@@ -1,0 +1,98 @@
+
+name: Build Runefall Release AAB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/runefall-upload.p12
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync Android project
+        run: npx cap sync android
+
+      - name: Decode signing key
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_FILE"
+          test -s "$ANDROID_KEYSTORE_FILE"
+
+      - name: Configure release signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("android/app/build.gradle")
+          s = p.read_text()
+
+          signing = """
+              signingConfigs {
+                  release {
+                      storeFile file(System.getenv("ANDROID_KEYSTORE_FILE"))
+                      storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                      keyPassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                  }
+              }
+
+          """
+
+          if "signingConfigs {" not in s:
+              s = s.replace("    buildTypes {", signing + "    buildTypes {", 1)
+
+          pattern = r"(buildTypes\s*\{\s*release\s*\{)"
+          s, count = re.subn(
+              pattern,
+              r"\1\n            signingConfig signingConfigs.release",
+              s,
+              count=1
+          )
+
+          if count != 1:
+              raise SystemExit("Could not configure release signing.")
+
+          p.write_text(s)
+          PY
+
+      - name: Build signed release AAB
+        working-directory: android
+        run: ./gradlew bundleRelease
+
+      - name: Upload release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: runefall-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+          
