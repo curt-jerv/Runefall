@@ -1,0 +1,52 @@
+
+name: Build Runefall AAB
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install JS dependencies
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync web assets into native project
+        run: npx cap sync android
+
+      - name: Generate Android app icon
+        run: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --android
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+
+      - name: Build Android App Bundle
+        working-directory: android
+        run: ./gradlew bundleDebug
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: runefall-aab
+          path: android/app/build/outputs/bundle/debug/app-debug.aab
+          
