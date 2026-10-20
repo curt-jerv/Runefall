@@ -112,6 +112,8 @@ syncStashItemsView();
 // across save/reload via the existing p.reachedX fields in saveGame/
 // newGame. flagName is one of those existing player fields (e.g.
 // 'reachedMountainPass') reused as the discovered-waypoint flag.
+// v490: discovery now happens when the player USES the waypoint (interact -> openTeleportMenu, see
+// WAYPOINT_FLAG_BY_FROM in ui/town-menus.js), not on proximity; the waypoint then draws lit (waypointLit).
 function discoverWaypoint(flagName){
   const p = game.player;
   if(!p[flagName]){

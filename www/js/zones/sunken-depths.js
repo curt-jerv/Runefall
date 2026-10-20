@@ -271,7 +271,7 @@ function updateSubZone(g, dt){
   updatePortalChoice(false);
   let skind = null;
   if(dist(p, t.entrance) < t.entrance.r + p.r + 22) skind = t.subzone==='sunken' ? 'sunkenToTemple' : t.subzone==='temple' ? 'templeToRuins' : 'poolToMarsh';
-  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ skind = 'waypointAncientRuins'; discoverWaypoint('reachedAncientRuins'); }
+  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ skind = 'waypointAncientRuins'; }
   else if(t.stairsDown && dist(p, t.stairsDown) < t.stairsDown.r + p.r + 22) skind = 'toSunkenDepths';
   else if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) skind = 'toTownFromTower';
   updateInteractPrompt(skind);
