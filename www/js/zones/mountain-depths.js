@@ -391,15 +391,25 @@ function startMinerSwarm(g){
     clusters.push(c);
   }
   if(!clusters.length){ for(let tries=0; tries<400 && clusters.length<2; tries++){ const c = deepMineSpot(room,null,8); if(c && offscreen(c.x,c.y)) clusters.push(c); } }
-  let nG = 0, nT = 0;
-  clusters.forEach((c,ci)=>{
-    for(let k=0;k<10;k++) if(spawnAt(k<8 ? 'goblin' : 'goblinarcher', c, 130)) nG++;
-    if(ci<3 && spawnAt('cavetroll', c, 70)) nT++;
-  });
-  for(let guard=0; nT<3 && guard<30; guard++){ const c = clusters[guard%Math.max(1,clusters.length)]; if(c && spawnAt('cavetroll', c, 160)) nT++; }
-  for(let guard=0; nG<28 && guard<80; guard++){ const c = clusters[guard%Math.max(1,clusters.length)]; if(c && spawnAt(guard%4===3?'goblinarcher':'goblin', c, 180)) nG++; }
+  // v490: the horde arrives as three groups over 15 seconds (was one big group at once), each from its own tunnel
+  g.minerSpawnAt = spawnAt; g.minerClusters = clusters;
+  g.minerWaves = [0, 7.5, 15]; g.minerWaveT = 0;
+  minerSwarmTick(g, 0);
   showBigMsg('THE HORDE COMES', 'Goblins and cave trolls pour from the tunnels', 3.2);
   shakeScreen(g, 4, 0.5);
+}
+function minerSwarmTick(g, dt){
+  if(!g.minerWaves || !g.minerWaves.length) return;
+  g.minerWaveT = (g.minerWaveT||0) + dt;
+  while(g.minerWaves.length && g.minerWaveT >= g.minerWaves[0]){
+    const wi = 3 - g.minerWaves.length; g.minerWaves.shift();
+    const cl = g.minerClusters || [], c = cl.length ? cl[wi % cl.length] : null, spawnAt = g.minerSpawnAt;
+    if(!c || !spawnAt) continue;
+    let nG = 0;
+    for(let k=0;k<14 && nG<9;k++) if(spawnAt(k%4===3 ? 'goblinarcher' : 'goblin', c, 150)) nG++;
+    for(let k=0;k<4;k++) if(spawnAt('cavetroll', c, 90)) break;
+    if(wi>0) showMsg(wi===1 ? 'More goblins pour from the tunnels!' : 'The last of the horde arrives!', 2.2, '#ffb070');
+  }
 }
 function makeMinerRing(p){
   let it = null;
@@ -435,13 +445,14 @@ function updateDeepMine(g, dt){
   const p = g.player, t = g.tower;
   if(!g.miners) setupMiners(g);
   // v456: the last few stragglers that drift far away count as fled (they used to keep the quest from completing)
+  minerSwarmTick(g, dt);
   if(p.minerQ===1 && g.minerSwarmSpawned){
     const left = g.enemies.filter(e=>e.minerSwarm && e.hp>0);
     const qq = getQuest(p, 'miners_lost'); if(qq && left.length) qq.desc = 'Hold off the horde coming for the miners. '+left.length+' remain.';
     if(left.length && left.length<=4) for(const e of left){ if(dist(e,p) > 650){ e._farT = (e._farT||0)+dt; if(e._farT > 5){ e.hp = 0; e.noReward = true; } } else e._farT = 0; }
   }
   // swarm cleared -> the foreman has something for you
-  if(p.minerQ===1 && g.minerSwarmSpawned && !g.enemies.some(e=>e.minerSwarm && e.hp>0)){
+  if(p.minerQ===1 && g.minerSwarmSpawned && !(g.minerWaves && g.minerWaves.length) && !g.enemies.some(e=>e.minerSwarm && e.hp>0)){
     p.minerQ = 2; const qq = getQuest(p, 'miners_lost'); if(qq) qq.desc = 'The horde is beaten. Talk to the miners.';
     showMsg('The horde is beaten. Talk to the miners.', 3.0); updateQuestBadge(); saveGame();
   }

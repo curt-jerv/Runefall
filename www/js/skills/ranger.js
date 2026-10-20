@@ -916,26 +916,30 @@ function pickEnemyTarget(g, e){
     }
     if(best) return best;
   }
-  // Tier 2: aggro-swap onto whoever is currently attacking this monster.
-  if((e.lastAttackedT||0) > 0 && e.lastAttacker){
-    const atk = e.lastAttacker;
-    const isPlayer = atk===p;
-    const stillValid = isPlayer
-      ? (!playerVanished && p.hp>0)
-      : (atk.hp>0 && g.followers && g.followers.includes(atk));
-    if(stillValid) return atk;
-  }
-  // Tier 3: the closest valid target (player, unless vanished, or any follower).
-  // Cat Companion (v81) is deliberately excluded here -- it's a non-combat
-  // pet with no attack of its own, so it never appears as lastAttacker
-  // (tier 2 above already can't select it) and shouldn't be a punching
-  // bag enemies pick off just for being nearby either.
-  let best = playerVanished ? null : p;
-  let bestD = playerVanished ? Infinity : dist(e,p) + (enemyLOS(g,e,p) ? 0 : 500);
-  if(g.followers) for(const f of g.followers){
-    if(f.kind==='cat') continue;
-    let d = dist(e,f);
-    if(d < bestD){ d += hasLOS(g,e,f) ? 0 : 500; if(d < bestD){ bestD = d; best = f; } }
-  }
+  // v490 threat: enemies go for the CLOSEST ally (you or a follower). Damage builds threat on whoever dealt it (fading over a few
+  // seconds); someone else only pulls the monster off its closest target with a lot more threat -- about a quarter of its life.
+  const th = threatTick(g, e);
+  const cands = [];
+  if(!playerVanished && p.hp>0) cands.push(p);
+  if(g.followers) for(const f of g.followers){ if(f.kind!=='cat' && f.hp>0) cands.push(f); }
+  if(!cands.length) return null;
+  let closest = null, cd = Infinity;
+  for(const c of cands){ const d = dist(e,c) + ((c===p ? enemyLOS(g,e,c) : hasLOS(g,e,c)) ? 0 : 500); if(d < cd){ cd = d; closest = c; } }
+  // stick with the current target unless the new closest is clearly closer (no ping-ponging between two allies)
+  if(e._tgt && e._tgt!==closest && cands.includes(e._tgt) && dist(e,e._tgt) < cd + 70) closest = e._tgt;
+  const base = th.get(closest)||0, need = Math.max(25, (e.maxHp||100)*THREAT_STEAL_FRAC);
+  let best = closest, bt = base + need;
+  for(const c of cands){ const v = th.get(c)||0; if(c!==closest && v >= bt){ bt = v; best = c; } }
+  e._tgt = best;
   return best;
+}
+const THREAT_STEAL_FRAC = 0.25, THREAT_FADE = 4;   // v490: extra threat needed (share of the monster's life) / fade time in seconds
+function threatTick(g, e){
+  const th = e.threat || (e.threat = new Map()), now = g.clock||0;
+  const dt = Math.max(0, now - (e._thT==null ? now : e._thT)); e._thT = now;
+  if(dt>0){ const k = Math.exp(-dt/THREAT_FADE); for(const [c,v] of th){ const nv = v*k; if(nv < 1 || !(c.hp>0)) th.delete(c); else th.set(c, nv); } }
+  if(e._thHp==null) e._thHp = e.hp;
+  const lost = e._thHp - e.hp; e._thHp = e.hp;
+  if(lost>0 && e.lastAttacker && (e.lastAttackedT||0)>0) th.set(e.lastAttacker, (th.get(e.lastAttacker)||0) + lost);
+  return th;
 }
