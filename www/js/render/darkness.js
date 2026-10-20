@@ -300,12 +300,13 @@ function drawLosShadow(g){
     const o = obs[i]; if(o.isWater||o.isFurniture||o.isProp) continue;
     if(o.x>p.x+LOS_RANGE || o.x+o.w<p.x-LOS_RANGE || o.y>p.y+LOS_RANGE || o.y+o.h<p.y-LOS_RANGE) continue;
     if(p.x>=o.x && p.x<=o.x+o.w && p.y>=o.y && p.y<=o.y+o.h) continue;
-    if(M && o.organic){ for(const cx of [o.x, o.x+o.w]) for(const cy of [o.y, o.y+o.h]) cellCorners.add(cx*65536+cy); continue; }
+    if(M && o.organic){ if(Math.abs(o.x+o.w/2-p.x) < 300 && Math.abs(o.y+o.h/2-p.y) < 300) for(const cx of [o.x, o.x+o.w]) for(const cy of [o.y, o.y+o.h]) cellCorners.add(cx*65536+cy); continue; }   // exact corners only close by; 540 even rays cover the rest
     near.push(o);
   }
-  if(!near.length && !(cellCorners && cellCorners.size)) return;
+  if(!near.length && !M) return;
   const angs = [];
-  for(let i=0;i<72;i++) angs.push(i/72*Math.PI*2-Math.PI);
+  const NU = M ? 540 : 72;
+  for(let i=0;i<NU;i++) angs.push(i/NU*Math.PI*2-Math.PI);
   for(const o of near){ for(const [cx,cy] of [[o.x,o.y],[o.x+o.w,o.y],[o.x,o.y+o.h],[o.x+o.w,o.y+o.h]]){ const a = Math.atan2(cy-p.y, cx-p.x); angs.push(a-0.0004, a, a+0.0004); } }
   if(cellCorners) for(const k of cellCorners){ const cx = Math.floor(k/65536), cy = k - cx*65536; const a = Math.atan2(cy-p.y, cx-p.x); angs.push(a-0.0004, a, a+0.0004); }
   angs.sort((a,b)=>a-b);
