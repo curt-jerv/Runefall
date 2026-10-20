@@ -17,7 +17,7 @@ function gojiraQuest(p){ return addQuestOnce(p, 'slay_gojira', 'Gojira, the Crat
 // 'bolt' = the Hunter hands over the Dragon Bolt; 'reward' = the Hunter thanks you for the Obsidian Obelisk
 function gojiraChainStage(p){
   if(p.obsidianTaken && !p.hunterRuneRewarded) return 'reward';
-  if(!p.gojiraSlain && huntsAllDone(p) && p.reachedRedridge && !hasItemQ(p,'dragon_bolt')) return 'bolt';   // v456: only once Redridge Canyon is reached
+  if(!p.gojiraSlain && huntsAllDone(p) && (p.reachedRedridge || (p.wmSeen && p.wmSeen.redridge)) && !hasItemQ(p,'dragon_bolt')) return 'bolt';   // v456: only once Redridge Canyon is reached
   return null;
 }
 const HUNTER_BOLT_TEXT = '"Four beasts felled. One remains: Gojira, the dragon of Redridge Crater. Take this Dragon Bolt -- throw it once she is under a tenth of her life."';

@@ -3,7 +3,7 @@
 //   Magic pack -- 5 neighbouring monsters sharing the SAME mods, glowing BLUE. Tougher, better drops.
 //   Elite      -- one monster with a random generated name, ~25% larger, glowing YELLOW, 2-3 mods.
 const SPECIAL_MODS = {
-  fast:      {name:'Fast',                apply(e){ e.speed*=1.3; e.atkCdMax*=0.8; }},
+  fast:      {name:'Fast',                apply(e){ e.speed*=1.15; e.atkCdMax*=0.85; }},   // v490: was 1.3x speed / 0.8x attack time
   strong:    {name:'Strong',              apply(e){ e.dmg*=1.4; }},
   fireEnch:  {name:'Fire Enchanted',      grp:'ele', apply(e){ e.dmgType='fire'; e.deathNova='fire'; }},
   coldEnch:  {name:'Cold Enchanted',      grp:'ele', apply(e){ e.dmgType='cold'; e.deathNova='cold'; e.chillHit=true; }},
