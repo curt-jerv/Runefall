@@ -178,12 +178,12 @@ bindBtn(document.getElementById('btnDodge'), ()=>{
   wantDodge=true;
 });
 // (v124) Potion button: tap = drink the assigned potion; hold = cycle which kind is assigned
-// (health / mana / beer / coffee). If the assigned kind runs out, the next kind you carry is used.
-const POTION_KINDS = ['health','mana','beer','coffee'];
-const POTION_EMOJI = {health:'\u2764\uFE0F', mana:'\u{1F4A7}', beer:'\u{1F37A}', coffee:'\u2615'};
+// (health / beer / coffee). If the assigned kind runs out, the next kind you carry is used.
+const POTION_KINDS = ['health','beer','coffee'];   // v490: mana potions removed
+const POTION_EMOJI = {health:'\u2764\uFE0F', beer:'\u{1F37A}', coffee:'\u2615'};
 function potionCount(p, kind){ let n=0; for(const it of p.inventory) if(it.slotType==='potion' && it.potionKind===kind) n++; return n; }
 // v478 potion belt: health potions live ONLY in the belt (never the bag). Capacity: 1 with no belt, 3 with any
-// belt, 4 with a tier-2 belt, 5 with tier 3 and up. Other potions (mana, beer, coffee) stay in the bag and are drunk from there.
+// belt, 4 with a tier-2 belt, 5 with tier 3 and up. Other potions (beer, coffee) stay in the bag and are drunk from there.
 const POTION_STACK_MAX = 5;
 const POTION_CD = 10, POTION_INSTANT = 0.10, POTION_HOT = 0.50, POTION_HOT_DUR = 4;
 function beltCapacity(p){ const b = p && p.equipment && p.equipment.belt; if(!b) return 1; const t = b.tier||1; return t>=3 ? 5 : t===2 ? 4 : 3; }
@@ -192,7 +192,7 @@ function fullMsgFor(it){ return isHealthPotion(it) ? 'Belt is full' : 'Bag is fu
 let potionStackOff = false;
 function dropPotionsAtFeet(p, n){
   const g = (typeof game!=='undefined') ? game : null; if(!g || !g.started || !g.loot) return false;
-  for(let i=0;i<n;i++) g.loot.push({type:'item', x:p.x+rand(-26,26), y:p.y+rand(-26,26), r:8, item:makePotionItem('health'), dropGrace:1.2});
+  for(let i=0;i<n;i++){ const l = {type:'item', x:p.x+rand(-26,26), y:p.y+rand(-26,26), r:8, item:makePotionItem('health'), dropGrace:1.2}; try{ fixLootSpot(g, l); }catch(e){} g.loot.push(l); }   // v490
   return true;
 }
 function ensurePotionEq(p){
@@ -203,7 +203,7 @@ function ensurePotionEq(p){
     p.beltV478 = true;
     potionStackOff = true;
     try{
-      if(eq.kind!=='health' && eq.n>0){ for(let i=0;i<eq.n;i++) forceAddToBag(p, makePotionItem(eq.kind)); eq.n = 0; }
+      if(eq.kind!=='health' && eq.n>0){ if(POTION_DEFS[eq.kind]) for(let i=0;i<eq.n;i++) forceAddToBag(p, makePotionItem(eq.kind)); eq.n = 0; }   // v490: an old mana belt is simply emptied
       eq.kind = 'health';
       let spare = 0;
       for(let i=p.inventory.length-1;i>=0;i--){ const it = p.inventory[i]; if(isHealthPotion(it)){ p.inventory.splice(i,1); if(eq.n < beltCapacity(p)) eq.n++; else spare++; } }

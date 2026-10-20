@@ -69,14 +69,13 @@ function genGamblerStock(charLevel){
   return stock;
 }
 // ---- Bartender potions/drinks (v120): 1000g each, limited stock, restocks every 3h (v182: all vendors) ----
-const BAR_POTION_PRICE = 250;   // v464: health and mana potions are always in stock
+const BAR_POTION_PRICE = 250;   // v464: health potions are always in stock (v490: mana potions removed)
 const BAR_PRICE = 1000, BAR_RESTOCK_MS = 60*60*1000, BUFF_DURATION_S = 300;
 const BEER_DMG_BONUS = 20, BEER_ARMOR_MULT = 0.6;
 const COFFEE_ATKSPD_MULT = 0.8 /* attack cooldown x0.8 = +20% attack speed */, COFFEE_MOVE_MULT = 1.2, COFFEE_HP_MULT = 0.5;
 const POTION_DEFS = {
   health: {name:'Health Potion', color:'#e2384f', desc:'Single use. Instantly restores your health to full.'},
   beer:   {name:'Beer', color:'#e8a83a', desc:'Single use. For 5 minutes: +20 damage, -40% armor.'},
-  mana:   {name:'Mana Potion', color:'#4a7bff', desc:'Single use. Instantly restores 60% of your Mana (Rage for a Warrior, Stamina for a Ranger).'},
   coffee: {name:'Coffee', color:'#a8794a', desc:'Single use. For 5 minutes: +20% attack speed, +20% movement speed, -50% total HP.'},
   purple: {name:"Witch's Purple Potion", color:'#a24bd8', desc:'Brewed by the Black Marsh witch from four monster parts. Drink to permanently gain +20% Fire, Cold, Lightning and Poison resistance.'},
 };
@@ -100,9 +99,9 @@ const PART_DEFS = {
   rottenflesh:{name:'Rotting Flesh', icon:'\u{1F9DF}', color:'#8aa86a', stat:'poisres', label:'Poison Resist', from:'Zombies, Poison Walkers and Poison Plants'},
   trollhide: {name:'Troll Hide', icon:'\u{1FAA8}', color:'#8a8a6a', stat:'regen', label:'Life Regen', scale:0.1, from:'Cave Trolls, Mountain Trolls and Troll Elders'},
   goblinear: {name:'Goblin Ear', icon:'\u{1F442}', color:'#a8c84a', stat:'gold', label:'Gold Find', from:'Goblins'},
-  firewing:  {name:'Ember Wing', icon:'\u{1F987}', color:'#ff7a2a', stat:'aoe', label:'Area Size', from:'Fire Bats'},
+  firewing:  {name:'Bat Wing',   /* v490: was Ember Wing */ icon:'\u{1F987}', color:'#ff7a2a', stat:'aoe', label:'Area Size', from:'Fire Bats'},
   scalehide: {name:'Crawler Scale Hide', icon:'\u{1F98E}', color:'#5c9a3a', stat:'lightres', label:'Lightning Resist', from:'Canyon Crawlers'},
-  harpyfeather:{name:'Harpy Feather', icon:'\u{1FAB6}', color:'#d8c8ff', stat:'cdr', label:'Cooldown Reduction', from:'Harpies and Rocs'},
+  harpyfeather:{name:'Avian Feather',   /* v490: was Harpy Feather */ icon:'\u{1FAB6}', color:'#d8c8ff', stat:'cdr', label:'Cooldown Reduction', from:'Harpies and Rocs'},
   buffalohide:{name:'Buffalo Hide', icon:'\u{1F9AC}', color:'#8a6a4a', stat:'block', label:'Block Chance', from:'Canyon Buffalo'},
   armordonplate:{name:'Armordon Plate', icon:'\u{1F6E1}', color:'#b08a5a', stat:'dmgred', label:'Damage Reduction', scale:0.6, from:'Armordons and Giants'},
   demonicstone:{name:'Demonic Stone', icon:'\u{1F52E}', color:'#d23a6a', stone:true, quest:true, mods:{leech:6,hp:8}, sp:'healhit', desc:'+6% Life Leech, +8% Max HP. 8% chance on hit to heal 4% of your max HP.'},
@@ -144,6 +143,8 @@ const PART_DEFS = {
   uqdjinn:{name:'Eye of the Tempest', icon:'\u{1F300}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{atkspd:6,lightres:25}, sp:'uq_djinn', desc:'+6% Attack Speed, +25% Lightning Resist. Stormcaller: Lightning Arc chains to 3 additional enemies.'},
   uqelementalist:{name:'Twinflame Prism', icon:'\u{1F52E}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{aoe:10,fireres:15,coldres:15}, sp:'uq_elementalist', desc:'+10% Area Size, +15% Fire and Cold Resist. Twinflame: Fireball launches 1 additional ball and Ice Bolt fires 2 extra bolts in a fan.'},
   uqcrater:{name:"Crown of the Crater King", icon:'\u{1F451}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{dmg:8,hp:6}, sp:'uq_crater', desc:'+8% Damage, +6% Max HP. Crater Stomp: every 8s your next attack stamps a T-Rex foot, crushing enemies in a wide circle for 150% weapon damage. Apex Hunger: each kill grants a stack (max 5, lasts 6s) of +4% attack speed and +3% damage.'},
+  // v490: Pyre Heart -- Immolate also wreathes you in a Flame Vortex
+  uqpyre:{name:'Pyre Heart', icon:'\u{1F525}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{firepct:10,fireres:15}, sp:'uq_pyre', desc:'+10% Fire Damage, +15% Fire Resist. Pyre Heart: while Immolate burns, a Flame Vortex swirls around you (uses your Flame Vortex rank, or rank 5 if you have none).'},
   uqnecromancer:{name:"Lich's Phylactery", icon:'\u{1F480}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{cdr:8,hp:6}, sp:'uq_necromancer', desc:'+8% Cooldown Reduction, +6% Max HP. Legion: Raise Dead raises 2 additional skeleton minions.'},
 };
 const PART_KEYS = Object.keys(PART_DEFS);
@@ -184,6 +185,7 @@ const STONE_RECIPES = [
   {id:'uq_djinn',       stone:'uqdjinn',       perfect:true, parts:['tempestglass','stormclaw','scalehide'],        hint:'Glass from the heart of a storm, bound with thunder and scale.'},
   {id:'uq_elementalist',stone:'uqelementalist',perfect:true, parts:['prismcinder','lavacarapace','tortugashell'],   hint:'Fire and frost, held together by a prism of cinders.'},
   {id:'uq_crater',      stone:'uqcrater',      parts:['rextooth','flameclaw','harpytalon'],           hint:'The king\'s tooth, the fire-raptor\'s claw and the queen\'s talon: whatever hunts from above, below, and the flame between.'},
+  {id:'uq_pyre',        stone:'uqpyre',        perfect:true, parts:['hellhoundfang','firewing','lavacarapace'],    hint:'The hound\'s burning fang, a bat\'s ember wing and a beetle\'s molten shell: a heart that feeds the pyre.'},   // v490
   {id:'uq_necromancer', stone:'uqnecromancer', perfect:true, parts:['wraithessence','rottenflesh','demoneye'],      hint:'The essence of the restless dead, rotted flesh and an eye that sees beyond the grave.'},
 ];
 // v383: where the signature parts come from (rolled in addition to the normal part drop)
@@ -221,21 +223,23 @@ const recipeKey = a=>a.slice().sort().join('+');
 const RECIPE_BY_KEY = {}; for(const r of STONE_RECIPES) RECIPE_BY_KEY[recipeKey(r.parts)] = r;
 const recipeOverlap = (keys, r)=>{ const pool = r.parts.slice(); let n = 0; for(const k of keys){ const i = pool.indexOf(k); if(i>=0){ pool.splice(i,1); n++; } } return n; };
 const PART_CHANCE = {normal:0.10, magic:0.25, rare:0.50};
+const PARTS_FULL_DEPTH = 21, PARTS_EARLY_MULT = 0.2;   // v490: zones before Lakeside Ruins (level < 21) drop parts at 1/5 the rate
 const PART_SHOP_PRICE = 600, PART_SHOP_SLOTS = 3, PART_SELL_PRICE = [0,150,450,1350];
 const partId = (k,t)=>k+'_'+t;
 const partName = (k,t)=>PART_DEFS[k].quest ? PART_DEFS[k].name : PART_TIER_PREFIX[t]+PART_DEFS[k].name;
 const PART_SHOP_KEYS = PART_KEYS.filter(k=>!PART_DEFS[k].quest && !PART_DEFS[k].sig);
 const partVal = (k,t)=>Math.round(PART_TIER_PCT[t]*(PART_DEFS[k].scale||1)*10)/10;
-const partDesc = (k,t)=>PART_DEFS[k].stone ? PART_DEFS[k].desc + (PART_DEFS[k].unique ? ' UNIQUE: cannot be removed once socketed. Only 1 single unique stone can be equipped at a time.' : '') : '+'+partVal(k,t)+(PART_DEFS[k].flat ? ' ' : '% ')+PART_DEFS[k].label+(PART_DEFS[k].flat ? ' (grows with level)' : '');
+const partDesc = (k,t)=>PART_DEFS[k].stone ? PART_DEFS[k].desc + (PART_DEFS[k].unique ? ' UNIQUE: needs character level 40 to socket and cannot be removed once socketed. Only 1 single unique stone can be equipped at a time.' : '') : '+'+partVal(k,t)+(PART_DEFS[k].flat ? ' ' : '% ')+PART_DEFS[k].label+(PART_DEFS[k].flat ? ' (grows with level)' : '');
 function addPart(p,k,t,n){ if(!p.parts) p.parts = {}; const id = partId(k,t||1); p.parts[id] = (p.parts[id]||0)+(n||1); }
 function takePart(p,k,t,n){ n = n||1; const id = partId(k,t); if(!p.parts || (p.parts[id]||0)<n) return false; p.parts[id]-=n; if(p.parts[id]<=0) delete p.parts[id]; return true; }
 function partBonuses(p){
   const b = {leech:0,crit:0,hp:0,dmg:0,def:0,speed:0,pen:0,eva:0,bleed:0,bleedch:0,sp:{},atkspd:0,aoe:0,mf:0,dmgred:0,block:0,cdr:0,coldres:0,fireres:0,poisres:0,regen:0,gold:0,lightres:0,
     critdmg:0,physpct:0,firepct:0,coldpct:0,lightpct:0,poisonpct:0,elempct:0,mok:0,lok:0,ailment:0,elite:0,allres:0,thorns:0,minion:0,proj:0,potion:0,maxres:0,mana:0};
   let uniqueUsed = false;   // v383: only ONE unique stone is active at a time
+  const stoneSeen = {};   // v490: each stone type counts once across all worn gear
   for(const it of Object.values(p.equipment||{})){
     if(!it || !it.socketed) continue;
-    for(const id of it.socketed){ if(!id) continue; const [k,t] = id.split('_'); const d = PART_DEFS[k]; if(!d) continue; if(d.unique){ if(uniqueUsed) continue; uniqueUsed = true; } if(d.stone){ for(const mk in d.mods) b[mk] = (b[mk]||0) + d.mods[mk]; if(d.sp) b.sp[d.sp] = true; } else b[d.stat] += partVal(k,+t)||0; }
+    for(const id of it.socketed){ if(!id) continue; const [k,t] = id.split('_'); const d = PART_DEFS[k]; if(!d) continue; if(d.stone){ if(stoneSeen[k]) continue; stoneSeen[k] = true; } if(d.unique){ if(uniqueUsed) continue; uniqueUsed = true; } if(d.stone){ for(const mk in d.mods) b[mk] = (b[mk]||0) + d.mods[mk]; if(d.sp) b.sp[d.sp] = true; } else b[d.stat] += partVal(k,+t)||0; }
   }
   return b;
 }
@@ -248,34 +252,35 @@ function showPartToast(text, color){
 }
 function partsMaybeDrop(g, en){
   const p = g.player;
-  if(!p || !p.partsHarvest || !en) return;
+  if(!p || !en) return;   // v490: parts drop from the very start (no witch needed)
+  const rare = (g.depth||0) < PARTS_FULL_DEPTH ? PARTS_EARLY_MULT : 1;   // v490: very rare before Lakeside Ruins
   // v387: signature boss parts, repeatable at fixed chances (Rex 5%, Brood Mother 10%, Flame Raptor 15%)
   { const bp = en.trex ? ['rextooth',0.05] : en.harpyQueen ? ['harpytalon',0.10] : en.lr ? ['flameclaw',0.15] : en.stormRaptor ? ['stormclaw',0.5] : null;
-    if(bp && Math.random() < bp[1]){ addPart(p,bp[0],1); showPartToast('Harvested: '+PART_DEFS[bp[0]].name+'  ('+partDesc(bp[0],1)+')', PART_DEFS[bp[0]].color); } }
+    if(bp && Math.random() < bp[1]*rare){ addPart(p,bp[0],1); showPartToast('Harvested: '+PART_DEFS[bp[0]].name+'  ('+partDesc(bp[0],1)+')', PART_DEFS[bp[0]].color); } }
   const pool = PART_DROPS[en.type], sigPool = SIG_DROPS[en.type];
   if(!pool && !sigPool) return;
   const tierKey = (en.elite || en.isBoss || en.isLairBoss) ? 'rare' : en.magic ? 'magic' : 'normal';
   let k = null;
-  if(pool && Math.random() < PART_CHANCE[tierKey]) k = pool[Math.floor(Math.random()*pool.length)];
-  else if(sigPool && Math.random() < SIG_CHANCE[tierKey]) k = sigPool[Math.floor(Math.random()*sigPool.length)];
+  if(pool && Math.random() < PART_CHANCE[tierKey]*rare) k = pool[Math.floor(Math.random()*pool.length)];
+  else if(sigPool && Math.random() < SIG_CHANCE[tierKey]*rare) k = sigPool[Math.floor(Math.random()*sigPool.length)];
   if(!k) return;
   addPart(p,k,1);
   showPartToast('Harvested: '+PART_DEFS[k].name+'  ('+partDesc(k,1)+')', PART_DEFS[k].color);
   saveGame();
   if(document.getElementById('invOverlay').style.display==='flex') try{ renderInventory(); }catch(e){}
 }
-const BAR_STOCK_KINDS = ['health','health','mana','mana','beer','beer','coffee','coffee'];
+const BAR_STOCK_KINDS = ['health','health','beer','beer','coffee','coffee'];   // v490: no mana potions
 function makePotionItem(kind){
   const d = POTION_DEFS[kind];
   return {id:'it'+Math.random().toString(36).slice(2,9), slotType:'potion', potionKind:kind, rarity:'magic', name:d.name,
-    affixes:[], color:d.color, questDesc:d.desc+((kind==='health'||kind==='mana') ? ' Always in stock.' : ''), unsellable:true, fixedPrice:(kind==='health'||kind==='mana') ? BAR_POTION_PRICE : BAR_PRICE};
+    affixes:[], color:d.color, questDesc:d.desc+(kind==='health' ? ' Always in stock.' : ''), unsellable:true, fixedPrice:kind==='health' ? BAR_POTION_PRICE : BAR_PRICE};
 }
 function refreshBarStock(p){
   if(!Array.isArray(p.barStock) || !p.barRestockAt || Date.now() >= p.barRestockAt){
     p.barStock = BAR_STOCK_KINDS.slice();
     p.barRestockAt = Date.now() + BAR_RESTOCK_MS;
   }
-  p.barStock = ['health','mana'].concat((p.barStock||[]).filter(k=>k!=='health' && k!=='mana'));   // one bottomless entry each
+  p.barStock = ['health'].concat((p.barStock||[]).filter(k=>k!=='health' && k!=='mana' && POTION_DEFS[k]));   // one bottomless entry; v490: mana potions are gone
   return p.barStock.map(makePotionItem);
 }
 function syncBarStock(){
@@ -294,9 +299,6 @@ function usePotion(p, item){
     p.potHotT = POTION_HOT_DUR; p.potHotRate = POTION_HOT*ps/POTION_HOT_DUR;
     p.potionCd = POTION_CD;
     if(game && game.particles) game.particles.push({type:'ring', x:p.x, y:p.y, t:0.45, max:0.45, r:34, color:'#e05a5a'});
-  } else if(kind==='mana'){
-    if(p.mp>=p.maxMp){ showMsg("I don't need this now", 1.3, '#ffd93a'); return false; }
-    gainResource(p, p.maxMp*Math.min(1, MANA_POTION_PCT*(1+(p.potionStrPct||0)))); showMsg(resourceName(p)+' restored!', 1.4);
   } else if(kind==='beer'){
     try{ setTimeout(()=>sfxPlay('burp', 1), 700); }catch(e){}
     p.beerT = BUFF_DURATION_S*(1+(p.potionStrPct||0)); recalcStats(p); showMsg('Beer: +20 damage, -40% armor (5 min)', 2.0);

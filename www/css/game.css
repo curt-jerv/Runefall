@@ -766,6 +766,12 @@
   .partCard .pMain{ flex:1;} .partCard .pSub{ font-size:10.5px; color:var(--bone-dim);}
   .partBtn{ padding:6px 10px; border-radius:6px; border:1px solid var(--ember); color:var(--ember); cursor:pointer; font-size:11px; white-space:nowrap; user-select:none;}
   .partBtn.off{ opacity:.35; pointer-events:none;}
+  /* v490: Recipe Book (inventory Parts tab + witch Recipes tab) */
+  .rbHead{ font-family:'Cinzel',serif; font-size:12.5px; color:#e8c860; padding:6px 4px; margin:2px 0 4px; border-bottom:1px solid rgba(232,200,96,.25); cursor:pointer; user-select:none;}
+  .rbRow{ padding:6px 8px; }
+  .rbCheck{ flex:0 0 auto; width:32px; height:32px; border-radius:50%; border:2px solid #4caf50; background:rgba(76,175,80,.18); color:#7fe07f; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:bold; cursor:pointer; user-select:none;}
+  .rbCheck:active{ filter:brightness(1.4); }
+  .rbCheck.off{ border-color:rgba(255,255,255,.12); background:none; cursor:default; }
   .partCard.uq{ border-color:#f2a31b !important; box-shadow:0 0 9px rgba(242,163,27,.4), inset 0 0 8px rgba(242,163,27,.15); }
   .partCard.kSlot.sel{ border-color:var(--ember); background:rgba(232,140,60,.14); }
   .invDivider{ font-size:11px; color:var(--bone-dim); letter-spacing:.05em; margin:10px 0 6px; text-transform:uppercase;}

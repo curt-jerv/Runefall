@@ -115,7 +115,7 @@ function statInfoText(key, p){
     FIRE: res('fire','Fire'), COLD: res('cold','Cold'), LTNG: res('lightning','Lightning'), PSN: res('poison','Poison'),
     'MAGIC FIND': '+'+pc(p.magicFindPct||0)+'% chance for magic, rare and better drops.',
     'GOLD FIND': '+'+pc(p.goldFindPct||0)+'% gold from drops.',
-    'POTION STR': '+'+pc((p.potionStrPct||0)*100)+'% potion strength: health potions heal more (both the instant heal and the heal over time), mana potions restore more, and beer/coffee last longer (gear cap 75%).',
+    'POTION STR': '+'+pc((p.potionStrPct||0)*100)+'% potion strength: health potions heal more (both the instant heal and the heal over time), and beer/coffee last longer (gear cap 75%).',
     BREACH: 'Deepest Breach floor cleared.',
     PLAYTIME: 'Time played on this character: '+fmtPlayTime(p.playTime||0, true)+'.',
     KILLS: 'Enemies this character has slain.'
@@ -208,7 +208,7 @@ function resourceInfoHtml(p){
   if(false) return '<b>Conviction</b><br>Templars transmute Rage into <b>Conviction</b>: the same bar, burning with holy purpose. It does not refill on its own and fades while you are idle.<br><br><b>Gain Conviction</b> by Smiting (+'+SMITE_CONV+', Wrath +'+WRATH_CONV+'), landing Vengeance (+'+VENG_CONV+' per foe), planting Banners (+'+BANNER_CONV+'), standing in Consecrate, and by fighting as any warrior does.<br><br><b>Spend it</b> on Judgment ('+JUDG_COST+'). Your followers deal most of your damage, so keep them alive: Smite heals them.';
   if(p.cls==='warrior') return '<b>Rage</b><br>'+(isTemplar(p) ? '<i>As a Templar you transmute Rage into <b>Conviction</b>: the same bar, burning with holy purpose, spent on your Templar skills.</i><br><br>' : 'Templars transmute Rage into <b>Conviction</b> for their skills; it is the same bar.<br><br>')+'Rage is the fuel for your skills. It does <b>not</b> refill on its own. It drains as you cast and fades on its own, faster the longer you go without fighting.<br><br><b>Gain Rage</b> by fighting: +'+RAGE_ON_HIT+' each time you land a hit, and up to +'+RAGE_ON_HURT_MAX+' each time you get hit (the bigger the hit, the more). With <b>Riposte</b>, blocking a hit gives '+RIPOSTE_RAGE_BASE+' to '+(RIPOSTE_RAGE_BASE+RIPOSTE_RAGE_MAX_BONUS)+' Rage depending on how hard it was.<br><br>Tip: taking hits and blocking fills the bar fastest, so a Warrior who stays in the fight always has Rage to spend.';
   if(p.cls==='ranger') return '<b>Stamina</b><br>Stamina powers your big shots and traps. Basic shots -- Strike, Rapid Shot, Splinter Shot and Multi Shot volleys -- are free and each one restores '+STAMINA_ON_SHOT+' Stamina. Heavy skills (Crippling, Stun and Explosive Shot, Aimed Shot, Rain of Arrows, traps, Hunter\'s Mark) cost a set amount that rises with their rank, and have cooldowns. Stamina also refills slowly on its own (about '+(STAMINA_REGEN_PCT*100).toFixed(1)+'% per second), and the Survivalist\'s <b>Evasion</b> passive makes every dodge restore Stamina. The pool grows a little every level.';
-  return '<b>Mana</b><br>Mana powers your spells. It refills slowly on its own (about '+Math.round(MANA_REGEN_PCT*100)+'% of the bar per second), you get '+Math.round(MANA_ON_KILL_PCT*100)+'% back on each kill, and your basic spells give some back on every hit. Mana potions restore '+Math.round(MANA_POTION_PCT*100)+'%.';
+  return '<b>Mana</b><br>Mana powers your spells. It refills slowly on its own (about '+Math.round(MANA_REGEN_PCT*100)+'% of the bar per second), you get '+Math.round(MANA_ON_KILL_PCT*100)+'% back on each kill, and your basic spells give some back on every hit..';
 }
 (function(){
   const box = document.createElement('div');
@@ -559,18 +559,36 @@ function setInvTab(t){
   document.getElementById('partsBag').style.display = t==='parts' ? 'block' : 'none';
   document.getElementById('knightsBag').style.display = t==='knights' ? 'block' : 'none';
   document.getElementById('bagDivider').textContent = t==='gear' ? 'Bag \u2014 tap an item for stats, or drag to equip' : t==='knights' ? 'Bag \u2014 drag an item onto a Knight slot, or tap it and choose Equip on Knights' : 'Parts Bag';
+  { const en = document.getElementById('bagEmptyNote'); if(en) en.style.display = t==='parts' ? 'none' : ''; }   // v490: the empty-bag note belongs to the gear bag
   renderPartsBag(); renderKnightsBag();
 }
 function renderPartsBag(){
   const p = game.player, el = document.getElementById('partsBag');
   if(!el) return;
-  if(!p.partsHarvest){ el.innerHTML = '<div style="color:var(--bone-dim); font-size:12px; padding:10px;">Another bag for collecting special parts.</div>'; return; }
+  // v490: the Parts bag works from the start (no witch needed); the Recipe Book sits on top
   const ids = Object.keys(p.parts||{}).sort((a,b)=>{ const [ka,ta]=a.split('_'), [kb,tb]=b.split('_'); return PART_KEYS.indexOf(ka)-PART_KEYS.indexOf(kb) || (+ta)-(+tb); });
-  el.innerHTML = ids.length ? ids.map(id=>{
+  el.innerHTML = recipeBookHtml(p) + '<div class="rbHead" style="cursor:default;">Your Parts</div>' + (ids.length ? ids.map(id=>{
     const [k,t] = id.split('_'), d = PART_DEFS[k];
     return '<div class="partCard'+(d.unique?' uq':'')+'"><div class="pIcon">'+d.icon+'</div><div class="pMain" style="color:'+d.color+'"><b>'+partName(k,+t)+'</b> \u00d7'+p.parts[id]+'<div class="pSub">'+partDesc(k,+t)+(d.from ? ' \u2014 drops from '+d.from : '')+'</div></div></div>';
-  }).join('') : '<div style="color:var(--bone-dim); font-size:12px; padding:10px;">No parts yet.</div>';
+  }).join('') : '<div style="color:var(--bone-dim); font-size:12px; padding:10px;">No parts yet. Monsters sometimes drop parts (rarely before Lakeside Ruins).</div>');
 }
+// v490: Recipe Book -- the recipes you have discovered, with a green check mark when you hold the parts.
+// Tapping the check mark loads them into the witch's cauldron (once she is freed); you still press Transmute yourself.
+let recipeBookOpen = true;
+function recipeBookHtml(p){
+  const known = STONE_RECIPES.filter(r=>(p.recipes||{})[r.id]);
+  const ready = known.filter(r=>recipePartIds(p, r)).length;
+  let h = '<div class="rbHead" data-rbtoggle="1">\u{1F4D6} Recipe Book <span class="pSub">('+known.length+' / '+STONE_RECIPES.length+' known'+(ready ? ', '+ready+' ready' : '')+')</span><span style="float:right;">'+(recipeBookOpen ? '\u25B4' : '\u25BE')+'</span></div>';
+  if(!recipeBookOpen) return h;
+  if(!known.length) return h + '<div class="pSub" style="padding:4px 10px 8px;">No recipes yet. The freed witch, the great bosses and your own cauldron experiments teach them.</div>';
+  h += '<div class="pSub" style="padding:0 4px 6px;">'+(witchCauldronReady(p) ? 'Tap \u2714 to put the parts in the witch\u2019s cauldron.' : 'Bring these to the Witch\u2019s cauldron.')+'</div>';
+  for(const r of known) h += recipeRowHtml(p, r);
+  return h;
+}
+document.getElementById('partsBag').addEventListener('click', e=>{
+  if(e.target.closest('[data-rbtoggle]')){ recipeBookOpen = !recipeBookOpen; renderPartsBag(); return; }
+  const rb = e.target.closest('[data-rbload]'); if(rb) cauldronLoadRecipe(rb.dataset.rbload);
+});
 document.getElementById('invTabGear').addEventListener('click', ()=>setInvTab('gear'));
 document.getElementById('invTabParts').addEventListener('click', ()=>setInvTab('parts'));
 document.getElementById('invTabKnights').addEventListener('click', ()=>setInvTab('knights'));
@@ -653,6 +671,7 @@ function renderInventory(){
       emptyNote.className = 'bagEmptyNote';
       emptyNote.textContent = 'No items collected yet';
       gridEl.parentNode.insertBefore(emptyNote, gridEl.nextSibling);
+      if(invTab==='parts') emptyNote.style.display = 'none';   // v490
     }
   } else if(emptyNote){
     emptyNote.remove();
@@ -973,7 +992,7 @@ document.getElementById('itemDetailBuy').addEventListener('click', ()=>{
   if(isHealthPotion(it) && ensurePotionEq(game.player).n >= beltCapacity(game.player)){ showMsg('Belt is full', 1.4); return; }   // v478: bought potions go straight to the belt
   game.player.gold -= price;
   forceAddToBag(game.player, it);
-  if(game.openVendor==='bar' && it.slotType==='potion' && (it.potionKind==='health' || it.potionKind==='mana')) game.town.stock[pendingIdx] = makePotionItem(it.potionKind);   // v464: never runs out
+  if(game.openVendor==='bar' && it.slotType==='potion' && it.potionKind==='health') game.town.stock[pendingIdx] = makePotionItem(it.potionKind);   // v464: never runs out
   else game.town.stock.splice(pendingIdx,1);
   if(it.unidentified){ it.unidentified = false; delete it.fixedPrice; }
   if(game.openVendor==='bar') syncBarStock();

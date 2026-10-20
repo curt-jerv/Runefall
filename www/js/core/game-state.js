@@ -354,6 +354,7 @@ function newGame(saved, cls){
     // v263: the Flame Raptor hunt and its Fire Claw are gone -- the 4th witch part is now the Colossus' Molten Shell Fragment
     player.quests = (player.quests||[]).filter(q=>!(q && (q.id==='hunt_raptor' || q.id==='legend_summit')));
     player.inventory = player.inventory.filter(it=>!(it && it.questId==='fire_claw'));
+    { const mg = stripManaPotions(player.inventory); if(mg>0) player.gold = (player.gold||0) + mg; }   // v490: mana potions are gone -- sold for half price
     // v453: rescue items that loot pickup wrongly 'equipped' into a non-gear slot (e.g. the Molten Shell Fragment)
     if(player.equipment){ for(const k of Object.keys(player.equipment)){ if(EQUIP_SLOTS.indexOf(k)<0 && player.equipment[k]){ const it = player.equipment[k]; delete player.equipment[k]; delete it.gx; delete it.gy; forceAddToBag(player, it); } } }
     // v452: the Frosthold dungeon now only opens through the key-turning sequence. Old saves that already used the key
