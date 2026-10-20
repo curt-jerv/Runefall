@@ -735,8 +735,10 @@ function rescueHunterNow(){
       q.status = 'complete';
       showMsg('"Thanks for rescuing me!"', 2.4);
     } else {
-      const left = huntersStatusList(p, q).filter(h=>!h.found).map(h=>h.clue).join('. ');
-      showMsg(left+'.', 3.4);
+      // v489: the freed hunter points you to the next one still missing
+      const HUNTER_AREA = {foundForest:'the Dark Forest', foundSpider:'the Spider Lair', foundBear:'the Bear Cave'};
+      const next = huntersStatusList(p, q).find(h=>!h.found);
+      showMsg('"Thanks for saving me! Check '+(next ? HUNTER_AREA[next.key] : 'the forest')+' for my companions."', 3.4);
     }
     updateQuestBadge();
     saveGame();
