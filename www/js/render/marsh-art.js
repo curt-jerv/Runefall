@@ -10,7 +10,7 @@ function drawBlackMarshFloor(room, cam){
       const ix = Math.floor(wx/TS), iy = Math.floor(wy/TS);
       const checker = ((ix+iy)%2+2)%2, hh = tileHash(ix,iy);
       let fill, pad = false;
-      if(room.arrow && !bmOpenAt(wx, wy, -30)){
+      if(room.arrow && !bmOpenAt(wx, wy, -30) && !(bmMidRiverAt(wx,wy) || bmOnPlank(wx,wy))){   // v490: the great river in the middle is water, not bog
         if(FLOOR_PASS===2) continue;
         ctx.fillStyle = hh > 0.85 ? '#0e1510' : (checker ? '#141e14' : '#111a11'); drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
         if(hh > 0.93){ ctx.fillStyle = 'rgba(40,60,44,0.6)'; ctx.beginPath(); ctx.ellipse(iso.x, iso.y, 12, 5, 0, 0, 7); ctx.fill(); }
@@ -22,6 +22,12 @@ function drawBlackMarshFloor(room, cam){
       } else if(bmWaterAt(room,wx,wy)){
         if(FLOOR_PASS===1) continue;
         const shim = (Math.floor((wx+wy)/TS*0.5 + clk*0.9) % 2 + 2) % 2;
+        if(bmMidRiverAt(wx,wy)){   // v490: the great river runs deeper and bluer than the bog streams, with pale ripple lines
+          fill = (checker^shim) ? '#2b5868' : '#244c5b';
+          ctx.fillStyle = fill; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
+          if(hh > 0.7){ ctx.strokeStyle = 'rgba(170,215,220,'+(0.16+0.1*Math.sin(clk*1.3+hh*20))+')'; ctx.lineWidth = 1.4; ctx.beginPath(); const ox = Math.sin(clk*0.8+hh*9)*6; ctx.moveTo(iso.x-14+ox, iso.y+2); ctx.quadraticCurveTo(iso.x+ox, iso.y-3, iso.x+14+ox, iso.y+2); ctx.stroke(); }
+          continue;
+        }
         fill = (checker^shim) ? '#2c4a3c' : '#264236';
         pad = hh > 0.9;
       } else if(FLOOR_PASS===2){
