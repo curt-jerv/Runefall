@@ -15,7 +15,7 @@ const FHD_WALL = {
   4:['#50644a','#1c2a1a','#2f4029'], 5:['#665e4a','#26221a','#3e382c'],
 };
 const FHD_EL_COL = {cold:'#bfeaff', fire:'#ff8a3a', lightning:'#8fd8ff', poison:'#8fe05a'};
-function fhdDepth(f){ return FH_DEPTH + 4 + f; }
+function fhdDepth(f){ return FH_DEPTH + 1 + Math.floor(f/2); }   // v489: Lv 40-42
 
 // ---- Frosthold Dungeon layouts (v280): each floor has its own hand-built shape, not a maze ----
 //   1 Frozen Vaults: snake of big vault chambers joined by corridors, ice pillars, side alcoves.

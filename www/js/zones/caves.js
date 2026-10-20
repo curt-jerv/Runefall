@@ -113,7 +113,7 @@ function genOrganicRoom(kind, depth){
   const R = organicLayout(kind, size, size, 4, {margin:220, entR:150, exitR:230, mainR:[230,320], tunnelR:kind==='bear'?105:100});
   return R;
 }
-const RAPTOR_LAIR_DEPTH = 49;   // v483: was 44
+const RAPTOR_LAIR_DEPTH = 43;   // v489: was 49 (Redridge is Lv 42 now)
 function makeRaptorLairFloor(floor){
   if(floor===1){
     const R = organicLayout('raptor', 3800, 3000, 4, {margin:260, entR:190, exitR:290, mainR:[330,450], tunnelR:150});

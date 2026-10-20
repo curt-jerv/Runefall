@@ -1,5 +1,5 @@
 // ---- Highward (v287): the floating Templar fortress. Five floors, an inverted pyramid (each floor wider than the last). ----
-const HW_DEPTH = 50;   // v483: Highward floors are Lv 50-54
+const HW_DEPTH = 46;   // v489: Highward floors are Lv 46-50 (were 50-54)
 const HW_FLOORS = 5, HW_W = [5600,6400,7200,8000,8800], HW_H = [2600,3000,3400,3800,4200];   // v421: rooms-and-halls fortress, ~4x the old floor area
 const HW_UP_FRAC = [0.5,0.82,0.18,0.82,null], HW_DOWN_FRAC = [null,0.5,0.82,0.18,0.82];
 const HW_WARNING = 'When shadows wake beneath the Hold, three bearers bind what none may hold.';

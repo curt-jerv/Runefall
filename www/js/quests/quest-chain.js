@@ -87,16 +87,16 @@ const WM_NODES = {
   lighthouse:{x:25,y:85,t:'Lighthouse Tower',l:'9-15',f:'reachedLighthouseTower'}, cemetery:{x:48,y:96,t:'Cursed Cemetery',l:'17',f:'reachedCursedCemetery',dir:'r'},
   lakeside:{x:66,y:78,t:'Lakeside Ruins',l:'21',f:'reachedLakesideRuins'}, marsh:{x:90,y:80,t:'Black Marsh',l:'28',f:'reachedBlackMarsh'}, highlands:{x:62,y:54,t:'Barren Highlands',l:'32',f:'reachedHighlands'},
   pass:{x:36,y:34,t:'Mountain Pass',l:'33',f:'reachedMountainPass',dir:'l'}, summit:{x:36,y:15,t:'Icy Summit',l:'35',f:'reachedIcySummit',dir:'l'}, shrine:{x:54,y:10,t:'Mountain Top Shrine',l:'37',dir:'r'},
-  frosthold:{x:58,y:33,t:'Frosthold Keep',l:'39',f:'frostholdUnlocked',up:1}, redridge:{x:82,y:36,t:'Redridge Canyon',l:'48',f:'reachedRedridge'},
+  frosthold:{x:58,y:33,t:'Frosthold Keep',l:'39',f:'frostholdUnlocked',up:1}, redridge:{x:82,y:36,t:'Redridge Canyon',l:'42',f:'reachedRedridge'}, highward:{x:90,y:19,t:'Highward Fortress',l:'46-50',f:'reachedHighwardWp',dir:'l'},
   cliffside:{x:102,y:24,t:'Cliffside Ascent',l:'55',f:'reachedCliffWp'}, keep:{x:117,y:13,t:'Shadow Keep',l:'61-69',f:'reachedKeepWp'},
 };
-const WM_EDGES = [['town','forest'],['forest','river'],['river','sunlit'],['sunlit','lighthouse'],['sunlit','cemetery'],['sunlit','lakeside'],['lakeside','marsh'],['marsh','highlands'],['highlands','pass'],['pass','summit'],['pass','frosthold'],['summit','shrine'],['frosthold','redridge'],['redridge','cliffside'],['cliffside','keep']];
+const WM_EDGES = [['town','forest'],['forest','river'],['river','sunlit'],['sunlit','lighthouse'],['sunlit','cemetery'],['sunlit','lakeside'],['lakeside','marsh'],['marsh','highlands'],['highlands','pass'],['pass','summit'],['pass','frosthold'],['summit','shrine'],['frosthold','redridge'],['redridge','highward'],['highward','cliffside'],['cliffside','keep']];
 function wmCurrent(){
   const g = game; if(!g) return null;
   // dungeons resolve to the overworld zone they are entered from
   const t = g.tower;
   const m = {town:'town',tavern:'town',forest:'forest',spiderlair:'forest',bearcave:'forest',rivervalley:'river',minotaurcave:'river',sunlitplains:'sunlit',
-    lighthouse:(t&&t.deep)?'pass':(t&&t.subzone)?((t.subzone==='sunken'||t.subzone==='temple')?'lakeside':(t.subzone==='rrtower'||t.subzone==='highward')?'redridge':'marsh'):(t&&t.fht)?'frosthold':(t&&t.ft)?'marsh':'lighthouse',
+    lighthouse:(t&&t.deep)?'pass':(t&&t.subzone)?((t.subzone==='sunken'||t.subzone==='temple')?'lakeside':t.subzone==='highward'?'highward':t.subzone==='rrtower'?'redridge':'marsh'):(t&&t.fht)?'frosthold':(t&&t.ft)?'marsh':'lighthouse',
     cursedcemetery:'cemetery',darkcrypt:'cemetery',lakesideruins:'lakeside',ancientruins:'lakeside',blackmarsh:'marsh',highlands:'highlands',mountainpass:'pass',frosthold:'frosthold',redridge:'redridge',redcrater:'redridge',raptorlair:'redridge'};
   if(g.scene==='ancientruins' && g.ruins && g.ruins.fhd) return 'frosthold';
   if(g.scene==='dungeon') return null;
@@ -108,7 +108,7 @@ function wmCurrent(){
 // (v248) every zone you've actually been inside lights up on the world map, whatever its waypoint flags say
 function wmMark(g, p){ if(!g || !p) return; if(p.fhtRuneTaken){ (p.wmSeen||(p.wmSeen={})).fhtower = true; } if(p.lighthouseBeaconOn || p.lighthouseFloor5Cleared){ (p.wmSeen||(p.wmSeen={})).lighthouse = true; } if(p.witchRescued){ (p.wmSeen||(p.wmSeen={})).tower = true; } const c = wmCurrent(); if(c){ if(!p.wmSeen) p.wmSeen = {}; if(!p.wmSeen[c]) p.wmSeen[c] = true; if(c==='frosthold' && !p.wmSeen.frosthold) p.wmSeen.frosthold = true; } }
 function wmRand(seed){ let t = seed>>>0; return ()=>((t = (t*1664525 + 1013904223)>>>0)/4294967296); }
-const WM_BIOME = {highlands:'#7a7058', town:'#8a7a52', forest:'#2c5a34', river:'#4a7a56', sunlit:'#b9a85a', lighthouse:'#6a7482', cemetery:'#4a4658', lakeside:'#4a7e78', marsh:'#3a5e52', pass:'#6c6a72', summit:'#c9d5e6', shrine:'#c9d5e6', frosthold:'#8fa2bc', redridge:'#a8553a', cliffside:'#6e6258', keep:'#3e2c40'};
+const WM_BIOME = {highlands:'#7a7058', town:'#8a7a52', forest:'#2c5a34', river:'#4a7a56', sunlit:'#b9a85a', lighthouse:'#6a7482', cemetery:'#4a4658', lakeside:'#4a7e78', marsh:'#3a5e52', pass:'#6c6a72', summit:'#c9d5e6', shrine:'#c9d5e6', frosthold:'#8fa2bc', redridge:'#a8553a', highward:'#7c7a74', cliffside:'#6e6258', keep:'#3e2c40'};
 let wmAnim = 0, wmLand = null, wmLandKey = '';
 const wmLabelRects = [];
 const WM_OFS = 7, WM_OFY = 6;
@@ -127,10 +127,12 @@ function wmPaintLand(CW, CH, sc, dpr){
   // v460: one continuous continent -- the only coastline is the west coast (Mistfall's harbour, the Lighthouse cape); land runs off the other three edges
   const coastPts = [[-8,5],[6,7.5],[20,8.5],[34,4.5],[44,1.5],[52,0.4],[60,2],[68,6.5],[76,13],[82,19.5],[87,20.5],[93,15],[100,10.5],[106,9],[118,9]];
   const coastX = y=>{ let i=0; while(i<coastPts.length-2 && coastPts[i+1][0]<y) i++; const [y0,x0]=coastPts[i], [y1,x1]=coastPts[i+1]; const t=Math.max(0,Math.min(1,(y-y0)/(y1-y0))), u=t*t*(3-2*t); return x0+(x1-x0)*u + Math.sin(y*0.9)*0.55 + Math.sin(y*2.3+1)*0.3; };
-  const landPath = (ctx, off)=>{ ctx.beginPath(); ctx.moveTo(coastX(-WM_OFY-2)-off, -WM_OFY-2); for(let y=-WM_OFY-2; y<=VH; y+=0.5) ctx.lineTo(coastX(y)-off, y); ctx.lineTo(VW+4, VH); ctx.lineTo(VW+4, -WM_OFY-2); ctx.closePath(); };
+  // v489: an eastern coastline too -- the sea lies beyond Shadow Keep
+  const eastX = y=>126 + y*0.06 + Math.sin(y*0.7+2)*1.6 + Math.sin(y*1.9)*0.5;
+  const landPath = (ctx, off)=>{ ctx.beginPath(); ctx.moveTo(coastX(-WM_OFY-2)-off, -WM_OFY-2); for(let y=-WM_OFY-2; y<=VH; y+=0.5) ctx.lineTo(coastX(y)-off, y); for(let y=VH; y>=-WM_OFY-2; y-=0.5) ctx.lineTo(eastX(y)+off, y); ctx.closePath(); };
   o.fillStyle = 'rgba(70,110,160,.10)'; landPath(o, 7); o.fill();
   o.fillStyle = 'rgba(70,110,160,.16)'; landPath(o, 3.6); o.fill();
-  o.strokeStyle = 'rgba(150,190,230,.22)'; o.lineWidth = 0.25; for(const d of [1.6,2.8]){ o.beginPath(); for(let y=-WM_OFY-2; y<=VH; y+=0.5){ const x = coastX(y)-d-Math.sin(y*1.7)*0.3; if(y===-WM_OFY-2) o.moveTo(x,y); else o.lineTo(x,y); } o.stroke(); }
+  o.strokeStyle = 'rgba(150,190,230,.22)'; o.lineWidth = 0.25; for(const d of [1.6,2.8]){ o.beginPath(); for(let y=-WM_OFY-2; y<=VH; y+=0.5){ const x = coastX(y)-d-Math.sin(y*1.7)*0.3; if(y===-WM_OFY-2) o.moveTo(x,y); else o.lineTo(x,y); } o.stroke(); o.beginPath(); for(let y=-WM_OFY-2; y<=VH; y+=0.5){ const x = eastX(y)+d+Math.sin(y*1.7)*0.3; if(y===-WM_OFY-2) o.moveTo(x,y); else o.lineTo(x,y); } o.stroke(); }
   l.fillStyle = '#b8a8d4'; landPath(l, 0.55); l.fill();
   l.fillStyle = '#566344'; landPath(l, 0); l.fill();
   l.globalCompositeOperation = 'source-atop';
@@ -174,10 +176,10 @@ function wmPaintLand(CW, CH, sc, dpr){
   // v460: fill the open country between regions with each region's own scenery (kept clear of the markers and labels)
   { const r = wmRand(777), tuft = (x,y)=>{ l.strokeStyle = '#d6c36a'; l.lineWidth = 0.22; l.beginPath(); l.moveTo(x-0.5,y); l.lineTo(x-0.7,y-0.9); l.moveTo(x,y); l.lineTo(x,y-1.1); l.moveTo(x+0.5,y); l.lineTo(x+0.7,y-0.9); l.stroke(); };
     const hill = (x,y,sz)=>{ l.fillStyle = '#5f5644'; l.beginPath(); l.ellipse(x,y,sz*1.6,sz*0.8,0,Math.PI,0); l.fill(); l.fillStyle = '#8a7e62'; l.beginPath(); l.ellipse(x-sz*0.3,y,sz*0.9,sz*0.55,0,Math.PI,0); l.fill(); };
-    for(let i=0;i<1500;i++){ const x = -WM_OFS + r()*VW, y = -WM_OFY + r()*VH, sz = r(); if(x < coastX(y)+2.5) continue;
+    for(let i=0;i<1500;i++){ const x = -WM_OFS + r()*VW, y = -WM_OFY + r()*VH, sz = r(); if(x < coastX(y)+2.5 || x > eastX(y)-2.5) continue;
       const [id, d] = nearestId(x,y); if(d < 8.5) continue; let busy = false; for(const [a,b] of WM_EDGES){ const A = WM_NODES[a], B = WM_NODES[b], vx = B.x-A.x, vy = B.y-A.y, t = Math.max(0,Math.min(1,((x-A.x)*vx+(y-A.y)*vy)/(vx*vx+vy*vy))); if(Math.hypot(A.x+vx*t-x, A.y+vy*t-y) < 2.6){ busy = true; break; } } if(busy) continue;
       if(id==='forest'||id==='town'||id==='river'||id==='lakeside'){ if(r()<0.75) pine(x,y,0.8+sz*0.6); }
-      else if(id==='pass'||id==='cliffside'){ if(r()<0.55) peak(x,y,1.3+sz*1.3,false); }
+      else if(id==='pass'||id==='cliffside'||id==='highward'){ if(r()<0.55) peak(x,y,1.3+sz*1.3,false); }
       else if(id==='summit'||id==='shrine'||id==='frosthold'){ if(r()<0.55) peak(x,y,1.3+sz*1.4,true); }
       else if(id==='sunlit'){ if(r()<0.6) tuft(x,y); }
       else if(id==='highlands'){ if(r()<0.35) hill(x,y,0.8+sz*0.9); else if(r()<0.15) peak(x,y,1+sz,false); }

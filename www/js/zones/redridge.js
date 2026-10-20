@@ -2,7 +2,7 @@
 // Far-east region past Frosthold Keep's east gate. A long sandstone canyon: cliff bands top and bottom, two
 // cross ridges that force a winding route (gaps alternate south / north), mesas, and packs of Reflective
 // Armordons, Jumping Raptors and Sand Snakes. Waypoint by the west entrance; the east end is a sealed passage.
-const RR_W = 6400, RR_H = 6400, RR_DEPTH = 48;   // v483: was 43   // v419: square (was 9000x4300)
+const RR_W = 6400, RR_H = 6400, RR_DEPTH = 42;   // v489: was 48 (v483: 43)   // v419: square (was 9000x4300)
 // v420: every pack is a single type with 8-12 monsters (armordons 6-9, they are big)
 const RR_PACKS = ['armordon','raptor','sandsnake','crawler','raptor','sandsnake','crawler','armordon'];
 function rrPackSize(type){ return type==='armordon' ? 6+Math.floor(Math.random()*4) : 8+Math.floor(Math.random()*5); }

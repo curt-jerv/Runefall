@@ -3,7 +3,7 @@
 // minions, floor 4 holds 7 Frosthold Champions; once they are all down a chest appears with the
 // Frost Templar Runestone. Runs on the 'lighthouse' scene rig with room.fht = true.
 const FHT_FLOORS = 5;
-function fhtDepth(f){ return FH_DEPTH + f; }
+function fhtDepth(f){ return FH_DEPTH + Math.ceil(f/2); }   // v489: Lv 40-42 (Redridge after it is 42)
 // v355: Frosthold Tower floors are now divided by walls into rooms (doorways are 260+ wide so enemies and the player path through easily)
 const FHT_WALL_T = 44, FHT_WALL_SEG = 120, FHT_WALL_COL = ['#8a97a8','#3b4552','#566270'];
 function fhtWall(list, x0, y0, x1, y1, gaps){
