@@ -18,7 +18,7 @@ function initWraith(e){
   e.wrAlpha = 0; e.wrShadowA = 0; e.wrDir = 0; e.wrAng = 0; e.wrOrbDir = 1; e.wrAddT = 0; e.wrAmb = null;
 }
 function wraithHit(g, e, target, mult, kb){
-  const dmg = e.dmg*mult*TELE_DMG_MULT;
+  const dmg = teleDmg(e, mult);
   if(target===g.player) playerDamage(g, dmg, e, kb); else applyFollowerDamage(g, target, dmg, e);
 }
 function wraithFloorOk(room, x, y){

@@ -18,7 +18,8 @@ function bmLowHalf(x){ return (bmBotY(x) - (BM_MID + bmWedgeHalf(x)))/2; }
 function bmUpTrailY(x){ const top = bmTopY(x), bot = BM_MID - bmWedgeHalf(x); return (top+bot)/2 + 110*Math.sin(x/520+1) * clamp(((bot-top)/2-200)/300, 0.2, 1); }
 const BM_JOIN_X = 6700;
 const TOAD_SPLASH_R = 78;
-const ARMORDON_TAIL_R = 105, RAPTOR_LEAP_R = 52;
+const ARMORDON_TAIL_R = 72, RAPTOR_LEAP_R = 52;   // v490: armordon tail ring was 105 (shrunk with the body, then 20% more)
+const RAPTOR_TELE_T = 0.7, RAPTOR_LEAP_RANGE = 240;   // v490: was 0.4s / 320 -- slower crouch, no leaps from off screen
 const ARMORDON_REFLECT_PCT = 0.2, ARMORDON_REFLECT_CD = 0.8, ARMORDON_REFLECT_CAP_PCT = 0.05; // reflected share of a hit; per-reflect cooldown; cap as share of your max HP
 const BM_RW = 90, BM_SLICE = 40, BM_TRAIL_OFF = 215, BM_TRAIL_HALFW = 46;
 const BM_BRIDGES = [2400, 4720]; // slice boundaries; the two slices touching each are left open (80px plank bridge)

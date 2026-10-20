@@ -50,7 +50,7 @@ function spawnWraithLord(g, pos){
   return e;
 }
 function wlHit(g, e, tgt, mult){
-  const dm = e.dmg*mult*TELE_DMG_MULT, hit = (amt, src)=>{ if(tgt===g.player) playerDamage(g, amt, src); else applyFollowerDamage(g, tgt, amt, src); };
+  const dm = teleDmg(e, mult), hit = (amt, src)=>{ if(tgt===g.player) playerDamage(g, amt, src); else applyFollowerDamage(g, tgt, amt, src); };
   if((e.wlPhase||1)>=2){   // v427: the flaming sword burns as it cuts -- part physical, part fire
     hit(dm*0.6, e); hit(dm*0.5, {dmgType:'fire', hp:0, x:e.x, y:e.y, r:0});
   } else hit(dm, e);

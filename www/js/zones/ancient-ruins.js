@@ -116,8 +116,8 @@ function updateRevenant(g, e, dt, target, d, isFollowerTarget, chillMult, room){
   const p = g.player, frac = e.hp/e.maxHp;
   const face = (ang)=>{ e.facing = {x:Math.cos(ang), y:Math.sin(ang)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y); };
   const hitArea = (cx, cy, R, mult)=>{
-    if(dist({x:cx,y:cy}, p) < R) playerDamage(g, e.dmg*mult*TELE_DMG_MULT, e, null);   // v456: only inside the drawn ring
-    if(g.followers) for(const f of g.followers) if(dist({x:cx,y:cy}, f) < R) applyFollowerDamage(g, f, e.dmg*mult*TELE_DMG_MULT, e);
+    if(dist({x:cx,y:cy}, p) < R) playerDamage(g, teleDmg(e, mult), e, null);   // v456: only inside the drawn ring
+    if(g.followers) for(const f of g.followers) if(dist({x:cx,y:cy}, f) < R) applyFollowerDamage(g, f, teleDmg(e, mult), e);
   };
   e.moving = false;
   if(!e.rvFast){ e.rvFast = true; e.baseSpeed = (e.baseSpeed||e.speed)*2; e.speed *= 2; }   // v456

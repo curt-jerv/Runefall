@@ -8,7 +8,7 @@ function updateMastodon(g, e, dt, target, d, isFollowerTarget, chillMult, room){
   if(e.mSt===undefined){ e.mSt='chase'; e.mT=0; e.mTmax=1; e.mCd=2.2; e.mNext=0; e.mDir=0; e.mHit={}; e.mPts=[]; }
   const st = e.mSt, tgs = [g.player].concat(g.followers||[]), F = e.hp<=e.maxHp*0.5 ? 0.8 : 1;
   const face = a=>{ e.facing = {x:Math.cos(a), y:Math.sin(a)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y); };
-  const hit = (tg, mult, kb)=>{ const dm = e.dmg*mult*TELE_DMG_MULT; if(tg===g.player) playerDamage(g, dm, e, kb); else applyFollowerDamage(g, tg, dm, e); };
+  const hit = (tg, mult, kb)=>{ const dm = teleDmg(e, mult); if(tg===g.player) playerDamage(g, dm, e, kb); else applyFollowerDamage(g, tg, dm, e); };
   if(st==='recover'){ e.mT -= dt; e.moving = false; if(e.mT<=0) e.mSt='chase'; return; }
   if(st==='stompTele'){
     e.mT -= dt; e.moving = false; e.atkAnimT = 0.1;

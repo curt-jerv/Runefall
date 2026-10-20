@@ -515,7 +515,7 @@ function updateDeep(g, dt){
   }
 }
 function walkerDeath(g, e){
-  const R = 150, dm = e.dmg*TELE_DMG_MULT*1.1, src = {dmgType:'poison', hp:0, x:e.x, y:e.y, r:0};
+  const R = 150, dm = teleDmg(e, 1.1), src = {dmgType:'poison', hp:0, x:e.x, y:e.y, r:0};
   if(dist(g.player,e) < R+g.player.r) playerDamage(g, dm, src);
   if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, src);
   g.particles.push({type:'ring', x:e.x, y:e.y, t:0.6, max:0.6, r:R, color:'#8fe05a'});
@@ -531,7 +531,7 @@ function walkerDeath(g, e){
 }
 function golemDeath(g, e){
   g.blasts = g.blasts || [];
-  g.blasts.push({x:e.x, y:e.y, t:1.3, max:1.3, r:140, dmg:e.dmg*TELE_DMG_MULT*1.3});
+  g.blasts.push({x:e.x, y:e.y, t:1.3, max:1.3, r:140, dmg:teleDmg(e, 1.3)});
   showMsg('The golem is about to explode!', 1.2, '#ff9a50');
 }
 function drawBeetleTelegraph(e){

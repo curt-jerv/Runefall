@@ -274,6 +274,17 @@ const WHIRLWIND_RAGE_DRAIN = 15, WHIRLWIND_BASE_DUR = 3, WHIRLWIND_RANK_STEP = 0
 const ASSAULT_BASE_DUR = 6, ASSAULT_RANK_STEP = 1.0, ASSAULT_CD = 20;
 // v216: every telegraphed enemy attack hits much harder (Kraken excluded -- separately tuned); 
 const TELE_DMG_MULT = 2;
+// v490: telegraphed hits from normal (non-boss) monsters are 25% softer, the heavy hitters 40%, and none of them can take more
+// than half your life in one blow (before armour). Bosses keep their full telegraph damage.
+const TELE_HEAVY = {alligator:1, giantoad:1, toad:1, cavetroll:1, mtroll:1, trollelder:1, raptor:1, ram:1};
+function teleIsBoss(e){ return !!(e && (e.isBoss||e.isLairBoss||e.bossName||e.bkBoss||e.prot||e.hwGuardian||e.brBoss)); }
+function teleDmg(e, mult){
+  let d = e.dmg*mult*TELE_DMG_MULT;
+  if(teleIsBoss(e)) return d;
+  d *= TELE_HEAVY[e.type] ? 0.6 : 0.75;
+  const p = typeof game!=='undefined' && game && game.player;
+  return p && p.maxHp>0 ? Math.min(d, p.maxHp*0.5) : d;
+}
 // v187 Warrior survivability: built-ins + two new Berserker actives (Leap, Unbreakable)
 const WARRIOR_HP_MULT = 1.2, WARRIOR_BASE_ARMOR = 2, WARRIOR_ARMOR_PER_LEVEL = 0.4;
 const WARRIOR_KILL_HEAL = 0.03, WARRIOR_BIG_KILL_HEAL = 0.08;

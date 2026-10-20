@@ -155,7 +155,7 @@ function hwBulwarkAI(g, e, dt, target, d, isFT, chill, room){
     if(e.bashWind<=0){
       const ax = e.x+Math.cos(e.bwAng)*(e.r+18), ay = e.y+Math.sin(e.bwAng)*(e.r+18), R = 46;
       g.particles.push({type:'burst', x:ax, y:ay, t:0.35, max:0.35, color:'#e8e2d0'});
-      if(!isFT && dist(p,{x:ax,y:ay}) < R+p.r && !p.dodging){ playerDamage(g, e.dmg*1.25*TELE_DMG_MULT, e, {x:Math.cos(e.bwAng)*110, y:Math.sin(e.bwAng)*110}); shakeScreen(g, 4, 0.18); }
+      if(!isFT && dist(p,{x:ax,y:ay}) < R+p.r && !p.dodging){ playerDamage(g, teleDmg(e, 1.25), e, {x:Math.cos(e.bwAng)*110, y:Math.sin(e.bwAng)*110}); shakeScreen(g, 4, 0.18); }
       else if(isFT && dist(target,{x:ax,y:ay}) < R+(target.r||12)) applyFollowerDamage(g, target, e.dmg*1.25, e);
       e.atkCd = e.atkCdMax;
     }
@@ -300,7 +300,7 @@ function updateBanditKing(g, e, dt, target, d, isFT, chill, room){
       e.x = L.sx + (L.x-L.sx)*k; e.y = L.sy + (L.y-L.sy)*k; e.bkHop = Math.sin(k*Math.PI)*90;
       if(k>=1){
         e.bkHop = 0; e.bkLeap = null; e.atkCd = e.atkCdMax*0.8;
-        const dm = e.dmg*1.6*TELE_DMG_MULT;
+        const dm = teleDmg(e, 1.6);
         if(dist(p, L) < BK_LEAP_R + p.r*0.5 && !p.dodging){ const a = Math.atan2(p.y-L.y, p.x-L.x); playerDamage(g, dm, e, {x:Math.cos(a)*95, y:Math.sin(a)*95}); }
         if(g.followers) for(const f of g.followers) if(dist(f, L) < BK_LEAP_R) applyFollowerDamage(g, f, dm, e);
         g.particles.push({type:'ring', x:L.x, y:L.y, t:0.45, max:0.45, r:BK_LEAP_R, color:'#e8b060'});
@@ -382,7 +382,7 @@ function hwKnightAI(g, e, dt, target, d, isFT, chill, room){
     for(let i=e.rainQ.length-1;i>=0;i--){
       const r = e.rainQ[i]; r.t -= dt;
       if(r.t<=0){
-        hurt(e.dmg*0.9*TELE_DMG_MULT, r, 54);
+        hurt(teleDmg(e, 0.9), r, 54);
         g.particles.push({type:'ring', x:r.x, y:r.y, t:0.4, max:0.4, r:54, color:'#ffd27a'});
         g.particles.push({type:'burst', x:r.x, y:r.y, t:0.35, max:0.35, color:'#e8c070'});
         e.rainQ.splice(i,1);
@@ -415,7 +415,7 @@ function hwKnightAI(g, e, dt, target, d, isFT, chill, room){
       e.x += Math.cos(ang)*e.speed*3.4*chill*dt; e.y += Math.sin(ang)*e.speed*3.4*chill*dt; e.moving = true;
       if(!e.chargeHit && dist(e,target) < reach+6){
         e.chargeHit = true;
-        const dm = e.dmg*1.3*TELE_DMG_MULT;
+        const dm = teleDmg(e, 1.3);
         if(isFT) applyFollowerDamage(g, target, dm, e); else playerDamage(g, dm, e);
         e.chargeT = 0; e.atkCd = e.atkCdMax;
       }
@@ -431,7 +431,7 @@ function hwKnightAI(g, e, dt, target, d, isFT, chill, room){
   if(e.tState==='tele'){
     e.tT -= dt; e.moving = false; e.atkAnimT = 0.1;
     if(e.tT<=0){
-      const R = e.slamR, dm = e.dmg*1.5*TELE_DMG_MULT;
+      const R = e.slamR, dm = teleDmg(e, 1.5);
       hurt(dm, e.tPt, R);
       g.particles.push({type:'ring', x:e.tPt.x, y:e.tPt.y, t:0.45, max:0.45, r:R, color:'#e8b060'});
       g.particles.push({type:'burst', x:e.tPt.x, y:e.tPt.y, t:0.4, max:0.4, color:'#d0a060'});

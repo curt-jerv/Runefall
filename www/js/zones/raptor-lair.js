@@ -17,7 +17,7 @@ function initLightningRaptor(e){
   e.lrTrails = []; e.lrStrikes = []; e.lrTravel = 0;
 }
 function lrHit(g, e, target, mult, kb){
-  const dmg = e.dmg*mult*TELE_DMG_MULT;
+  const dmg = teleDmg(e, mult);
   if(target===g.player) playerDamage(g, dmg, e, kb); else applyFollowerDamage(g, target, dmg, e);
 }
 function updateLightningRaptor(g, e, dt, target, d, isFollowerTarget, chillMult, room){

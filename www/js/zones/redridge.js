@@ -6,7 +6,7 @@ const RR_W = 6400, RR_H = 6400, RR_DEPTH = 42;   // v489: was 48 (v483: 43)   //
 // v420: every pack is a single type with 8-12 monsters (armordons 6-9, they are big)
 const RR_PACKS = ['armordon','raptor','sandsnake','crawler','raptor','sandsnake','crawler','armordon'];
 function rrPackSize(type){ return type==='armordon' ? 6+Math.floor(Math.random()*4) : 8+Math.floor(Math.random()*5); }
-const CRAWLER_TONGUE_LEN = 420, CRAWLER_TONGUE_HW = 34, CRAWLER_TONGUE_WIND = 0.6, CRAWLER_PULL_SPEED = 1000;
+const CRAWLER_TONGUE_LEN = 290, CRAWLER_TONGUE_HW = 34, CRAWLER_TONGUE_WIND = 0.6, CRAWLER_PULL_SPEED = 1000;
 // v456: the canyon is two zones now. West: the Last Wayfarer, Watchtower I, the Frosthold gate and the Skybridge.
 // East: Watchtowers II and III, the Raptor Lair and the Crater road. A canyon pass joins them.
 const RR_PARTS = {

@@ -51,7 +51,7 @@ function spawnProtector(g, kind, pos){
 function protHitArea(g, e, cx, cy, R, mult, kbAway, chill){
   const p = g.player;
   if(dist({x:cx,y:cy}, p) < R + p.r){
-    playerDamage(g, e.dmg*mult*TELE_DMG_MULT, e, null);
+    playerDamage(g, teleDmg(e, mult), e, null);
     if(chill && !p.slowImmune) p.chillT = Math.max(p.chillT||0, 1.6);
   }
   if(g.followers) for(const f of g.followers) if(dist({x:cx,y:cy}, f) < R + f.r) applyFollowerDamage(g, f, e.dmg*mult, e);

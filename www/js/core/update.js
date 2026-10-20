@@ -2428,7 +2428,7 @@ function updateStep(dt){
       if(e.slamState==='telegraph'){
         e.slamTelegraphT -= dt;
         if(e.slamTelegraphT<=0){
-          const slamDmg = e.dmg*BOSS_SLAM_DMG_MULT*TELE_DMG_MULT;
+          const slamDmg = teleDmg(e, BOSS_SLAM_DMG_MULT);
           if(dist(p, e.slamPos) < BOSS_SLAM_RADIUS+p.r) playerDamage(g, slamDmg, e);
           if(g.followers) for(const f of g.followers){
             if(dist(f, e.slamPos) < BOSS_SLAM_RADIUS+f.r) applyFollowerDamage(g, f, slamDmg, e);
@@ -2476,6 +2476,7 @@ function updateStep(dt){
     } else if(e.type==='archer' || e.type==='spider' || e.type==='banditarcher' || e.type==='skeletonarcher' || e.type==='goblinarcher' || e.type==='fhaxe' || e.type==='coilsentry' || e.type==='cultist'){
       updateStuckTracking(e, dt);
       if(e.type==='cultist') cultistSummon(g, e, target, d, dt);
+      const _sx = e.x, _sy = e.y;
       if(d < e.preferRange-20){
         // (v122) backing away is slower than chasing, so melee can close the gap
         const ang=Math.atan2(e.y-target.y,e.x-target.x);
@@ -2489,7 +2490,9 @@ function updateStep(dt){
       // v272: ranged enemies need a moment of clear sight before the first shot (no instant shots when you round a corner)
       const canSeeT = d < (e.type==='skeletonarcher'?336:420) && enemyLOS(g,e,target);
       if(canSeeT) e.losT = (e.losT||0) + dt; else e.losT = 0;
-      if(canSeeT && e.atkCd<=0 && e.losT >= RANGED_AIM_DELAY){
+      // v490: ...and must stand still for a moment before loosing (no shooting on the run)
+      e._stillT = (Math.abs(e.x-_sx) + Math.abs(e.y-_sy) > 0.01) ? 0 : (e._stillT||0) + dt;
+      if(canSeeT && e.atkCd<=0 && e.losT >= RANGED_AIM_DELAY && e._stillT >= RANGED_STILL_T){
         e.atkCd = e.atkCdMax * (e.type==='skeletonarcher' ? 0.9+Math.random()*0.5 : 1);   // (v245) skeleton archers: -20% range, de-synced volleys
         e.atkAnimT = 0.22;
         const ang=Math.atan2(target.y-e.y,target.x-e.x);
@@ -2533,7 +2536,7 @@ function updateStep(dt){
         e.x += Math.cos(e.lungeDir)*400*dt; e.y += Math.sin(e.lungeDir)*400*dt; e.moving = true;
         if(!e.lungeHit && dist(e,target) < e.r+target.r+8){
           e.lungeHit = true;
-          const lungeDmg = e.dmg*0.75*TELE_DMG_MULT;   // v456: halved
+          const lungeDmg = teleDmg(e, 0.75);   // v456: halved
           if(isFollowerTarget) applyFollowerDamage(g, target, lungeDmg, e);
           else playerDamage(g, lungeDmg, e);
           g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#8fd06a'});
@@ -2585,7 +2588,7 @@ function updateStep(dt){
         e.hop = Math.sin(k*Math.PI)*48; e.moving = true;
         if(e.tT<=0){
           e.tState='idle'; e.hop=0; e.atkCd = e.atkCdMax*0.8;
-          const R = TOAD_SPLASH_R, dm = e.dmg*1.4*TELE_DMG_MULT;
+          const R = TOAD_SPLASH_R, dm = teleDmg(e, 1.4);
           if(dist(p,e) < R+p.r) playerDamage(g, dm, e);
           if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, e);
           g.particles.push({type:'ring', x:e.x, y:e.y, t:0.45, max:0.45, r:R, color:'#8fe65a'});
@@ -2645,7 +2648,7 @@ function updateStep(dt){
       } else if(e.tState==='tele'){
         e.tT -= dt; e.moving = false; e.atkAnimT = 0.1;
         if(e.tT<=0){
-          const R = e.slamR||TROLL_SLAM_R, dm = e.dmg*1.5*TELE_DMG_MULT;
+          const R = e.slamR||TROLL_SLAM_R, dm = teleDmg(e, 1.5);
           if(dist(p,e.tPt) < R) playerDamage(g, dm, e);
           if(g.followers) for(const f of g.followers) if(dist(f,e.tPt) < R) applyFollowerDamage(g, f, dm, e);
           g.particles.push({type:'ring', x:e.tPt.x, y:e.tPt.y, t:0.45, max:0.45, r:R, color:'#d9a066'});
@@ -2681,7 +2684,7 @@ function updateStep(dt){
         e.tT -= dt; e.moving = false;
         if(!e.tHit){
           e.tHit = true;
-          const R = ARMORDON_TAIL_R, dm = e.dmg*1.0*TELE_DMG_MULT;
+          const R = ARMORDON_TAIL_R, dm = teleDmg(e, 1.0);
           if(dist(p,e) < R+p.r) playerDamage(g, dm, e);
           if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, e);
           g.particles.push({type:'ring', x:e.x, y:e.y, t:0.45, max:0.45, r:R, color:'#e8a060'});
@@ -2725,7 +2728,7 @@ function updateStep(dt){
             }
           }
           if(e.tGrab){
-            const dm = e.dmg*0.6*TELE_DMG_MULT;
+            const dm = teleDmg(e, 0.6);
             if(e.tGrab===p) playerDamage(g, dm, e); else applyFollowerDamage(g, e.tGrab, dm, e);
             e.tState = 'pull'; e.tT = 0.45;
             g.particles.push({type:'burst', x:e.tGrab.x, y:e.tGrab.y, t:0.25, max:0.25, color:'#e8808a'});
@@ -2746,8 +2749,10 @@ function updateStep(dt){
         if(e.tT<=0){ e.tState='idle'; e.tGrab=null; e.atkCd = 0; }
       } else {
         e.tCd -= dt;
-        if(e.tCd<=0 && d<CRAWLER_TONGUE_LEN-40 && d>e.r+target.r+70 && enemyLOS(g,e,target)){
-          e.tDir = Math.atan2(target.y-e.y, target.x-e.x); e.tState='tele'; e.tT=CRAWLER_TONGUE_WIND; e.tCd=rand(4.5,6.5); e.windT=0;
+        // v490: a pack takes turns -- only one tongue at a time nearby, at most two per pack in a few seconds
+        const tongueBusy = ()=>{ let n = 0; const now = g.clock||0; for(const o of g.enemies){ if(o===e || o.type!=='crawler' || !(o.hp>0) || dist(o,e) > 700) continue; if(o.tState==='tele'||o.tState==='lash'||o.tState==='pull') return true; if(now - (o.tLastT||-99) < 4) n++; } return n>=2; };
+        if(e.tCd<=0 && d<CRAWLER_TONGUE_LEN-40 && d>e.r+target.r+70 && enemyLOS(g,e,target) && !tongueBusy()){
+          e.tDir = Math.atan2(target.y-e.y, target.x-e.x); e.tState='tele'; e.tT=CRAWLER_TONGUE_WIND; e.tCd=rand(7,11); e.windT=0; e.tLastT = g.clock||0;
         } else if(tickEnemyWindup(g, e, target, isFollowerTarget, reach, dt)){
           // mid bite
         } else if(d>reach){
@@ -2772,7 +2777,7 @@ function updateStep(dt){
         e.hop = Math.sin(k*Math.PI)*42; e.moving = true;
         if(e.tT<=0){
           e.tState='idle'; e.hop=0; e.atkCd = e.atkCdMax*0.6;
-          const R = RAPTOR_LEAP_R, dm = e.dmg*1.3*TELE_DMG_MULT;
+          const R = RAPTOR_LEAP_R, dm = teleDmg(e, 1.3);
           if(dist(p,e) < R+p.r) playerDamage(g, dm, e);
           if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, e);
           g.particles.push({type:'ring', x:e.x, y:e.y, t:0.35, max:0.35, r:R, color:'#e8b060'});
@@ -2782,8 +2787,8 @@ function updateStep(dt){
         e.tCd -= dt;   // v482: raptors circle too
       } else {
         e.tCd -= dt;
-        if(e.tCd<=0 && d<320 && d>110 && enemyLOS(g,e,target)){
-          e.tPt = {x:target.x, y:target.y}; e.tState='tele'; e.tT=0.4; e.tCd=3+Math.random()*2; e.windT=0;
+        if(e.tCd<=0 && d<RAPTOR_LEAP_RANGE && d>110 && enemyLOS(g,e,target)){
+          e.tPt = {x:target.x, y:target.y}; e.tState='tele'; e.tT=RAPTOR_TELE_T; e.tCd=3+Math.random()*2; e.windT=0;   // v490: a longer crouch before the leap
         } else if(tickEnemyWindup(g, e, target, isFollowerTarget, reach, dt)){
           // mid bite
         } else if(d>reach){
@@ -2878,7 +2883,7 @@ function updateStep(dt){
         e.moving = true;
         if(!e.boarChargeHit && dist(e,target) < e.r+target.r+8){
           e.boarChargeHit = true;
-          const chargeDmg = e.dmg*BOAR_CHARGE_DMG_MULT*TELE_DMG_MULT;
+          const chargeDmg = teleDmg(e, BOAR_CHARGE_DMG_MULT);
           const kb = null; // knockback removed (buggy)
           if(isFollowerTarget) applyFollowerDamage(g, target, chargeDmg, e);
           else playerDamage(g, chargeDmg, e, kb);
@@ -2924,7 +2929,7 @@ function updateStep(dt){
         e.moving = true;
         if(!e.chargeHit && dist(e,target) < e.r+target.r+8+BEAR_CHARGE_HIT_BONUS){
           e.chargeHit = true;
-          const chargeDmg = e.dmg*BEAR_CHARGE_DMG_MULT*TELE_DMG_MULT;
+          const chargeDmg = teleDmg(e, BEAR_CHARGE_DMG_MULT);
           if(isFollowerTarget) applyFollowerDamage(g, target, chargeDmg, e);
           else playerDamage(g, chargeDmg, e, e.type==='ram' ? {x:Math.cos(e.chargeDir)*85, y:Math.sin(e.chargeDir)*85} : null);   // v459: rams bowl you over
           g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#c98a4a'});
@@ -2939,7 +2944,7 @@ function updateStep(dt){
         if(e.chargeWindT<=0){ e.chargeState = 'charging'; e.chargeT = BEAR_CHARGE_DUR; e.chargeHit = false; e.moving = true; }
       } else {
         e.chargeCd -= dt;
-        if(e.chargeCd<=0 && d < BEAR_CHARGE_RANGE && d > e.r+target.r+meleeRangePad+20 && enemyLOS(g,e,target)){
+        if(e.chargeCd<=0 && d < (e.type==='ram' ? 300 : BEAR_CHARGE_RANGE) && d > e.r+target.r+meleeRangePad+20 && enemyLOS(g,e,target)){   // v490: rams charge from 300, not off screen
           e.chargeState = 'wind'; e.chargeWindT = BEAR_CHARGE_WIND; e.chargeHit = false; e.windT = 0;
           e.chargeDir = Math.atan2(target.y-e.y, target.x-e.x);
           e.chargeCd = BEAR_CHARGE_CD;
@@ -2947,6 +2952,8 @@ function updateStep(dt){
           g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#e0b070'});
         } else if(tickEnemyWindup(g, e, target, isFollowerTarget, e.r+target.r+meleeRangePad, dt)){
           // mid wind-up (claw swipe) -- the shared telegraph is drawn in drawEnemyTells
+        } else if(e.type==='ram' && !isFollowerTarget && wolfCircle(g, e, target, d, dt, chillMult, room)){
+          // v490: rams hold off and circle while a herd-mate is already butting you
         } else if(d>e.r+target.r+meleeRangePad){
           const ang = steerAngleTo(e, target.x, target.y, room.obstacles);
           e.x += Math.cos(ang)*e.speed*chillMult*dt; e.y += Math.sin(ang)*e.speed*chillMult*dt;
@@ -2974,7 +2981,7 @@ function updateStep(dt){
         e.moving = true;
         if(!e.zChargeHit && dist(e,target) < e.r+target.r+8){
           e.zChargeHit = true;
-          const chargeDmg = e.dmg*ZOMBIE_CHARGE_DMG_MULT*TELE_DMG_MULT;
+          const chargeDmg = teleDmg(e, ZOMBIE_CHARGE_DMG_MULT);
           if(isFollowerTarget) applyFollowerDamage(g, target, chargeDmg, e);
           else playerDamage(g, chargeDmg, e);
           g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#9fe6f5'});
@@ -3089,7 +3096,7 @@ function updateStep(dt){
         dropLoot(g, dp.x, dp.y, g.enemies[i].type, g.enemies[i].isLairBoss, g.enemies[i]);
         partsMaybeDrop(g, g.enemies[i]);
         if(uq(g.player,'uq_crater')){ g.player.apexStacks = Math.min(5,(g.player.apexStacks||0)+1); g.player.apexT = 6; } }
-      { const ml0 = g.enemies[i].ml || g.depth; gainXp(g, Math.max(1, Math.round(xpForKill(ml0, !!(g.enemies[i].isBoss||g.enemies[i].isLairBoss)) * (g.enemies[i].elite ? XP_ELITE_MULT : g.enemies[i].magic ? XP_MAGIC_MULT : 1) * (g.enemies[i].xpMul||1) * xpLevelMult(g.player.level, ml0)))); }
+      { const ml0 = g.enemies[i].ml || g.depth; gainXp(g, Math.max(1, Math.round(xpForKill(ml0, !!(g.enemies[i].isBoss||g.enemies[i].isLairBoss)) * (g.enemies[i].elite ? XP_ELITE_MULT : g.enemies[i].magic ? XP_MAGIC_MULT : 1) * (g.enemies[i].xpMul||1) * ((g.enemies[i].isBoss||g.enemies[i].isLairBoss) ? 1 : (g.enemies[i].hpXp||1)) * xpLevelMult(g.player.level, ml0)))); }
       if(g.player.cls==='mystic') gainResource(g.player, g.player.maxMp*MANA_ON_KILL_PCT);
       if(g.player.lifeOnKill>0 && g.player.hp>0) g.player.hp = Math.min(g.player.maxHp, g.player.hp + g.player.lifeOnKill*(1+g.player.level*0.1));
       if(g.player.manaOnKill>0) gainResource(g.player, g.player.manaOnKill*(1+g.player.level*0.1));

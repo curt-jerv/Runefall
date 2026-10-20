@@ -18,7 +18,7 @@ function updateLavaBeetle(g, e, dt, target, d, isFollowerTarget, chillMult, room
     e.hop = Math.sin(k*Math.PI)*46; e.moving = true;
     if(e.tT<=0){
       e.tState='idle'; e.hop=0; e.atkCd = e.atkCdMax*0.8;
-      const R = BEETLE_LEAP_R, dm = e.dmg*1.3*TELE_DMG_MULT;
+      const R = BEETLE_LEAP_R, dm = teleDmg(e, 1.3);
       if(dist(p,e) < R+p.r) playerDamage(g, dm, e);
       if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, e);
       g.particles.push({type:'ring', x:e.x, y:e.y, t:0.45, max:0.45, r:R, color:'#ff8a3a'});
@@ -94,7 +94,7 @@ function initColossus(e){
 }
 function colArena(e){ return {x0:HEART_AX0+e.r, x1:HEART_AX1-e.r, y0:HEART_AY0+e.r, y1:HEART_AY1-e.r}; }
 function colHit(g, e, tgt, mult, phys){
-  const dm = e.dmg*mult*TELE_DMG_MULT;
+  const dm = teleDmg(e, mult);
   const src = phys ? {dmgType:'normal', hp:0, x:e.x, y:e.y, r:0} : e;
   if(tgt===g.player) playerDamage(g, dm, src); else applyFollowerDamage(g, tgt, dm, src);
 }

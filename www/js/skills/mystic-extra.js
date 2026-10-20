@@ -147,7 +147,7 @@ function playerRunTime(g){
 // v481: wolves circle -- when a packmate is already in melee with you, an incoming wolf pulls up at a short distance,
 // pauses, then slinks sideways for about a second before it darts in too. Once per approach.
 const WOLF_CIRCLE_R = 120;
-const PACK_CIRCLE = {wolf:'wolf', goblin:'goblin', raptor:'raptor', bandit:'bandit', banditbrute:'bandit', fhdwarf:'dwarf', fhbrute:'dwarf'};   // v482
+const PACK_CIRCLE = {wolf:'wolf', goblin:'goblin', raptor:'raptor', bandit:'bandit', banditbrute:'bandit', fhdwarf:'dwarf', fhbrute:'dwarf', warg:'warg', hellhound:'hound', ram:'ram'};   // v482 (v490: + wargs, hell hounds, rams)
 function wolfCircle(g, e, target, d, dt, chillMult, room){
   if(d > 420) e._wcDone = false;
   if(e._wcT > 0){

@@ -175,7 +175,7 @@ function spawnFhTurrets(g, room){
   }
 }
 function fhCmdHit(g, e, tgt, mult){
-  const dm = e.dmg*mult*TELE_DMG_MULT;
+  const dm = teleDmg(e, mult);
   if(tgt===g.player) playerDamage(g, dm, e); else applyFollowerDamage(g, tgt, dm, e);
 }
 function fhCmdTargets(g){ return [g.player].concat(g.followers||[]); }
@@ -462,7 +462,7 @@ function initBalrog(e){
   e.bPools = []; e.bStrikes = []; e.bStormT = 0; e.bStrikeCd = 0;
 }
 function balHit(g, e, target, mult, kb){
-  const dmg = e.dmg*mult*TELE_DMG_MULT;
+  const dmg = teleDmg(e, mult);
   if(target===g.player) playerDamage(g, dmg, e, kb); else applyFollowerDamage(g, target, dmg, e);
 }
 function updateBalrog(g, e, dt, target, d, isFollowerTarget, chillMult, room){

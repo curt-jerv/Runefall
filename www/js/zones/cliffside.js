@@ -266,7 +266,7 @@ function spawnHarpyQueen(g){
   return e;
 }
 function queenHit(g, e, tgt, mult, kb){
-  const dm = e.dmg*mult*TELE_DMG_MULT;
+  const dm = teleDmg(e, mult);
   if(tgt===g.player) playerDamage(g, dm, e, kb); else applyFollowerDamage(g, tgt, dm, e);
 }
 function updateHarpyQueen(g, e, dt, target, d, isFollowerTarget, chillMult, room){

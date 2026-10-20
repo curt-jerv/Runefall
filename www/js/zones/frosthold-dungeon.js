@@ -266,7 +266,7 @@ function initDwConstruct(e, room){
   e.arena = {x0:er.x+e.r+30, x1:er.x+er.w-e.r-30, y0:er.y+e.r+30, y1:er.y+er.h-e.r-30};
 }
 function dwcHit(g, e, tg, mult){
-  const dm = e.dmg*mult*TELE_DMG_MULT;
+  const dm = teleDmg(e, mult);
   if(tg===g.player) playerDamage(g, dm, e); else applyFollowerDamage(g, tg, dm, e);
 }
 function updateDwConstruct(g, e, dt, target, d, isFollowerTarget, chillMult, room){
