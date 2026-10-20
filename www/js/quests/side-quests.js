@@ -179,6 +179,14 @@ function drawSimpleNpcIso(n, clock, o){
   else { roundRect(-7.5,-31,15,20,4); ctx.fill(); ctx.stroke(); }
   ctx.fillStyle = '#d2a57a'; ctx.beginPath(); ctx.arc(0,-36,5.6,0,7); ctx.fill();
   if(n.hood){ ctx.fillStyle = n.hood; ctx.beginPath(); ctx.arc(0,-37,6.6,3.14,6.28); ctx.lineTo(6.6,-31); ctx.lineTo(-6.6,-31); ctx.closePath(); ctx.fill(); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.ellipse(0,-35,4,3.6,0,0,7); ctx.fill(); ctx.fillStyle = '#d2a57a'; ctx.beginPath(); ctx.arc(0,-34.4,3,0,3.14); ctx.fill(); }
+  else if(n.hat==='captain'){   // v490: grey beard, peaked navy cap with a gold band, brass buttons
+    ctx.fillStyle = '#b8b4aa'; ctx.beginPath(); ctx.moveTo(-5,-36); ctx.quadraticCurveTo(0,-26,5,-36); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#1a120c'; ctx.fillRect(-2.6,-38,1.4,1.4); ctx.fillRect(1.2,-38,1.4,1.4);
+    ctx.fillStyle = '#1c2236'; ctx.beginPath(); ctx.ellipse(0,-41,7,3.2,0,3.14,6.28); ctx.fill(); ctx.fillRect(-6,-42,12,2.6);
+    ctx.fillStyle = '#d8b04a'; ctx.fillRect(-6,-40.2,12,1.2);
+    ctx.fillStyle = '#10141f'; ctx.beginPath(); ctx.ellipse(1.5,-39.2,6.5,1.6,0,0,7); ctx.fill();
+    ctx.fillStyle = '#d8b04a'; for(const by of [-27,-22,-17]){ ctx.beginPath(); ctx.arc(0,by,0.9,0,7); ctx.fill(); }
+  }
   else { ctx.fillStyle = '#d8d4c8'; ctx.beginPath(); ctx.arc(0,-38,5.8,3.3,6.1); ctx.fill(); ctx.fillStyle = '#1a120c'; ctx.fillRect(-2.6,-37,1.4,1.4); ctx.fillRect(1.2,-37,1.4,1.4); ctx.strokeStyle = '#2a2418'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(-2,-36.4,2,0,7); ctx.arc(2,-36.4,2,0,7); ctx.stroke(); }
   if(n.tool==='shovel'){ ctx.strokeStyle = '#5a3a1c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(11,-34); ctx.lineTo(12,-1); ctx.stroke(); ctx.fillStyle = '#8a8f98'; ctx.beginPath(); ctx.moveTo(9,-3); ctx.lineTo(15,-3); ctx.lineTo(14,3); ctx.lineTo(10,3); ctx.closePath(); ctx.fill(); }
   else if(n.tool==='lantern'){ const fl = 0.7+0.3*Math.sin(t*9+n.id); ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(11,-26); ctx.lineTo(11,-20); ctx.stroke(); ctx.fillStyle = 'rgba(255,190,90,'+fl+')'; roundRect(8,-20,6,7,1.5); ctx.fill(); ctx.strokeStyle = '#3a2a1a'; ctx.stroke(); }

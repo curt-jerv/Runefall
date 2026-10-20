@@ -220,6 +220,7 @@ function render(){
       if(g.town.outerTrees) for(const tr of g.town.outerTrees){ const io = toIso(tr.x,tr.y); if(io.x>cam.x-160 && io.x<cam.x+W+160 && io.y>cam.y-300 && io.y<cam.y+H+200) drawables.push({depth:tr.x+tr.y, draw:()=>(tr.dead ? drawDeadTreeIso(tr) : drawTreeIso(tr))}); }
       if(g.town.props) for(const pr of g.town.props) drawables.push({depth:pr.x+pr.y+(pr.k==='fence'?pr.len/2:0), draw:()=>drawTownProp(pr, g.clock||0)});
       drawables.push({depth:500+930, draw:()=>drawSignIso({x:500,y:930}, ['DOCKS'])});
+      for(const tn of townTipNpcs(g)) drawables.push({depth:tn.x+tn.y, draw:()=>drawSimpleNpcIso(tn, g.clock||0)});   // v490
       if(tavernIsOpen(p) && g.town.boat){ const bt = g.town.boat; drawables.push({depth:bt.x+bt.y, draw:()=>drawTownBoat(bt, g.clock||0)}); }
       if(g.followers) for(const f of g.followers) drawables.push({depth:f.x+f.y, draw:()=>drawFollowerIso(f)});
       pushNecroDrawables(g, drawables);
