@@ -3082,6 +3082,7 @@ function updateStep(dt){
       if(g.enemies[i].sapMarked && !g.enemies[i].soulTaken){ g.enemies[i].soulTaken = true; p.souls = Math.min(SOUL_CAP, (p.souls||0) + SOUL_SAP_SOULS_PER_KILL); checkDemonBindThreshold(g); }
       if(g.enemies[i].deathNova) specialDeathNova(g, g.enemies[i]);
       if(isGlobeBoss(g.enemies[i]) && !g.enemies[i]._globeDead){ g.enemies[i]._globeDead = true; dropGlobes(g, g.enemies[i], 2); }
+      if(g.enemies[i].ftMapCarrier && !p.ftMapFound){ p.ftMapFound = true; showMsg('Forgotten Tower map found \u2014 every floor is now charted', 3.4, '#e8c44a'); saveGame(); }   // v490
       if(g.enemies[i].hwMapCarrier && !p.hwMapFound){ p.hwMapFound = true; showMsg('Highward map found — every floor is now charted', 3.4, '#e8c44a'); saveGame(); }
       if(g.enemies[i].mapBrute && room.subzone==='keep'){ p.keepMaps = p.keepMaps || {}; if(!p.keepMaps[room.kpArea]){ p.keepMaps[room.kpArea] = true; showMsg('Floor map found \u2014 this floor is now charted', 3.4, '#e8c44a'); saveGame(); } }
       if(room.floorRects && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; showMsg('Dungeon map found', 2.8, '#e8c44a'); }
