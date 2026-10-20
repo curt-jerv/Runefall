@@ -16,7 +16,7 @@ The owner has no coding experience: explain things plainly, batch changes, and k
 - `.github/workflows/build-android.yml` — manual debug APK. `static.yml` — GitHub Pages deploy of `www/`.
 
 ## Working on the game
-- Version each batch (last: v490 — enemy/boss/quest/zone batch; v489 big gameplay/UI batch; v488 code split into folders; v487 performance). Bump the save-migration flags (`skillsV4xx`, newest `skillsV489`) when a skill tree layout changes and refund points.
+- Version each batch (last: v491 — Sunken static, Knights figure, small tuning; v490 enemy/boss/quest/zone batch; v489 big gameplay/UI batch; v488 code split into folders; v487 performance). Bump the save-migration flags (`skillsV4xx`, newest `skillsV489`) when a skill tree layout changes and refund points.
 - After every edit: `node scripts/check-js.js` (syntax-checks every file and that `load.js` lists them all, and WARNS about code hidden behind a mid-line `// comment` — the most common breakage; treat any warning as a bug).
 - Code that runs while a file loads (not inside a function) may only use functions/vars from the same or EARLIER files in `load.js`. New file → add it to `load.js`.
 - Testing over http (audio needs it): `cd www && http-server -p 8090`; file:// works too but without audio.

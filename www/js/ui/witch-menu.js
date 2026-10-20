@@ -32,7 +32,7 @@ function recipeRowHtml(p, r){
     return '<span style="color:'+(ok?'#7fd87f':'var(--bone-dim)')+'">'+(r.perfect?'Perfect ':'')+PART_DEFS[k].name+'</span>';
   }).join(' + ');
   return '<div class="partCard rbRow'+(sd.unique?' uq':'')+'"><div class="pIcon">'+sd.icon+'</div><div class="pMain" style="color:'+sd.color+'"><b>'+sd.name+'</b><div class="pSub">'+parts+'</div></div>'
-    + (ids ? '<div class="rbCheck" data-rbload="'+r.id+'" title="Load into the cauldron">\u2714</div>' : '<div class="rbCheck off"></div>')+'</div>';
+    + (ids ? '<div class="rbCheck" title="You hold the parts for this recipe">\u2714</div>' : '<div class="rbCheck off"></div>')+'</div>';   // v491: just a marker here; the witch's Recipes tab loads the cauldron
 }
 // Tap a check mark: open the cauldron with that recipe's parts in the pot. Nothing is brewed until you press Transmute.
 function cauldronLoadRecipe(rid){
@@ -105,7 +105,7 @@ function renderWitchParts(){
     for(const r of STONE_RECIPES){
       const sd = PART_DEFS[r.stone];
       if(known[r.id]){ const ok = !!recipePartIds(p, r);   // v490: a green check mark loads the cauldron
-        h += '<div class="partCard'+(sd.unique?' uq':'')+'"><div class="pIcon">'+sd.icon+'</div><div class="pMain" style="color:'+sd.color+'"><b>'+sd.name+'</b><div class="pSub">'+sd.desc+'</div><div class="pSub">Recipe: '+r.parts.map(k=>(r.perfect?'Perfect ':'')+PART_DEFS[k].name).join(' + ')+'</div></div>'+(ok ? '<div class="rbCheck" data-rbload="'+r.id+'" title="Load into the cauldron">\u2714</div>' : '')+'</div>'; }
+        h += '<div class="partCard'+(sd.unique?' uq':'')+(ok?' rbReady':'')+'"'+(ok ? ' data-rbload="'+r.id+'" title="Tap to put these parts in the cauldron"' : '')+'><div class="pIcon">'+sd.icon+'</div><div class="pMain" style="color:'+sd.color+'"><b>'+sd.name+'</b><div class="pSub">'+sd.desc+'</div><div class="pSub">Recipe: '+r.parts.map(k=>(r.perfect?'Perfect ':'')+PART_DEFS[k].name).join(' + ')+'</div></div>'+(ok ? '<div class="rbCheck">\u2714</div>' : '')+'</div>'; }   // v491: tap a ready recipe -> parts go in the cauldron
       else h += '<div class="partCard'+(sd.unique?' uq':'')+'" style="opacity:.6;"><div class="pIcon">?</div><div class="pMain"><b>'+(sd.unique?'Unknown unique recipe':'Unknown recipe')+'</b><div class="pSub"><i>'+r.hint+'</i></div></div></div>';
     }
   } else if(witchTab==='sell'){

@@ -360,6 +360,12 @@ function updateBuffBar(p){
   if(ironStillMult(p)>1) items.push({k:'ironstill', icon:'\u{1F6E1}\uFE0F', label:'+'+Math.round((ironStillMult(p)-1)*100)+'%', t:0, tip:'Iron Skin: standing your ground, +'+Math.round((ironStillMult(p)-1)*100)+'% Defence (up to +50%)'});
   if(p.bhPool>1) items.push({k:'bharvest', icon:'\u{1FA78}', label:'regen', t:0, tip:'Blood Harvest: faded Rage returning as life'});
   if(p.assaultT>0) items.push({k:'assault', icon:'\u{1F525}', t:p.assaultT, tip:'Assault: bonus damage and life leech, but you take more damage as it ramps'});
+  // v491: the beast lairs' zone hazards show in the buff row too
+  { const g = game, st = g && g.tower && g.scene==='lighthouse' ? g.tower : null;
+    if(st && st.subzone==='sunken') items.push({k:'zstatic', icon:'\u26A1', label:'\u00d7'+SUNKEN_STATIC_STACKS, t:0, tip:'Static \u00d7'+SUNKEN_STATIC_STACKS+': the depths crackle -- you take lightning damage over time (lightning resistance helps)'});
+    if(st && st.subzone==='pool') items.push({k:'zpoison', icon:'\u2620\uFE0F', label:'', t:0, tip:'Toxic water: poison damage over time (poison resistance helps)'});
+    if(st && st.deep && st.bossFloor) items.push({k:'zheat', icon:'\u{1F525}', label:'', t:0, tip:'Scorching heat: fire damage over time (fire resistance helps)'});
+    if(g && g.scene==='icyzone' && g.iz && g.iz.cold) items.push({k:'zcold', icon:'\u2744\uFE0F', label:'', t:0, tip:'Bitter cold: you lose life over time'}); }
   const sig = items.map(i=>i.k).join(',');
   if(sig!==buffBarSig){
     buffBarSig = sig;

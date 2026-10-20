@@ -1114,10 +1114,11 @@ function spawnEnemy(g, type, pos){
   if(type==='skeleton' || type==='skeletonarcher' || type==='bandit' || type==='banditarcher' || type==='goblin' || type==='goblinarcher') e.speed *= 1.5;
   if(type==='cavetroll'){ e.speed *= 2; e.meleeBonus = 26; e.meleeSplash = true; }           // troll club hits everything in a wider circle
   if(type==='zombie') e.speed *= 1.07;
-  if(type==='skeleton') e.speed *= 0.5;   // v486: skeletons shamble at half speed
-  // v490 tuning: skeletons a further 15% slower, goblins half speed, bandits slower too; trolls 10% smaller
-  if(type==='skeleton') e.speed *= 0.85;
-  if(type==='goblin' || type==='goblinarcher') e.speed *= 0.5;
+  // v491: the risen dead shamble (D2 feel) -- skeletons ~44% of your speed, their archers a little quicker, goblins clearly faster than both
+  if(type==='skeleton') e.speed *= 0.56;
+  if(type==='skeletonarcher') e.speed *= 0.7;
+  if(type==='goblin' || type==='goblinarcher') e.speed *= 0.575;
+  // v490 tuning: bandits slower; trolls 10% smaller
   if(type==='bandit' || type==='banditarcher') e.speed *= 0.8;
   if(type==='cavetroll' || type==='mtroll' || type==='trollelder'){ e.r = Math.round(e.r*0.9); if(e.baseR) e.baseR = e.r; }
   if(type==='mtroll'){ e.speed *= 1.6; e.meleeBonus = 22; e.meleeSplash = true; }

@@ -9,6 +9,7 @@ const SUNK_W = 5382, SUNK_H = 1472, SUNK_CY = 736;           // 46px-aligned so 
 const SUNK_LAKE_X0 = 1909, SUNK_LAKE_X1 = 4163, SUNK_BR_Y0 = 621, SUNK_BR_Y1 = 851;
 const POOL_W = 3818, POOL_H = 2208;
 const POOL_CX = 2900, POOL_CY = 1104, POOL_RX = 650, POOL_RY = 800;
+const SUNKEN_STATIC_STACKS = 2, SUNKEN_STATIC_PCT = 0.003;   // v491: each Static stack = 0.3% of max life per second (lightning, cut by lightning resistance)
 const POOL_POISON_TICK_PCT = 0.03, POOL_POISON_TICK_S = 3;   // 3% of max life every 3s (applied smoothly), cut by poison resistance
 function poolDepth(){ return BM_DEPTH + 1; }
 function subWaterAt(room, x, y){
@@ -285,6 +286,13 @@ function updateSubZone(g, dt){
     bagPulse(); saveGame();
   }
   if(g.chest && !g.chest.opened && g.chest.subBoss && dist(g.chest,p) < g.chest.r+p.r) openSubChest(g);
+  // v491: the Sunken Depths are charged with static -- two stacks of a lightning debuff while you are down here
+  if(t.subzone==='sunken' && !g.over && p.hp>0){
+    const rate = p.maxHp*SUNKEN_STATIC_PCT*SUNKEN_STATIC_STACKS*(1-elementResist(p,'lightning')/100);
+    p.hp -= rate*dt; g.staticT = (g.staticT||0) + dt;
+    if(Math.random() < dt*1.5) g.particles.push({type:'burst', x:p.x+rand(-14,14), y:p.y-rand(10,34), t:0.18, max:0.18, color:'#bfe6ff'});
+    if(p.hp<=0){ p.hp=0; endGame(g); }
+  }
   if(t.subzone==='pool' && !g.over && p.hp>0){
     const rate = p.maxHp*POOL_POISON_TICK_PCT/POOL_POISON_TICK_S*(1-elementResist(p,'poison')/100);
     p.hp -= rate*dt; g.poolT = (g.poolT||0) + dt;
