@@ -19,3 +19,4 @@
 #achToast.on{ transform:translate(0,0); }
 #achToast .achIco{ font-size:20px; }
 #achToast .t2{ font-size:13px; }
+#achToast{ z-index:5; }   /* v491: menus cover it */

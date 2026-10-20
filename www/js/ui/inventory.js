@@ -554,11 +554,9 @@ function setInvTab(t){
   invTab = t;
   document.getElementById('invTabGear').classList.toggle('active', t==='gear');
   document.getElementById('invTabParts').classList.toggle('active', t==='parts');
-  document.getElementById('invTabKnights').classList.toggle('active', t==='knights');
-  document.getElementById('bagGrid').style.display = (t==='gear' || t==='knights') ? '' : 'none';   // v489: the bag stays under the Knights slots
+  document.getElementById('bagGrid').style.display = t==='gear' ? '' : 'none';
   document.getElementById('partsBag').style.display = t==='parts' ? 'block' : 'none';
-  document.getElementById('knightsBag').style.display = t==='knights' ? 'block' : 'none';
-  document.getElementById('bagDivider').textContent = t==='gear' ? 'Bag \u2014 tap an item for stats, or drag to equip' : t==='knights' ? 'Bag \u2014 drag an item onto a Knight slot, or tap it and choose Equip on Knights' : 'Parts Bag';
+  document.getElementById('bagDivider').textContent = t==='parts' ? 'Parts Bag' : dollView==='knights' ? 'Bag \u2014 drag an item onto a Knight slot, or tap it and choose Equip on Knights' : 'Bag \u2014 tap an item for stats, or drag to equip';
   { const en = document.getElementById('bagEmptyNote'); if(en) en.style.display = t==='parts' ? 'none' : ''; }   // v490: the empty-bag note belongs to the gear bag
   renderPartsBag(); renderKnightsBag();
 }
@@ -590,7 +588,16 @@ document.getElementById('partsBag').addEventListener('click', e=>{
 });
 document.getElementById('invTabGear').addEventListener('click', ()=>setInvTab('gear'));
 document.getElementById('invTabParts').addEventListener('click', ()=>setInvTab('parts'));
-document.getElementById('invTabKnights').addEventListener('click', ()=>setInvTab('knights'));
+// v491: Character / Knights view of the equipment figure
+let dollView = 'char';
+function setDollView(v){
+  dollView = v;
+  document.getElementById('dollTabChar').classList.toggle('active', v==='char');
+  document.getElementById('dollTabKnights').classList.toggle('active', v==='knights');
+  setInvTab(invTab); renderInventory();
+}
+document.getElementById('dollTabChar').addEventListener('click', ()=>setDollView('char'));
+document.getElementById('dollTabKnights').addEventListener('click', ()=>setDollView('knights'));
 let knightPick = null;
 // v489: Knights tab -- the four shared Squire slots sit on top like your own paperdoll; the normal bag stays below.
 // Drag an item onto a slot or tap it and choose "Equip on Knights"; tap a filled slot to take the item back.
@@ -603,26 +610,36 @@ function knightEquipFromBag(p, invIdx){
   ke[key] = it; knightGearChanged(); saveGame(); showMsg('Knights: '+it.name, 1.2);
   return true;
 }
-function renderKnightsBag(){
-  const p = game.player, el = document.getElementById('knightsBag'); if(!el) return;
+function renderKnightsBag(){   // v491: the tabs, and the Squires' gear bonus line under the figure (Knights view)
+  const p = game.player, el = document.getElementById('knightsBag'), tabs = document.getElementById('dollTabs'); if(!el) return;
   const has = uq(p,'uq_templar');
-  document.getElementById('invTabKnights').style.display = has ? '' : 'none';
-  if(!has){ if(invTab==='knights'){ invTab = 'gear'; setInvTab('gear'); } return; }
-  if(invTab!=='knights') return;
-  const ke = knightEq(p), kg = knightGear(p);
-  let h = '<div class="kSlotRow">';
-  for(const [key,label] of KNIGHT_SLOTS){
-    const it = ke[key];
-    h += '<div class="kSlotBox'+(it?' full':'')+'" data-kslot="'+key+'" title="'+(it ? it.name : label)+'" style="'+(it ? 'border-color:'+it.color : '')+'">'+(it ? bagItemHtml(it) : '<span class="kLbl">'+label+'</span>')+'</div>';
-  }
-  h += '</div>';
-  h += '<div class="pSub" style="margin:4px 0 6px; text-align:center;">Every Squire wears this gear. Knight gear bonus: '+(kg.any ? ('+'+Math.round(kg.dmg*0.75)+' damage'+(kg.dmgPct?', +'+kg.dmgPct+'% damage':'')+', +'+Math.round(kg.hp+kg.armor*1.5)+' life'+(kg.block?', '+Math.round(kg.block)+'% block':'')) : 'none yet')+'</div>';
-  el.innerHTML = h;
+  if(tabs) tabs.style.display = has ? '' : 'none';
+  if(!has && dollView==='knights'){ dollView = 'char'; document.getElementById('dollTabChar').classList.add('active'); document.getElementById('dollTabKnights').classList.remove('active'); }
+  if(dollView!=='knights'){ el.style.display = 'none'; return; }
+  const kg = knightGear(p);
+  el.style.display = 'block';
+  el.innerHTML = '<div class="pSub" style="margin:2px 0 6px; text-align:center;">Every Squire wears this gear. Bonus: '+(kg.any ? ('+'+Math.round(kg.dmg*0.75)+' damage'+(kg.dmgPct?', +'+kg.dmgPct+'% damage':'')+', +'+Math.round(kg.hp+kg.armor*1.5)+' life'+(kg.block?', '+Math.round(kg.block)+'% block':'')) : 'none yet')+'</div>';
 }
-document.getElementById('knightsBag').addEventListener('click', (e)=>{
-  const p = game.player, ke = knightEq(p);
-  const sl = e.target.closest('[data-kslot]');
-  if(sl){ const key = sl.dataset.kslot; if(ke[key]){ forceAddToBag(p, ke[key]); ke[key] = null; knightGearChanged(); saveGame(); renderInventory(); } }
+// The Knights figure: helm, armour, sword and shield in the same places as your own.
+const KNIGHT_DOLL_POS = {helm:'helm', armor:'armor', weapon:'mainhand', shield:'offhand'};
+function renderKnightDollInto(containerEl, p){
+  containerEl.querySelectorAll('.pdSlot').forEach(el=>el.remove());
+  const ke = knightEq(p);
+  for(const [key,label] of KNIGHT_SLOTS){
+    const it = ke[key], pos = PD_SLOT_POS[KNIGHT_DOLL_POS[key]];
+    const el = document.createElement('div');
+    el.className = 'pdSlot knightSlot'+(it?' filled':''); el.dataset.kslot = key;
+    if(pos){ el.style.left=pos.left+'px'; el.style.top=pos.top+'px'; el.style.width=pos.width+'px'; el.style.height=pos.height+'px'; }
+    const icon = it ? (bagArtSvg(it) || categoryIconSvg(it.slotType, it)) : '';
+    el.innerHTML = '<div class="slotLabel">'+label+'</div>'+(it ? '<div class="slotItem'+(bagArtSvg(it)?' slotArt':'')+'" style="color:'+it.color+'">'+icon+'</div>' : '');
+    el.title = it ? it.name+' \u2014 tap to take it back' : 'Knights: '+label;
+    containerEl.appendChild(el);
+  }
+}
+document.getElementById('paperdoll').addEventListener('click', (e)=>{
+  const sl = e.target.closest('[data-kslot]'); if(!sl) return;
+  const p = game.player, ke = knightEq(p), key = sl.dataset.kslot;
+  if(ke[key]){ forceAddToBag(p, ke[key]); ke[key] = null; knightGearChanged(); saveGame(); renderInventory(); }
 });
 function renderInventory(){
   const p = game.player;
@@ -636,7 +653,8 @@ function renderInventory(){
   document.getElementById('invClassHeader').textContent = invTreeName ? (invClsName+' · '+invTreeName) : invClsName;
 
   // ---- Paperdoll: one slot hotspot per equip slot, laid out over the silhouette ----
-  renderPaperdollInto(document.getElementById('paperdoll'), p, 'pdSlot-', true);
+  if(dollView==='knights' && uq(p,'uq_templar')) renderKnightDollInto(document.getElementById('paperdoll'), p);   // v491
+  else renderPaperdollInto(document.getElementById('paperdoll'), p, 'pdSlot-', true);
 
   // ---- Grid bag: each item drawn as a WxH block at its stored (gx,gy) ----
   const gridEl = document.getElementById('bagGrid');
@@ -834,7 +852,7 @@ function openItemDetail(idx, source){
     equipBtn.style.display = 'none'; sellBtn.style.display = 'none';
     if(source==='inv'){ useBtn.style.display = 'flex'; const un = useBtn.querySelector('.schName'); if(un) un.textContent = item.slotType==='potion' ? 'Drink' : 'Use'; }
   }
-  { const lb = equipBtn.querySelector('.schName'), kOn = invTab==='knights' && source==='inv' && !!knightSlotFor(item); if(lb) lb.textContent = kOn ? 'Equip on Knights' : 'Equip'; }   // v489
+  { const lb = equipBtn.querySelector('.schName'), kOn = dollView==='knights' && source==='inv' && !!knightSlotFor(item); if(lb) lb.textContent = kOn ? 'Equip on Knights' : 'Equip'; }   // v489
   document.getElementById('itemDetailOverlay').style.display = 'flex';
   itemDetailOpenedAt = performance.now();
 }
@@ -865,7 +883,7 @@ document.getElementById('itemDetailEquip').addEventListener('click', ()=>{
   if(itemDetailSource==='vendorStock') return;
   const p = game.player;
   const item = itemDetailSource==='stash' ? stash.items[pendingIdx] : p.inventory[pendingIdx];
-  if(item && invTab==='knights' && itemDetailSource==='inv' && knightSlotFor(item)){ knightEquipFromBag(p, pendingIdx); closeItemDetail(); renderInventory(); return; }   // v489
+  if(item && dollView==='knights' && itemDetailSource==='inv' && knightSlotFor(item)){ knightEquipFromBag(p, pendingIdx); closeItemDetail(); renderInventory(); return; }   // v489
   if(item){
     let _stIdx=-1;
     if(itemDetailSource==='stash'){ _stIdx=pendingIdx; stash.items.splice(pendingIdx,1); }

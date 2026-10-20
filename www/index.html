@@ -198,16 +198,20 @@ window.onerror = function(msg, src, line, col, err){
     <button id="charStatsBtn" class="skillChoice" style="justify-content:center; margin-bottom:12px;">
       <div class="schName">Character Stats</div>
     </button>
+    <div class="dollWrap">
     <div id="paperdoll" class="paperdoll">
       <div class="pdHead"></div>
       <div class="pdTorso"></div>
       <div class="pdLegL"></div>
       <div class="pdLegR"></div>
     </div>
+    <!-- v491: Character / Knights tabs run down the right of the figure; Knights swaps the figure to the Squires' shared gear -->
+    <div id="dollTabs" class="dollTabs" style="display:none;"><div id="dollTabChar" class="dollTab active">Character</div><div id="dollTabKnights" class="dollTab">Knights</div></div>
+    </div>
+    <div id="knightsBag" style="display:none;"></div>
     </div>
     <div class="invColR">
-    <div id="invTabs" style="display:flex; gap:6px; margin:10px 0 4px;"><div id="invTabGear" class="invTab active">Gear</div><div id="invTabParts" class="invTab">Parts</div><div id="invTabKnights" class="invTab" style="display:none;">Knights</div></div>
-    <div id="knightsBag" style="display:none; margin-top:6px;"></div>
+    <div id="invTabs" style="display:flex; gap:6px; margin:10px 0 4px;"><div id="invTabGear" class="invTab active">Gear</div><div id="invTabParts" class="invTab">Parts</div></div>
     <div class="invDivider" id="bagDivider">Bag &mdash; tap an item for stats, or drag to equip</div>
     <div id="bagGrid" class="bagGrid"></div>
     <div id="partsBag" style="display:none; margin-top:6px; max-height:250px; overflow-y:auto; -webkit-overflow-scrolling:touch;"></div>
