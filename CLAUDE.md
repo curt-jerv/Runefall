@@ -13,10 +13,15 @@ The owner has no coding experience: explain things plainly, batch changes, and k
 - `.github/workflows/build-android.yml` — manual debug APK. `static.yml` — GitHub Pages deploy of `www/`.
 
 ## Working on the game
-- Version each batch (last shipped: v486). Bump the save-migration flags (`skillsV4xx`) when a skill tree layout changes and refund points.
+- Version each batch (last: v487 — performance batch). Bump the save-migration flags (`skillsV4xx`) when a skill tree layout changes and refund points.
 - After every edit: syntax-check the inline script (extract the main `<script>` and run `node --check`). A `// comment` added mid-line swallows the rest of that line — the most common breakage.
 - Test with Playwright (Chromium is at /opt/pw-browsers/chromium). Hooks: `window.__test` (getGame, stepSim, spawnEnemy, enter*…), `window.__enter` (every zone's enter function), `window.__simPause = true` to step manually.
 - Phone layouts to check: landscape ~800x360 / 915x412, portrait 390x844.
+
+## Performance (v487)
+- Graphics quality (`settings.gfxQ`: auto/high/medium/low → `gfxLevel`): sets the drawing resolution (`gfxDpr`) and glow strength (main ctx `shadowBlur` is scaled in `perfPatchCtx`, which also reuses gradients). Auto steps down when frames are slow (`gfxAutoTune`).
+- Ground is pre-painted into 512px chunks (`cachedFloor`). Floor painters check `FLOOR_PASS` (1 = baking, skip moving water; 2 = live, moving water only). A new floor painter with animation must follow that pattern.
+- Collisions use grids (`pushOutOfObstacles`, `obsGrid`, `separateEnemies`); use `pushOutOfObstacles(ent, list)` instead of looping `pushOutOfRect`.
 
 ## Store / release state (Oct 2026)
 - Play Console app created; internal testing live (build 2). New personal account → needs a closed test with 12+ testers for 14 days before production.
