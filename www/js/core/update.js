@@ -1180,7 +1180,8 @@ function updateStep(dt){
       if(tg){ ang = Math.atan2(tg.y-p.y, tg.x-p.x); dd = Math.max(40, Math.hypot(tg.x-p.x, tg.y-p.y) - (tg.r+p.r+6)); }
       else { ang = Math.atan2(p.facing.y, p.facing.x); dd = LEAP_BLIND; }
       p.leapDir = {x:Math.cos(ang), y:Math.sin(ang)}; p.leapDistLeft = dd; p.leapSpd = dd/LEAP_TIME;
-      p.leapT = LEAP_TIME; p.leapRank = lRank; p.leapTarget = tg || null;   // v489: the charge follows its target (it used to fly to where the enemy stood and often whiffed) p.facing = {x:p.leapDir.x, y:p.leapDir.y}; p.faceSign = screenFacingSign(p.facing.x,p.facing.y);
+      p.leapT = LEAP_TIME; p.leapRank = lRank; p.leapTarget = tg || null;   // v489: the charge follows its target (it used to fly to where the enemy stood and often whiffed)
+      p.facing = {x:p.leapDir.x, y:p.leapDir.y}; p.faceSign = screenFacingSign(p.facing.x,p.facing.y);
       p.invuln = Math.max(p.invuln||0, LEAP_TIME+0.05);
       p.leapCdMax = leapCdForRank(lRank); p.leapCd = applyCdr(p, p.leapCdMax);
       showMsg('Charge!', 0.5);
@@ -1917,7 +1918,8 @@ function updateStep(dt){
     if(p.immolateT>0){ p.immolateT = 0; showMsg('The flames die down', 0.8); }   // v304: press again to extinguish
     else if(imR>0 && !(p.immolateCd>0) && p.hp <= p.maxHp*IMMOLATE_MIN_HP){ showMsg('Too weak to Immolate (needs over '+Math.round(IMMOLATE_MIN_HP*100)+'% life)', 1.2); }   // v481
     else if(imR>0 && !(p.immolateCd>0)){
-      p.immolateDurMax = 1e9; p.immolateT = 1e9;   // v489: no duration -- burns until pressed again or you drop to 25% life p.immolatePol = polarityCast(p,'fire');   // v489: fire cast for Elemental Polarity
+      p.immolateDurMax = 1e9; p.immolateT = 1e9;   // v489: no duration -- burns until pressed again or you drop to 25% life
+      p.immolatePol = polarityCast(p,'fire');   // v489: fire cast for Elemental Polarity (v490: was hidden behind the comment above)
       p.immolateCdMax = applyCdr(p, IMMOLATE_CD); p.immolateCd = p.immolateCdMax;
       showMsg('Immolate!', 0.9);
       g.particles.push({type:'ring', x:p.x, y:p.y, t:0.5, max:0.5, r:90, color:'#ff7a3d'});
