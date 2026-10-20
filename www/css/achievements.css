@@ -1,0 +1,16 @@
+  #achList{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:8px; overflow-y:auto; max-height:62vh; padding:2px 4px 8px; }
+  .achCard{ display:flex; gap:10px; align-items:center; padding:8px 10px; background:linear-gradient(#17130e,#0e0c09); border:1px solid #3a2f22; box-shadow:inset 0 0 0 1px rgba(0,0,0,.6); }
+  .achCard .achIco{ flex:0 0 38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px; border:1px solid #3a2f22; background:#0a0806; filter:grayscale(1) brightness(.55); }
+  .achCard .achName{ font-family:'Cinzel',serif; font-size:13px; color:#8d8070; letter-spacing:.04em; }
+  .achCard .achDesc{ font-size:11.5px; color:#77705f; margin-top:2px; }
+  .achCard .achBar{ height:4px; background:#221c15; margin-top:5px; }
+  .achCard .achBar i{ display:block; height:100%; background:#7a5a2a; }
+  .achCard.done{ border-color:#7a5f2c; background:linear-gradient(#231b10,#130f0a); }
+  .achCard.done .achIco{ filter:none; border-color:#a8843e; box-shadow:0 0 8px rgba(232,196,74,.25); }
+  .achCard.done .achName{ color:#e8c44a; }
+  .achCard.done .achDesc{ color:#b8a888; }
+  #achToast{ position:fixed; left:50%; top:64px; transform:translate(-50%,-20px); opacity:0; pointer-events:none; z-index:60; display:flex; gap:10px; align-items:center; padding:8px 16px 8px 10px; background:linear-gradient(#241b10,#120e09); border:1px solid #a8843e; box-shadow:0 4px 18px rgba(0,0,0,.7), 0 0 14px rgba(232,196,74,.18); transition:opacity .35s, transform .35s; }
+  #achToast.on{ opacity:1; transform:translate(-50%,0); }
+  #achToast .achIco{ font-size:24px; }
+  #achToast .t1{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:.18em; color:#a8946a; text-transform:uppercase; }
+  #achToast .t2{ font-family:'Cinzel',serif; font-size:15px; color:#e8c44a; }

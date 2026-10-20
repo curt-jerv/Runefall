@@ -1,10 +1,13 @@
 # Runefall — notes for Claude
 
-Runefall is a single-file HTML5/Canvas isometric action RPG (Diablo 2 mood) built for Android phones.
+Runefall is an HTML5/Canvas isometric action RPG (Diablo 2 mood) built for Android phones, with no frameworks or build step.
 The owner has no coding experience: explain things plainly, batch changes, and keep summaries short.
 
 ## Layout
-- `www/index.html` — the whole game (one ~9 MB file: HTML + CSS + JS + base64 music). This is the file to edit.
+- `www/index.html` — the page: HTML for every screen/menu, links the CSS, then `js/load.js`.
+- `www/js/` — the game code (v488 split of the old single script, ~97 files): `core/` (boot, saves, game state, loop, update, HUD), `ui/` (menus, inventory, skill tree, settings, store), `items/`, `skills/` (per class), `combat/`, `quests/`, `town/`, `zones/` (one per area), `monsters/`, `render/` (drawing), `audio/`.
+- `www/js/load.js` — the ordered file list. Files are plain scripts sharing one global scope (no modules); ORDER MATTERS. The loader fetches everything, then runs it all at once.
+- `www/css/` (styles), `www/fonts/` (Cinzel, Alegreya), `www/audio/sfx|music/` (ogg; paths in `SND_BANK` / `MUS_BANK`).
 - `www/privacy.html` — privacy policy, served by GitHub Pages at https://curt-jerv.github.io/Runefall/privacy.html
 - `capacitor.config.json` — appId `com.sol.Runefall` (permanent, never change it).
 - `package.json` — Capacitor 8 + `@capacitor/app`, `@capacitor/screen-orientation`, `@capgo/native-purchases`.
@@ -13,8 +16,10 @@ The owner has no coding experience: explain things plainly, batch changes, and k
 - `.github/workflows/build-android.yml` — manual debug APK. `static.yml` — GitHub Pages deploy of `www/`.
 
 ## Working on the game
-- Version each batch (last: v487 — performance batch). Bump the save-migration flags (`skillsV4xx`) when a skill tree layout changes and refund points.
-- After every edit: syntax-check the inline script (extract the main `<script>` and run `node --check`). A `// comment` added mid-line swallows the rest of that line — the most common breakage.
+- Version each batch (last: v488 — code split into folders; v487 performance). Bump the save-migration flags (`skillsV4xx`) when a skill tree layout changes and refund points.
+- After every edit: `node scripts/check-js.js` (syntax-checks every file and that `load.js` lists them all). A `// comment` added mid-line swallows the rest of that line — the most common breakage.
+- Code that runs while a file loads (not inside a function) may only use functions/vars from the same or EARLIER files in `load.js`. New file → add it to `load.js`.
+- Testing over http (audio needs it): `cd www && http-server -p 8090`; file:// works too but without audio.
 - Test with Playwright (Chromium is at /opt/pw-browsers/chromium). Hooks: `window.__test` (getGame, stepSim, spawnEnemy, enter*…), `window.__enter` (every zone's enter function), `window.__simPause = true` to step manually.
 - Phone layouts to check: landscape ~800x360 / 915x412, portrait 390x844.
 
@@ -25,7 +30,7 @@ The owner has no coding experience: explain things plainly, batch changes, and k
 
 ## Store / release state (Oct 2026)
 - Play Console app created; internal testing live (build 2). New personal account → needs a closed test with 12+ testers for 14 days before production.
-- In-app products (one-time, purchase option id `buy`): `runefall_cat_companion` $2.99, `runefall_expanded_stash` $1.99. Billing code: `iapPurchase` / `iapRestore` in index.html (free unlock in a plain browser).
+- In-app products (one-time, purchase option id `buy`): `runefall_cat_companion` $2.99, `runefall_expanded_stash` $1.99. Billing code: `iapPurchase` / `iapRestore` (www/js/ui/support-store.js) (free unlock in a plain browser).
 - Every new upload needs a higher versionCode (the workflow handles it).
 
 ## Game design notes
@@ -41,16 +46,16 @@ The owner has no coding experience: explain things plainly, batch changes, and k
 Runefall is an isometric mobile/web ARPG built with vanilla HTML5, CSS3, and JavaScript. 
 
 ## 🛠️ Tech Stack & Architecture
-- **Frontend:** Vanilla HTML5, CSS3, JavaScript (ES6+ Modules).
+- **Frontend:** Vanilla HTML5, CSS3, JavaScript (ES6+, plain scripts in one shared scope, loaded in order by `www/js/load.js`).
 - **Rendering:** HTML5 Canvas API and/or CSS-based DOM layering for isometric grid and UI.
 - **Version Control:** Git / GitHub (`https://github.com/curt-jerv/Runefall`).
 
 ## 📁 Repository Structure Rules
-- `/assets/sprites/` - Character sprites organized by tier (tier1, tier2, tier3) and animations.
-- `/assets/environment/` - Isometric tiles, buildings, trees, and props.
-- `/assets/ui/` - HUD elements, button frames, and menu screens.
-- `/js/` - Modular JavaScript files (`game.js`, `renderer.js`, `input.js`, `player.js`).
-- `/css/` - Responsive stylesheets supporting both portrait and landscape layouts.
+Everything the app ships lives under `www/` (Capacitor's webDir):
+- `www/js/<topic>/` - game code by topic (see Layout above).
+- `www/css/` - stylesheets (portrait and landscape layouts).
+- `www/audio/`, `www/fonts/` - sound, music, fonts.
+- Planned for the art upgrade: `www/assets/sprites/` (characters/monsters, by tier and animation), `www/assets/environment/` (tiles, buildings, trees, props), `www/assets/ui/` (HUD, frames, menus).
 
 ## 💻 Coding Standards
 - Write clean, modular, object-oriented or functional ES6 JavaScript without heavy frameworks.

@@ -1,0 +1,8 @@
+:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.gearBonus{color:#7fd6ff;font-weight:700;}
+  .masteryInfo{margin:4px 10px 8px;padding:6px 10px;border:1px solid rgba(232,194,90,.35);border-radius:6px;background:rgba(232,194,90,.07);font-size:11px;line-height:1.35;color:#cdbf94}
+  .masteryInfo .mBtn{background:rgba(232,194,90,.12);border:1px solid #e8c25a;color:#ffe08a;border-radius:14px;padding:3px 12px;font-size:11px;font-weight:bold;letter-spacing:.04em;cursor:pointer}
+  .masteryInfo .mTitle{color:#e8c25a;font-weight:bold;letter-spacing:.04em}
+  .masteryInfo .mSub{display:block;font-weight:normal;color:#b8ad8a;margin-top:2px}
+  .masteryInfo .mPips{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+  .masteryInfo .mPip{padding:1px 7px;border-radius:10px;border:1px solid #5a5238;color:#8a8266;font-size:10px}
+  .masteryInfo .mPip.on{border-color:#e8c25a;color:#ffe08a;background:rgba(232,194,90,.15)}
