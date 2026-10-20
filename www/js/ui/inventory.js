@@ -581,13 +581,12 @@ function recipeBookHtml(p){
   let h = '<div class="rbHead" data-rbtoggle="1">\u{1F4D6} Recipe Book <span class="pSub">('+known.length+' / '+STONE_RECIPES.length+' known'+(ready ? ', '+ready+' ready' : '')+')</span><span style="float:right;">'+(recipeBookOpen ? '\u25B4' : '\u25BE')+'</span></div>';
   if(!recipeBookOpen) return h;
   if(!known.length) return h + '<div class="pSub" style="padding:4px 10px 8px;">No recipes yet. The freed witch, the great bosses and your own cauldron experiments teach them.</div>';
-  h += '<div class="pSub" style="padding:0 4px 6px;">'+(witchCauldronReady(p) ? 'Tap \u2714 to put the parts in the witch\u2019s cauldron.' : 'Bring these to the Witch\u2019s cauldron.')+'</div>';
+  h += '<div class="pSub" style="padding:0 4px 6px;">'+'\u2714 = you hold the parts. At the Witch\u2019s cauldron, tap the recipe in her Recipes tab to load them.'+'</div>';
   for(const r of known) h += recipeRowHtml(p, r);
   return h;
 }
 document.getElementById('partsBag').addEventListener('click', e=>{
   if(e.target.closest('[data-rbtoggle]')){ recipeBookOpen = !recipeBookOpen; renderPartsBag(); return; }
-  const rb = e.target.closest('[data-rbload]'); if(rb) cauldronLoadRecipe(rb.dataset.rbload);
 });
 document.getElementById('invTabGear').addEventListener('click', ()=>setInvTab('gear'));
 document.getElementById('invTabParts').addEventListener('click', ()=>setInvTab('parts'));

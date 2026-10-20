@@ -256,7 +256,7 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
   } else if(d>reach){
     const ang = steerAngleTo(e, target.x, target.y, room.obstacles);
     face(ang);
-    const sp = e.speed*chillMult;   // v490: no phase-2 speed-up
+    const sp = e.speed*chillMult*(e.cPhase===2 ? 1.1 : 1);   // v491: phase 2 is quicker again, but milder (was 1.2)
     e.x += Math.cos(ang)*sp*dt; e.y += Math.sin(ang)*sp*dt; e.moving = true;
   } else if(e.atkCd<=0){ beginEnemyMelee(e); }
 }

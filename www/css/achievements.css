@@ -15,7 +15,7 @@
   #achToast .t1{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:.18em; color:#a8946a; text-transform:uppercase; }
   #achToast .t2{ font-family:'Cinzel',serif; font-size:15px; color:#e8c44a; }
 /* v490: achievements pop up in the top-left corner, clear of the story banner */
-#achToast{ left:calc(12px + env(safe-area-inset-left,0px)); top:calc(10px + env(safe-area-inset-top,0px)); transform:translate(0,-20px); padding:6px 12px 6px 8px; }
+#achToast{ left:auto; right:calc(12px + env(safe-area-inset-right,0px)); top:calc(40px + env(safe-area-inset-top,0px)); transform:translate(0,-20px); padding:6px 12px 6px 8px; }   /* v491: top-right under the area name (the buff row owns the top-left) */
 #achToast.on{ transform:translate(0,0); }
 #achToast .achIco{ font-size:20px; }
 #achToast .t2{ font-size:13px; }

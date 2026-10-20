@@ -385,6 +385,9 @@
   /* v490: a spoken line -- mixed case, italic, warm */
   #bigMsg.speech .bmTitle{ text-transform:none; font-style:italic; letter-spacing:.06em; font-family:'Alegreya',Georgia,serif; color:#e9d6a8; font-size:clamp(13px,3vw,19px); white-space:normal; }
   #bigMsg.speech .bmRule{ display:none; }
+  /* v491: a recipe you can brew right now */
+  .partCard.rbReady{ cursor:pointer; box-shadow:inset 0 0 0 1px rgba(127,216,127,.55); }
+  .partCard.rbReady:active{ background:rgba(127,216,127,.12); }
 
   #overlay{
     position:absolute; inset:0; z-index:10; display:none;
