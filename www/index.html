@@ -46,7 +46,22 @@ window.onerror = function(msg, src, line, col, err){
     <div class="hbar"><div id="xpfill" class="hfill xp-fill" style="width:0%"></div><span class="hlab">XP</span><span id="xpnum" class="hnum"></span></div>
   </div>
   <div id="zonePlaque"><span id="zoneText"></span></div>
-  <div id="topBtns">
+</div>
+<div id="subHud">
+    <div id="soulsWrap">
+  <div class="soulIcon"><svg viewBox="0 0 24 24"><path d="M12 2 C17 2 20 6 20 11 C20 14 18 16.5 18 19 L18 22 L6 22 L6 19 C6 16.5 4 14 4 11 C4 6 7 2 12 2 Z" fill="currentColor" opacity="0.85"></path><circle cx="9" cy="11" r="1.8" fill="#17130f"></circle><circle cx="15" cy="11" r="1.8" fill="#17130f"></circle></svg></div>
+  <span id="soulsNum">0</span>/<span id="soulsMax">50</span>
+</div>
+</div>
+<div id="buffBar"></div>
+<div id="buffTip"></div>
+</div>
+
+<!-- v489: bottom HUD dock -- life globe, menu buttons + XP, resource globe (Diablo style); the old top bars stay hidden but are still updated -->
+<div id="hudDock">
+  <div class="globe" id="hpGlobe"><div class="gfill" id="hpGlobeFill"></div><div class="gice" id="hpGlobeIce"></div><div class="gshine"></div><span class="gnum" id="hpGlobeNum"></span></div>
+  <div id="dockMid">
+    <div id="topBtns">
     <div id="goldPlaque" style="display:none !important;"><span id="goldNum">0</span>g</div>
     <span class="tbSpacer"></span>
     <div id="bagBtn">INV<div id="bagBadge">!</div></div>
@@ -60,15 +75,9 @@ window.onerror = function(msg, src, line, col, err){
   </svg>
 </div>
   </div>
-</div>
-<div id="subHud">
-    <div id="soulsWrap">
-  <div class="soulIcon"><svg viewBox="0 0 24 24"><path d="M12 2 C17 2 20 6 20 11 C20 14 18 16.5 18 19 L18 22 L6 22 L6 19 C6 16.5 4 14 4 11 C4 6 7 2 12 2 Z" fill="currentColor" opacity="0.85"></path><circle cx="9" cy="11" r="1.8" fill="#17130f"></circle><circle cx="15" cy="11" r="1.8" fill="#17130f"></circle></svg></div>
-  <span id="soulsNum">0</span>/<span id="soulsMax">50</span>
-</div>
-</div>
-<div id="buffBar"></div>
-<div id="buffTip"></div>
+    <div id="dockXp"><div id="dockXpFill"></div><span id="dockXpTxt"></span></div>
+  </div>
+  <div class="globe" id="resGlobe"><div class="gfill" id="resGlobeFill"></div><div class="gres" id="resGlobeRes"></div><div class="gshine"></div><span class="gnum" id="resGlobeNum"></span></div>
 </div>
 
 <div id="portalChoice">
@@ -181,6 +190,7 @@ window.onerror = function(msg, src, line, col, err){
   <div class="modalCard plaque invCard invCardWide">
     <div class="invHeader">
       <h2>Inventory</h2>
+      <div id="invGold" class="invGold">0 gold</div>
       <div id="invClose" class="closeBtn">X</div>
     </div>
     <div class="invColL">
@@ -197,10 +207,10 @@ window.onerror = function(msg, src, line, col, err){
     </div>
     <div class="invColR">
     <div id="invTabs" style="display:flex; gap:6px; margin:10px 0 4px;"><div id="invTabGear" class="invTab active">Gear</div><div id="invTabParts" class="invTab">Parts</div><div id="invTabKnights" class="invTab" style="display:none;">Knights</div></div>
+    <div id="knightsBag" style="display:none; margin-top:6px;"></div>
     <div class="invDivider" id="bagDivider">Bag &mdash; tap an item for stats, or drag to equip</div>
     <div id="bagGrid" class="bagGrid"></div>
     <div id="partsBag" style="display:none; margin-top:6px; max-height:250px; overflow-y:auto; -webkit-overflow-scrolling:touch;"></div>
-    <div id="knightsBag" style="display:none; margin-top:6px;"></div>
     </div>
   </div>
 </div>
