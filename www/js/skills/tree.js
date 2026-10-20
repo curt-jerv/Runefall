@@ -73,7 +73,7 @@ const SKILL_TREES = {
       desc:'Hurl a bolt of holy light that strikes the first foe and mends allies. Every third cast is a mighty Wrath.'},
     {id:'banner',       name:'Battle Standard', type:'active', reqLevel:21, row:3, col:2, prereq:['squire'],
       desc:'Plant a battle standard that bolsters you and your followers. Each one alternates between War (damage) and Aegis (defence).'},
-    {id:'squire',       name:'Commander',    type:'passive', reqLevel:14, row:2, col:2, prereq:['smite','consecrate'], prereqMode:'or',
+    {id:'squire',       name:'Commander',    type:'passive', reqLevel:14, row:2, col:2, prereq:['smite','consecrate','sacredWeapon','auraOfRetribution'], prereqMode:'or',   // v489: diagonal links from Sacred Weapon / Aura
       desc:'Call squires to fight at your side and command them to greater strength. Most of your damage comes from them.'},
     {id:'bannerWar',    name:'Standard of War',   type:'passive', reqLevel:21, row:3, col:0, prereq:['banner'],
       desc:'War standards rouse you and your followers to greater damage and critical strikes.'},
@@ -231,13 +231,13 @@ const RANGER_SKILL_TREES = {
       desc:'Loose a barbed arrow that leaves a festering wound.'},
     {id:'companionWolf', name:'Summon Wolf',    type:'passive', reqLevel:7,  row:1, col:1, prereq:[],
       desc:'A loyal wolf hunts at your side. Respawns after 5 seconds if fallen.'},
-    {id:'huntersBond',   name:"Hunter's Bond",  type:'passive', reqLevel:1,  row:0, col:2, prereq:[],
+    {id:'huntersBond',   name:"Hunter's Bond",  type:'passive', reqLevel:7,  row:1, col:2, prereq:['companionWolf'],   // v489: beside Summon Wolf, linked to it
       desc:'The bond with your companions makes them fiercer and sturdier.'},
     {id:'stunShot',      name:'Stun Shot',      type:'active', reqLevel:7,  row:1, col:0, prereq:['cripplingShot'],
       desc:'Fire a heavy arrow that rattles a foe senseless.'},
     {id:'packTactics',   name:'Ambush',          type:'active', reqLevel:14, row:2, col:1, prereq:['companionWolf'],
       desc:'Send your companions leaping onto your target for a savage ambush.'},
-    {id:'beastFury',     name:'Beast Fury',     type:'active', reqLevel:7,  row:1, col:2, prereq:['huntersBond'],
+    {id:'beastFury',     name:'Beast Fury',     type:'active', reqLevel:14, row:2, col:2, prereq:['huntersBond'],   // v489: one row down
       desc:'Drive your companions into a frenzy, fighting alongside them.'},
     {id:'explosiveShot', name:'Explosive Shot', type:'active', reqLevel:21, row:3, col:0, prereq:['stunShot'],
       desc:'A fire-tipped arrow that bursts into flame on impact.'},
@@ -340,26 +340,28 @@ const MYSTIC_SKILL_TREES = {
   // OR-gating (nodes 3 & 6): see prereqSatisfied/prereqReqText below (the
   // node.prereqMode:'or' opt-in flag) for exactly how this coexists with
   // every existing AND-gated node, Precise Shot included, unchanged.
+  // v489 Necromancer layout: Soul Sap / Soul Shield / Raise Skeletons; Fear / Soul Hunger / Sacrifice;
+  // Soul Fire / Demon Bind / Soul Gate; Plague. Fear -> Soul Fire, Sacrifice -> Soul Gate, both -> Demon Bind -> Plague.
   necromancer: { name:'Necromancer', layout:'shield', nodes:[
-    {id:'soulNova', name:'Soul Nova', type:'active', reqLevel:17, row:2, col:1, prereq:['soulShield','sacrifice'], prereqMode:'or',
-      desc:'Burst your souls outward in a ring that tears through everything around you.'},
-    {id:'raiseDead', name:'Raise Skeletons', type:'active', reqLevel:1, row:0, col:2, prereq:[],
-      desc:'Raise brittle skeletons to fight for you. Cheap, fragile and easily replaced.'},
     {id:'soulSap', name:'Soul Sap', type:'active', reqLevel:1, row:0, col:0, prereq:[],
-      desc:'Rend the soul from a dying enemy to fuel your dark power.'},
-    {id:'soulHunger', name:'Soul Hunger', type:'passive', reqLevel:7, row:1, col:1, prereq:['fear'],
+      desc:'Drain the life and soul from your enemies with a venomous touch.'},
+    {id:'soulShield', name:'Soul Shield', type:'passive', reqLevel:1, row:0, col:1, prereq:[],
+      desc:'The souls you hold circle you and turn aside blows, giving you a chance to block.'},
+    {id:'raiseDead', name:'Raise Skeletons', type:'active', reqLevel:1, row:0, col:2, prereq:[],
+      desc:'Raise skeletons to fight for you. Cast again to blow up the ones standing and raise a fresh set.'},
+    {id:'fear', name:'Fear', type:'active', reqLevel:7, row:1, col:0, prereq:['soulSap'],
+      desc:'Curse a group of enemies with dread: they flee, and take more damage while the curse lasts.'},
+    {id:'soulHunger', name:'Soul Hunger', type:'passive', reqLevel:7, row:1, col:1, prereq:['soulShield'],
       desc:'Bleed your own life into a growing store of souls, and grow stronger for every soul you hold.'},
+    {id:'sacrifice', name:'Sacrifice', type:'passive', reqLevel:7, row:1, col:2, prereq:['raiseDead'],
+      desc:'Your fallen skeletons burst in poison, the blast as strong as the life they had.'},
+    {id:'soulFire', name:'Soul Fire', type:'active', reqLevel:21, row:3, col:0, prereq:['fear'],
+      desc:'Hurl a great rolling ball of green soul-flame that bursts on impact.'},
+    {id:'demonBind', name:'Demon Bind', type:'passive', reqLevel:21, row:3, col:1, prereq:['soulFire','soulGate'], prereqMode:'or',
+      desc:'Bind a hulking demon to your service. It grows stronger with every soul you hold.'},
     {id:'soulGate', name:'Soul Gate', type:'active', reqLevel:21, row:3, col:2, prereq:['sacrifice'],
       desc:'Tear open a gate that feeds on your souls and spits out skeletal archers.'},
-    {id:'soulShield', name:'Soul Shield', type:'passive', reqLevel:14, row:2, col:0, prereq:['soulSap'],
-      desc:'The souls you hold harden around you, adding Defence so blows miss more often. Costs no souls.'},
-    {id:'demonBind', name:'Demon Bind', type:'passive', reqLevel:20, row:3, col:1, prereq:['soulNova'],
-      desc:'Bind a demon to your life. The more souls you hold, the greater it grows.'},
-    {id:'fear', name:'Fear', type:'active', reqLevel:1, row:0, col:1, prereq:[],
-      desc:'Spend souls to fill nearby enemies with dread, sending them fleeing in terror.'},
-    {id:'sacrifice', name:'Sacrifice', type:'passive', reqLevel:7, row:1, col:2, prereq:['raiseDead'],
-      desc:'Your fallen skeletons burst, burning souls for a bigger blast.'},
-    {id:'plague', name:'Plague', type:'active', reqLevel:28, row:4, col:1, prereq:['demonBind','soulGate'], prereqMode:'or', capstone:true,
+    {id:'plague', name:'Plague', type:'active', reqLevel:28, row:4, col:1, prereq:['demonBind'], capstone:true,
       desc:'Corrupt the earth itself with a spreading plague.'},
   ] },
 };

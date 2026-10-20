@@ -99,7 +99,8 @@ const RUNEFALL_FILES = [
   'render/darkness.js',
   'render/render.js',
   'ui/start-screen.js',
-  'core/test-hooks.js'
+  'core/test-hooks.js',
+  'core/resume.js'
 ];
 (function(){
   const run = texts=>{ texts.forEach((t, i)=>{ const s = document.createElement('script'); s.textContent = t + '\n//# sourceURL=' + location.href.replace(/[^/]*$/, '') + 'js/' + RUNEFALL_FILES[i]; document.body.appendChild(s); }); };

@@ -41,7 +41,7 @@ function updateTown(dt){
     if(dx===0&&dy===0){ dx=p.facing.x; dy=p.facing.y; }
     const d=Math.hypot(dx,dy)||1;
     p.dodgeDir = {x:dx/d, y:dy/d};
-    if(p.cls==='ranger'){ gainResource(p, p.maxMp*STAMINA_DODGE_PCT); survDodgeRegenStart(p); }
+    if(p.cls==='ranger'){ gainResource(p, evasionDodgeStamina(p)); survDodgeRegenStart(p); }
     p.dodging = true; p.dodgeT = p.dodgeDur; if(p.partB && p.partB.sp && p.partB.sp.windroll) p.windT = 3;
     p.dodgeCharges -= 1;
     p.dodgeCdMax = applyCdr(p, finesseDodgeCooldown(p));

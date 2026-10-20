@@ -104,7 +104,7 @@ function bowExpertDmgMult(p){
   return 1 + tblAt(BOW_EXPERT_DMG_PCT, rank)/100;
 }
 // ---- v227 Ranger redesign helpers ----
-const AIMED_SHOT_DMG_MULT = 2.2, AIMED_SHOT_CRIT_BONUS = 15, AIMED_SHOT_FALLOFF = 0.8, AIMED_SHOT_CD = 0.4;   // v267: no real cooldown, just a short lockout
+const AIMED_SHOT_DMG_MULT = 2.2, AIMED_SHOT_CRIT_BONUS = 15, AIMED_SHOT_FALLOFF = 0.8, AIMED_SHOT_CD = 2.5;   // v489: a real cooldown again (was a 0.4s lockout)
 const AIMED_HELD_MULT_BASE = 3, AIMED_HELD_MULT_STEP = 0.25, AIMED_TAP_MULT = 1.5, AIMED_HOLD_MS = 280;   // v267: hold = 3x..4x, tap = 1.5x
 function aimedShotMult(rank, full){ return full===false ? AIMED_TAP_MULT : AIMED_HELD_MULT_BASE + AIMED_HELD_MULT_STEP*(Math.max(1,rank)-1); }
 function aimedShotPierce(rank){ return 3 + Math.floor((Math.max(1,rank)-1)/2); }
@@ -136,7 +136,7 @@ const INSTINCT_HP_PER_RANK = 0.05, INSTINCT_SPEED_PER_RANK = 0.02, OPPORTUNIST_P
 // attack would currently target. Ranks scale each arrow's damage via the
 // same skillMult curve every ranked skill uses, and shrink the cooldown
 // from 7s at Rank1 down to 4s at Rank5.
-const RAPID_SHOT_CD = 5, RAPID_SHOT_CD_MIN = 3;
+const RAPID_SHOT_CD = 5, RAPID_SHOT_CD_MIN = 3, RAPID_SHOT_ATKCD_MULT = 1.6;   // v489: Rapid Shot rides the Strike timer (a 3-arrow burst takes 1.6 Strikes)
 const RAPID_SHOT_COUNT = 3, RAPID_SHOT_INTERVAL = 0.12;
 function rapidShotCooldown(rank){
   if(rank<=0) return RAPID_SHOT_CD;
@@ -287,7 +287,7 @@ function whirlSlowMult(p){
 function whirlSpeed(p){ return clamp(BASE_ATK_CD/Math.max(0.05, p.atkCdMax||BASE_ATK_CD), 0.6, 2.6); }   // v355: Attack Speed spins the blade faster, so it ticks (and procs leech/bleed/etc.) more often
 function whirlDmgMult(r){ return 2 + 1.5*(clamp(r||1,1,MAX_EFF_RANK)-1)/(MAX_SKILL_RANK-1); }   // v372: x2 at Rank 1 up to x3.5 at Rank 10
 function whirlDrain(p){ const r=Math.max(1,(p.skills&&effectiveRank(p,'whirlwind'))||1); return Math.max(5, WHIRLWIND_RAGE_DRAIN - WHIRLWIND_DRAIN_STEP*(r-1)) + WHIRLWIND_DRAIN_RAMP*(p.whirlwindElapsed||0); }   // v204: starts at 15/s (10/s at max rank) and climbs 5/s every second
-const LEAP_CD = 8, LEAP_CD_STEP = 0, LEAP_RAGE_GAIN_PCT = 0.20, LEAP_RANGE = 460, LEAP_BLIND = 260, LEAP_TIME = 0.32, LEAP_RADIUS = 26, LEAP_STUN_BASE = 0.8, LEAP_STUN_STEP = 0.1;
+const LEAP_CD = 8, LEAP_CD_STEP = 0, LEAP_RAGE_GAIN_PCT = 0.20, LEAP_RANGE = 460, LEAP_BLIND = 260, LEAP_TIME = 0.32, LEAP_RADIUS = 70, LEAP_STUN_BASE = 0.8, LEAP_STUN_STEP = 0.1;
 const UNBREAK_DUR = 4, UNBREAK_DUR_STEP = 0.5, UNBREAK_DR = 0.35, UNBREAK_DR_STEP = 0.03, UNBREAK_CD = 8;   // v217: free, 8s cooldown, 4s -> 6s at max rank
 function leapCdForRank(rank){ return LEAP_CD; }
 function unbreakDr(rank){ return Math.min(0.6, UNBREAK_DR + UNBREAK_DR_STEP*(Math.max(1,rank)-1)); }

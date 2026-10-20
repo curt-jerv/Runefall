@@ -103,7 +103,7 @@ let wantStormcall=false, wantRaiseDead=false, wantMeteor=false, wantAttack=false
   // block below. Now both fire independently through their own want-flag,
   // same Main/1/2/3-slot-only convention as every other post-v74 active
   // skill (Fireball/Ice Bolt, etc.), with zero side effect on Strike.
-  wantSoulSap=false, wantLightningArc=false, wantDeathBolt=false, wantSoulGate=false, wantSoulNova=false;
+  wantSoulSap=false, wantLightningArc=false, wantDeathBolt=false, wantSoulGate=false, wantSoulFire=false;
 // Precise Shot (Marksman capstone): whether the STRIKE button is currently
 // physically held down. Read by the aiming state machine in updatePlaying();
 // see onAttackDown/onAttackUp below for how this gets set.

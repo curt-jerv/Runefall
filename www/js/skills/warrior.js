@@ -203,7 +203,7 @@ const TEMPLAR_FOLLOWER_BASE = 1.7;     // ...because their followers hit much ha
 const COMMANDER_DMG_PER_RANK = 0.15;
 const SMITE_RANGE = 360, SMITE_SPEED = 560, SMITE_R = 14, SMITE_PEN = 0.25, SMITE_HEAL = 0.08, WRATH_HEAL = 0.16, WRATH_MULT = 1.9, SMITE_CONV = 5, WRATH_CONV = 14, WRATH_EVERY = 3, WRATH_AOE_R = 95, WRATH_AOE_MULT = 0.6;
 function smiteRankMult(rank){ return rank>0 ? 0.85 + 0.075*(rank-1) : 0.85; }   // 85% of a normal hit at rank 1, 115% at rank 5
-const SACRED_EVERY = 3, SACRED_BURN_DUR = 3, SACRED_BURN_PCT = 0.2;   // v455 Sacred Weapon: after 3 Vengeances, the 4th is empowered
+const SACRED_EVERY = 3, SACRED_BURN_DUR = 3, SACRED_BURN_PCT = 0.4, SACRED_COST = 10;   // v489: costs 10 Conviction, burn doubled (was 20%/s)   // v455 Sacred Weapon: after 3 Vengeances, the 4th is empowered
 function sacredBonus(r){ r = Math.max(1, r||1); return 0.5 + 0.1*(Math.min(10,r)-1) + 0.02*Math.max(0,r-10); }   // +50% damage -> +140% at Rank 10
 const RETRIB_BASE = 0.10, RETRIB_MAX = 0.50;
 function retributionPct(r){ r = r||0; return r<=0 ? 0 : Math.min(0.6, RETRIB_BASE + (RETRIB_MAX-RETRIB_BASE)*(Math.min(10,r)-1)/9 + 0.01*Math.max(0,r-10)); }
@@ -312,7 +312,7 @@ function placeBanner(g, p, rank){
   g.particles.push({type:'burst', x:p.x, y:p.y, t:0.4, max:0.4, color:type==='war' ? '#e2503a' : '#6fb4ff'});
 }
 function castConsecrate(g, p, rank){
-  if((p.mp||0) < CONS_COST){ noResourceMsg(p); return false; }
+  if((p.mp||0) < CONS_COST){ noResourceMsg(p, 'consecrate'); return false; }
   p.mp = Math.max(0, p.mp - CONS_COST);
   const old = g.consecrate; if(old && old.fx) old.fx.t = 0;
   const r = CONS_R * aoeRadiusMult(p);
@@ -325,7 +325,7 @@ function castConsecrate(g, p, rank){
 const JUDG_BLIND_DUR = 3, JUDG_BLIND_MISS = 0.5;   // v419: pillars blind foes -- 50% of their attacks miss for 3s
 const judgmentMult = r=> r>0 ? 2 + (Math.min(MAX_EFF_RANK,r)-1)/(MAX_SKILL_RANK-1) : 1;   // v419: 2x at rank 1 up to 3x at rank 10
 function castJudgment(g, p, rank){
-  if((p.mp||0) < JUDG_COST){ noResourceMsg(p); return false; }
+  if((p.mp||0) < JUDG_COST){ noResourceMsg(p, 'judgment'); return false; }
   const cand = g.enemies.filter(e=>e.hp>0 && dist(p,e) < JUDG_RANGE);
   if(!cand.length) return false;
   cand.sort((a,b)=> ((isHeavyEnemy(a)?0:a.elite?1:2) - (isHeavyEnemy(b)?0:b.elite?1:2)) || (dist(p,a)-dist(p,b)));
@@ -501,13 +501,12 @@ function warriorV266Tick(g, p, dt){
   updateJudgments(g, dt);
 }
 // v268 Sacrifice (passive): a dying skeleton bursts, burning souls for a bigger blast, and poisons what it hits.
-function necroSkeletonDeath(g, f){
+function necroSkeletonDeath(g, f, recast){
   const p = g.player, sRank = (p.skills && effectiveRank(p,'sacrifice'))||0;
-  if(sRank<=0) return;
-  const spend = Math.min(p.souls||0, 1 + Math.floor(sRank/2));
-  p.souls = (p.souls||0) - spend;
-  const dmg = wpnDmg(p) * swd('sacrifice', sRank) * (1 + 0.5*spend);
-  const radius = SACRIFICE_RADIUS * (1 + 0.1*spend) * aoeRadiusMult(p);
+  if(sRank<=0){ if(recast) g.particles.push({type:'burst', x:f.x, y:f.y, t:0.35, max:0.35, color:'#cfc6b0'}); return; }
+  // v489: no souls spent -- the burst is as strong as the skeleton's life (its max life, 25% -> 45% with rank), boosted by minion damage %
+  const dmg = (f.maxHp||0) * sacrificeLifePct(sRank) * (1 + ((p.followerDmgPct)||0));
+  const radius = SACRIFICE_RADIUS * aoeRadiusMult(p);
   for(const e of g.enemies){
     if(e.hp<=0) continue;
     if(dist(f,e) < radius+e.r){
@@ -597,13 +596,13 @@ tornadoCdForRank = (f=>(r,...a)=>f((r==null||r!==r)?r:rkSpread5(r),...a))(tornad
 stormDuration = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(stormDuration);
 hurricaneDuration = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(hurricaneDuration);
 immolateDuration = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(immolateDuration);
-immolateBoost = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(immolateBoost);
+// v489: immolateBoost uses its own rank curve (no rkTop8 squeeze)
 flameVortexDur = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(flameVortexDur);
 permafrostDur = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(permafrostDur);
 iceArmorSlowPct = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(iceArmorSlowPct);
 thunderstepRegenBonus = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(thunderstepRegenBonus);
 elementalExplosionAilmentChance = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(elementalExplosionAilmentChance);
-fearVulnPct = (f=>(r,...a)=>f((r==null||r!==r)?r:rkSpread5(r),...a))(fearVulnPct);
+// v489: fearVulnPct has its own rank curve
 fearCooldown = (f=>(r,...a)=>f((r==null||r!==r)?r:rkSpread5(r),...a))(fearCooldown);
 fearDuration = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(fearDuration);
 deathBoltBounces = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(deathBoltBounces);

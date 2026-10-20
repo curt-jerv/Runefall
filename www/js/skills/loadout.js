@@ -57,11 +57,11 @@ const ACTIVE_SKILL_REGISTRY = {
   poisonKnives:  { oldBtnId:'btnPoisonKnives', trigger(){ wantPoisonKnives=true; },  getCd(p){ return {cur:p.poisonKnivesCd, max:p.poisonKnivesCdMax}; } },
   shadowStep:    { oldBtnId:'btnShadowStep',   trigger(){ wantShadowStep=true; },    getCd(p){ return {cur:p.shadowStepCd, max:p.shadowStepCdMax}; } },
   vanish:        { oldBtnId:'btnVanish',       trigger(){ wantVanish=true; },        getCd(p){ return {cur:p.vanishCd, max:p.vanishCdMax}; } },
-  rapidShot:     { oldBtnId:'btnRapidShot',    trigger(){ wantRapidShot=true; },     getCd(p){ return {cur:p.rapidShotCd, max:p.rapidShotCdMax}; } },
+  rapidShot:     { oldBtnId:'btnRapidShot',    trigger(){ wantRapidShot=true; },     getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },   // v489: a basic shot now
   splinterShot:  { oldBtnId:null, trigger(){ wantSplinterShot=true; }, getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
-  cripplingShot: { oldBtnId:'btnCripplingShot',trigger(){ wantCripplingShot=true; }, getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
-  explosiveShot: { oldBtnId:null, trigger(){ wantExplosiveShot=true; }, getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
-  stunShot:      { oldBtnId:'btnStunShot',     trigger(){ wantStunShot=true; },      getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
+  cripplingShot: { oldBtnId:'btnCripplingShot',trigger(){ wantCripplingShot=true; }, getCd(p){ return {cur:p.cripplingShotCd, max:p.cripplingShotCdMax}; } },
+  explosiveShot: { oldBtnId:null, trigger(){ wantExplosiveShot=true; }, getCd(p){ return {cur:p.explosiveShotCd||0, max:p.explosiveShotCdMax||EXPLOSIVE_SHOT_CD}; } },
+  stunShot:      { oldBtnId:'btnStunShot',     trigger(){ wantStunShot=true; },      getCd(p){ return {cur:p.stunShotCd, max:p.stunShotCdMax}; } },
   packTactics:   { oldBtnId:'btnPackTactics',  trigger(){ wantPackTactics=true; },   getCd(p){ return {cur:p.packTacticsCd, max:p.packTacticsCdMax}; } },
   fieldDress:    { oldBtnId:'btnFieldDress',   trigger(){ wantFieldDress=true; },    getCd(p){ return {cur:p.fieldDressCd, max:p.fieldDressCdMax}; } },
   // Djinn tree (v75): brand-new active skills with no pre-existing
@@ -112,7 +112,7 @@ const ACTIVE_SKILL_REGISTRY = {
   // resource-costing) active skill needs only its own `.cost(p)` function
   // here, same shape as Sacrifice/Plague's -- nothing else about the
   // registry, the slot buttons, or triggerSkillSlot/onAttackDown changes.
-  soulNova:      { oldBtnId:null,              trigger(){ wantSoulNova=true; }, getCd(p){ return {cur:p.soulNovaCd, max:p.soulNovaCdMax}; } },   // v419: no .cost() -- 10 souls, or 20 mana when short (checked in the cast block)
+  soulFire:      { oldBtnId:null,              trigger(){ wantSoulFire=true; }, getCd(p){ return {cur:p.soulFireCd, max:p.soulFireCdMax}; } },   // v489: 5 souls + 20 mana
   raiseDead:     { oldBtnId:null, trigger(){ wantRaiseDead=true; }, getCd(p){ return {cur:p.raiseDeadCd||0, max:p.raiseDeadCdMax||RAISE_DEAD_CD}; } },
   stormcall:     { oldBtnId:null, trigger(){ wantStormcall=true; }, getCd(p){ return {cur:p.stormcallCd||0, max:p.stormcallCdMax||STORMCALL_CD}; } },
   meteor:        { oldBtnId:null, trigger(){ wantMeteor=true; }, getCd(p){ return {cur:p.meteorCd||0, max:p.meteorCdMax||BLIZZARD_CD}; } },
@@ -240,18 +240,19 @@ const RESOURCE_SKILLS = {
   // (v152) Lightning Arc / Fireball / Ice Bolt / Soul Sap no longer cost mana -- they REWARD it on hit (MANA_ON_HIT_PCT).
   // Everything else costs a lot more, against a much smaller pool.
   plague:{cost:75}, soulGate:{cost:40}, immolate:{cost:35}, flameVortex:{cost:45}, permafrost:{cost:21, step:-1.8},
-  nova:{cost:38}, tornado:{cost:35}, hurricane:{cost:70}, iceArmor:{cost:0}, pyroTorrent:{cost:20}, blizzard:{cost:80}, meteor:{cost:95}, stormcall:{cost:30}, raiseDead:{cost:20}, fear:{cost:15},  /* pyroTorrent cost is PER SECOND while channelling */
+  nova:{cost:26}, tornado:{cost:35}, hurricane:{cost:70}, iceArmor:{cost:0}, pyroTorrent:{cost:20}, blizzard:{cost:80}, meteor:{cost:95}, stormcall:{cost:32}, raiseDead:{cost:12}, fear:{cost:25},  /* pyroTorrent cost is PER SECOND while channelling */
   shieldThrow:{cost:25, minCd:1.0}, bulwark:{cost:30}, reckoning:{cost:15}, seismicSlam:{cost:25}, whirlwind:{cost:15, minCd:1.0}, unbreakable:{cost:0, minCd:8},
-  explosiveShot:{cost:16}, splinterShot:{cost:8}, rapidShot:{cost:22, minCd:1.2}, cripplingShot:{cost:18, minCd:1.0}, stunShot:{cost:22, minCd:2.0}, aimedShot:{cost:28, minCd:0.4}, rainOfArrows:{cost:30}, huntersMark:{cost:20}, explosiveTrap:{cost:35}, poisonTrap:{cost:20}, frostTrap:{cost:20},
+  // v489 Ranger: flat Stamina costs that grow with rank (basic shots -- Strike, Rapid Shot, Splinter Shot, Multi Shot -- are free and refill Stamina)
+  cripplingShot:{cost:20, step:1}, stunShot:{cost:26, step:1.2}, explosiveShot:{cost:30, step:1.5}, aimedShot:{cost:40, step:2}, rainOfArrows:{cost:50, step:2.5}, huntersMark:{cost:20, step:0.5}, explosiveTrap:{cost:35, step:1}, poisonTrap:{cost:20, step:0.8}, frostTrap:{cost:20, step:0.8},
 };
 const ATKCD_SKILLS = {lightningArc:1, soulSap:1, fireball:1, iceBolt:1, deathBolt:1};   // these ride the basic-attack cooldown
 const RAGE_DECAY_BASE = 3, RAGE_DECAY_MAX = 24, RAGE_DECAY_GRACE = 3, RAGE_DECAY_ACCEL = 3.6;   // v295: Rage fades 3x as fast
 const RAGE_MAX = 100, RAGE_ON_HIT = 4, RAGE_ON_HURT_MAX = 10, RAGE_HIT_INTERVAL = 0.12;
 const STAMINA_BASE = 100, STAMINA_PER_LEVEL = 2, STAMINA_REGEN_PCT = 0.025;
-// v256: Ranger big skills cost a % of the pool (so they stay meaningful as the pool grows). Rapid+Aimed+Rain = 80% of the pool.
-// Refill: dodging (+25%), basic shots / Multi Shot (+3% each volley) and a slow passive trickle.
-const STAMINA_DODGE_PCT = 0.25, STAMINA_ON_SHOT_PCT = 0.03;
-const RANGER_COST_PCT = {explosiveShot:0.16, splinterShot:0.08, rapidShot:0.30, aimedShot:0.33, rainOfArrows:0.40, cripplingShot:0.06, stunShot:0.08, huntersMark:0.12, explosiveTrap:0.22, poisonTrap:0.14, frostTrap:0.14};   // v267: bigger bills, refilled by dodging + shooting
+const STAMINA_ON_SHOT = 5;   // v489: flat Stamina per basic shot / volley (was 3% of the pool)
+// v489: dodging no longer refills Stamina by itself -- the Survivalist's Evasion passive adds it (15 at rank 1 -> 42 at rank 10)
+function evasionDodgeStamina(p){ const r = (p && p.skills && effectiveRank(p,'evasion'))||0; return r>0 ? 15 + 3*(Math.min(10,r)-1) + Math.max(0, r-10) : 0; }
+const RANGER_COST_PCT_OLD = {explosiveShot:0.16, splinterShot:0.08, rapidShot:0.30, aimedShot:0.33, rainOfArrows:0.40, cripplingShot:0.06, stunShot:0.08, huntersMark:0.12, explosiveTrap:0.22, poisonTrap:0.14, frostTrap:0.14};   // v267: bigger bills, refilled by dodging + shooting
 const WARRIOR_BASE_REGEN = 0.4;   // v479: % of max life per second
 const MANA_REGEN_PCT = 0.02, MANA_ON_KILL_PCT = 0.03, MANA_POTION_PCT = 0.6;
 const MANA_ON_HIT_PCT = {lightningArc:0.04, fireball:0.03, iceBolt:0.08, soulSap:0.05, deathBolt:0.05};   // % of max mana per hit   // % of max mana per hit
@@ -261,10 +262,10 @@ function resourceName(p){ return RESOURCE_NAME[p.cls]||'Mana'; }
 function resCost(p,id,rankOverride){
   const r = RESOURCE_SKILLS[id]; if(!r) return 0;
   let c = r.cost;
+  if(id==='raiseDead' && p && p.skills) return RAISE_DEAD_MANA_PER_SKEL * Math.max(1, necroSkeletonLimit(p));   // v489: 12 mana per skeleton raised
   if(r.step){ const rk = rankOverride!=null ? rankOverride : ((p&&p.skills&&effectiveRank(p,id))||0); c += r.step*Math.max(0,rk-1); }
   if(p && p.cls==='mystic') c *= 1 + 0.02*Math.max(0,(p.level||1)-20);
   if(p && WR_SKILLS[id] && (p.windReady || p._wrCostWin>0)) c *= 0.5;   // v466 Windrunner
-  if(p && p.cls==='ranger' && RANGER_COST_PCT[id]) c = RANGER_COST_PCT[id]*(p.maxMp||100);
   if(p && p.cls==='ranger' && p.skills){ const ts=effectiveRank(p,'predatorsInstinct')||0; if(ts>0) c *= 1 - 0.05*Math.min(10,ts); }   // v454: Steady Breath is part of Predator's Instinct
   return Math.round(c);
 }
@@ -279,7 +280,7 @@ function gainResource(p,amt){ if(p && p.cls==='warrior' && (p.whirlwindT>0 || p.
   if(p && p.cls==='warrior' && amt>0) amt *= wsRageMult(p);   // v338
   if(p && p.cls==='warrior' && p._inWar && amt>0) amt *= 1 + bannerWarRage(p);   // v323: Standard of War -> a little faster Rage/Conviction   // v203: no Rage generation while Whirlwind is spinning
   if(p && p.maxMp>0){ p.mp = Math.min(p.maxMp,(p.mp||0)+amt); if(p.cls==='warrior' && amt>0) p.rageIdleT = 0; } }
-function noResourceMsg(p){ if(!(p.resMsgT>0)){ p.resMsgT = 0.9; showMsg('Not enough '+resourceName(p).toLowerCase(), 0.8); } }
+function noResourceMsg(p, id){ if(!(p.resMsgT>0)){ p.resMsgT = 0.9; const nm = (p.cls==='warrior' && id && TEMPLAR_IDS_V2.includes(id)) ? 'conviction' : resourceName(p).toLowerCase(); showMsg('Not enough '+nm, 0.8); } }   // v489: Templar skills say Conviction
 // Drops a cast the player can't afford (before its cast block runs); a Mystic falls back to Strike.
 function gateResourceWants(p){
   if(wantLightningArc){ if(!resourceAffordable(p,'lightningArc')){ wantLightningArc=false; noResourceMsg(p); if(!preciseShotActive(p)) wantAttack=true; } else if(p.atkCd<=0) spendResource(p,'lightningArc'); }

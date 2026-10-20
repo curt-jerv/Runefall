@@ -46,7 +46,7 @@ function novaShockDuration(rank){ return rank>0 ? NOVA_SHOCK_DUR_BASE + NOVA_SHO
 // (v121) 3s cooldown at rank 1, dropping evenly to 1s at rank 5.
 function tornadoCdForRank(rank){ return Math.max(TORNADO_CD_MIN, TORNADO_CD - (TORNADO_CD-TORNADO_CD_MIN)*(Math.min(5,Math.max(1,rank))-1)/4); }
 const TORNADO_CD = 3, TORNADO_CD_MIN = 1, TORNADO_R = 22, TORNADO_BASE_DMG = 18, TORNADO_SPEED = 300*0.2, TORNADO_TICK_INTERVAL = 0.6, TORNADO_LIFE = 6;
-const TORNADO_HITS_PER_ENEMY = 3, TORNADO_HIT_GAP = 0.28;   // v454
+const TORNADO_HITS_PER_ENEMY = 3, TORNADO_HIT_GAP = 1/3;   // v489: no cap -- each enemy inside is hit 3 times per second
 // Storm (active): a zone that follows the player for a few seconds. Per
 // the brief, its ONLY mechanical effect is +20% Crit Chance for the
 // player against any enemy currently inside it -- no separate damage or
@@ -63,7 +63,9 @@ function stormDuration(rank){ return rank>0 ? STORM_DUR_BASE + STORM_DUR_STEP*(r
 // wants Storm's crit bonus checks (see the isCrit rolls in updatePlaying()).
 function stormCritBonus(p, target){ return 0; }   // (v152) Storm is a passive now -- its bonus lives in recalcStats
 function critMultOf(p){ return 1.8 + (p.critMultBonus||0) + (p.skills ? deadeyeCritMult(p) : 0); }
-const STORM_CRIT_PER_RANK = 2, STORM_CRITMULT_PER_RANK = 0.04;   // deliberately minimal for now
+const STORM_CRIT_PER_RANK = 3, STORM_CRITMULT_PER_RANK = 0;   // v489: +3% crit per rank (was 2%), no crit multiplier
+const STORM_SHRED_DUR = 4;
+function stormShredPct(r){ r = Math.max(1, r||1); return Math.min(0.30, 0.10 + 0.15*(Math.min(10,r)-1)/9 + 0.005*Math.max(0, r-10)); }   // -10% lightning resistance -> -25% at rank 10
 // Hurricane (Djinn capstone): a persistent tick-damage AoE around the
 // player for its duration, same "active duration + repeating tick" shape
 // Whirlwind already uses. Slow is implemented by reusing the existing Ice
@@ -76,6 +78,7 @@ const STORM_CRIT_PER_RANK = 2, STORM_CRITMULT_PER_RANK = 0.04;   // deliberately
 const HURRICANE_CD = 8, HURRICANE_CD_STEP = 2/9, HURRICANE_RADIUS = 110, HURRICANE_TICK_INTERVAL = 0.3;
 const HURRICANE_DUR_BASE = 4, HURRICANE_DUR_STEP = 1; // 4s at Rank1 -> 8s at Rank5
 function hurricaneDuration(rank){ return rank>0 ? HURRICANE_DUR_BASE + HURRICANE_DUR_STEP*(rank-1) : HURRICANE_DUR_BASE; }
+function hurricaneDefPct(r){ r = Math.max(1, r||1); return 0.10 + 0.20*(Math.min(10,r)-1)/9 + 0.01*Math.max(0, r-10); }   // v489: +10% defence -> +30% at rank 10 while it rages
 function hurricaneCooldown(rank){ return HURRICANE_CD - HURRICANE_CD_STEP*(Math.max(1,rank||1)-1); }
 // ---------- Elementalist tree (Mystic's 2nd tree, v76) ---------------------
 // New status-effect fields introduced this batch, both generically reusable
@@ -132,7 +135,7 @@ function elementalPolarityDmg(p, base, extraRank, skillId){
   return wpnDmg(p) * swd(skillId||'fireball', epRank) * assaultDealtMult(p) * weaponDmgMult(p);
 }
 // ---- v269 Elementalist / Djinn rework ----
-const FIREBALL_ATKCD_MULT = 0.7, FIREBALL_BALL_MULT = 0.7, FIREBALL_VOLLEY_GAP = 0.17, FIREBALL_VOLLEY_PAUSE = 0.28, FIREBALL_SIDE_OFFSET = 9;
+const FIREBALL_ATKCD_MULT = 0.7, FIREBALL_BALL_MULT = 0.7, FIREBALL_VOLLEY_GAP = 0.19, FIREBALL_VOLLEY_PAUSE = 0.45, FIREBALL_SPEED_MULT = 0.8, FIREBALL_SIDE_OFFSET = 9;
 const ICE_BOLT_ATKCD_MULT = 1.686, ICE_BOLT_DMG_MULT = 4.05;   // v442: 1.15s base cast (was 1.23s), damage ~89% of Fireball's DPS
 const PERMAFROST_ICEBOLT_SPEED = 1.25;   // v442: Ice Bolt casts 25% faster while you stand in your Permafrost
 const ICE_BOLT_R = 11, ICE_BOLT_SPEED_MULT = 0.8;
@@ -146,7 +149,7 @@ function fireballBurnChance(p, e){
   return Math.min(0.9, c);
 }
 const HEAVY_SPELL_MULT = 1.3;   // Pyro Torrent / Blizzard / Plague / Hurricane: +30%
-function polarityBonus(rank){ return rank>0 ? 0.10 + 0.0375*(rkSpread5(Math.min(MAX_EFF_RANK,rank))-1) : 0; }
+function polarityBonus(rank){ return rank>0 ? 0.20 + 0.0625*(rkSpread5(Math.min(MAX_EFF_RANK,rank))-1) : 0; }   // v489: +20% -> +45% at rank 10 (was 10% -> 25%)
 // Call when a damaging spell is cast: returns the damage multiplier (opposite element to the previous spell) and remembers this element.
 function polarityCast(p, el){
   const r = (p.skills && effectiveRank(p,'elementalPolarity')) || 0;
@@ -163,7 +166,7 @@ function coldHit(e, w){
   if(!e || !(e.hp>0)) return false;
   e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR);
   if(freezeImmune(e) || e.freezeImmT>0 || e.frozenT>0) return false;
-  e.coldHits = (e.coldHitT>0 ? (e.coldHits||0) : 0) + (w||1)*(e.permaT>0 ? 2 : 1);   // v442: inside Permafrost every cold hit counts double
+  e.coldHits = (e.coldHitT>0 ? (e.coldHits||0) : 0) + (w||1);   // v489: Permafrost no longer doubles cold hits
   e.coldHitT = FREEZE_COUNT_WINDOW;
   const tough = isEliteOrBrute(e);
   if(e.coldHits >= (tough ? FREEZE_HITS_TOUGH : FREEZE_HITS_NORMAL)){
@@ -177,7 +180,8 @@ function coldHit(e, w){
 // Self fire damage (Immolate / Flame Vortex): goes through fire resistance, ignores Ice Armor and shields, can never kill.
 function selfFireDamage(g, p, amt, quiet){
   if(!(amt>0) || !(p.hp>0)) return 0;
-  const d = amt*(1 - elementResist(p,'fire')/100);
+  let d = amt*(1 - elementResist(p,'fire')/100);
+  if(p.iceArmorHp>0 && d>0){ const soak = Math.min(p.iceArmorHp, d); p.iceArmorHp -= soak; d -= soak; p.iaSince = 0; if(p.iceArmorHp<=0){ p.iceArmorHp = 0; p.iceArmorT = 0; showMsg('Ice Armor broken', 0.8); } }   // v489: your own fire melts Ice Armor first
   const real = Math.max(0, Math.min(d, p.hp-1));
   p.hp -= real;
   if(!quiet){ p.hitFlash = 0.25; p.sinceHurt = 0; shakeScreen(g, 5, 0.2); }
@@ -188,12 +192,19 @@ function pushEnemy(g, e, ang, dist0){
   const nx = clamp(e.x+Math.cos(ang)*dist0, e.r, g.room.w-e.r), ny = clamp(e.y+Math.sin(ang)*dist0, e.r, g.room.h-e.r);
   if(!losBlocked(g.room.obstacles||[], e.x, e.y, nx, ny)){ e.x = nx; e.y = ny; }
 }
-const IMMOLATE_CD = 20, IMMOLATE_SELF_PCT = 0.05, IMMOLATE_MIN_HP = 0.50, IMMOLATE_EXPLODE_R = 85, IMMOLATE_EXPLODE_PCT = 0.6;
+const IMMOLATE_CD = 20, IMMOLATE_SELF_PCT = 0.05, IMMOLATE_MIN_HP = 0.25, IMMOLATE_EXPLODE_R = 85, IMMOLATE_EXPLODE_PCT = 0.6;
 function immolateDuration(rank){ return 6 + 1*(Math.max(1,rank)-1); }
-function immolateBoost(rank){ return 0.20 + 0.05*(Math.max(1,rank)-1); }
+function immolateBoost(rank){ const r = Math.max(1, rank||1); return r<=5 ? 0.5 + 0.125*(r-1) : 1.0 + 0.2*(Math.min(10,r)-5) + 0.05*Math.max(0, r-10); }   // v489: +50% / +100% at rank 5 / +200% at rank 10
 const FLAME_VORTEX_CD = 14, FLAME_VORTEX_R = 75, FLAME_VORTEX_PULL = 0, FLAME_VORTEX_SELF_PCT = 0.12, FLAME_VORTEX_BLAST_MULT = 4;
 function flameVortexDur(rank){ return 4 + 0.5*(Math.max(1,rank)-1); }
-const PERMAFROST_CD = 16, PERMAFROST_R = 150, PERMAFROST_CAST_RANGE = 400, PERMAFROST_SLOW = 0.9, PERMAFROST_SPEED = 1.1;
+const PERMAFROST_CD = 12, PERMAFROST_R = 150, PERMAFROST_CAST_RANGE = 400, PERMAFROST_SLOW = 0.9, PERMAFROST_SPEED = 1.1;
+// v489 Permafrost: enemies inside are slowed 25% (50% at rank 10) and take +20% cold damage (+50% at rank 10);
+// chilled/frozen enemies that die inside shatter, hurting enemies around them. Cooldown 12s -> 8s at rank 10.
+const PERMA_SHATTER_R = 85, PERMA_SHATTER_PCT = 0.12;
+const r10 = (lo, hi, r)=>{ r = Math.max(1, r||1); return lo + (hi-lo)*(Math.min(10,r)-1)/9; };
+function permafrostSlowPct(r){ return r10(0.25, 0.50, r); }
+function permafrostColdAmp(r){ return r10(0.20, 0.50, r); }
+function permafrostCd(r){ return r10(12, 8, r); }
 function permafrostDur(rank){ return 6 + 1*(Math.max(1,rank)-1); }
 function permafrostSpeedMult(p){ const z = p.permaZone; return (z && dist(p,z) < z.r) ? PERMAFROST_SPEED : 1; }
 function iceArmorSlowPct(rank){ return Math.max(0.05, 0.10 - 0.0125*(Math.max(1,rank)-1)); }
@@ -295,7 +306,7 @@ function iceArmorExplodeDmg(p, r){ return Math.max(0, p.iceArmorHp||0); }
 // at every rank (rank scales damage AND duration instead, per the brief).
 // (v124) Rework: a rooted 5s channel -- one long red beam that tracks the nearest enemy and grows
 // stronger the longer it burns (x1 -> x2). Ranks add damage; duration is a fixed 5s.
-const PYRO_TORRENT_CD = 8, PYRO_TORRENT_TICK_INTERVAL = 0.1;
+const PYRO_TORRENT_CD = 0, PYRO_TORRENT_TICK_INTERVAL = 0.1, PYRO_RAMP_TIME = 5;
 const PYRO_TORRENT_RANGE = 260, PYRO_TORRENT_HALF_ANGLE = Math.PI/4, PYRO_TORRENT_WIDTH = 24, PYRO_TORRENT_TURN = 5.5;
 const PYRO_TORRENT_DUR_BASE = 5, PYRO_TORRENT_DUR_STEP = 0, PYRO_TORRENT_RAMP = 1.0, PYRO_TORRENT_TICK_MULT = 0.42;
 function pyroTorrentDuration(rank){ return rank>0 ? PYRO_TORRENT_DUR_BASE + PYRO_TORRENT_DUR_STEP*(rank-1) : PYRO_TORRENT_DUR_BASE; }
@@ -328,9 +339,9 @@ const BLIZZARD_DUR = 4, BLIZZARD_TICK = 0.25, BLIZZARD_TICK_MULT = 0.45, BLIZZAR
 // one, which `continue`s the same way). Rank scales BOTH the fear duration
 // AND (per the brief, explicitly, unlike most of this tree's other active
 // skills) the skill's OWN cooldown -- see fearCooldown/fearDuration.
-const FEAR_CD_BASE = 14, FEAR_CD_MIN = 8, FEAR_RADIUS = 150;
+const FEAR_CD_BASE = 8, FEAR_CD_MIN = 8, FEAR_RADIUS = 150, FEAR_CAST_RANGE = 380;   // v489: 8s cooldown, cast onto a group of enemies
 const FEAR_VULN_BASE = 5, FEAR_VULN_MAX = 10, FEAR_VULN_EXTRA = 3; // % extra damage taken: 5% at rank 1 -> 10% at rank 5, lasting the fear + 3s
-function fearVulnPct(rank){ return rank>0 ? FEAR_VULN_BASE + (FEAR_VULN_MAX-FEAR_VULN_BASE)/4*(rank-1) : 0; }
+function fearVulnPct(rank){ const r = Math.max(1, rank||1); return rank>0 ? 20 + 30*(Math.min(10,r)-1)/9 + Math.max(0, r-10) : 0; }   // v489: +20% damage taken -> +50% at rank 10
 const FEAR_DUR_BASE = 1.5, FEAR_DUR_STEP = 0.5; // 1.5s at Rank1 -> 3.5s at Rank5
 function fearCooldown(rank){
   if(rank<=0) return FEAR_CD_BASE;
@@ -366,7 +377,7 @@ const NECRO_SKELETON_BASE_DMG = 8, NECRO_SKELETON_HP_MULT = 0.25, NECRO_SKELETON
 // that flies from the killed enemy BACK to the player -- see isSoulOrb in
 // the projectile-hit handler and drawProjectilesIso.
 const SOUL_SAP_SPLASH_R = 170;   // v484: the two extra drains only reach enemies close to the main target
-const SOUL_CAP = 50, SOUL_SAP_SOULS_PER_KILL = 1, SOUL_ORB_SPEED = 520;
+const SOUL_CAP = 50, SOUL_SAP_SOULS_PER_KILL = 3, SOUL_SAP_SOULS_PER_CAST = 1, SOUL_ORB_SPEED = 520;   // v489: +1 soul per Soul Sap attack that hits, +3 when a sapped enemy dies
 const SOULSAP_MULT = 1.2;
 // Node 4 -- Sacrifice (active, requires Soul Sap): the first skill in the
 // game with an explicit resource COST, not just a cooldown -- see the new
@@ -404,12 +415,15 @@ const SOUL_HUNGER_HP_PCT = 0.015, SOUL_HUNGER_DMG_PER_SOUL = 0.005;   // +1% dam
 function soulHungerInterval(rank){ return (1.6 - 0.2*(Math.max(1,rank)-1))/5; }   // v299: 5x as fast
 function soulHungerMult(p){ const r = (p.skills && effectiveRank(p,'soulHunger'))||0; return r>0 ? 1 + SOUL_HUNGER_DMG_PER_SOUL*Math.min(SOUL_CAP,(p.souls||0)) : 1; }
 const SOULSHIELD_PER_SOUL = 0.012;
+// v489 Soul Shield: a chance to block per soul held (0.4% at rank 1 -> 0.7% at rank 10), instead of Defence
+function soulShieldBlockPerSoul(r){ r = Math.max(1, r||1); return 0.004 + 0.003*(Math.min(10,r)-1)/9 + 0.0002*Math.max(0, r-10); }
+function soulShieldBlock(p){ const r = (p && p.skills && effectiveRank(p,'soulShield'))||0; return r>0 ? Math.min(0.5, soulShieldBlockPerSoul(r)*Math.min(SOUL_CAP, p.souls||0)) : 0; }
 function soulShieldFrac(rank){ return 0.40 + 0.05*(Math.max(1,rank)-1); }
 // v413: Soul Shield is a free passive defence -- souls held give damage reduction, nothing is drained
 // v414: ...as extra Defence Rating (so it works through the normal hit-chance curve and its floor, not as flat damage reduction):
 // each soul adds a slice of an equal-level enemy's attack rating. 50 souls ~ +25% of AR at rank 1 (about 15% fewer hits land, less with good gear).
 function soulShieldPerSoul(rank){ return rank>0 ? 0.005*(1+0.12*(Math.max(1,rank)-1)) : 0; }
-function soulShieldDefense(p){ const r = (p && p.skills && effectiveRank(p,'soulShield'))||0; return r>0 ? enemyAttackRating(p.level)*soulShieldPerSoul(r)*Math.min(SOUL_CAP,p.souls||0) : 0; }
+function soulShieldDefense(p){ return 0; const r = (p && p.skills && effectiveRank(p,'soulShield'))||0; return r>0 ? enemyAttackRating(p.level)*soulShieldPerSoul(r)*Math.min(SOUL_CAP,p.souls||0) : 0; }
 const SOULGATE_COST = 6, SOULGATE_CD = 20, SOULGATE_ARCHER_LIFE = 6, SOULGATE_ARCHER_CAP = 8, SOULGATE_ARCHER_BASE_DMG = 7;
 function soulGateDrain(rank){ return 2 - 0.2*(Math.max(1,rank)-1); }
 // v319: the gate now stays open a SET time and souls are paid per archer actually released (no archer out = no soul spent)
@@ -419,22 +433,43 @@ function soulGateDuration(rank){ return SOULGATE_DUR_BASE + SOULGATE_DUR_STEP*(M
 function soulGateInterval(rank){ return 1.0 - 0.1*(Math.max(1,rank)-1); }
 const FEAR_SOUL_COST = 0;   // v411: Fear costs mana only again
 // v419: Soul Nova -- a flat 10 souls, or 20 mana when you hold fewer; damage grows with rank
-const SOULNOVA_SOUL_COST = 10, SOULNOVA_MANA_COST = 20, SOULNOVA_CD = 8, SOULNOVA_RADIUS = 135, SOULNOVA_MULT = 1.6, SOULNOVA_CHILL = 2.0;
-function soulNovaDmg(p, rank){ return wpnDmg(p) * swd('soulNova', rank) * soulHungerMult(p); }
+// v489 Soul Fire (replaces Soul Nova): 5 souls + 20 mana, a big slow rolling ball of green soul-flame that bursts on impact (half physical, half poison)
+const SOULFIRE_SOUL_COST = 5, SOULFIRE_MANA_COST = 20, SOULFIRE_CD = 6, SOULFIRE_RADIUS = 105, SOULFIRE_SPEED = 170, SOULFIRE_LIFE = 3.2, SOULFIRE_R = 15;
+function soulFireExplode(g, p, pr){
+  const R = pr.R || SOULFIRE_RADIUS;
+  for(const e of g.enemies){
+    if(e.hp>0 && dist(pr,e) < R+e.r){
+      e.hp -= splitHit(p, e, pr.dmg, 0.5, 'poison'); e.hitT = 0.2;
+      e.poisonT = Math.max(e.poisonT||0, POISON_DOT_DUR); e.poisonDps = Math.max(e.poisonDps||0, pr.dmg*0.5*POISON_DOT_PCT);
+      checkExecute(g, e);
+    }
+  }
+  shakeScreen(g, 4, 0.2);
+  g.particles.push({type:'ring', x:pr.x, y:pr.y, t:0.45, max:0.45, r:R, color:'#7dff6a'});
+  g.particles.push({type:'ring', x:pr.x, y:pr.y, t:0.3, max:0.3, r:R*0.6, color:'#d8ffd0'});
+  g.particles.push({type:'gasBurst', thin:1, x:pr.x, y:pr.y, t:0.6, max:0.6, r:R*0.8, seed:pr.seed||0});
+  for(let k=0;k<12;k++){ const an = k/12*6.283, rr = R*(0.2+Math.random()*0.6); g.particles.push({type:'burst', x:pr.x+Math.cos(an)*rr, y:pr.y+Math.sin(an)*rr, t:0.45, max:0.45, color:k%3===0?'#e6ffe0':k%2?'#5ae04a':'#2a9a3a'}); }
+  for(let k=0;k<5;k++){ const an = Math.random()*6.283; g.particles.push({type:'dbWisp', x:pr.x+Math.cos(an)*R*0.4, y:pr.y+Math.sin(an)*R*0.4, t:0.7, max:0.7}); }
+  try{ sfxPlay('fireHit', 0.9); }catch(err){}
+}
+function soulFireDmg(p, rank){ return wpnDmg(p) * swd('soulFire', rank) * soulHungerMult(p); }
 const DEMON_LINK_SHARE = 0.5, DEMON_SIZE_PER_10 = 0.05, DEMON_DMG_PER_10 = 0.10;
 function demonSoulMult(p, per){ return 1 + per*Math.min(SOUL_CAP,(p.souls||0))/10; }
 function necroSkeletonCount(rank){ return rank>0 ? [0,2,2,3,4,5][Math.min(5,rank)] : 0; }
 const NECRO_RESPAWN_SOULS = 1;
 // v460 Raise Skeletons: passive + active. A fallen skeleton stays down until you press Raise Skeletons --
 // unless you hold a soul: then one soul is spent automatically to raise it after a short delay.
-const RAISE_DEAD_CD = 3;
-function skelSoulRaiseDelay(rank){ return Math.min(3, 0.35*necroSkeletonRespawn(rank||1)); }
+const RAISE_DEAD_CD = 6;   // v489
+function skelSoulRaiseDelay(rank){ return 3; }   // v489: a held soul raises a fallen skeleton after 3s
+const RAISE_DEAD_MANA_PER_SKEL = 12;
+function necroSkeletonLimit(p){ const r = (p && p.skills && effectiveRank(p,'raiseDead'))||0; return r>0 ? necroSkeletonCount(r) + (uq(p,'uq_necromancer') ? 2 : 0) : 0; }
+function sacrificeLifePct(r){ r = Math.max(1, r||1); return 0.25 + 0.20*(Math.min(10,r)-1)/9 + 0.01*Math.max(0, r-10); }   // v489: blast = 25% -> 45% of the skeleton's max life
 // v460 Meteor (Elementalist fire capstone)
 const METEOR_DELAY = 0.9, METEOR_R = 125, METEOR_BURN_DUR = 4, METEOR_BURN_TICK = 0.25;
 const NECRO_SKEL_SOUL_DMG = 0.25;   // v416: +25% skeleton damage at a full soul bar, scaled by souls held
 const PLAGUE_DMG_BUFF = 1.3;
-function necroHasSoulSkills(p){ if(!p || !p.skills) return false; for(const id of ['deathBolt','soulSap','soulHunger','soulGate','soulShield','demonBind','sacrifice','fear','raiseDead','soulNova']) if((effectiveRank(p,id)||0)>0) return true; return false; }
-const NECRO_TREE_IDS = ['soulNova','deathBolt','raiseDead','soulSap','soulHunger','soulGate','soulShield','demonBind','fear','sacrifice','plague'];
+function necroHasSoulSkills(p){ if(!p || !p.skills) return false; for(const id of ['deathBolt','soulSap','soulHunger','soulGate','soulShield','demonBind','sacrifice','fear','raiseDead','soulFire']) if((effectiveRank(p,id)||0)>0) return true; return false; }
+const NECRO_TREE_IDS = ['soulNova','soulFire','deathBolt','raiseDead','soulSap','soulHunger','soulGate','soulShield','demonBind','fear','sacrifice','plague'];
 const NECRO_DEMON_BASE_DMG = 14, NECRO_DEMON_HP_MULT = 1.4, NECRO_DEMON_R = 13.8;   // v402/v409: 15% smaller twice (was 19)
 const NECRO_DEMON_LEECH_BASE = 0.10, NECRO_DEMON_LEECH_STEP = 0.025; // 10% at Rank1 -> 20% at Rank5 (halved)
 // v382: wolves life-leech too: 5% of the damage they deal at Rank 1, rising to 20% at Rank 10 (heals only the wolf)

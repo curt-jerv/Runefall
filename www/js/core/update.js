@@ -179,7 +179,7 @@ function updateStep(dt){
       if(dx===0&&dy===0){ dx=p.facing.x; dy=p.facing.y; }
       const d=Math.hypot(dx,dy)||1;
       p.dodgeDir = {x:dx/d, y:dy/d};
-    if(p.cls==='ranger'){ gainResource(p, p.maxMp*STAMINA_DODGE_PCT); survDodgeRegenStart(p); }
+    if(p.cls==='ranger'){ gainResource(p, evasionDodgeStamina(p)); survDodgeRegenStart(p); }
       try{ mirageOnDodge(g, p); }catch(e){}
       p.dodging = true; p.dodgeT = p.dodgeDur; if(p.partB && p.partB.sp && p.partB.sp.windroll) p.windT = 3;
       p.dodgeCharges -= 1;
@@ -340,7 +340,7 @@ function updateStep(dt){
       g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*STAFF_BOLT_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*STAFF_BOLT_SPEED*projectileSpeedMult(p),
         r:6, dmg, from:'player', life:1.4, color:'#b57bff', isArrow:true, isArcaneBolt:true, crit:isCrit});
     } else if(isBow){
-      if(p.cls==='ranger') gainResource(p, p.maxMp*STAMINA_ON_SHOT_PCT);
+      if(p.cls==='ranger') gainResource(p, STAMINA_ON_SHOT);
       // Ranger basic attack: fire an arrow instead of swinging a melee arc.
       // Multi Shot (Marksman): once ranked, this fires 3 arrows at once in a
       // small fan instead of one (5 at Rank 5), each rolling the same dmg/crit
@@ -708,15 +708,14 @@ function updateStep(dt){
   if(wantRapidShot){
     wantRapidShot=false;
     const rsRank = effectiveRank(p,'rapidShot')||0;
-    if(rsRank>0 && isBow && p.rapidShotCd<=0 && !p.rapidShotBurst){
+    if(rsRank>0 && isBow && p.atkCd<=0 && !p.rapidShotBurst && !p.dodging){   // v489: a free basic shot on the Strike timer
       const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
-      p.rapidShotCdMax = applyCdr(p, rapidShotCooldown(rsRank));
-      p.rapidShotCd = p.rapidShotCdMax;
+      p.atkCd = p.atkCdMax*RAPID_SHOT_ATKCD_MULT; p.atkAnimT = 0.2;
+      gainResource(p, STAMINA_ON_SHOT);
       p.rapidShotBurst = {left:RAPID_SHOT_COUNT, timer:0, ang, rank:rsRank, target:target||null, hitsOnTarget:0};
-      showMsg('Rapid Shot!', 0.6);
     }
   }
   if(p.rapidShotBurst){
@@ -745,19 +744,20 @@ function updateStep(dt){
   // a Stamina cost instead (6% / 8%), and each one refunds the usual 3% a basic shot does.
   if(p.cripplingShotCd>0) p.cripplingShotCd -= dt;
   if(p.stunShotCd>0) p.stunShotCd -= dt;
+  if(p.explosiveShotCd>0) p.explosiveShotCd -= dt;
   if(wantCripplingShot){
     const csRank = effectiveRank(p,'cripplingShot')||0;
-    if(csRank>0 && p.atkCd>0 && p.atkCd<0.25){ /* buffer the press until Strike is ready */ }
+    if(csRank>0 && p.atkCd>0 && p.atkCd<0.25 && !(p.cripplingShotCd>0)){ /* buffer the press until Strike is ready */ }
     else {
       wantCripplingShot=false;
-      if(csRank>0 && p.atkCd<=0 && !p.dodging){
+      if(csRank>0 && p.atkCd<=0 && !p.dodging && !(p.cripplingShotCd>0) && resourceAffordable(p,'cripplingShot')){
         const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
         const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
         p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
         p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
         p.atkAnimT = 0.2;
         p.atkCd = p.atkCdMax;
-        spendResource(p,'cripplingShot'); gainResource(p, p.maxMp*STAMINA_ON_SHOT_PCT);
+        p.cripplingShotCdMax = applyCdr(p, CRIPPLING_SHOT_CD); p.cripplingShotCd = p.cripplingShotCdMax;
         const csDmg = wpnDmg(p) * swd('cripplingShot', csRank) * assaultDealtMult(p) * weaponDmgMult(p);
         g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
           r:5, dmg:csDmg, from:'player', life:1.4, color:'#b4293f', isArrow:true, isCripplingShot:true, bleedPct:cripplingShotBleedPct(csRank)});
@@ -774,7 +774,7 @@ function updateStep(dt){
         const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
         p.facing = {x:Math.cos(ang), y:Math.sin(ang)}; p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
         p.atkAnimT = 0.2; p.atkCd = p.atkCdMax;
-        spendResource(p,'splinterShot'); gainResource(p, p.maxMp*STAMINA_ON_SHOT_PCT);
+        gainResource(p, STAMINA_ON_SHOT);   // v489: free basic shot
         const spCrit = Math.random()*100 < (p.critChance||0) + (p.rallyT>0 ? RALLY_CRIT_BONUS : 0) + arrowEyeCritBonus(p);
         const spDmg = wpnDmg(p) * swd('splinterShot', spRank) * assaultDealtMult(p) * weaponDmgMult(p) * (spCrit ? critMultOf(p) : 1);
         g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
@@ -787,12 +787,12 @@ function updateStep(dt){
     if(xsRank>0 && p.atkCd>0 && p.atkCd<0.25){ /* buffer the press until Strike is ready */ }
     else {
       wantExplosiveShot=false;
-      if(xsRank>0 && isBow && p.atkCd<=0 && !p.dodging){
+      if(xsRank>0 && isBow && p.atkCd<=0 && !p.dodging && !(p.explosiveShotCd>0) && resourceAffordable(p,'explosiveShot')){
         const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
         const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
         p.facing = {x:Math.cos(ang), y:Math.sin(ang)}; p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
         p.atkAnimT = 0.2; p.atkCd = p.atkCdMax;
-        spendResource(p,'explosiveShot');
+        p.explosiveShotCdMax = applyCdr(p, EXPLOSIVE_SHOT_CD); p.explosiveShotCd = p.explosiveShotCdMax;
         const xsCrit = Math.random()*100 < (p.critChance||0) + (p.rallyT>0 ? RALLY_CRIT_BONUS : 0) + arrowEyeCritBonus(p);
         const xsDmg = wpnDmg(p) * swd('explosiveShot', xsRank) * assaultDealtMult(p) * weaponDmgMult(p) * (xsCrit ? critMultOf(p) : 1);
         g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
@@ -802,17 +802,17 @@ function updateStep(dt){
   }
   if(wantStunShot){
     const ssRank2 = effectiveRank(p,'stunShot')||0;
-    if(ssRank2>0 && p.atkCd>0 && p.atkCd<0.25){ /* buffer */ }
+    if(ssRank2>0 && p.atkCd>0 && p.atkCd<0.25 && !(p.stunShotCd>0)){ /* buffer */ }
     else {
       wantStunShot=false;
-      if(ssRank2>0 && p.atkCd<=0 && !p.dodging){
+      if(ssRank2>0 && p.atkCd<=0 && !p.dodging && !(p.stunShotCd>0) && resourceAffordable(p,'stunShot')){
         const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
         const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
         p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
         p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
         p.atkAnimT = 0.2;
         p.atkCd = p.atkCdMax;
-        spendResource(p,'stunShot'); gainResource(p, p.maxMp*STAMINA_ON_SHOT_PCT);
+        p.stunShotCdMax = applyCdr(p, STUN_SHOT_CD); p.stunShotCd = p.stunShotCdMax;
         const stDmg = wpnDmg(p) * swd('stunShot', ssRank2) * assaultDealtMult(p) * weaponDmgMult(p);
         g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
           r:5, dmg:stDmg, from:'player', life:1.4, color:'#f0d078', isArrow:true, isStunShot:true, stunDur:stunShotStunDuration(ssRank2), stunChance:stunShotStunChance(ssRank2)});
@@ -1180,7 +1180,7 @@ function updateStep(dt){
       if(tg){ ang = Math.atan2(tg.y-p.y, tg.x-p.x); dd = Math.max(40, Math.hypot(tg.x-p.x, tg.y-p.y) - (tg.r+p.r+6)); }
       else { ang = Math.atan2(p.facing.y, p.facing.x); dd = LEAP_BLIND; }
       p.leapDir = {x:Math.cos(ang), y:Math.sin(ang)}; p.leapDistLeft = dd; p.leapSpd = dd/LEAP_TIME;
-      p.leapT = LEAP_TIME; p.leapRank = lRank; p.facing = {x:p.leapDir.x, y:p.leapDir.y}; p.faceSign = screenFacingSign(p.facing.x,p.facing.y);
+      p.leapT = LEAP_TIME; p.leapRank = lRank; p.leapTarget = tg || null;   // v489: the charge follows its target (it used to fly to where the enemy stood and often whiffed) p.facing = {x:p.leapDir.x, y:p.leapDir.y}; p.faceSign = screenFacingSign(p.facing.x,p.facing.y);
       p.invuln = Math.max(p.invuln||0, LEAP_TIME+0.05);
       p.leapCdMax = leapCdForRank(lRank); p.leapCd = applyCdr(p, p.leapCdMax);
       showMsg('Charge!', 0.5);
@@ -1189,6 +1189,12 @@ function updateStep(dt){
   }
   if(p.leapT>0){
     p.leapT -= dt; p.movementStopT = Math.max(p.movementStopT||0, 0.06);
+    const lt = p.leapTarget;
+    if(lt && lt.hp>0 && p.leapT>0){   // steer at the target's current spot, arriving just in front of it
+      const dx = lt.x-p.x, dy = lt.y-p.y, dd = Math.hypot(dx,dy) - (lt.r+p.r+6);
+      if(dd > 0){ p.leapDir = {x:dx/(dd+lt.r+p.r+6), y:dy/(dd+lt.r+p.r+6)}; p.leapDistLeft = dd; p.leapSpd = Math.max(p.leapSpd, dd/Math.max(0.05, p.leapT)); }
+      else p.leapDistLeft = 0;
+    }
     const mvd = Math.min(p.leapDistLeft, p.leapSpd*dt), steps = Math.max(1, Math.ceil(mvd/4)), sd = mvd/steps;
     for(let i=0;i<steps;i++){
       p.x += p.leapDir.x*sd; p.y += p.leapDir.y*sd;
@@ -1201,8 +1207,9 @@ function updateStep(dt){
       p.leapT = 0;
       const lr = p.leapRank||1, rad = LEAP_RADIUS*aoeRadiusMult(p);
       const ld = wpnDmg(p) * swd('leap', lr) * assaultDealtMult(p) * weaponDmgMult(p);
+      const lt2 = p.leapTarget; p.leapTarget = null;
       for(const e of g.enemies){
-        if(dist(p,e) < rad+e.r){
+        if(e.hp>0 && (dist(p,e) < rad+e.r || (e===lt2 && dist(p,e) < rad+e.r+40))){   // the charged target is always hit if the charge reached it
           e.hp -= applyEnemyArmor(p, e, ld); e.hitT = 0.2; checkExecute(g, e);
           if(!e.isBoss && !e.isLairBoss && !e.gj && !e.trex) e.stunT = Math.max(e.stunT||0, LEAP_STUN_BASE + LEAP_STUN_STEP*(lr-1));
         }
@@ -1378,7 +1385,7 @@ function updateStep(dt){
       let hits = 0;
       const swR = (p.skills && effectiveRank(p,'sacredWeapon'))||0;   // v455 Sacred Weapon
       let sacred = false;
-      if(swR>0){ p.vengCount = (p.vengCount||0) + 1; if(p.vengCount > SACRED_EVERY){ p.vengCount = 0; sacred = true; dmg *= 1 + sacredBonus(swR); } }
+      if(swR>0){ p.vengCount = Math.min(SACRED_EVERY+1, (p.vengCount||0) + 1); if(p.vengCount > SACRED_EVERY && (p.mp||0) >= SACRED_COST){ p.vengCount = 0; p.mp -= SACRED_COST; sacred = true; dmg *= 1 + sacredBonus(swR); } }   // v489: the empowered 4th swing burns 10 Conviction (it waits for it)
       for(const e of g.enemies){
         if(e.hp<=0) continue;
         const d = dist(p,e);
@@ -1576,7 +1583,7 @@ function updateStep(dt){
   if(wantHurricane){
     wantHurricane=false;
     const hRank = effectiveRank(p,'hurricane')||0;
-    if(hRank>0 && p.hurricaneCd<=0 && p.hurricaneT<=0 && !(p.aoeGcd>0)){
+    if(hRank>0 && p.hurricaneCd<=0 && !(p.aoeGcd>0)){   // v489: may be recast while still raging -- it restarts its duration
       p.aoeGcd = AOE_GCD;
       p.movementStopT = 0.2;
       p.hurricaneDurMax = hurricaneDuration(hRank);
@@ -1584,6 +1591,7 @@ function updateStep(dt){
       p.hurricaneTick = 0;
       p.hurricaneCdMax = hurricaneCooldown(hRank);
       p.hurricaneCd = applyCdr(p, p.hurricaneCdMax);
+      recalcStats(p);   // v489: Hurricane's defence bonus
       showMsg('Hurricane!', 0.8);
     }
   }
@@ -1602,7 +1610,7 @@ function updateStep(dt){
         }
       }
     }
-    if(p.hurricaneT<0) p.hurricaneT = 0;
+    if(p.hurricaneT<=0){ p.hurricaneT = 0; recalcStats(p); }
   }
 
   // Fireball / Ice Bolt (Elementalist, v76): the 2 virtual active skills
@@ -1635,8 +1643,8 @@ function updateStep(dt){
     while(p.fbQueue.length && p.fbQueue[0].t<=0){
       const q = p.fbQueue.shift();
       const px = p.x - Math.sin(q.ang)*q.off, py = p.y + Math.cos(q.ang)*q.off;
-      g.projectiles.push({x:px, y:py, vx:Math.cos(q.ang)*ELEMENTAL_BOLT_SPEED, vy:Math.sin(q.ang)*ELEMENTAL_BOLT_SPEED,
-        r:7, dmg:q.dmg, from:'player', life:1.4, color:'#ff7a3d', isArrow:true, isFireball:true, manaReward:'fireball'});
+      g.projectiles.push({x:px, y:py, vx:Math.cos(q.ang)*ELEMENTAL_BOLT_SPEED*FIREBALL_SPEED_MULT, vy:Math.sin(q.ang)*ELEMENTAL_BOLT_SPEED*FIREBALL_SPEED_MULT,   // v489: 20% slower
+        r:7, dmg:q.dmg, from:'player', life:1.4/FIREBALL_SPEED_MULT, color:'#ff7a3d', isArrow:true, isFireball:true, manaReward:'fireball'});
       p.atkAnimT = 0.2;
     }
   }
@@ -1733,16 +1741,17 @@ function updateStep(dt){
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
       p.atkAnimT = 0.22;
       if(p.cls==='mystic') gainResource(p, p.maxMp*MANA_ON_HIT_PCT.soulSap);
+      p.souls = Math.min(SOUL_CAP, (p.souls||0) + SOUL_SAP_SOULS_PER_CAST); checkDemonBindThreshold && checkDemonBindThreshold(g, p);   // v489: every Soul Sap attack makes a soul
       for(let ti=0; ti<ssTargets.length; ti++){ const target = ssTargets[ti];   // v417: nearest takes full damage, the other two 50%
       const isCrit = Math.random()*100 < (p.critChance||0) + (p.rallyT>0 ? RALLY_CRIT_BONUS : 0) + stormCritBonus(p, target);
       let dmg = wpnDmg(p);
       if(isCrit) dmg *= critMultOf(p);
       dmg *= assaultDealtMult(p) * weaponDmgMult(p) * swd('soulSap', ssRank) * (ti===0 ? 1 : 0.5);   // v318/v417: nearest full, extra targets half
       lastHitCrit = isCrit;
-      target.hp -= applyEnemyArmor(p, target, dmg); target.hitT = 0.15;
+      target.hp -= applyEnemyArmor(p, target, dmg, 0, 'poison'); target.hitT = 0.15;   // v489: poison damage
       lastHitCrit = false;
       checkExecute(g, target);
-      g.particles.push({type:'burst', x:target.x, y:target.y, t:0.22, max:0.22, color:'#a06ad0'});
+      g.particles.push({type:'burst', x:target.x, y:target.y, t:0.22, max:0.22, color:'#7dd45a'});
       // a kill lands exactly 1 soul (same rule as before the rework)
       target.sapMarked = true;   // a soul is collected when this enemy dies (from any source)
       const orbAng = Math.atan2(p.y-target.y, p.x-target.x);
@@ -1784,21 +1793,21 @@ function updateStep(dt){
   if(wantPyroTorrent){
     wantPyroTorrent=false;
     const ptRank = effectiveRank(p,'pyroTorrent')||0;
-    if(ptRank>0 && p.pyroTorrentCd<=0 && p.pyroTorrentT<=0){
+    if(p.pyroTorrentT>0){ p.pyroTorrentT = 0; }   // v489: press again to stop (no duration limit, no cooldown)
+    else if(ptRank>0){
       const target = nearestEnemy(g, p, PYRO_TORRENT_RANGE);
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
       p.pyroTorrentAng = ang; p.pyroPol = polarityCast(p,'fire');
-      p.pyroTorrentDurMax = pyroTorrentDuration(ptRank);
-      p.pyroTorrentT = p.pyroTorrentDurMax;
+      p.pyroTorrentDurMax = 1e9; p.pyroTorrentT = 1e9; p.pyroTorrentElapsed = 0;
       p.pyroTorrentTick = 0;
-      p.pyroTorrentCd = applyCdr(p, p.pyroTorrentCdMax);
+      p.pyroTorrentCd = 0;
       showMsg('Pyro Torrent!', 0.8);
     }
   }
   if(p.pyroTorrentT>0){
-    p.pyroTorrentT -= dt;
+    p.pyroTorrentElapsed = (p.pyroTorrentElapsed||0) + dt;
     p.pyroTorrentTick -= dt;
     { const cps = resCost(p,'pyroTorrent'); p.mp = Math.max(0,(p.mp||0) - cps*dt); if(p.mp<=0.01 && p.cls==='mystic'){ p.pyroTorrentT = 0; showMsg('Out of mana', 0.8); } }
     setAimStickVisible(p.pyroTorrentT>0);
@@ -1806,7 +1815,7 @@ function updateStep(dt){
     else {
       p.movementStopT = Math.max(p.movementStopT||0, 0.12); // channelled in place
       const ptRank = effectiveRank(p,'pyroTorrent')||0;
-      const frac = clamp(1 - p.pyroTorrentT/Math.max(0.01,p.pyroTorrentDurMax), 0, 1);
+      const frac = clamp((p.pyroTorrentElapsed||0)/PYRO_RAMP_TIME, 0, 1);   // v489: ramps over the first 5s of channelling
       let ang = p.pyroTorrentAng!=null ? p.pyroTorrentAng : Math.atan2(p.facing.y,p.facing.x);
       let tgt = nearestEnemy(g, p, PYRO_TORRENT_RANGE);
       let manualAim = false;
@@ -1908,7 +1917,7 @@ function updateStep(dt){
     if(p.immolateT>0){ p.immolateT = 0; showMsg('The flames die down', 0.8); }   // v304: press again to extinguish
     else if(imR>0 && !(p.immolateCd>0) && p.hp <= p.maxHp*IMMOLATE_MIN_HP){ showMsg('Too weak to Immolate (needs over '+Math.round(IMMOLATE_MIN_HP*100)+'% life)', 1.2); }   // v481
     else if(imR>0 && !(p.immolateCd>0)){
-      p.immolateDurMax = immolateDuration(imR); p.immolateT = p.immolateDurMax;
+      p.immolateDurMax = 1e9; p.immolateT = 1e9;   // v489: no duration -- burns until pressed again or you drop to 25% life p.immolatePol = polarityCast(p,'fire');   // v489: fire cast for Elemental Polarity
       p.immolateCdMax = applyCdr(p, IMMOLATE_CD); p.immolateCd = p.immolateCdMax;
       showMsg('Immolate!', 0.9);
       g.particles.push({type:'ring', x:p.x, y:p.y, t:0.5, max:0.5, r:90, color:'#ff7a3d'});
@@ -1981,12 +1990,12 @@ function updateStep(dt){
     wantPermafrost=false;
     const pfR = effectiveRank(p,'permafrost')||0;
     if(pfR>0 && !(p.permafrostCd>0)){
-      p.permafrostCdMax = applyCdr(p, PERMAFROST_CD); p.permafrostCd = p.permafrostCdMax;
+      p.permafrostCdMax = applyCdr(p, permafrostCd(pfR)); p.permafrostCd = p.permafrostCdMax;
       const tg = nearestEnemyOnScreen(g, p, PERMAFROST_CAST_RANGE);
       let zx, zy;
       if(tg && hasLOS(g,p,tg)){ zx = tg.x; zy = tg.y; }
       else { const fa = Math.atan2(p.facing.y, p.facing.x); zx = clamp(p.x+Math.cos(fa)*160, 40, g.room.w-40); zy = clamp(p.y+Math.sin(fa)*160, 40, g.room.h-40); }
-      p.permaZone = {x:zx, y:zy, t:0, dur:permafrostDur(pfR), r:PERMAFROST_R*aoeRadiusMult(p), rank:pfR};
+      p.permaZone = {x:zx, y:zy, t:0, dur:permafrostDur(pfR), r:PERMAFROST_R*aoeRadiusMult(p), rank:pfR, pol:polarityCast(p,'cold')};   // v489: cold cast for Elemental Polarity
       showMsg('Permafrost!', 0.9);
       g.particles.push({type:'ring', x:zx, y:zy, t:0.5, max:0.5, r:p.permaZone.r, color:'#4f82c8'});
     }
@@ -1997,9 +2006,7 @@ function updateStep(dt){
     g.particles.push({type:'frostzone', x:z.x, y:z.y, t:0.06, max:0.06, r:z.r, perma:1, prog:z.t/z.dur});
     for(const e of g.enemies){
       if(e.hp>0 && dist(z,e) < z.r+e.r){
-        e.permaT = 0.25;
-        if(!(e.permaArmedT>0) && !(e.permaCool>0) && !freezeImmune(e) && !isHeavyEnemy(e)) e.permaArmedT = 8;
-        else if(!(e.permaArmedT>0) && !(e.permaCool>0)) e.permaArmedT = 8;   // bosses get the slow; the armed hit only chills them
+        e.permaT = 0.25; e.permaSlow = permafrostSlowPct(z.rank); e.permaAmp = permafrostColdAmp(z.rank);
       }
     }
     if(z.t >= z.dur) p.permaZone = null;
@@ -2015,20 +2022,23 @@ function updateStep(dt){
   if(wantFear){
     wantFear=false;
     const frRank = effectiveRank(p,'fear')||0;
-    if(frRank>0 && p.fearCd<=0 && (p.souls||0)>=FEAR_SOUL_COST){
-      p.souls -= FEAR_SOUL_COST;
+    if(frRank>0 && p.fearCd<=0){
       p.fearCdMax = applyCdr(p, fearCooldown(frRank));
       p.fearCd = p.fearCdMax;
-      const dur = fearDuration(frRank);
+      const dur = fearDuration(frRank), R = FEAR_RADIUS*aoeRadiusMult(p);
+      const at = pickAoeSpot(g, p, R, FEAR_CAST_RANGE);   // v489: cast onto the biggest group in range
       for(const e of g.enemies){
-        if(!(e.isBoss||e.isLairBoss||e.lr||e.rev||e.lvBoss||e.mastodon||e.prot||e.bossName) && dist(p,e) < FEAR_RADIUS*aoeRadiusMult(p)+e.r){
-          e.fearT = Math.max(e.fearT||0, dur);
-          e.fearVulnT = dur + FEAR_VULN_EXTRA; e.fearVulnPct = fearVulnPct(frRank);
+        if(e.hp>0 && dist(at,e) < R+e.r){
+          e.fearVulnT = dur + FEAR_VULN_EXTRA; e.fearVulnPct = fearVulnPct(frRank);   // every enemy hit is cursed (bosses too)
+          if(!(e.isBoss||e.isLairBoss||e.lr||e.rev||e.lvBoss||e.mastodon||e.prot||e.bossName)) e.fearT = Math.max(e.fearT||0, dur);   // bosses do not flee
+          g.particles.push({type:'burst', x:e.x, y:e.y, t:0.45, max:0.45, color:'#b07ae0'});
         }
       }
       showMsg('Fear!', 0.8);
-      g.particles.push({type:'ring', x:p.x, y:p.y, t:0.4, max:0.4, r:FEAR_RADIUS*aoeRadiusMult(p), color:'#8a6ab0'});
-      g.particles.push({type:'burst', x:p.x, y:p.y, t:0.35, max:0.35, color:'#3a2050'});
+      g.particles.push({type:'ring', x:at.x, y:at.y, t:0.55, max:0.55, r:R, color:'#b07ae0'});
+      g.particles.push({type:'ring', x:at.x, y:at.y, t:0.4, max:0.4, r:R*0.55, color:'#e0c8ff'});
+      g.particles.push({type:'gasBurst', thin:1, x:at.x, y:at.y, t:0.7, max:0.7, r:R*0.9, seed:Math.random()*6, color:'#6a3a90'});
+      for(let k=0;k<10;k++){ const an = k/10*6.283; g.particles.push({type:'dbWisp', x:at.x+Math.cos(an)*R*0.6, y:at.y+Math.sin(an)*R*0.6, t:0.6, max:0.6}); }
     }
   }
 
@@ -2038,16 +2048,14 @@ function updateStep(dt){
     wantRaiseDead = false;
     const rdR = effectiveRank(p,'raiseDead')||0;
     if(rdR>0 && !(p.raiseDeadCd>0)){
-      const waiting = (g.followerPending||[]).filter(x=>x.kind==='skeleton').length;
-      if((p.skelDown||0) + waiting <= 0){ showMsg('Your skeletons are all standing', 0.9); }
-      else {
-        p.skelDown = 0; if(g.followerPending) g.followerPending = g.followerPending.filter(x=>x.kind!=='skeleton');
-        const n0 = g.followers.length; ensureFollowers(g);
-        for(let k=n0;k<g.followers.length;k++){ const nf = g.followers[k]; if(nf.kind!=='skeleton') continue; const an = Math.random()*6.283; nf.x = p.x+Math.cos(an)*30; nf.y = p.y+Math.sin(an)*30; g.particles.push({type:'burst', x:nf.x, y:nf.y, t:0.45, max:0.45, color:'#cfc6e8'}); }
-        p.raiseDeadCdMax = applyCdr(p, RAISE_DEAD_CD); p.raiseDeadCd = p.raiseDeadCdMax;
-        g.particles.push({type:'ring', x:p.x, y:p.y, t:0.4, max:0.4, r:70, color:'#a08ad0'});
-        showMsg('Rise!', 0.7);
-      }
+      // v489: recasting blows up every skeleton still standing (a Sacrifice burst) and raises a full fresh set
+      for(let k=g.followers.length-1;k>=0;k--){ const f = g.followers[k]; if(f.kind!=='skeleton') continue; g.followers.splice(k,1); necroSkeletonDeath(g, f, true); }
+      p.skelDown = 0; if(g.followerPending) g.followerPending = g.followerPending.filter(x=>x.kind!=='skeleton');
+      const n0 = g.followers.length; ensureFollowers(g);
+      for(let k=n0;k<g.followers.length;k++){ const nf = g.followers[k]; if(nf.kind!=='skeleton') continue; const an = Math.random()*6.283; nf.x = p.x+Math.cos(an)*30; nf.y = p.y+Math.sin(an)*30; g.particles.push({type:'burst', x:nf.x, y:nf.y, t:0.45, max:0.45, color:'#a08ad0'}); }
+      p.raiseDeadCdMax = applyCdr(p, RAISE_DEAD_CD); p.raiseDeadCd = p.raiseDeadCdMax;
+      g.particles.push({type:'ring', x:p.x, y:p.y, t:0.4, max:0.4, r:70, color:'#a08ad0'});
+      showMsg('Rise!', 0.7);
     }
   }
 
@@ -2105,30 +2113,24 @@ function updateStep(dt){
     }
   }
 
-  // v419 Soul Nova: a ring burst around you. Costs a flat 10 souls, or 20 mana if you hold fewer than 10.
-  if(p.soulNovaCd>0) p.soulNovaCd -= dt;
-  if(wantSoulNova){
-    wantSoulNova=false;
-    const snRank = effectiveRank(p,'soulNova')||0;
-    if(snRank>0 && p.soulNovaCd<=0){
-      const viaSouls = (p.souls||0) >= SOULNOVA_SOUL_COST;
-      if(!viaSouls && (p.mp||0) < SOULNOVA_MANA_COST){ noResourceMsg(p); }
+  // v489 Soul Fire: 5 souls + 20 mana -- a big, slow ball of green soul-flame that bursts on impact (see soulFireExplode)
+  if(p.soulFireCd>0) p.soulFireCd -= dt;
+  if(wantSoulFire){
+    wantSoulFire=false;
+    const sfRank = effectiveRank(p,'soulFire')||0;
+    if(sfRank>0 && p.soulFireCd<=0){
+      if((p.souls||0) < SOULFIRE_SOUL_COST){ if(!(p.resMsgT>0)){ p.resMsgT = 0.9; showMsg('Not enough souls ('+SOULFIRE_SOUL_COST+' needed)', 0.9); } }
+      else if((p.mp||0) < SOULFIRE_MANA_COST){ noResourceMsg(p); }
       else {
-        const dmg = soulNovaDmg(p, snRank);   // (with the souls still held, so Soul Hunger counts them)
-        if(viaSouls) p.souls -= SOULNOVA_SOUL_COST; else p.mp = Math.max(0,(p.mp||0)-SOULNOVA_MANA_COST);
-        p.soulNovaCdMax = applyCdr(p, SOULNOVA_CD); p.soulNovaCd = p.soulNovaCdMax;
-        const R = SOULNOVA_RADIUS*aoeRadiusMult(p);
-        for(const e of g.enemies){
-          if(e.hp>0 && dist(p,e) < R+e.r){
-            e.hp -= applyEnemyArmor(p, e, dmg, 0, 'cold'); e.hitT = 0.15; e.chillT = Math.max(e.chillT||0, SOULNOVA_CHILL);
-            g.particles.push({type:'burst', x:e.x, y:e.y, t:0.25, max:0.25, color:'#a06ad0'});
-            checkExecute(g, e);
-          }
-        }
-        showMsg('Soul Nova!', 0.7);
-        g.particles.push({type:'ring', x:p.x, y:p.y, t:0.45, max:0.45, r:R, color:'#a06ad0'});
-        g.particles.push({type:'ring', x:p.x, y:p.y, t:0.3, max:0.3, r:R*0.6, color:'#e0d0ff'});
-        g.particles.push({type:'burst', x:p.x, y:p.y, t:0.4, max:0.4, color:'#5a2a80'});
+        const dmg = soulFireDmg(p, sfRank);   // (with the souls still held, so Soul Hunger counts them)
+        p.souls -= SOULFIRE_SOUL_COST; p.mp = Math.max(0, (p.mp||0) - SOULFIRE_MANA_COST);
+        p.soulFireCdMax = applyCdr(p, SOULFIRE_CD); p.soulFireCd = p.soulFireCdMax;
+        const tg = nearestEnemyOnScreen(g, p, 520);
+        const ang = tg ? Math.atan2(tg.y-p.y, tg.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
+        p.facing = {x:Math.cos(ang), y:Math.sin(ang)}; p.faceSign = screenFacingSign(p.facing.x, p.facing.y); p.atkAnimT = 0.3;
+        g.projectiles.push({x:p.x+Math.cos(ang)*20, y:p.y+Math.sin(ang)*20, vx:Math.cos(ang)*SOULFIRE_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*SOULFIRE_SPEED*projectileSpeedMult(p),
+          r:SOULFIRE_R, dmg, from:'player', life:SOULFIRE_LIFE, isSoulFire:true, seed:Math.random()*10, R:SOULFIRE_RADIUS*aoeRadiusMult(p)});
+        showMsg('Soul Fire!', 0.7);
       }
     }
   }
@@ -2232,7 +2234,7 @@ function updateStep(dt){
     if(e.permaT>0) e.permaT -= dt; if(e.permaArmedT>0) e.permaArmedT -= dt; if(e.permaCool>0) e.permaCool -= dt;
     if(e.coldHitT>0) e.coldHitT -= dt; if(e.freezeImmT>0) e.freezeImmT -= dt;
     if(e.elderBuffT>0){ e.elderBuffT -= dt; if(e.elderBuffT<=0){ e.elderBuffT = 0; e.dmg /= 1.25; e.speed /= 1.15; } }
-    const chillMult = (e.chillT>0 ? 0.5 : 1) * (e.permaT>0 ? PERMAFROST_SLOW : 1);   // v476: pursuit removed
+    const chillMult = (e.chillT>0 ? 0.5 : 1) * (e.permaT>0 ? 1-(e.permaSlow||0.25) : 1);   // v489: Permafrost slows 25-50%
     // Blizzard's Freeze (e.frozenT, v76): a brand-new, GENERIC full
     // immobilize -- merged into the same branch as Stun (both fully stop
     // movement/attacks via `continue`) so either one ticks down correctly
@@ -3031,6 +3033,14 @@ function updateStep(dt){
   if(g.boltFx) updateBoltFx(g, dt);
   if(g.flashT>0) g.flashT = Math.max(0, g.flashT-dt*1.4);
   // remove dead
+  // v489 Permafrost shatter: chilled or frozen enemies that die inside the zone burst, hurting their neighbours
+  if(p.permaZone) for(let si=0; si<g.enemies.length; si++){ const e = g.enemies[si];
+    if(e.hp<=0 && !e._shattered && e.permaT>0 && (e.chillT>0 || e.frozenT>0)){
+      e._shattered = true;
+      const sd = Math.min((e.maxHp||0)*PERMA_SHATTER_PCT, wpnDmg(p,true)*6);
+      for(const o of g.enemies){ if(o!==e && o.hp>0 && dist(o,e) < PERMA_SHATTER_R+o.r){ o.hp -= applyEnemyArmor(p, o, sd, 0, 'cold'); o.hitT = 0.15; coldHit(o, 1); } }
+      g.particles.push({type:'ring', x:e.x, y:e.y, t:0.35, max:0.35, r:PERMA_SHATTER_R, color:'#bfeaff'}); g.particles.push({type:'burst', x:e.x, y:e.y, t:0.4, max:0.4, color:'#e6f8ff'});
+    } }
   for(const we of g.enemies){ if(we.wraith && we.wrImmune) we.hp = we.wrLockHp; else if(we.wlord && we.wlImmune) we.hp = we.wlLockHp; }   // v225: the shadow form cannot be hurt
   for(let i=g.enemies.length-1;i>=0;i--){
     if(g.enemies[i].hp<=0){
@@ -3141,6 +3151,8 @@ function updateStep(dt){
         const oa = Math.atan2(p.y-pr.y, p.x-pr.x), os = Math.hypot(pr.vx,pr.vy) || SOUL_ORB_SPEED;
         pr.vx = Math.cos(oa)*os; pr.vy = Math.sin(oa)*os;
         if(dist(pr,p) < pr.r+p.r) dead = true;
+      } else if(pr.isSoulFire){
+        for(const e of g.enemies){ if(e.hp>0 && dist(pr,e) < pr.r+e.r){ dead = true; break; } }
       } else if(pr.isTornado){
         // Tornado (v103 rework): pierces every enemy in its path instead
         // of dying on the first hit (dead is never set true here, so the
@@ -3161,7 +3173,7 @@ function updateStep(dt){
           if(rec && rec.cd>0) rec.cd -= dt;
           if(dist(pr,e) >= (pr.hitR||pr.r)+e.r) continue;
           if(!rec){ rec = {n:0, cd:0}; pr.tHits.set(e, rec); }
-          if(rec.n >= TORNADO_HITS_PER_ENEMY || rec.cd>0) continue;
+          if(rec.cd>0) continue;
           rec.n++; rec.cd = TORNADO_HIT_GAP;
           e.hp -= applyEnemyArmor(p, e, pr.dmg); e.hitT = 0.15;
           if(pr.staticCharge) lightningCharge(g, e, 0, 'enemy');
@@ -3343,6 +3355,7 @@ function updateStep(dt){
         }
       }
     }
+    if(dead && pr.isSoulFire && !pr.burst){ pr.burst = true; soulFireExplode(g, p, pr); }
     if(dead) g.projectiles.splice(i,1);
   }
 

@@ -516,7 +516,7 @@ function recalcStats(p){
   // raw item total separately for anything that wants to display it apart
   // from Warding's contribution).
   p.defenceFlat = addDefenceFlat;
-  p.defense = (addArmor + addDefenceFlat + addDexterity*DEF_PER_DEX + (p.cls==='warrior' ? (WARRIOR_BASE_ARMOR + WARRIOR_ARMOR_PER_LEVEL*p.level)*DEF_SCALE : 0)) * (1 + addDefensePct/100) * (1 + ironSkinDefensePct(p)) * (p.beerT>0 ? BEER_ARMOR_MULT : 1) * (1 + pb.def/100) * (1 + (p.bannerDefNow||0)/100);
+  p.defense = (addArmor + addDefenceFlat + addDexterity*DEF_PER_DEX + (p.cls==='warrior' ? (WARRIOR_BASE_ARMOR + WARRIOR_ARMOR_PER_LEVEL*p.level)*DEF_SCALE : 0)) * (1 + addDefensePct/100) * (1 + ironSkinDefensePct(p)) * (p.beerT>0 ? BEER_ARMOR_MULT : 1) * (1 + pb.def/100) * (1 + (p.bannerDefNow||0)/100) * (p.hurricaneT>0 ? 1 + hurricaneDefPct((p.skills && effectiveRank(p,'hurricane'))||1) : 1);   // v489 Hurricane
   p.armor = p.defense/DEF_SCALE;   // old-scale value, still used by skills that add armor to their damage
   // v83 Studded (+Thorns): flat damage reflected onto an attacker whenever
   // the player is actually hit (not blocked/dodged) -- see playerDamage.
