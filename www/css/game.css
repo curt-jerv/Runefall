@@ -1,0 +1,1208 @@
+  :root{
+    --void:#0a0806;
+    --stone:#17130f;
+    --stone-light:#241e18;
+    --ember:#e2703a;
+    --ember-dim:#8a4526;
+    --blood:#b4293f;
+    --arcane:#5b8cff;
+    --gold:#e8c44a;
+    --bone:#d8cdb8;
+    --bone-dim:#8a8078;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{
+    height:100%; margin:0; overflow:hidden; background:var(--void);
+    font-family:system-ui, -apple-system, sans-serif; color:var(--bone);
+    touch-action:none;
+  }
+  #wrap{position:fixed; inset:0; height:100%;}
+  canvas{display:block; width:100%; height:100%;}
+
+  .plaque{
+    background:linear-gradient(180deg,var(--stone-light),var(--stone));
+    border:1px solid #3a2f22;
+    border-radius:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  #buffBar{ position:absolute; top:calc(76px + env(safe-area-inset-top,0px)); left:12px; display:flex; gap:6px; z-index:5; pointer-events:auto; }
+  .buffIcon{ display:flex; flex-direction:column; align-items:center; min-width:40px; padding:3px 5px; border-radius:8px; background:rgba(22,18,13,0.85); border:1px solid #6a5a3a; font-size:18px; line-height:1.1; }
+  .buffIcon[data-k=unbreak]{ border-color:#f0d078; box-shadow:0 0 8px rgba(240,208,120,.65); animation:buffPulse 1s ease-in-out infinite; }
+  .buffIcon[data-k=assault]{ border-color:#e2382f; box-shadow:0 0 8px rgba(226,56,47,.6); }
+  @keyframes buffPulse{ 0%,100%{ box-shadow:0 0 5px rgba(240,208,120,.4);} 50%{ box-shadow:0 0 12px rgba(240,208,120,.9);} }
+  .buffIcon b{ font-size:10px; font-weight:600; color:#e8c44a; font-family:Alegreya,Georgia,serif; }
+  #hud{
+    position:absolute; top:calc(12px + env(safe-area-inset-top,0px)); left:12px; right:12px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    pointer-events:none;
+    z-index:5;
+  }
+  #bars{ width:200px; padding:6px 8px 7px; }
+  .hudCol{ display:flex; flex-direction:column; gap:5px; }
+  .hbar{ position:relative; height:14px; border-radius:5px; background:rgba(0,0,0,.5); border:1px solid #4a3c2a; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,.6); }
+  .hfill{ height:100%; width:100%; transition:width .15s ease; box-shadow:inset 0 1px 0 rgba(255,255,255,.25); }
+  .hlab{ position:absolute; left:6px; top:0; z-index:2; font:700 9px/14px system-ui,sans-serif; letter-spacing:.06em; color:rgba(255,255,255,.9); text-shadow:0 1px 2px rgba(0,0,0,.9); }
+  .hnum{ position:absolute; right:6px; top:0; z-index:2; font:600 9px/14px system-ui,sans-serif; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.9); }
+  #hudLevel{ margin-bottom:5px !important; }
+
+  /* (v162) unified top strip: bars + gold/souls + BAG/TREE/QUEST/MENU/map in one subtle translucent band */
+  #topStrip{ position:absolute; top:0; left:0; right:0; z-index:5; pointer-events:none;
+    padding:calc(6px + env(safe-area-inset-top,0px)) 10px 6px; display:flex; flex-wrap:wrap; align-items:center; gap:5px 10px;
+    background:linear-gradient(180deg,rgba(10,7,14,.88),rgba(10,7,14,.72)); border-bottom:2px solid #050308; box-shadow:0 3px 10px rgba(0,0,0,.55), inset 0 -1px 0 rgba(255,214,120,.18); }
+  #topStrip #bars{ flex:1 1 300px; display:flex; align-items:center; gap:6px; width:auto; padding:0; background:none; border:none; box-shadow:none; min-width:0; }
+  #topStrip .hbar{ flex:1 1 0; min-width:0; height:14px; border-radius:4px; background:rgba(0,0,0,.6); border:1.5px solid #000; box-shadow:0 0 0 1px rgba(255,214,120,.22), inset 0 1px 3px rgba(0,0,0,.7); }
+  #topStrip .hlab{ font:800 9px/14px system-ui,sans-serif; left:4px; }
+  #topStrip .hnum{ font:700 9px/14px system-ui,sans-serif; right:4px; }
+  #topStrip #hudLevel{ flex:0 0 auto; margin:0 !important; font:700 11px Alegreya,Georgia,serif; color:var(--gold); text-shadow:0 1px 2px #000; letter-spacing:.03em; }
+  #topBtns{ flex:1 1 auto; display:flex; align-items:center; justify-content:flex-end; gap:5px; pointer-events:none; }
+  #topBtns .tbSpacer{ flex:0 0 0; }
+  #topBtns{ min-width:0; flex-wrap:nowrap; }
+  #topBtns > div{ flex:1 1 0; }   /* v419: the buttons share the width evenly */
+  #topBtns #mapBtn{ flex:0 0 34px !important; }
+  #topBtns{ justify-content:stretch; }
+  /* v176: region text + soul counter live in their own row under the top strip; buff icons follow */
+  #topWrap{ position:absolute; top:0; left:0; right:0; z-index:5; pointer-events:none; }
+  #topWrap #topStrip{ position:relative; top:auto; left:auto; right:auto; }
+  #subHud{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:3px 12px 0; min-height:15px; pointer-events:none; }
+  #topStrip #zonePlaque{ flex:0 1 auto; min-width:0; max-width:100%; font:700 11px Alegreya,Georgia,serif; color:var(--gold); text-shadow:0 1px 2px #000,0 0 4px #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #subHud #soulsWrap{ position:static; padding:0; font-size:11px; text-shadow:0 1px 2px #000,0 0 4px #000; margin-left:auto; }
+  #topWrap #buffBar{ position:relative; top:auto; left:auto; padding:5px 12px 0; }
+  #buffBar:empty{ padding:0; }
+  .buffIcon{ cursor:pointer; }
+  #buffTip{ display:none; margin:5px 12px 0; padding:5px 9px; max-width:260px; border-radius:7px; background:rgba(22,18,13,0.92); border:1px solid #6a5a3a; color:#f0e6d0; font:600 11px Alegreya,Georgia,serif; pointer-events:auto; }
+  @media (max-width:520px){ #topBtns{ gap:3px; } #topBtns > div{ padding:0 5px !important; min-width:24px; font-size:10px !important; } #topStrip #zonePlaque, #subHud #soulsWrap{ font-size:10px; } #topBtns #mapBtn{ width:26px !important; min-width:26px !important; } }
+  #topBtns > div{ position:relative !important; top:auto !important; left:auto !important; right:auto !important; width:auto !important; height:28px !important; min-width:28px;
+    padding:0 8px !important; margin:0; border-radius:6px !important; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,#3a3026,#2a2218) !important; border:1.5px solid #0a0806 !important; box-shadow:0 0 0 1px rgba(255,214,120,.35), 0 2px 4px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.18) !important;
+    font:800 11px Alegreya,Georgia,serif !important; letter-spacing:.04em; color:var(--bone); pointer-events:auto; }
+  #topBtns #goldPlaque{ color:var(--gold); pointer-events:none; background:none !important; border-color:transparent !important; box-shadow:none !important; padding:0 4px !important; font-size:13px !important; text-shadow:0 1px 2px #000; }
+  #subHud #soulsWrap{ color:#c9a0ff; }
+  #topBtns #mapBtn{ padding:0 !important; width:30px !important; }
+  #topBtns #mapBtn svg{ width:19px; height:19px; }
+  #topBtns > div:active{ filter:brightness(1.4); }
+  #topBtns #mapBtn{ flex:1 1 0 !important; width:auto !important; min-width:28px !important; }   /* v467: same size as the other buttons */
+  #topStrip #bagBadge, #topStrip #skillsBadge, #topStrip #questBadge{ top:-5px; right:-5px; }
+  @media (min-width:900px){ #topStrip{ flex-wrap:nowrap; } #topStrip #bars{ flex:0 1 460px; } #topBtns{ flex:1 1 360px; max-width:640px; margin-left:auto; } }
+  #bossBar{ position:absolute; left:50%; transform:translateX(-50%); top:calc(96px + env(safe-area-inset-top,0px)); width:min(62vw,460px); z-index:6; display:none; pointer-events:none; text-align:center; }
+  #bossName.quiet{ color:#cfc3a6; font-weight:600; font-size:12px; letter-spacing:.04em; }
+  #bossName{ font:700 13px Alegreya,Georgia,serif; color:#f0d078; letter-spacing:.06em; text-shadow:0 1px 4px rgba(0,0,0,.95); margin-bottom:3px; }
+  .bossTrack{ position:relative; height:16px; border-radius:6px; background:rgba(0,0,0,.6); border:1px solid #7a5a3a; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.6), inset 0 1px 3px rgba(0,0,0,.7); }
+  #bossFill{ height:100%; width:100%; background:linear-gradient(180deg,#e8574a,#8a1a1a); transition:width .15s ease; }
+  #bossNum{ position:absolute; left:0; right:0; top:0; font:700 10px/16px system-ui,sans-serif; color:#fff; text-shadow:0 1px 2px #000; }
+  @media (min-width:760px){ #bossBar{ top:calc(64px + env(safe-area-inset-top,0px)); } }
+  .barrow{ display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .barlabel{ font-size:10px; letter-spacing:.04em; color:var(--bone-dim); width:14px; text-align:center; font-weight:700;}
+  .bar-track{
+    flex:1; height:14px; border-radius:4px; overflow:hidden;
+    padding:2px;
+  }
+  .bar-fill{ height:100%; border-radius:2px; transition:width .15s ease; }
+  .fill-hp{ background:linear-gradient(180deg,#e0455f,var(--blood)); }
+  .fill-mp{ background:linear-gradient(180deg,#7ea8ff,var(--arcane)); }
+  /* v443 Ice Armor HUD: translucent ice layer over the WHOLE health bar, its width = how full the barrier is; reserved mana = hatched grey block on the right of the mana bar */
+  #iafill{ position:absolute; left:0; top:50%; height:50%;   /* v444: bottom half only, so the life fill stays readable on top */ width:0; z-index:1; pointer-events:none; transition:width .15s ease, opacity .2s;
+    background:linear-gradient(180deg,rgba(150,210,255,.74),rgba(70,140,230,.68)); box-shadow:inset 0 1px 0 rgba(255,255,255,.45), inset -1px 0 0 rgba(220,245,255,.7); }
+  #mpres{ position:absolute; right:0; top:0; height:100%; width:0; z-index:1; pointer-events:none; display:none;
+    background:repeating-linear-gradient(135deg,rgba(78,78,88,.92) 0 3px,rgba(52,52,60,.92) 3px 6px); border-left:1px solid rgba(200,200,215,.35); }
+  #barnum{ font-size:10px; color:var(--bone-dim); margin-top:-3px; letter-spacing:.02em;}
+  /* Character level readout, top-left HUD -- sits directly above the HP bar
+     inside #bars so it moves/anchors with the same safe-area-aware cluster
+     as the health/XP bars, without touching the gold plaque/map icon over
+     on the right or any of the button rows further down. */
+  #hudLevel{
+    font-family:Alegreya,Georgia, 'Times New Roman', serif; font-weight:700; font-size:12px;
+    color:var(--gold); letter-spacing:.02em; margin-bottom:4px; text-shadow:0 1px 3px rgba(0,0,0,.6);
+  }
+
+  /* v85: the old #stats plaque (DEPTH number + "Lv.N · Gg" text block) was
+     replaced by a minimal map-icon button (#mapBtn) -- see the Region Map
+     overlay below. Gold is still shown at a glance via #goldPlaque right
+     next to it; level and current depth/zone moved into the Character
+     Stats popup (see statSummaryHtml's ZONE/LVL cells) since removing the
+     old plaque would otherwise make that info inaccessible mid-run. */
+  #goldPlaque{
+    position:absolute; top:calc(12px + env(safe-area-inset-top,0px)); right:64px; z-index:5;
+    height:44px; padding:0 12px; display:flex; align-items:center; justify-content:center;
+    font-family:Alegreya,Georgia, 'Times New Roman', serif; font-weight:700; font-size:14px; color:var(--gold);
+    pointer-events:none; white-space:nowrap;
+  }
+  #mapBtn{
+    position:absolute; top:calc(12px + env(safe-area-inset-top,0px)); right:12px; z-index:5;
+    width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    pointer-events:auto; color:var(--bone);
+  }
+  #boltBtn{
+    display:none; position:absolute; left:50%; bottom:calc(120px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); z-index:30;
+    min-width:270px; padding:14px 28px; text-align:center; cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:manipulation;
+    font-family:Alegreya,Georgia,'Times New Roman',serif; font-weight:900; font-size:22px; letter-spacing:.14em; color:#fff3c8;
+    text-shadow:0 0 10px rgba(255,150,40,.95), 0 2px 3px rgba(0,0,0,.9);
+    background:linear-gradient(180deg,#e0561c 0%,#8e1e0a 55%,#4a0d05 100%);
+    border:2px solid #ffd070; border-radius:12px;
+    box-shadow:0 0 0 2px #3a0a04, 0 0 26px 6px rgba(255,120,30,.75), inset 0 0 18px rgba(255,210,120,.45);
+    animation:boltPulse 0.9s ease-in-out infinite;
+  }
+  #boltBtn .bbIcon{ display:block; font-size:30px; line-height:1; margin-bottom:2px; }
+  #boltBtn:active{ transform:translateX(-50%) scale(.96); }
+  @keyframes boltPulse{ 0%,100%{ box-shadow:0 0 0 2px #3a0a04, 0 0 20px 4px rgba(255,120,30,.6), inset 0 0 14px rgba(255,210,120,.35); } 50%{ box-shadow:0 0 0 2px #3a0a04, 0 0 42px 12px rgba(255,170,50,.95), inset 0 0 26px rgba(255,230,150,.65); } }
+  @media (max-width:520px){ #boltBtn{ bottom:calc(230px + env(safe-area-inset-bottom,0px)); min-width:0; width:min(300px,calc(100vw - 32px)); font-size:19px; padding:10px 14px; } }
+  #areaLvl{
+    position:absolute; top:calc(60px + env(safe-area-inset-top,0px)); right:12px; width:44px; z-index:5; text-align:center;
+    font-family:Alegreya,Georgia, 'Times New Roman', serif; font-weight:700; font-size:10px; line-height:1.1; color:var(--gold);
+    text-shadow:0 1px 3px rgba(0,0,0,.8); pointer-events:none; display:none; letter-spacing:.02em;
+  }
+  #mapBtn svg{ width:24px; height:24px; display:block; }
+  #mapBtn:active{ filter:brightness(1.3); }
+
+  /* v85: the XP bar now lives directly inside #bars, immediately under the
+     HP bar, instead of as a separately-positioned plaque lower on the
+     screen -- a single cohesive top-left HUD cluster instead of two
+     disconnected bars. */
+  #xpwrap{ margin-top:2px; pointer-events:none; }
+  .xp-track{ height:6px; border-radius:3px; overflow:hidden; }
+  .xp-fill{ height:100%; background:linear-gradient(90deg,#caa24a,#f0d078); transition:width .2s ease; }
+
+  /* Necromancer (v78): a compact soul counter -- shown only once Soul Sap
+     has a rank (see updateSoulsHud). Placed top-right, just below the
+     gold plaque/map icon row -- the top-right corner otherwise only holds
+     the icon buttons further down (#menuBtn/#questBtn, both starting at
+     96px), so this doesn't clash with anything already there. */
+  #soulsWrap{
+    position:absolute; top:calc(78px + env(safe-area-inset-top,0px)); right:12px; z-index:5;
+    display:none; align-items:center; gap:5px; padding:4px 9px;
+    font-family:Alegreya,Georgia, 'Times New Roman', serif; font-weight:700; font-size:12px;
+    color:#c9a0ff; pointer-events:none;
+  }
+  #soulsWrap .soulIcon{ width:13px; height:13px; flex-shrink:0; }
+  #soulsWrap .soulIcon svg{ width:100%; height:100%; display:block; }
+
+  #bagBtn{
+    position:absolute; top:calc(96px + env(safe-area-inset-top,0px)); left:12px; z-index:5;
+    width:44px; height:32px; display:flex; align-items:center; justify-content:center;
+    font-family:Alegreya,Georgia, 'Times New Roman', serif; font-weight:700; font-size:11px;
+    letter-spacing:.03em; color:var(--bone); pointer-events:auto;
+  }
+  #bagBtn:active{ filter:brightness(1.3); }
+  #bagBadge{
+    position:absolute; top:-6px; right:-6px; width:14px; height:14px; border-radius:50%;
+    background:var(--gold); color:#2a1e08; font-size:9px; font-weight:800;
+    display:none; align-items:center; justify-content:center; font-family:system-ui,sans-serif;
+  }
+
+  #skillsBtn{
+    position:absolute; top:calc(132px + env(safe-area-inset-top,0px)); left:12px; z-index:5;
+    width:44px; height:32px; display:flex; align-items:center; justify-content:center;
+    font-family:Alegreya,Georgia, 'Times New Roman', serif; font-weight:700; font-size:10px;
+    letter-spacing:.03em; color:var(--bone); pointer-events:auto;
+  }
+  #skillsBtn:active{ filter:brightness(1.3); }
+  #skillsBadge{
+    position:absolute; top:-6px; right:-6px; width:14px; height:14px; border-radius:50%;
+    background:var(--gold); color:#2a1e08; font-size:9px; font-weight:800;
+    display:none; align-items:center; justify-content:center; font-family:system-ui,sans-serif;
+  }
+
+  #menuBtn{
+    position:absolute; top:calc(96px + env(safe-area-inset-top,0px)); right:12px; z-index:5;
+    width:44px; height:32px; display:flex; align-items:center; justify-content:center;
+    font-family:Alegreya,Georgia, 'Times New Roman', serif; font-weight:700; font-size:10px;
+    letter-spacing:.03em; color:var(--bone); pointer-events:auto;
+  }
+  #menuBtn:active{ filter:brightness(1.3); }
+
+  #questBtn{
+    position:absolute; top:calc(132px + env(safe-area-inset-top,0px)); right:12px; z-index:5;
+    width:44px; height:32px; display:flex; align-items:center; justify-content:center;
+    font-family:Alegreya,Georgia, 'Times New Roman', serif; font-weight:700; font-size:10px;
+    letter-spacing:.03em; color:var(--bone); pointer-events:auto;
+  }
+  #questBtn:active{ filter:brightness(1.3); }
+  #questBadge{
+    position:absolute; top:-6px; right:-6px; width:14px; height:14px; border-radius:50%;
+    background:var(--gold); color:#2a1e08; font-size:9px; font-weight:800;
+    display:none; align-items:center; justify-content:center; font-family:system-ui,sans-serif;
+  }
+
+  /* v86: item 4 of the UI/UX overhaul -- the old wide bottom-center
+     "interact bar" (a pill spanning uppercase text like "TALK TO OLD MAN",
+     "ENTER THE DARK FOREST", "OPEN STASH") is replaced with a small circular
+     icon button, stacked directly ABOVE the Dodge button in the same
+     bottom-right action cluster (see #actionCluster/#btnDodge above) instead
+     of floating alone at bottom-center. Purely a visual/positional change --
+     updateInteractPrompt() (the exact same proximity-driven show/hide logic)
+     and the #btnInteract click handler (the exact same interactKind dispatch)
+     are both reused completely unmodified; only the CSS position/shape and
+     the label content (now a single glyph via INTERACT_ICONS instead of a
+     multi-word label) changed. Positioned inside #actionCluster so it shares
+     its safe-area-aware anchor and moves together with Dodge/the skill slots. */
+  .interactBtn{
+    position:absolute; right:16px; bottom:232px;   /* v479: above the potion button so it never covers it */
+    width:52px; height:52px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    z-index:6; font-family:Alegreya,Georgia,'Times New Roman',serif; font-weight:700; font-size:19px;
+    color:var(--gold); pointer-events:auto;
+  }
+  .interactBtn:active{ filter:brightness(1.3); }
+
+  #portalChoice{
+    position:absolute; left:50%; bottom:calc(108px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%);
+    z-index:6; display:none; flex-direction:column; gap:8px; align-items:center; pointer-events:none;
+  }
+  .portalBtn{
+    padding:12px 28px; font-family:Alegreya,Georgia,'Times New Roman',serif; font-weight:700; font-size:13px;
+    letter-spacing:.03em; pointer-events:auto; text-transform:uppercase; white-space:nowrap; text-align:center;
+  }
+  .portalBtn:active{ filter:brightness(1.3); }
+  .portalBtn.primary{ color:var(--gold); border-color:var(--gold); box-shadow:0 0 10px rgba(232,196,74,0.25); }
+  .portalBtn.secondary{ color:var(--bone-dim); font-size:12px; padding:9px 22px; }
+
+  #joyzone{ position:absolute; left:0; bottom:0; width:46%; height:52%; z-index:4; }
+  #joybase{
+    position:absolute; width:118px; height:118px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.06), rgba(0,0,0,.35));
+    border:2px solid rgba(216,205,184,.25);
+    display:none; z-index:4;
+  }
+  #joyknob{
+    position:absolute; width:52px; height:52px; border-radius:50%;
+    background:linear-gradient(180deg,var(--ember),var(--ember-dim));
+    border:2px solid rgba(255,255,255,.3);
+    box-shadow:0 2px 8px rgba(0,0,0,.5);
+    transform:translate(-50%,-50%);
+  }
+
+  #aimzone{ position:absolute; right:0; bottom:0; width:54%; height:62%; z-index:4; display:none; }
+  /* while Pyro Torrent channels, the aim pad takes Strike's place and every attack/skill button is hidden */
+  body.pyroChannel #btnAttack, body.pyroChannel .skillSlotBtn{ visibility:hidden; pointer-events:none; }
+  #aimhint{ position:absolute; right:8px; bottom:8px; width:104px; height:104px; border-radius:50%; border:2px dashed rgba(255,110,70,.45); display:none; z-index:4; pointer-events:none; color:rgba(255,150,110,.7); font:600 11px system-ui; text-align:center; line-height:104px; }
+  #aimbase{ position:absolute; width:104px; height:104px; border-radius:50%; background:radial-gradient(circle at 35% 30%, rgba(255,120,70,.12), rgba(0,0,0,.35)); border:2px solid rgba(255,120,80,.5); display:none; z-index:4; pointer-events:none; }
+  #aimknob{ position:absolute; width:46px; height:46px; border-radius:50%; background:linear-gradient(180deg,#ff7a4a,#b52a14); border:2px solid rgba(255,255,255,.3); transform:translate(-50%,-50%); }
+  #buttons{
+    position:absolute; right:calc(16px + env(safe-area-inset-right,0px)); bottom:calc(232px + env(safe-area-inset-bottom,0px));
+    display:flex; flex-wrap:wrap-reverse; justify-content:flex-end; align-content:flex-end;
+    gap:10px; max-width:252px; z-index:5;
+  }
+  /* ---- v74: generalized active-skill loadout cluster -----------------------
+     Strike (X, "main") sits in the fixed far bottom-right corner exactly
+     where it always has; Dodge (permanent, never reassignable) sits fixed
+     directly above it; three small assignable circular buttons (1/2/3) fan
+     out to its left in a rough arc, per the layout the brief sketched:
+                  4 (dodge)
+             3  __
+         2.  /  X  \
+      1.      \ __/
+     This is a separate absolutely-positioned cluster from the #buttons flex
+     tray above (which now only holds legacy per-skill buttons that AREN'T
+     currently assigned to one of these 4 slots -- see updateSkillSlotButtonsUI
+     for the show/hide handoff between the two). All offsets are relative to
+     this single bottom-right anchor point, so they move together with the
+     safe-area inset exactly like #buttons already did. */
+  #actionCluster{
+    position:absolute; right:calc(16px + env(safe-area-inset-right,0px)); bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    width:0; height:0; z-index:5;
+  }
+  /* Compound selector (.actbtn.skillSlotBtn) so this always beats the plain
+     .actbtn{position:relative} rule regardless of stylesheet source order --
+     a bare .skillSlotBtn{position:absolute} rule has the same specificity as
+     .actbtn and would lose depending on which one is declared later. */
+  .actbtn.skillSlotBtn{ position:absolute; width:48px; height:48px; background:radial-gradient(circle at 35% 30%,#2e2820,#15120e); color:var(--bone); }
+  #btnSlot3{ right:92px; bottom:100px; }
+  #btnSlot2{ right:121px; bottom:56px; }
+  #btnSlot1{ right:127px; bottom:3px; }
+  .skillSlotBtn.slotEmpty{ opacity:0.4; border-style:dashed; }
+  .slotIcon{ position:absolute; inset:7px; display:none; align-items:center; justify-content:center; pointer-events:none; }
+  .slotIcon svg{ width:100%; height:100%; color:inherit; display:block; }
+  #btnAttack .slotIcon{ inset:14px; }
+  .actbtn{
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; font-family:Alegreya,Georgia, 'Times New Roman', serif; font-weight:700;
+    border:2px solid rgba(216,205,184,.3); position:relative; overflow:hidden;
+  }
+  .actbtn .cd{
+    position:absolute; inset:0; background:rgba(0,0,0,.55);
+    transform:translateY(100%); transition:none;
+  }
+  .actbtn span.lbl{ font-size:11px; letter-spacing:.03em; }
+  .actbtn span.key{ font-size:9px; color:var(--bone-dim); font-family:system-ui, -apple-system, sans-serif; margin-top:1px;}
+  /* Dodge is fixed/permanent -- never reassignable -- so it's positioned
+     directly, not through the generic slot system. See #actionCluster above. */
+  #btnDodge{ position:absolute; right:10px; bottom:98px; width:64px; height:64px; background:radial-gradient(circle at 35% 30%,#3a4a5a,#1c2530); color:#a9c4de; }
+  #btnPotion{ position:absolute; right:16px; bottom:170px; width:52px; height:52px; background:radial-gradient(circle at 35% 30%,#b0405a,#4a1522); color:#ffe8ee; }
+  #btnPotion .ico{ font-size:22px; line-height:1; }
+  #btnPotion .cnt{ position:absolute; right:5px; bottom:2px; font-size:11px; font-family:system-ui,sans-serif; }
+  #btnPotion.empty{ opacity:.45; }
+  #btnSlam{ width:74px; height:74px; background:radial-gradient(circle at 35% 30%,#7a8a9a,#3d4552); color:#eaf1ff; display:none; }
+  /* Strike is the default occupant of the "main" assignable slot -- it can be
+     reassigned to any other allocated active skill via the skill-tree Assign
+     button, in which case .slotIcon shows that skill's icon in place of the
+     STRIKE label (see updateSkillSlotButtonsUI). Position kept exactly where
+     Strike has always sat: the far bottom-right corner of the screen. */
+  #btnAttack{ position:absolute; right:0; bottom:0; width:84px; height:84px; background:radial-gradient(circle at 35% 30%,#c85a3a,var(--blood)); color:#fff0e8; }
+  #btnThrow{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#7a95a8,#33505f); color:#dff0f8; display:none; }
+  #btnGuardian{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#e6c86a,#8a6a2a); color:#2a1e08; display:none; }
+  #btnWhirlwind{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#d97a4a,#7a3018); color:#fff0e8; display:none; }
+  #btnBattlecry{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#e8c86a,#6a4a18); color:#2a1e08; display:none; }
+  #btnAssault{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#e8564a,#7a1616); color:#fff0e8; display:none; }
+  #btnStance{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#7a8a5a,#3a4a2a); color:#eef4e2; display:none; }
+  #btnRally{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#e6c86a,#6a5218); color:#2a1e08; display:none; }
+  #btnTrap{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#8a9a5a,#3a4018); color:#eef4e2; display:none; }
+  #btnPoisonKnives{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#8fe06a,#284018); color:#eef4e2; display:none; }
+  #btnShadowStep{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#b48ce8,#3a2258); color:#f4ecff; display:none; }
+  #btnVanish{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#8a7ad0,#241a3a); color:#f0ecff; display:none; }
+  #btnRapidShot{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#e8c44a,#6a4a18); color:#2a1e08; display:none; }
+  #btnCripplingShot{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#c85a6a,#5a1c28); color:#ffe8ec; display:none; }
+  #btnStunShot{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#e8d06a,#6a5818); color:#2a1e08; display:none; }
+  #btnPackTactics{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#9a8a5a,#3a3018); color:#eef4e2; display:none; }
+  #btnFieldDress{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#7ad07a,#1c4a20); color:#eaffea; display:none; }
+  .actbtn.channelActive{ filter:brightness(1.4); box-shadow:0 0 12px 2px rgba(122,208,122,0.7); }
+  .actbtn:active{ filter:brightness(1.25); }
+
+  /* v419: monster-part pickups get their own line at the top, so no other message can overwrite it */
+  #partToast{ position:absolute; top:calc(74px + env(safe-area-inset-top,0px)); left:50%; transform:translate(-50%,0); font:700 13px/1.2 Alegreya,Georgia,serif; letter-spacing:.06em; text-align:center; opacity:0; transition:opacity .35s; pointer-events:none; z-index:7; max-width:92vw; padding:4px 12px; border-radius:6px; background:rgba(10,7,14,.72); border:1px solid rgba(255,214,120,.25); text-shadow:0 1px 2px #000; }
+  #msg{
+    position:absolute; top:calc(100px + env(safe-area-inset-top,0px)); left:50%; transform:translate(-50%,0);
+    font-family:'Cinzel','Trajan Pro','Times New Roman',Georgia,serif; font-size:14px; font-weight:600; color:#d8c8a8; text-align:center;
+    letter-spacing:.1em; opacity:0; pointer-events:none; z-index:6; max-width:84vw; font-size:11.5px;
+    text-shadow:0 1px 0 #000,0 2px 6px rgba(0,0,0,.9);
+  }
+
+  #bigMsg{
+    --bmY:0px; position:absolute; top:calc(96px + env(safe-area-inset-top,0px)); left:50%; transform:translate(-50%,var(--bmY)) scale(1); z-index:7; pointer-events:none; opacity:0; text-align:center;
+    font-family:'Cinzel','Trajan Pro','Times New Roman',Georgia,serif; font-weight:700; letter-spacing:.22em; white-space:nowrap; max-width:92vw;
+    padding:4px 34px 6px; background:radial-gradient(ellipse at center, rgba(8,5,4,.62) 0%, rgba(8,5,4,.38) 55%, rgba(8,5,4,0) 80%);
+  }
+  #bigMsg .bmTitle{ font-size:clamp(13px,3vw,20px); color:#cdbb92; text-transform:uppercase;
+    text-shadow:0 1px 0 #000,0 0 10px rgba(120,20,10,.55),0 3px 10px rgba(0,0,0,.95); }
+  #bigMsg.small .bmTitle{ font-size:clamp(11px,2.4vw,15px); }
+  #bigMsg .bmSub{ white-space:normal; margin-top:2px; font-size:clamp(9px,2.2vw,12px); font-weight:600; letter-spacing:.1em; color:#a89878; text-shadow:0 1px 0 #000,0 2px 6px rgba(0,0,0,.95); }
+  #bigMsg .bmRule{ height:1px; margin:3px auto 0; width:60%; background:linear-gradient(90deg,transparent,#7a5a2a,#a07a3a,#7a5a2a,transparent); box-shadow:none; opacity:.8; }
+  @keyframes bmPop{ 0%{opacity:0; transform:translate(-50%,var(--bmY)) scale(1.04);} 18%{opacity:1; transform:translate(-50%,var(--bmY)) scale(1);} 100%{transform:translate(-50%,var(--bmY)) scale(1);} }
+  /* v441: every banner (beasts too) sits at the top, just under the HUD -- top is set live in JS */
+  #bigMsg.show{ animation:bmPop .6s ease-out both; }
+
+  #overlay{
+    position:absolute; inset:0; z-index:10; display:none;
+    align-items:center; justify-content:center; flex-direction:column;
+    background:radial-gradient(ellipse at center, rgba(20,8,14,.92), rgba(5,2,4,.98));
+    text-align:center; padding:24px;
+  }
+  #overlay h1{ font-family:Alegreya,Georgia, 'Times New Roman', serif; font-size:38px; color:var(--blood); margin:0 0 6px; letter-spacing:.03em;}
+  #overlay p{ margin:4px 0; color:var(--bone-dim); font-size:14px;}
+  #overlay .big{ color:var(--bone); font-size:16px; margin-top:10px;}
+  #overlay button{
+    margin-top:22px; padding:14px 34px; font-family:Alegreya,Georgia, 'Times New Roman', serif; font-size:16px; font-weight:700;
+    background:linear-gradient(180deg,var(--ember),var(--ember-dim)); color:#1c0f08;
+    border:none; border-radius:8px; box-shadow:0 3px 0 #6b3419;
+  }
+  #overlay button:active{ transform:translateY(2px); box-shadow:0 1px 0 #6b3419;}
+
+  /* v239: Diablo-II-inspired title screen */
+  #start{
+    position:absolute; inset:0; z-index:11; display:flex; align-items:center; justify-content:flex-start;
+    flex-direction:column; text-align:center; padding:0 24px; overflow:hidden;
+    background:#050305;
+  }
+  .tsHost .tsScene{ position:absolute; inset:0; width:100%; height:100%; }
+  .tsHost .tsGlow{ position:absolute; left:0; right:0; bottom:0; height:55%;
+    background:radial-gradient(ellipse 60% 70% at 50% 100%, rgba(255,96,24,.42), rgba(150,30,8,.18) 45%, transparent 75%);
+    animation:tsFlicker 3.4s ease-in-out infinite; pointer-events:none; }
+  .tsHost .tsVig{ position:absolute; inset:0; background:radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(0,0,0,.85) 100%); pointer-events:none; }
+  @keyframes tsFlicker{ 0%,100%{opacity:.85} 30%{opacity:1} 55%{opacity:.7} 75%{opacity:.95} }
+  .tsHost .tsEmber{ position:absolute; bottom:-10px; width:3px; height:3px; border-radius:50%; background:#ff9a3c; box-shadow:0 0 6px 2px rgba(255,120,30,.8);
+    opacity:0; animation:tsRise var(--d,9s) linear infinite; animation-delay:var(--dl,0s); left:var(--x,50%); }
+  @keyframes tsRise{ 0%{ transform:translate(0,0) scale(1); opacity:0 } 10%{opacity:.95} 100%{ transform:translate(var(--dx,30px),-88vh) scale(.3); opacity:0 } }
+  #start .tsTitleWrap{ position:relative; z-index:2; margin-top:11vh; display:flex; flex-direction:column; align-items:center; }
+  #start h1{
+    font-family:'Cinzel','Trajan Pro','Times New Roman',Georgia,serif; font-weight:900; font-size:min(12.5vw,78px); margin:0; letter-spacing:.11em; padding-left:.11em;
+    background:linear-gradient(180deg,#fff2c4 0%,#e8c25a 28%,#9a6a1c 52%,#e8c25a 70%,#6b430f 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 2px 0 #1a0d04) drop-shadow(0 0 18px rgba(255,140,40,.35)); line-height:1;
+  }
+  #start .tsRule{ display:flex; align-items:center; gap:10px; margin:10px 0 0; width:min(78vw,420px); }
+  #start .tsRule i{ flex:1; height:1px; background:linear-gradient(90deg,transparent,#8a6a2a,transparent); }
+  #start .tsRule b{ width:9px; height:9px; transform:rotate(45deg); background:linear-gradient(135deg,#f0d078,#6b430f); box-shadow:0 0 8px rgba(255,170,60,.6); }
+  #start .tsMenu{ position:relative; z-index:2; margin-top:9vh; display:flex; flex-direction:column; align-items:center; gap:12px; }
+  #start .tsMenu button{
+    position:relative; width:min(78vw,290px); padding:14px 20px; cursor:pointer;
+    font-family:'Cinzel','Trajan Pro','Times New Roman',Georgia,serif; font-size:16px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:#d9b25a;
+    background:linear-gradient(180deg,#34302e 0%,#1d1a19 48%,#121010 52%,#23201e 100%);
+    border:2px solid #5a4418; border-radius:2px; margin:0;
+    box-shadow:inset 0 0 0 1px #0a0806, inset 0 1px 0 rgba(255,235,170,.18), 0 0 0 1px #000, 0 6px 14px rgba(0,0,0,.7);
+    text-shadow:0 2px 2px #000, 0 0 10px rgba(255,150,40,.25); transition:color .15s, box-shadow .15s, border-color .15s;
+  }
+  #start .tsMenu button::before, #start .tsMenu button::after{ content:''; position:absolute; top:50%; width:7px; height:7px; margin-top:-3.5px; transform:rotate(45deg); background:#6b5320; box-shadow:0 0 0 1px #000; transition:background .15s, box-shadow .15s; }
+  #start .tsMenu button::before{ left:9px; } #start .tsMenu button::after{ right:9px; }
+  #start .tsMenu button:hover, #start .tsMenu button:focus-visible{ color:#fff0c0; border-color:#c89a3a; outline:none;
+    box-shadow:inset 0 0 0 1px #0a0806, inset 0 0 18px rgba(255,140,40,.22), 0 0 0 1px #000, 0 0 18px rgba(255,120,30,.45); }
+  #start .tsMenu button:hover::before, #start .tsMenu button:hover::after{ background:#ffb24a; box-shadow:0 0 8px #ff8a1e; }
+  #start .tsMenu button:active{ transform:translateY(1px); filter:brightness(.92); }
+  #continueSub{ font-family:Alegreya,Georgia,serif; font-size:12px; letter-spacing:.06em; color:#b79a5e; margin:0 0 -4px; text-shadow:0 1px 2px #000; }
+  #continueBtn{ border-color:#8a6a24 !important; }
+
+  /* v244: character / class select share the D2 title-screen scene (cloned in by JS) and its stone plaques */
+  #classSelect, #charSelect{
+    position:absolute; inset:0; z-index:11; display:none; overflow:hidden;
+    align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:24px; background:#050305;
+  }
+  #charSelect{ z-index:12; }
+  #classSelect > :not(.tsScene):not(.tsGlow):not(.tsEmber):not(.tsVig), #charSelect > :not(.tsScene):not(.tsGlow):not(.tsEmber):not(.tsVig){ position:relative; z-index:2; }
+  #classSelect h1, #charSelect h1{
+    font-family:'Cinzel','Trajan Pro','Times New Roman',Georgia,serif; font-weight:900; font-size:min(8.5vw,40px); margin:0; letter-spacing:.1em; padding-left:.1em; line-height:1.1;
+    background:linear-gradient(180deg,#fff2c4 0%,#e8c25a 28%,#9a6a1c 52%,#e8c25a 70%,#6b430f 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 2px 0 #1a0d04) drop-shadow(0 0 14px rgba(255,140,40,.3));
+  }
+  .classSub{ font-family:Alegreya,Georgia,serif; color:#b79a5e; font-size:13px; letter-spacing:.06em; margin:10px 0 22px; text-shadow:0 1px 2px #000; }
+  .classGrid{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:340px; max-height:56vh; overflow-y:auto; }
+  .classCard{
+    display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:2px; text-align:left; cursor:pointer;
+    background:linear-gradient(180deg,#34302e 0%,#1d1a19 48%,#121010 52%,#23201e 100%); border:2px solid #5a4418; color:#d9b25a;
+    box-shadow:inset 0 0 0 1px #0a0806, inset 0 1px 0 rgba(255,235,170,.18), 0 0 0 1px #000, 0 6px 14px rgba(0,0,0,.7);
+    font-family:inherit; position:relative; transition:color .15s, box-shadow .15s, border-color .15s;
+  }
+  .classCard:not(.locked):hover{ border-color:#c89a3a; box-shadow:inset 0 0 0 1px #0a0806, inset 0 0 18px rgba(255,140,40,.22), 0 0 0 1px #000, 0 0 18px rgba(255,120,30,.45); }
+  .classCard:not(.locked):active{ filter:brightness(.92); transform:translateY(1px); }
+  .classIcon{ font-size:26px; flex-shrink:0; width:34px; text-align:center; filter:grayscale(.55) sepia(.6) brightness(.95) drop-shadow(0 0 6px rgba(255,150,40,.4)); }
+  .className{ font-family:'Cinzel','Trajan Pro','Times New Roman',Georgia,serif; font-weight:800; font-size:16px; letter-spacing:.12em; text-transform:uppercase; color:#e8c25a; text-shadow:0 2px 2px #000; }
+  .classDesc{ font-family:Alegreya,Georgia,serif; font-size:11px; color:#a8926a; margin-top:3px; line-height:1.4; }
+  .classCard.locked{ opacity:0.5; }
+  .classCard.selected{ border-color:#f0c040; box-shadow:inset 0 0 0 1px #0a0806, inset 0 0 22px rgba(255,170,50,.35), 0 0 0 1px #000, 0 0 22px rgba(255,170,40,.6); }
+  .classCard.selected .className{ color:#fff0c0; }
+  .classActions{ display:flex; gap:12px; margin-top:20px; justify-content:center; }
+  .classActions .tsBackBtn{ margin-top:0; width:min(38vw,160px); }
+  #classConfirm:disabled{ opacity:.4; cursor:default; filter:grayscale(.6); }
+  #classConfirm:not(:disabled){ color:#fff0c0; border-color:#f0c040; box-shadow:inset 0 0 0 1px #0a0806, 0 0 0 1px #000, 0 0 16px rgba(255,170,40,.5); }
+  .classSoon{
+    position:absolute; top:10px; right:12px; font-size:9px; letter-spacing:.04em; font-weight:700;
+    color:var(--gold); text-transform:uppercase;
+  }
+  .tsBackBtn{ margin-top:20px; width:min(60vw,200px); padding:12px 20px; cursor:pointer; font-family:'Cinzel','Trajan Pro',Georgia,serif; font-size:14px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:#d9b25a;
+    background:linear-gradient(180deg,#34302e 0%,#1d1a19 48%,#121010 52%,#23201e 100%); border:2px solid #5a4418; border-radius:2px; box-shadow:inset 0 0 0 1px #0a0806, 0 0 0 1px #000, 0 6px 14px rgba(0,0,0,.7); }
+  .tsBackBtn:hover{ color:#fff0c0; border-color:#c89a3a; }
+
+  .charDelete{
+    position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;
+    background:#120e0c; border:1px solid #5a4418; color:#b79a5e; font-family:system-ui,sans-serif;
+  }
+  .charDelete:active{ filter:brightness(1.4); color:var(--blood); }
+
+  /* ---- modals: skill picker + inventory ---- */
+  .modalOverlay{
+    position:absolute; inset:0; z-index:20; display:none;
+    align-items:center; justify-content:center;
+    background:rgba(5,2,4,.82); padding:20px; pointer-events:auto;
+  }
+  /* Item detail can be opened on top of either the Inventory or the Shop
+     screen, so it always needs to paint above both regardless of DOM order. */
+  #itemDetailOverlay{ z-index:21; }
+  #itemCompareOverlay{ z-index:23; }
+  .icSub{ font-size:11px; letter-spacing:.05em; text-transform:uppercase; font-weight:700; margin-bottom:4px; }
+  .icReq{ font-size:12px; font-weight:600; margin-bottom:2px; }
+  .icBase{ display:flex; align-items:baseline; gap:8px; margin:8px 0 2px; }
+  .icBaseVal{ font-size:20px; font-weight:800; line-height:1; color:#f2ead6; }
+  .icBaseLbl{ font-size:11px; color:#cdbf9a; text-transform:uppercase; letter-spacing:.06em; }
+  .icImp{ font-size:12px; color:#9a917a; font-style:italic; }
+  .icDiv{ height:1px; background:linear-gradient(90deg, rgba(232,196,74,.55), rgba(232,196,74,.05)); margin:8px 0 8px; }
+  .icMod{ display:flex; justify-content:space-between; gap:10px; font-size:13.5px; line-height:1.55; }
+  .icPips{ letter-spacing:1px; font-size:10px; opacity:.85; white-space:nowrap; }
+  .icUp{ color:#6fe08a; font-weight:700; font-size:11px; margin-left:6px; white-space:nowrap; }
+  .icDown{ color:#ff7a6a; font-weight:700; font-size:11px; margin-left:6px; white-space:nowrap; }
+  .icEq{ color:#8d8672; font-size:11px; margin-left:6px; }
+  .icCols{ display:flex; gap:12px; align-items:flex-start; }
+  .icCol{ flex:1; min-width:0; background:rgba(0,0,0,.28); border:1px solid rgba(232,196,74,.18); border-radius:8px; padding:10px; }
+  .icColHead{ font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:#8d8672; margin-bottom:4px; }
+  .icColName{ font-size:15px; font-weight:700; margin-bottom:2px; overflow-wrap:anywhere; }
+  /* Sits on top of the skill tree overlay it pops up from. */
+  #skillNodePopupOverlay{ z-index:22; }
+  /* Sits on top of the skill-info popup its own Assign button opens from. */
+  #skillAssignOverlay{ z-index:23; }
+  .modalCard{
+    width:100%; max-width:380px; max-height:88vh; overflow-y:auto; padding:20px;
+  }
+  .modalCard h2{ font-family:Alegreya,Georgia,'Times New Roman',serif; color:var(--ember); margin:0 0 4px; font-size:20px; text-align:center;}
+  .modalSub{ color:var(--bone-dim); font-size:12px; margin:0 0 16px; text-align:center;}
+  .skillChoices{ display:flex; flex-direction:column; gap:10px; }
+  .skillChoice{
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:8px;
+    background:linear-gradient(180deg,#241e18,#17130f); border:1px solid #3a2f22; color:var(--bone);
+    text-align:left; width:100%; font-family:inherit;
+  }
+  .skillChoice:active{ filter:brightness(1.25); }
+  .schIcon{
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:Alegreya,Georgia,serif; font-weight:800; font-size:11px; flex-shrink:0;
+    background:radial-gradient(circle at 35% 30%,var(--ember),var(--ember-dim)); color:#1c0f08;
+  }
+  .schName{ font-family:Alegreya,Georgia,'Times New Roman',serif; font-weight:700; font-size:14px; }
+  .schDesc{ font-size:11px; color:var(--bone-dim); margin-top:2px;}
+  .modalFoot{ margin-top:14px; font-size:11px; color:var(--gold); text-align:center; min-height:14px;}
+
+  .treeCard{ max-width:420px; }
+  .treeTabs{ display:flex; gap:6px; margin-bottom:10px; }
+  .treeTabBtn{
+    flex:1; padding:7px 4px; text-align:center; font-family:Alegreya,Georgia,'Times New Roman',serif; font-weight:700;
+    font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--bone-dim);
+    background:linear-gradient(180deg,#241e18,#17130f); border:1px solid #3a2f22; border-radius:7px; cursor:pointer;
+  }
+  .treeTabBtn.active{ color:var(--gold); border-color:var(--gold); box-shadow:0 0 8px rgba(232,196,74,0.3); }
+  .treeCols{ display:flex; gap:8px; align-items:flex-start; }
+  .treeCol{ flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; }
+  /* Defender's "shield" layout: a 3-column grid so a wide top row of 3 nodes
+     narrows to a 2-node middle row and a single centered capstone node at
+     the bottom point, per node.row/node.col. Simple absolutely-positioned
+     line segments (drawn in JS after layout) fill in the connectors. */
+  .treeShieldWrap{ position:relative; width:100%; }
+  .treeShieldGrid{
+    display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:auto;
+    gap:40px 22px; position:relative; z-index:1; padding:6px 0 10px;
+  }
+  /* Templar's "cross" layout (v56) reuses this same 3-column grid as-is --
+     its 6 nodes (row 0: Squire; row 1: Offensive Stance / Commander / Guard
+     Stance; row 2: Battlecry; row 3: Rallying Cry) just add a 4th row below
+     Defender's 3, which grid-auto-rows:auto already accommodates. */
+  .treeShieldGrid .treeNode{ width:100%; }
+  /* Berserker's "sword" layout: a 5-column grid so a 3-node blade (the
+     topmost node offset one column left of the spine) runs into a 3-node
+     crossguard row, ending in a single pommel/capstone node -- same
+     row/col-driven placement as the shield grid above, plain wider. */
+  .treeSwordGrid{
+    display:grid; grid-template-columns:repeat(5,1fr); grid-auto-rows:auto;
+    gap:40px 6px; position:relative; z-index:1; padding:6px 0 10px;
+  }
+  .treeSwordGrid .treeNode{ width:100%; }
+  .treeShieldLines{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+  .treeShieldLines line{ stroke:#7a6a62; stroke-width:2.5; stroke-linecap:round; }
+  .treeShieldLines line.lit, .treeShieldLines polyline.lit{ stroke:var(--ember); }
+  /* Orthogonal T/cross elbow connectors (Berserker's sword layout, Templar's
+     cross layout -- see drawShieldConnectors()) reuse the same stroke style
+     as the plain straight-line connectors above. */
+  .treeShieldLines polyline{ stroke:#7a6a62; stroke-width:2.5; fill:none; stroke-linejoin:round; stroke-linecap:round; }
+  .treeColTitle{
+    font-family:Alegreya,Georgia,'Times New Roman',serif; font-weight:700; font-size:12px; color:var(--ember);
+    text-align:center; margin-bottom:4px; text-transform:uppercase; letter-spacing:.03em;
+  }
+  .treeConnector{ width:2px; height:10px; background:#3a2f22; }
+  .treeColLocked{ opacity:0.5; }
+  .treeColLocked .treeColTitle{ color:var(--bone-dim); }
+  .treeNode{
+    width:100%; border-radius:8px; padding:8px 6px; text-align:center;
+    background:linear-gradient(180deg,#241e18,#17130f); border:1px solid #3a2f22;
+  }
+  .treeNode.locked{ opacity:1; filter:brightness(0.55) saturate(0.7); }
+  .treeNode.available{ border-color:var(--gold); box-shadow:0 0 8px rgba(232,196,74,0.35); }
+  .treeNode.unlocked{ border-color:var(--ember); }
+  .treeNodeName{ font-family:Alegreya,Georgia,'Times New Roman',serif; font-weight:700; font-size:11px; color:var(--bone); }
+  .treeNodeDesc{ font-size:9px; color:var(--bone-dim); margin-top:3px; line-height:1.3; }
+  .treeNodeEffect{ font-size:9px; color:#8fc0d0; margin-top:4px; line-height:1.3; }
+  .treeNodeReq{ font-size:9px; color:var(--gold); margin-top:4px; text-transform:uppercase; letter-spacing:.02em; }
+  .treeNode.unlocked .treeNodeReq{ color:#8fd08a; }
+  .treeComingSoon{ font-size:10px; color:var(--bone-dim); padding:18px 4px; text-align:center; }
+  /* Defender tab: icon-only nodes (see treeNodeIconHtml) -- keeps the shield
+     layout's connecting lines/positions, just swaps full text for a small
+     clickable icon + name, with the details moved into skillNodePopup. */
+  .treeNode.iconNode{ padding:8px 4px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .treeNodeIconSvg{ width:40px; height:40px; color:var(--bone-dim); display:block; }
+  .treeNode.iconNode.available .treeNodeIconSvg{ color:var(--gold); }
+  .treeNode.iconNode.unlocked .treeNodeIconSvg{ color:var(--ember); }
+  .treeNodeIconLabel{ font-family:Alegreya,Georgia,'Times New Roman',serif; font-weight:700; font-size:10px; color:var(--bone); line-height:1.2; }
+  #skillNodePopupOverlay .modalCard{ max-width:280px; }
+  .skillNodePopupIcon{ width:56px; height:56px; margin:0 auto 8px; color:var(--gold); }
+  .skillNodePopupIcon svg{ width:100%; height:100%; }
+  #skillNodePopupName{ text-align:center; font-size:15px; }
+  #skillNodePopupDesc{ font-size:11px; color:var(--bone-dim); line-height:1.4; margin:8px 0; }
+  #skillNodePopupEffect{ font-size:11px; color:#8fc0d0; line-height:1.4; margin-bottom:6px; }
+  #skillNodePopupReq{ font-size:10px; color:var(--gold); text-transform:uppercase; letter-spacing:.02em; margin-bottom:12px; }
+  #skillNodePopupAllocate{
+    display:block; width:100%; padding:10px; border-radius:8px; border:1px solid var(--gold);
+    background:linear-gradient(180deg,#3a3020,#241c10); color:var(--gold); font-family:Alegreya,Georgia,'Times New Roman',serif;
+    font-weight:700; font-size:13px; letter-spacing:.03em; cursor:pointer;
+  }
+  #skillNodePopupAllocate:active{ filter:brightness(1.2); }
+  /* Assign -- only shown for active skills with at least 1 rank (see
+     openSkillNodePopup); opens #skillAssignOverlay to pick Main/1/2/3.
+     v76: #skillNodePopupAssignFireball/IceBolt (Elemental Polarity's own
+     pair of Assign buttons for its 2 virtual skills) share this same style. */
+  #skillNodePopupAssign, #skillNodePopupAssignFireball, #skillNodePopupAssignIceBolt{
+    display:none; width:100%; padding:10px; border-radius:8px; border:1px solid var(--arcane);
+    background:linear-gradient(180deg,#232c40,#141a28); color:#a9c4ff; font-family:Alegreya,Georgia,'Times New Roman',serif;
+    font-weight:700; font-size:13px; letter-spacing:.03em; cursor:pointer; margin-top:8px;
+  }
+  #skillNodePopupAssignFireball:active, #skillNodePopupAssignIceBolt:active{ filter:brightness(1.25); }
+  #skillNodePopupAssign:active{ filter:brightness(1.25); }
+  .skillAssignCurrent{ font-size:10px; color:var(--bone-dim); display:block; margin-top:2px; font-weight:400; }
+
+  .invCard{ text-align:left; }
+  .invHeader{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .invHeader h2{ margin:0; text-align:left; }
+  /* v229: menus are locked to the screen -- the title row with the X stays pinned at the top while the content scrolls beneath it */
+  .modalCard .invHeader{ position:sticky; top:-20px; z-index:8; background:#1d1813; margin:-20px -20px 12px; padding:16px 20px 10px; border-bottom:1px solid #3a2f22; border-radius:8px 8px 0 0; }
+  .fsOverlay .modalCard .invHeader{ top:calc(-20px - env(safe-area-inset-top,0px)); margin-top:calc(-20px - env(safe-area-inset-top,0px)); padding-top:calc(16px + env(safe-area-inset-top,0px)); border-radius:0; }
+  .modalOverlay{ height:100vh; height:100dvh; max-height:100dvh; }
+  .modalCard{ max-height:88vh; max-height:88dvh; overscroll-behavior:contain; }
+  .fsOverlay .modalCard{ max-height:100vh; max-height:100dvh; }
+  .closeBtn{
+    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:#241e18; border:1px solid #3a2f22; color:var(--bone); font-size:13px; font-weight:700;
+    font-family:system-ui,sans-serif;
+  }
+  .closeBtn:active{ filter:brightness(1.3); }
+  .invStats{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px 3px; margin-bottom:10px; font-size:11px; color:var(--bone-dim); text-align:center; }
+  .invStats div{ background:#17130f; border-radius:6px; padding:6px 2px; }
+  .invStats .resRow{ grid-column:1/-1; display:grid; grid-template-columns:repeat(6,1fr); gap:6px 3px; background:none; padding:0; }
+  .invStats .resRow .statCell{ font-size:10px; }
+  .invStats .statHead{ grid-column:1/-1; background:none !important; padding:6px 2px 0 !important; text-align:left; color:var(--gold); font:700 11px/1.2 Alegreya,Georgia,serif; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid #3a2f22; border-radius:0 !important; }
+  .invStats .statCell.zero{ opacity:.42; }
+  .invStats .resRow4{ grid-column:1/-1; display:grid; grid-template-columns:repeat(4,1fr); gap:6px 3px; background:none; padding:0; }
+  .invStats .resRow4 .statCell{ font-size:10px; }
+  .invStats .statCell .resRaw{ display:block; font-size:8.5px; opacity:.6; font-weight:normal; line-height:1.1; margin-top:1px; }
+  .invStats .statCell{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .invStats .statCell.sel{ outline:1.5px solid var(--gold); background:#2a2030; }
+  #statTip{ position:sticky; top:0; z-index:3; box-shadow:0 4px 14px rgba(0,0,0,.5); display:none; margin:2px 0 10px; padding:9px 11px; border-radius:8px; background:rgba(22,18,13,.96); border:1px solid #6a5a3a; color:#f0e6d0; font:600 12px/1.45 Alegreya,Georgia,serif; cursor:pointer; }
+  #statTip b{ color:var(--gold); }
+  .invStats div b{ display:block; color:var(--bone); font-size:13px; font-family:Alegreya,Georgia,serif; margin-top:1px; }
+  .invSlots{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:4px;}
+  .slotBox{
+    aspect-ratio:1; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,#1d1813,#14110d); border:1px solid #3a2f22; padding:4px; text-align:center;
+  }
+  .slotBox.filled{ border-color:var(--ember-dim); }
+  .slotBox .slotLabel{ font-size:8px; letter-spacing:.03em; color:var(--bone-dim); text-transform:uppercase;}
+  .slotBox .slotItem{ font-size:9px; font-weight:700; margin-top:3px; line-height:1.2; }
+  /* ---- Paperdoll equipment silhouette (Diablo-2-style layout) ---- */
+  .invCardWide{ max-width:360px; }
+  .paperdoll{ position:relative; width:255px; height:223px; margin:0 auto 4px; }
+  .pdHead, .pdTorso, .pdLegL, .pdLegR{ position:absolute; background:#1d1813; pointer-events:none; }
+  .pdHead{ left:108px; top:0; width:39px; height:39px; border-radius:50%; }
+  .pdTorso{ left:81px; top:37px; width:94px; height:94px; clip-path:polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%); }
+  .pdLegL{ left:88px; top:128px; width:32px; height:85px; border-radius:0 0 7px 7px; }
+  .pdLegR{ left:134px; top:128px; width:32px; height:85px; border-radius:0 0 7px 7px; }
+  .pdSlot{
+    position:absolute; border-radius:7px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,#241e18,#17130f); border:1px solid #3a2f22; padding:2px; text-align:center; overflow:hidden;
+  }
+  .pdSlot.filled{ border-color:var(--ember-dim); }
+  .pdSlot .slotLabel{ font-size:7px; letter-spacing:.02em; color:var(--bone-dim); text-transform:uppercase; }
+  .pdSlot .slotItem{ font-size:8px; font-weight:700; margin-top:2px; line-height:1.15; }
+  .pdSlot .slotItem svg{ width:22px; height:22px; display:block; }
+  .pdSlot .slotArt{ position:absolute; left:2px; right:2px; top:10px; bottom:2px; margin:0; }
+  .pdSlot.filled .slotLabel{ display:none; }
+  .pdSlot.filled .slotArt{ top:2px; }   /* v452: equipped art fills the whole slot */
+  .pdSlot .slotArt svg.bagArt, .pdSlot .slotItem.slotArt svg, #pdSlot-mainhand .slotArt svg.bagArt, #pdSlot-offhand .slotArt svg.bagArt, #pdSlot-armor .slotArt svg.bagArt{ width:100% !important; height:100% !important; }
+  .pdSlot.filled .slotLabel{ opacity:.55; }
+  #pdSlot-helm{ left:108px; top:0px; width:40px; height:35px; }
+  #pdSlot-amulet{ left:158px; top:28px; width:28px; height:28px; }
+  #pdSlot-mainhand{ left:10px; top:56px; width:48px; height:103px; }
+  #pdSlot-mainhand .slotItem svg, #pdSlot-offhand .slotItem svg{ width:29px; height:29px; }
+  #pdSlot-armor{ left:94px; top:50px; width:68px; height:76px; }
+  #pdSlot-armor .slotItem svg{ width:27px; height:27px; }
+  #pdSlot-offhand{ left:197px; top:56px; width:48px; height:103px; }
+  #pdSlot-belt{ left:89px; top:127px; width:77px; height:21px; }
+  #pdSlot-gloves{ left:10px; top:160px; width:48px; height:48px; }
+  #pdSlot-ring1{ left:64px; top:169px; width:28px; height:28px; }
+  #pdSlot-ring2{ left:164px; top:169px; width:28px; height:28px; }
+  #pdSlot-boots{ left:197px; top:160px; width:48px; height:48px; }
+  /* ---- Vendor screen: Diablo-2-style trade layout -- vendor stock, then
+     the player's own equipped gear + bag below it. Reuses the existing
+     #shopStock/#shopBag/#shopPaperdoll elements unchanged (same ids, same
+     JS). Used to be squeezed into two narrow side-by-side scaled-down
+     columns (see the v85 note directly below); now that the vendor overlay
+     is fullscreen it's a single full-width stacked column instead. ---- */
+  /* v85: the vendor screen used to cram both columns side-by-side at a
+     fixed 148px width, scaling the stock/bag grids AND the paperdoll down
+     to ~46%/58% of native size to fit -- their item cells rendered at
+     roughly 15px square, far too small a tap target. Now that the vendor
+     overlay is fullscreen (.fsOverlay, above) there's no need to squeeze:
+     the two "columns" stack full-width instead, and the grids/paperdoll
+     render at their real, un-scaled size (32px cells -- same as the
+     Inventory screen's own bag grid) with a bigger, clearer gap between
+     each section, in place of the old scaled-down cramped scale. This is
+     the "vendor screen too small -- tighten gaps, enlarge tap targets" fix. */
+  .socketBench{ min-height:170px; border:2px dashed #8a7a4a; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:12px; background:rgba(0,0,0,.35); color:var(--bone-dim); font-size:12px; line-height:1.5; }
+  .socketBench.hasItem{ border-style:solid; border-color:#c9b6ff; }
+  .sockRow{ display:flex; gap:10px; justify-content:center; margin:10px 0 2px; }
+  .sockDot{ width:22px; height:22px; border-radius:50%; border:2px solid #6a5c80; background:rgba(0,0,0,.4); box-shadow:inset 0 0 6px rgba(0,0,0,.8); }
+  .sockDot.on{ border-color:#c9b6ff; background:radial-gradient(circle at 40% 35%, #2a2038, #05030a 70%); box-shadow:inset 0 0 6px #000, 0 0 6px rgba(201,182,255,.55); }
+  #socketInfo{ margin:10px 0; font-size:12px; color:var(--bone-dim); text-align:center; line-height:1.6; }
+  .shopColumns{ display:flex; flex-direction:column; gap:16px; align-items:stretch; }
+  .shopColLeft, .shopColRight{ width:100%; min-width:0; }
+  .shopColRight{ display:flex; flex-direction:column; }
+  .shopGridFrame{ width:100%; max-width:320px; margin:0 auto; }
+  .shopGridFrame .bagGrid{ margin:0 auto; }
+  .shopPdFrame{ width:100%; max-width:255px; margin:0 auto 10px; }
+  .shopPdFrame .paperdoll{ margin:0 auto; }
+  /* ---- Grid bag (Diablo-2-style: each item occupies a WxH cell footprint) ---- */
+  .bagGrid{
+    position:relative; width:320px; height:192px; margin:0 auto; border-radius:6px;
+    background-color:#0f0c0a; border:1px solid #2e261c;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size:32px 32px;
+  }
+  .bagCell{
+    position:absolute; border-radius:4px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,#241e18,#17130f); border:1px solid #3a2f22; text-align:center;
+    overflow:hidden; padding:1px;
+    /* touch-action is NOT inherited from body -- without this, a touch-drag
+       that starts on a cell can get eaten by the modal's scroll gesture
+       before pointermove events even reach our drag handler. */
+    touch-action:none;
+  }
+  .pdSlot{ touch-action:none; }
+  .bagGrid{ touch-action:none; }
+  .bagCell svg.bagArt{ width:100%; height:100%; display:block; pointer-events:none; }
+  .bagCell .bcIcon{ font-size:13px; line-height:1; }
+  .bagCell .bcIcon svg{ width:18px; height:18px; display:block; margin:0 auto; }
+  .bagCell .bcLabel{ font-size:7px; font-weight:700; line-height:1.1; margin-top:1px; }
+  .bagEmptyNote{ font-size:11px; color:var(--bone-dim); text-align:center; padding:6px 0 0; }
+  .invTab{ flex:1; text-align:center; padding:8px 6px; border:1px solid rgba(255,255,255,.18); border-radius:8px; cursor:pointer; font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:var(--bone-dim); user-select:none;}
+  .invTab.active{ background:rgba(232,140,60,.18); border-color:var(--ember); color:var(--ember); font-weight:700;}
+  .partCard{ display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid rgba(255,255,255,.14); border-radius:8px; margin-bottom:6px; font-size:12px; line-height:1.4;}
+  .partCard .pIcon{ font-size:22px; width:30px; text-align:center;}
+  .partCard .pMain{ flex:1;} .partCard .pSub{ font-size:10.5px; color:var(--bone-dim);}
+  .partBtn{ padding:6px 10px; border-radius:6px; border:1px solid var(--ember); color:var(--ember); cursor:pointer; font-size:11px; white-space:nowrap; user-select:none;}
+  .partBtn.off{ opacity:.35; pointer-events:none;}
+  .partCard.uq{ border-color:#f2a31b !important; box-shadow:0 0 9px rgba(242,163,27,.4), inset 0 0 8px rgba(242,163,27,.15); }
+  .partCard.kSlot.sel{ border-color:var(--ember); background:rgba(232,140,60,.14); }
+  .invDivider{ font-size:11px; color:var(--bone-dim); letter-spacing:.05em; margin:10px 0 6px; text-transform:uppercase;}
+  .invBag{ display:flex; flex-direction:column; gap:6px; max-height:180px; overflow-y:auto;}
+  .bagItem{
+    display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-radius:6px;
+    background:#17130f; border:1px solid #2e261c; font-size:11px; gap:8px;
+  }
+  .bagItem .biName{ font-weight:700; }
+  .bagItem .biStats{ color:var(--bone-dim); font-size:10px; margin-top:2px;}
+  .bagItem .biTap{ font-size:9px; color:var(--bone-dim); flex-shrink:0; white-space:nowrap; }
+  .bagEmpty{ color:var(--bone-dim); font-size:11px; text-align:center; padding:14px 0;}
+  .bagItem.cantAfford{ opacity:0.45; }
+
+  .settingsRow{ padding:6px 4px 16px; }
+  .settingsLabel{ display:flex; justify-content:space-between; font-size:12px; color:var(--bone-dim); margin-bottom:8px; }
+  .settingsLabel b{ color:var(--bone); font-weight:700; }
+  .settingsSlider{ width:100%; accent-color:var(--ember); }
+  .settingsNote{ font-size:11px; color:var(--bone-dim); margin-top:16px; line-height:1.4; }
+
+  /* ---- v81: ON/OFF toggle switch, for the Support submenu's Cat Companion
+     and Expanded Stash rows. No toggle/checkbox control existed anywhere in
+     the game before this (Settings' only control is the volume <input
+     type=range>), so this is a new small component -- built to match the
+     same plaque/ember/gold palette as everything else (a dark plaque-style
+     track, a bone-colored knob, ember-to-gold gradient once ON) rather than
+     a generic native checkbox, so it reads as part of the same UI system. ---- */
+  .buyBtn{ flex:0 0 auto; min-width:76px; text-align:center; padding:9px 14px; border-radius:8px; font-weight:700; font-size:15px; letter-spacing:.3px; cursor:pointer;
+    color:#2a1a05; background:linear-gradient(180deg,#f4d36a,#d29a2a); border:1px solid #6b4a10; box-shadow:0 2px 0 #6b4a10, 0 0 10px rgba(240,190,70,.25); user-select:none; }
+  .buyBtn:active{ transform:translateY(1px); box-shadow:0 1px 0 #6b4a10; }
+  .toggleRow.unowned .toggleSwitch{ display:none; }
+  .toggleRow.owned .buyBtn{ display:none; }
+  .toggleRow{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 14px; border-radius:8px; margin-bottom:10px;
+    background:linear-gradient(180deg,#241e18,#17130f); border:1px solid #3a2f22; color:var(--bone);
+  }
+  .toggleRow .schIcon{ flex-shrink:0; }
+  .toggleRowBody{ flex:1; text-align:left; }
+  .toggleSwitch{
+    position:relative; flex-shrink:0; width:46px; height:26px; border-radius:13px;
+    background:#17130f; border:1px solid #3a2f22; box-shadow:inset 0 1px 3px rgba(0,0,0,.5);
+  }
+  .toggleSwitch .toggleKnob{
+    position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%;
+    background:linear-gradient(180deg,#cdc4b4,var(--bone-dim));
+    box-shadow:0 1px 3px rgba(0,0,0,.5); transition:left .15s ease, background .15s ease;
+  }
+  .toggleSwitch.on{ background:linear-gradient(180deg,var(--ember-dim),#3a2418); border-color:var(--ember); }
+  .toggleSwitch.on .toggleKnob{ left:22px; background:linear-gradient(180deg,#f0d078,var(--gold)); }
+  .toggleRow.on{ border-color:var(--ember-dim); }
+  .toggleSub{ font-size:10px; color:var(--gold); margin-top:4px; }
+  .keyCap{ min-width:78px; padding:8px 10px; border-radius:6px; border:1px solid #3a2f22; background:#17130f; color:var(--gold); font:700 13px system-ui,sans-serif; cursor:pointer; flex-shrink:0; }
+  .keyCap.listening{ border-color:var(--ember); color:#fff; background:#3a2418; }
+  .keyCap.unset{ color:var(--bone-dim); font-weight:400; }
+  .kh{ display:none; position:absolute; top:3px; left:50%; transform:translateX(-50%); font:700 9px system-ui,sans-serif; font-style:normal; color:#e9dfc6; background:rgba(0,0,0,.6); border-radius:4px; padding:0 4px; pointer-events:none; white-space:nowrap; z-index:2; }
+  body.pcMode .kh{ display:block; }
+
+  /* ---- v85: fullscreen conversion for the 4 "big" screens (Skill Tree,
+     Inventory, Stash, Vendor) -- previously each rendered as a centered
+     .modalCard with a visible gap of background around it (.modalOverlay's
+     own padding:20px, plus the card's own max-width/max-height). Adding
+     .fsOverlay to the overlay removes that outer padding and stretches the
+     card to the full viewport, edge to edge (minus safe-area insets), while
+     everything INSIDE the card (tabs, grids, popups opened on top of it,
+     etc.) keeps working completely unchanged -- this only touches the
+     outer overlay/card sizing, not any of the content layout logic. */
+  .fsOverlay{ padding:0; }
+  .fsOverlay .modalCard{
+    width:100%; height:100%; max-width:100%; max-height:100%;
+    border-radius:0; margin:0; border-left:none; border-right:none;
+    padding-top:calc(20px + env(safe-area-inset-top,0px));
+    padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  }
+  /* Bigger close-button tap target to match the extra breathing room. */
+  .fsOverlay .closeBtn{ width:36px; height:36px; font-size:15px; }
+  /* v247: tight fit -- smaller paddings/gaps so the Inventory and Vendor screens fit the screen without scrolling */
+  #invOverlay .modalCard, #shopOverlay .modalCard{ padding-top:calc(8px + env(safe-area-inset-top,0px)); padding-bottom:calc(8px + env(safe-area-inset-bottom,0px)); padding-left:10px; padding-right:10px; overflow-y:auto; }
+  #invOverlay .modalCard .invHeader, #shopOverlay .modalCard .invHeader{ top:calc(-8px - env(safe-area-inset-top,0px)); margin:calc(-8px - env(safe-area-inset-top,0px)) -10px 4px; padding:calc(8px + env(safe-area-inset-top,0px)) 12px 6px; }
+  #invOverlay .closeBtn, #shopOverlay .closeBtn{ width:30px; height:30px; font-size:13px; }
+  #invOverlay .invHeader h2, #shopOverlay .invHeader h2{ font-size:17px; }
+  #invOverlay .invDivider, #shopOverlay .invDivider{ margin:4px 0 3px; }
+  #shopOverlay .modalSub{ margin:0 0 4px; }
+  #shopOverlay .shopColumns{ gap:6px; }
+  #shopOverlay .shopPdFrame{ margin:0 auto 2px; }
+  #invOverlay #invClassHeader{ margin:-2px 0 4px !important; }
+  #invOverlay #charStatsBtn{ margin-bottom:4px !important; padding-top:7px; padding-bottom:7px; }
+  #invOverlay #invTabs{ margin:4px 0 2px !important; }
+  #invOverlay .paperdoll{ margin:0 auto 2px; }
+
+  /* ---- v382: wide / landscape layouts ----
+     Phones in portrait keep the single-column stacks above. In landscape (and on desktop) the full-screen screens stop stretching
+     edge to edge: they become a centred panel with two columns, and the small pop-up cards get tighter and wider. */
+  @media (min-aspect-ratio:1/1) and (min-width:640px){
+    .fsOverlay{ padding:10px max(10px, env(safe-area-inset-right,0px)) 10px max(10px, env(safe-area-inset-left,0px)); }
+    .fsOverlay .modalCard{ width:100%; max-width:1020px; height:100%; max-height:100%; border-radius:10px; border:1px solid #3a2f22; margin:0 auto;
+      padding-top:12px; padding-bottom:12px; padding-left:16px; padding-right:16px; }
+    .fsOverlay .modalCard .invHeader, #invOverlay .modalCard .invHeader, #shopOverlay .modalCard .invHeader{ top:-12px; margin:-12px -16px 8px; padding:8px 16px 6px; border-radius:10px 10px 0 0; }
+    .fsOverlay .closeBtn{ width:30px; height:30px; font-size:13px; }
+    /* inventory (v405, Diablo-2 style): a half-screen panel on the right; the camera slides so the player stays visible on the left.
+       One column, so the gear boxes and the bag grid keep the same proportions as on a phone. */
+    #invOverlay{ justify-content:flex-end; align-items:stretch; background:rgba(0,0,0,.18); padding-left:0; }
+    #invOverlay .modalCard{ width:50vw; min-width:380px; max-width:620px; margin:0; display:block; }
+    #invOverlay .modalCard .invHeader{ grid-column:auto; }
+    #invOverlay .invColL, #invOverlay .invColR{ min-width:0; display:block; }
+    #invOverlay .invColR .bagGrid{ margin:0 auto; width:320px; }
+    #invOverlay .invColR #invTabs{ margin-top:2px !important; }
+    /* vendor: for sale left, equipped + bag right */
+    #shopOverlay .modalCard{ max-width:1010px; }
+    #shopOverlay .shopColumns{ flex-direction:row; gap:22px; align-items:flex-start; }
+    #shopOverlay .shopColLeft{ flex:0 0 330px; width:330px; }
+    /* v407: three blocks side by side (for sale | equipped | your bag) so the vendor fits short landscape screens without shrinking */
+    #shopOverlay .shopColRight{ flex:1 1 0; width:auto; display:grid; grid-template-columns:265px 1fr; column-gap:16px; align-content:start; }
+    #shopOverlay .shopColRight > :nth-child(1){ grid-column:1; grid-row:1; }
+    #shopOverlay .shopColRight > :nth-child(2){ grid-column:1; grid-row:2; }
+    #shopOverlay .shopColRight > :nth-child(3){ grid-column:2; grid-row:1; }
+    #shopOverlay .shopColRight > :nth-child(4){ grid-column:2; grid-row:2; }
+    #shopOverlay .shopColRight > :nth-child(n+5){ grid-column:2; }
+    /* stash: stash left, bag right */
+    #stashOverlay .modalCard{ max-width:770px; }
+    #stashOverlay .stashCols{ display:flex; gap:22px; align-items:flex-start; }
+    #stashOverlay .stashColL, #stashOverlay .stashColR{ flex:1 1 0; min-width:0; }
+    #stashOverlay .invDivider{ margin-top:2px; }
+    /* skill tree / anything else full-screen: centred, a bit narrower */
+    #skillTreeOverlay .modalCard{ max-width:980px; }
+  }
+  /* short landscape screens (phones on their side): small pop-up cards go wider and tighter instead of tall and narrow */
+  @media (max-height:560px) and (min-aspect-ratio:1/1){
+    .modalOverlay:not(.fsOverlay){ padding:8px max(10px, env(safe-area-inset-right,0px)) 8px max(10px, env(safe-area-inset-left,0px)); }
+    .modalOverlay:not(.fsOverlay) .modalCard{ max-width:560px; padding:12px 16px; max-height:calc(100dvh - 16px); }
+    .modalOverlay:not(.fsOverlay) .modalCard .invHeader{ top:-12px; margin:-12px -16px 8px; padding:8px 16px 6px; }
+    .modalOverlay:not(.fsOverlay) .skillChoices{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .modalOverlay:not(.fsOverlay) .skillChoice{ padding:8px 12px; gap:10px; margin-bottom:0 !important; }
+    .modalOverlay:not(.fsOverlay) .modalSub{ margin-bottom:8px; }
+    #settingsOverlay .modalCard{ display:grid; grid-template-columns:1fr 1fr; column-gap:14px; row-gap:4px; align-content:start; max-width:640px; }
+    #settingsOverlay .modalCard > .invHeader, #settingsOverlay .modalCard > .settingsRow{ grid-column:1 / -1; }
+    #shopOverlay .modalCard, #invOverlay .modalCard, #stashOverlay .modalCard{ padding-top:8px; padding-bottom:8px; }
+    #invOverlay .modalCard .invHeader, #shopOverlay .modalCard .invHeader, .fsOverlay .modalCard .invHeader{ top:-8px; margin:-8px -16px 6px; padding:6px 16px 4px; }
+  }
+
+  .fitWrap{ position:relative; width:100%; }
+  .fitBody{ transform-origin:top left; }
+
+  /* ---- v85: Region Map popup (opened from #mapBtn) -- a first-pass,
+     low-fi zone map. Town gets a real schematic plotted from its actual
+     landmark coordinates (g.town.*); every other zone (forest, mountain
+     pass, dungeon floors, etc.) doesn't have a fixed/discoverable layout
+     yet, so it gets a simpler "known landmarks" reference list instead --
+     see renderRegionMap()/ZONE_LANDMARKS. */
+  .regionMapTitle{ font-family:Alegreya,Georgia,'Times New Roman',serif; color:var(--ember); font-size:16px; text-align:center; margin:0 0 12px; }
+  .regionMapCanvas{
+    position:relative; width:100%; aspect-ratio:14/9; border-radius:10px;
+    background:linear-gradient(180deg,#1c1712,#0f0c0a); border:1px solid #3a2f22;
+    margin-bottom:14px; overflow:hidden;
+  }
+  .regionMapCanvas.genericMode{ aspect-ratio:auto; overflow:visible; }
+
+  /* v412: full-screen map. The canvas fills the card; the maps are drawn at the container's pixel size. */
+  #regionMapOverlay .modalCard.mapCard{ display:flex; flex-direction:column; max-width:100%; width:100%; height:100%; padding-left:10px; padding-right:10px; overflow:hidden; }
+  #regionMapOverlay .mapBar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 8px; flex:0 0 auto; }
+  #regionMapOverlay .regionMapTitle{ margin:0; text-align:left; flex:1 1 auto; font-size:17px; }
+  #regionMapOverlay .mapToggle{ flex:0 0 auto; width:auto; padding:6px 14px; justify-content:center; border-color:var(--arcane); margin:0; }
+  #regionMapOverlay .regionMapCanvas{ flex:1 1 auto; min-height:0; width:100%; aspect-ratio:auto; margin:0 0 4px; display:flex; align-items:center; justify-content:center; background:radial-gradient(ellipse at center,#14110c 0%,#070605 80%); }
+  #regionMapOverlay .regionMapCanvas canvas{ box-shadow:0 0 0 1px #000, 0 6px 24px rgba(0,0,0,.8); }
+  #regionMapOverlay .regionMapCanvas canvas{ display:block; max-width:100%; max-height:100%; }
+  #regionMapOverlay .regionMapCanvas.genericMode{ overflow:auto; display:block; }
+  .regionMapDot{
+    position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column;
+    align-items:center; gap:2px; pointer-events:none;
+  }
+  .regionMapIcon{
+    width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 35% 30%,var(--ember),var(--ember-dim)); color:#1c0f08;
+    font-size:10px; font-weight:800; box-shadow:0 0 6px rgba(226,112,58,.6);
+  }
+  .regionMapDot.player .regionMapIcon{ background:radial-gradient(circle at 35% 30%,#8fe06a,#284018); color:#0c1808; box-shadow:0 0 8px rgba(143,224,106,.8); }
+  .regionMapLabel{ font-size:8px; color:var(--bone); background:rgba(5,2,4,.7); padding:1px 4px; border-radius:3px; white-space:nowrap; }
+  .regionMapGenericNote{ font-size:11px; color:var(--bone-dim); text-align:center; padding:14px 16px 4px; line-height:1.4; }
+  .regionMapListWrap{ display:flex; flex-direction:column; gap:6px; padding:0 6px 14px; }
+  .regionMapListItem{
+    display:flex; align-items:center; gap:8px; font-size:12px; color:var(--bone);
+    background:#17130f; border:1px solid #2e261c; border-radius:6px; padding:7px 10px;
+  }
+  .regionMapListItem .schIcon{ width:26px; height:26px; font-size:12px; }
+  /* v470: embedded fonts (SIL Open Font License) -- Cinzel by Natanael Gama; Alegreya by Huerta Tipografica */
+  @font-face{ font-family:'Cinzel'; font-style:normal; font-weight:400 900; font-display:swap; src:url('../fonts/cinzel.woff') format('woff'); }
+  @font-face{ font-family:'Alegreya'; font-style:normal; font-weight:400 900; font-display:swap; src:url('../fonts/alegreya.woff') format('woff'); }
+  @font-face{ font-family:'Alegreya'; font-style:italic; font-weight:400 900; font-display:swap; src:url('../fonts/alegreya-italic.woff') format('woff'); }
+
+  /* ==================================================================
+     v470 UI reskin -- forged iron and worn stone, in the spirit of Diablo II.
+     Material hierarchy: big panels are carved stone in a bronze-banded iron
+     frame with corner bosses; buttons are raised iron slabs; slots, grids and
+     bar channels are recessed into the stone. Cinzel (inscriptional capitals)
+     for titles, tabs and buttons; Alegreya (a dark book serif) for reading.
+     ================================================================== */
+  :root{
+    --ink:#090705; --iron:#15120e; --iron-2:#1d1914; --stone:#26211a; --stone-2:#2f281f;
+    --bronze:#6a5330; --bronze-hi:#a8854a; --bronze-lo:#3a2c18;
+    --gold:#d0b06a; --gold-hi:#f0d79a; --bone:#cdc1a5; --bone-dim:#867b67;
+    --blood:#9a1c14; --ember:#c8682a; --arcane:#4a74d8;
+    --f-display:'Cinzel','Trajan Pro',Georgia,serif; --f-body:'Alegreya',Georgia,'Times New Roman',serif;
+    --stone-tex:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 -.08'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+                url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.04' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .41  0 0 0 0 .28  0 0 0 .3 -.1'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>");
+    --boss:radial-gradient(circle, #e2c07a 0 1.5px, #8a6a34 2.2px, #2a1d0c 3.6px, rgba(0,0,0,.6) 4.6px, transparent 5.4px);
+    --slab:linear-gradient(180deg,#332b22 0%,#211c16 46%,#17130f 54%,#1d1813 100%);
+    --slab-frame:inset 0 1px 0 rgba(255,226,170,.13), inset 0 0 0 1px #3c3020, inset 0 -2px 0 rgba(0,0,0,.45), 0 0 0 1px #000, 0 2px 4px rgba(0,0,0,.6);
+    --well:inset 0 2px 6px rgba(0,0,0,.85), inset 0 0 0 1px rgba(0,0,0,.9), 0 1px 0 rgba(255,226,170,.07);
+  }
+  html, body{ background:var(--ink); font-family:var(--f-body); font-variant-numeric:lining-nums; color:var(--bone); }
+  button{ font-family:inherit; }
+
+  /* ---------- panels ---------- */
+  .plaque, .modalCard{
+    background-color:#1b1712;
+    background-image:var(--stone-tex), linear-gradient(180deg,#221d17,#16120e);
+    border:1px solid #000; border-radius:3px;
+    box-shadow:inset 0 0 0 1px var(--bronze), inset 0 0 0 3px #0c0a07, inset 0 0 0 4px var(--bronze-lo), inset 0 0 46px rgba(0,0,0,.7), 0 12px 40px rgba(0,0,0,.85);
+  }
+  .modalCard{
+    background-image:var(--boss), var(--boss), var(--boss), var(--boss), var(--stone-tex), linear-gradient(180deg,#221d17,#16120e);
+    background-size:12px 12px, 12px 12px, 12px 12px, 12px 12px, auto, auto, auto;
+    background-position:3px 3px, calc(100% - 3px) 3px, 3px calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), 0 0, 0 0, 0 0;
+    background-repeat:no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, no-repeat;
+    color:var(--bone);
+  }
+  .modalOverlay{ background:radial-gradient(ellipse at center, rgba(8,6,4,.72), rgba(3,2,1,.9)); }
+  .modalCard h2, .regionMapTitle{
+    font-family:var(--f-display); font-weight:700; letter-spacing:.06em; color:var(--gold);
+    text-shadow:0 1px 0 #000, 0 2px 3px rgba(0,0,0,.9), 0 0 14px rgba(208,150,60,.22);
+  }
+  .modalCard .invHeader{
+    background:linear-gradient(180deg,rgba(14,11,8,.96),rgba(22,18,13,.96)) !important;
+    border-bottom:none !important; border-radius:3px 3px 0 0;
+    box-shadow:0 1px 0 #000, 0 2px 0 var(--bronze-lo), 0 3px 0 rgba(0,0,0,.6), inset 0 1px 0 rgba(255,226,170,.05);
+  }
+  .modalSub{ color:var(--bone-dim); font-style:italic; font-size:13px; }
+  .closeBtn{
+    border-radius:2px !important; background:var(--slab) !important; border:none !important; box-shadow:var(--slab-frame);
+    color:#b4362a !important; font:700 14px/1 var(--f-display) !important; text-shadow:0 1px 0 #000; cursor:pointer;
+  }
+  .closeBtn:active{ filter:brightness(1.35); }
+
+  /* ---------- buttons ---------- */
+  .skillChoice, .toggleRow, #skillNodePopupAllocate, #skillNodePopupAssign, #skillNodePopupAssignFireball, #skillNodePopupAssignIceBolt,
+  #overlay button, .portalBtn, .partBtn, .keyCap, .mapToggle, .tsBackBtn{
+    background:var(--slab) !important; border:none !important; border-radius:2px !important; box-shadow:var(--slab-frame) !important;
+    color:var(--bone) !important;
+  }
+  .skillChoice:active, .toggleRow:active, #skillNodePopupAllocate:active, #skillNodePopupAssign:active, .portalBtn:active, .partBtn:active{ filter:brightness(1.3); }
+  .skillChoice{ padding:11px 14px; gap:12px; }
+  .schName{ font-family:var(--f-display); font-weight:700; font-size:13px; letter-spacing:.05em; color:var(--gold); text-shadow:0 1px 0 #000; }
+  .schDesc{ font-size:12px; color:var(--bone-dim); font-style:italic; }
+  .schIcon{
+    border-radius:2px !important; color:var(--gold) !important; font-size:15px !important;
+    background:radial-gradient(circle at 50% 40%, #2a231b, #0e0b08 75%) !important;
+    box-shadow:var(--well), 0 0 0 1px var(--bronze-lo) !important; filter:sepia(.55) saturate(.8);
+  }
+  #skillNodePopupAllocate, #skillNodePopupAssign, #skillNodePopupAssignFireball, #skillNodePopupAssignIceBolt{
+    font-family:var(--f-display) !important; font-weight:700 !important; letter-spacing:.08em; padding:11px !important; cursor:pointer;
+  }
+  #skillNodePopupAllocate{ color:var(--gold-hi) !important; box-shadow:var(--slab-frame), inset 0 0 14px rgba(200,120,40,.18) !important; }
+  #skillNodePopupAssign, #skillNodePopupAssignFireball, #skillNodePopupAssignIceBolt{ color:#a9c0f0 !important; }
+  .portalBtn{ font-family:var(--f-display) !important; letter-spacing:.12em; }
+  .portalBtn.primary{ color:var(--gold-hi) !important; box-shadow:var(--slab-frame), 0 0 16px rgba(200,120,40,.35) !important; }
+  .buyBtn{ border-radius:2px; font-family:var(--f-display); color:#1d1206; background:linear-gradient(180deg,#e8c87a,#a77a2c 60%,#7a5518); border:1px solid #000; box-shadow:inset 0 1px 0 rgba(255,245,210,.6), 0 0 0 1px #3a2a10, 0 2px 4px rgba(0,0,0,.6); }
+  #overlay button{ font-family:var(--f-display) !important; letter-spacing:.12em; color:var(--gold-hi) !important; }
+  #overlay h1{ font-family:var(--f-display); color:#b4241a; letter-spacing:.1em; text-shadow:0 2px 0 #000, 0 0 24px rgba(160,20,10,.6); }
+
+  /* toggles and segmented controls */
+  .toggleSwitch{ border-radius:2px; background:#0d0b08; border:none; box-shadow:var(--well), 0 0 0 1px var(--bronze-lo); }
+  .toggleSwitch .toggleKnob{ border-radius:1px; background:linear-gradient(180deg,#6e604c,#3a3226); box-shadow:inset 0 1px 0 rgba(255,230,180,.25), 0 0 0 1px #000; }
+  .toggleSwitch.on{ background:linear-gradient(90deg,#3a1408,#6a2a0c); box-shadow:var(--well), 0 0 0 1px var(--bronze); }
+  .toggleSwitch.on .toggleKnob{ background:linear-gradient(180deg,#f0d38a,#a37a32); }
+  .toggleRow.on{ box-shadow:var(--slab-frame), inset 0 0 12px rgba(200,120,40,.15) !important; }
+  .segRow{ display:block; }
+  .segCtl{ display:flex; margin-top:9px; box-shadow:var(--well); background:#0d0b08; padding:2px; gap:2px; }
+  .segCtl button{ flex:1; padding:7px 4px; background:transparent; border:none; font:700 11px var(--f-display); letter-spacing:.1em; color:var(--bone-dim); cursor:pointer; }
+  .segCtl button.on{ background:var(--slab); box-shadow:var(--slab-frame); color:var(--gold-hi); }
+  .settingsSlider{ accent-color:#a8302a; }
+  .settingsLabel{ font-family:var(--f-display); font-size:11px; letter-spacing:.06em; }
+
+  /* tabs */
+  .treeTabBtn, .invTab{
+    border-radius:2px 2px 0 0 !important; background:linear-gradient(180deg,#1a1611,#100d0a) !important; border:none !important;
+    box-shadow:inset 0 0 0 1px #2d2418, 0 0 0 1px #000 !important;
+    font:700 11px var(--f-display) !important; letter-spacing:.1em; color:var(--bone-dim) !important; text-transform:uppercase;
+  }
+  .treeTabBtn.active, .invTab.active{
+    background:var(--slab) !important; color:var(--gold-hi) !important;
+    box-shadow:inset 0 0 0 1px var(--bronze), inset 0 1px 0 rgba(255,226,170,.18), 0 0 0 1px #000, 0 0 12px rgba(200,120,40,.25) !important;
+  }
+
+  /* ---------- top HUD: an iron band with bar channels ---------- */
+  #topStrip{
+    background-image:var(--stone-tex), linear-gradient(180deg,#1d1914,#110e0b) !important;
+    border-bottom:none !important;
+    box-shadow:0 1px 0 #000, 0 2px 0 var(--bronze), 0 3px 0 #000, 0 6px 14px rgba(0,0,0,.6) !important;
+  }
+  #topStrip .hbar{
+    height:15px !important; border-radius:8px !important; border:none !important; background:#070504 !important; overflow:hidden;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.95), 0 0 0 1px #000, 0 0 0 2px #4d3c22, 0 0 0 3px #000, 0 1px 0 3px rgba(255,226,170,.06) !important;
+  }
+  /* the liquid: lit from above, a bright meniscus at the leading edge, glass glare over the top */
+  .hfill{ position:relative; border-radius:8px 0 0 8px; box-shadow:none !important; }
+  .hfill::before{ content:''; position:absolute; left:0; right:0; top:1px; height:35%; border-radius:6px; background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,0)); }
+  .hfill::after{ content:''; position:absolute; right:0; top:0; bottom:0; width:2px; background:rgba(255,240,220,.55); box-shadow:0 0 4px rgba(255,220,180,.6); }
+  #hpfill{ background:linear-gradient(180deg,#e2563e 0%,#b0241a 38%,#6e0e0a 78%,#3a0504 100%) !important; }
+  #mpfill{ background:linear-gradient(180deg,#5f8cf0 0%,#2a4fb8 38%,#14287a 78%,#0a1440 100%) !important; }
+  #mpfill[data-res=warrior]{ background:linear-gradient(180deg,#ffb060 0%,#e0601c 38%,#9a2a0a 78%,#4a1004 100%) !important; }
+  #mpfill[data-res=ranger]{ background:linear-gradient(180deg,#f6e08a 0%,#cfa22e 38%,#86610e 78%,#3e2c04 100%) !important; }
+  #xpfill{ background:linear-gradient(180deg,#f2d888 0%,#c39a3c 45%,#7a5a1c 100%) !important; }
+  #topStrip .hbar:last-child{ height:9px !important; }
+  #topStrip .hbar:last-child .hlab, #topStrip .hbar:last-child .hnum{ line-height:9px !important; font-size:8px !important; }
+  #topStrip .hlab{ font:700 9px/15px var(--f-display) !important; letter-spacing:.1em; color:rgba(255,236,206,.88) !important; text-shadow:0 1px 1px #000, 0 0 3px #000 !important; }
+  #topStrip .hnum{ font:700 10px/15px var(--f-body) !important; color:#fff4e0 !important; text-shadow:0 1px 1px #000, 0 0 3px #000 !important; }
+  #topStrip #hudLevel{ font:700 12px var(--f-display) !important; color:var(--gold) !important; letter-spacing:.06em; }
+  #topBtns > div{
+    background:var(--slab) !important; border:none !important; border-radius:2px !important; box-shadow:var(--slab-frame) !important;
+    font:700 11px var(--f-display) !important; letter-spacing:.12em; color:var(--gold) !important; text-shadow:0 1px 0 #000;
+  }
+  #topBtns #goldPlaque{ box-shadow:none !important; background:none !important; }
+  #topStrip #zonePlaque{ font:600 12px var(--f-display) !important; letter-spacing:.06em; color:var(--gold) !important; }
+  #bagBadge, #skillsBadge, #questBadge{ border-radius:2px !important; background:radial-gradient(circle at 45% 35%,#ff8a4a,#a8240e 70%) !important; color:#fff3e0 !important; box-shadow:0 0 0 1px #000, 0 0 8px rgba(255,90,30,.75); font-family:var(--f-display) !important; }
+  .buffIcon, #buffTip, #statTip{ border-radius:2px !important; background:rgba(14,11,8,.92) !important; border:none !important; box-shadow:inset 0 0 0 1px var(--bronze-lo), 0 0 0 1px #000 !important; }
+  .buffIcon b{ font-family:var(--f-display); }
+  #bossName{ font-family:var(--f-display) !important; letter-spacing:.12em !important; color:#d8b06a; }
+  .bossTrack{ border-radius:8px !important; border:none !important; background:#070504 !important; box-shadow:inset 0 2px 4px rgba(0,0,0,.95), 0 0 0 1px #000, 0 0 0 2px #6a4c26, 0 0 0 3px #000, 0 4px 12px rgba(0,0,0,.7) !important; }
+  #bossFill{ position:relative; background:linear-gradient(180deg,#e2563e 0%,#b0241a 38%,#6e0e0a 78%,#3a0504 100%) !important; }
+  #bossNum{ font-family:var(--f-body) !important; }
+
+  /* ---------- on-screen messages ---------- */
+  #msg, #bigMsg{ font-family:var(--f-display) !important; }
+  #partToast{ font-family:var(--f-display) !important; border-radius:2px !important; background:rgba(10,8,6,.82) !important; border:none !important; box-shadow:inset 0 0 0 1px var(--bronze-lo), 0 0 0 1px #000; }
+
+  /* ---------- action buttons: forged discs in a bronze ring ---------- */
+  .actbtn{
+    border:none !important; font-family:var(--f-display) !important; letter-spacing:.08em;
+    box-shadow:0 0 0 1px #000, 0 0 0 3px #5a4527, 0 0 0 4px #000, inset 0 2px 3px rgba(255,226,170,.16), inset 0 -10px 16px rgba(0,0,0,.65), 0 4px 10px rgba(0,0,0,.6) !important;
+    text-shadow:0 1px 1px #000, 0 0 4px #000;
+  }
+  .actbtn.skillSlotBtn{ background:radial-gradient(circle at 50% 38%,#2d271f,#0e0b08 72%) !important; color:var(--bone) !important; }
+  .skillSlotBtn.slotEmpty{ opacity:.5; border-style:none !important; }
+  #btnAttack{ background:radial-gradient(circle at 50% 36%,#a8322a,#5a0e0a 62%,#250504 100%) !important; color:#fde6cc !important; }
+  #btnDodge{ background:radial-gradient(circle at 50% 36%,#4a5258,#1c2125 62%,#0b0d0f 100%) !important; color:#cfd8de !important; }
+  #btnPotion{ background:radial-gradient(circle at 50% 36%,#8e2030,#4a0a14 62%,#1e0408 100%) !important; }
+  .actbtn .cd{ background:rgba(0,0,0,.62) !important; }
+  .actbtn span.lbl{ font-size:10px; letter-spacing:.1em; }
+  .interactBtn{ border-radius:50% !important; background:radial-gradient(circle at 50% 38%,#3a3024,#120e0a 72%) !important; box-shadow:0 0 0 1px #000, 0 0 0 3px var(--bronze), 0 0 0 4px #000, 0 0 16px rgba(220,160,60,.35) !important; font-family:var(--f-display) !important; }
+  #joybase{ border:none !important; box-shadow:0 0 0 1px rgba(0,0,0,.6), 0 0 0 3px rgba(106,83,48,.45), inset 0 0 24px rgba(0,0,0,.6); }
+  #joyknob{ background:radial-gradient(circle at 45% 35%,#6a5a46,#2a2219 70%) !important; border:none !important; box-shadow:0 0 0 1px #000, 0 0 0 2px var(--bronze), 0 3px 8px rgba(0,0,0,.7), inset 0 1px 2px rgba(255,230,180,.3) !important; }
+
+  /* ---------- skill tree ---------- */
+  .treeCard .masteryInfo{ border-radius:2px; border:none; box-shadow:inset 0 0 0 1px var(--bronze-lo); background:rgba(0,0,0,.25); }
+  .treeNode{
+    border:none !important; border-radius:2px !important;
+    background:radial-gradient(ellipse at 50% 30%, #2a241c, #14110d 78%) !important;
+    box-shadow:inset 0 0 0 1px #000, inset 0 0 0 2px #2d2519, inset 0 2px 8px rgba(0,0,0,.8), 0 0 0 1px #000 !important;
+  }
+  .treeNode.locked{ filter:brightness(.6) saturate(.35) !important; }
+  .treeNode.available{ box-shadow:inset 0 0 0 1px #000, inset 0 0 0 2px var(--bronze-hi), inset 0 0 16px rgba(220,160,60,.18), 0 0 0 1px #000, 0 0 12px rgba(220,150,50,.28) !important; }
+  .treeNode.unlocked{ background:radial-gradient(ellipse at 50% 30%, #3a2c1a, #17110b 78%) !important; box-shadow:inset 0 0 0 1px #000, inset 0 0 0 2px var(--bronze), inset 0 0 18px rgba(200,110,30,.22), 0 0 0 1px #000 !important; }
+  .treeNodeIconSvg{ color:#6c6252 !important; filter:drop-shadow(0 1px 0 #000); }
+  .treeNode.iconNode.available .treeNodeIconSvg{ color:var(--gold) !important; }
+  .treeNode.iconNode.unlocked .treeNodeIconSvg{ color:#f0a24a !important; filter:drop-shadow(0 0 5px rgba(240,140,40,.55)) drop-shadow(0 1px 0 #000); }
+  .treeNodeIconLabel, .treeNodeName{ font-family:var(--f-body) !important; font-weight:700; font-size:11.5px !important; color:var(--bone) !important; text-shadow:0 1px 0 #000; }
+  .treeNode.unlocked .treeNodeIconLabel{ color:var(--gold-hi) !important; }
+  .treeColTitle{ font-family:var(--f-display) !important; color:var(--gold) !important; letter-spacing:.1em; }
+  .treeShieldLines line, .treeShieldLines polyline{ stroke:#3b3124 !important; stroke-width:3 !important; filter:drop-shadow(0 1px 0 rgba(0,0,0,.9)); }
+  .treeShieldLines line.lit, .treeShieldLines polyline.lit{ stroke:#c7843a !important; filter:drop-shadow(0 0 3px rgba(230,130,40,.7)); }
+  #treePointsText{ font-family:var(--f-display); font-style:normal; letter-spacing:.08em; color:var(--gold); }
+  .skillNodePopupIcon{ color:#f0a24a !important; filter:drop-shadow(0 0 6px rgba(240,140,40,.45)); }
+  #skillNodePopupEffect, .treeNodeEffect{ color:#9fb8c8 !important; }
+  #skillNodePopupReq, .treeNodeReq{ font-family:var(--f-display); letter-spacing:.06em; }
+
+  /* ---------- inventory, paperdoll, grids ---------- */
+  .bagGrid{
+    border:none !important; border-radius:1px !important; background-color:#0c0a08 !important;
+    background-image:linear-gradient(to right, rgba(150,120,70,.13) 1px, transparent 1px), linear-gradient(to bottom, rgba(150,120,70,.13) 1px, transparent 1px) !important;
+    box-shadow:var(--well), 0 0 0 1px var(--bronze-lo), 0 0 0 2px #000;
+  }
+  .bagCell{ border-radius:1px !important; background:linear-gradient(180deg,rgba(40,48,70,.28),rgba(14,16,24,.35)) !important; }
+  .pdSlot, .slotBox{ border:none !important; border-radius:2px !important; background:radial-gradient(ellipse at 50% 40%,#1b1712,#0b0907 80%) !important; box-shadow:var(--well), 0 0 0 1px #3a2f20 !important; }
+  .pdSlot.filled, .slotBox.filled{ box-shadow:var(--well), 0 0 0 1px var(--bronze) !important; }
+  .pdHead, .pdTorso, .pdLegL, .pdLegR{ background:#110e0b !important; opacity:.7; }
+  .pdSlot .slotLabel, .slotBox .slotLabel{ font-family:var(--f-display); letter-spacing:.06em; color:#5f5646; }
+  .invDivider, .icColHead, .icSub{ font-family:var(--f-display); letter-spacing:.1em; }
+  .invStats div{ border-radius:1px !important; background:rgba(0,0,0,.32) !important; box-shadow:inset 0 0 0 1px rgba(106,83,48,.28); }
+  .invStats .statHead{ font:700 12px/1.2 var(--f-display) !important; color:var(--gold) !important; border-bottom:1px solid var(--bronze-lo) !important; box-shadow:none !important; }
+  .invStats div b{ font-family:var(--f-body); font-size:14px; color:#efe4ca; }
+  .invStats .statCell.sel{ outline:none; box-shadow:inset 0 0 0 1px var(--bronze-hi), 0 0 8px rgba(220,150,50,.3) !important; }
+  .partCard, .bagItem, .regionMapListItem{ border-radius:2px !important; background:rgba(0,0,0,.3) !important; border:none !important; box-shadow:inset 0 0 0 1px #3a2f20; }
+  .socketBench{ border-radius:2px; }
+
+  /* item card: a black tooltip slab, the name centred like an inscription */
+  #itemDetailOverlay .modalCard, #itemCompareOverlay .modalCard{
+    background-image:linear-gradient(180deg,rgba(10,8,6,.97),rgba(6,5,4,.97)) !important; background-size:auto !important;
+    box-shadow:inset 0 0 0 1px #2c2418, 0 0 0 1px #000, 0 14px 40px rgba(0,0,0,.9) !important;
+  }
+  #itemDetailOverlay .invHeader h2{ font-size:18px; }
+  .icMod{ font-family:var(--f-body); font-size:14px; }
+  .icBaseVal{ font-family:var(--f-display); }
+  .icDiv{ background:linear-gradient(90deg, transparent, var(--bronze), transparent) !important; }
+  .icCol{ border-radius:2px; border:none; box-shadow:inset 0 0 0 1px #2c2418; }
+
+  /* title, class and character select keep their own scene; buttons follow the slab */
+  #start .tsMenu button, .classCard, .tsBackBtn{ font-family:var(--f-display); }
+  .classDesc, .classSub, #continueSub{ font-family:var(--f-body); }
+
+  /* region map */
+  .regionMapCanvas{ border:none !important; border-radius:2px !important; box-shadow:var(--well), 0 0 0 1px var(--bronze-lo) !important; }
+
+  /* the witch, vendors, stash: the same materials (they reuse the classes above) */
+  .masteryInfo .mBtn{ border-radius:2px; font-family:var(--f-display); }
+  /* character stats: zero stats tucked away, the Strike skill readout across the full row */
+  #invStats:not(.showAll) .statCell.zero{ display:none; }
+  .invStats .mainSkillCell{ grid-column:1/-1; display:grid !important; grid-template-columns:1fr auto; grid-template-rows:auto auto; align-items:baseline; column-gap:10px; text-align:left; padding:8px 10px !important; box-shadow:inset 0 0 0 1px var(--bronze), inset 0 0 14px rgba(200,110,30,.14) !important; }
+  .invStats .mainSkillCell .msLabel{ grid-column:1; grid-row:1; font:700 10px var(--f-display); letter-spacing:.1em; color:var(--bone-dim); }
+  .invStats .mainSkillCell .msName{ grid-column:1; grid-row:2; font:700 15px var(--f-body); color:var(--gold-hi); }
+  .invStats .mainSkillCell .msName i{ font-weight:400; font-size:12px; color:var(--bone-dim); }
+  .invStats .mainSkillCell b{ grid-column:2; grid-row:1 / span 2; align-self:center; margin:0 !important; font-size:20px !important; color:#ffcf8a !important; text-align:right; }
+  .invStats .mainSkillCell .resRaw{ grid-column:1/-1; grid-row:3; font-size:11px !important; opacity:.75; }
+  .showAllBtn{ white-space:nowrap; flex-shrink:0; margin-left:auto; margin-right:10px; padding:5px 10px; border:none; border-radius:2px; background:var(--slab); box-shadow:var(--slab-frame); font:700 10px var(--f-display); letter-spacing:.08em; color:var(--bone-dim); cursor:pointer; }
+  .showAllBtn:active{ filter:brightness(1.3); }
+  body.noPotionBtn .interactBtn{ bottom:170px; }
+  /* v473 mood overlays: above the world, below every HUD element; never catch touches */
+  #moodVig, #moodGrain{ position:absolute; inset:0; pointer-events:none; z-index:1; display:none; }
+  #moodGrain{ inset:-256px; background-repeat:repeat; will-change:transform; animation:moodGrain .5s steps(1) infinite; }
+  @keyframes moodGrain{ 0%{transform:translate(0,0)} 20%{transform:translate(-97px,61px)} 40%{transform:translate(53px,-131px)} 60%{transform:translate(-149px,-37px)} 80%{transform:translate(89px,113px)} }
+  @media (prefers-reduced-motion:reduce){ #moodGrain{ animation:none; } }
+  /* item art: knock the glossy primaries back toward aged metal and leather */
+  svg.bagArt, .slotArt svg, .bcIcon svg{ filter:saturate(.72) sepia(.18) contrast(1.06) brightness(.94); }
+  /* v486: notch / system-bar safe areas for the HUD, and the region name gets its own line under the top band */
+  #topStrip{ padding-left:calc(10px + env(safe-area-inset-left,0px)) !important; padding-right:calc(10px + env(safe-area-inset-right,0px)) !important; }
+  #subHud{ padding-left:calc(12px + env(safe-area-inset-left,0px)) !important; padding-right:calc(12px + env(safe-area-inset-right,0px)) !important; min-height:18px; }
+  #topWrap #buffBar{ padding-left:calc(12px + env(safe-area-inset-left,0px)) !important; }
+  #subHud #zonePlaque{ flex:1 1 auto; min-width:0; text-align:left; font:600 11px var(--f-display, Alegreya, Georgia, serif) !important; letter-spacing:.07em; color:var(--gold) !important;
+    text-shadow:0 1px 2px #000, 0 0 5px #000, 0 0 10px rgba(0,0,0,.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.92; transition:opacity .25s; }
+  #subHud #zonePlaque.bossUp{ opacity:0; }
+  @media (orientation:landscape){ #subHud #zonePlaque{ font-size:11.5px !important; } }
