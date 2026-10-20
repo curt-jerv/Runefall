@@ -13,8 +13,9 @@ function gfxAutoTune(rawMs){
   const T = GFX_TUNE; T.n++; T.sum += rawMs;
   if(T.n < 90) return;
   const avg = T.sum/T.n; T.n = 0; T.sum = 0;
-  if(avg > 22 && gfxLevel>0){ if(T.rose) T.need = Math.min(T.need*2, 320); T.rose = false; T.good = 0; gfxApply(gfxLevel-1); return; }
-  if(avg < 13 && gfxLevel<1){ if(++T.good >= T.need){ T.good = 0; T.rose = true; gfxApply(gfxLevel+1); } }
+  const cap30 = fpsFrameMs() > 20, slowMs = cap30 ? 45 : 22, goodMs = cap30 ? 36 : 13;   // v489: judged against the chosen frame-rate
+  if(avg > slowMs && gfxLevel>0){ if(T.rose) T.need = Math.min(T.need*2, 320); T.rose = false; T.good = 0; gfxApply(gfxLevel-1); return; }
+  if(avg < goodMs && gfxLevel<1){ if(++T.good >= T.need){ T.good = 0; T.rose = true; gfxApply(gfxLevel+1); } }
   else T.good = 0;
 }
 function moodAutoTune(rawMs){
@@ -27,7 +28,11 @@ function moodAutoTune(rawMs){
   if(settings.atmos!=='low' && settings.atmos!==false){ settings.atmos = 'low'; saveSettings(settings); try{ syncGraphicsUI(); }catch(e){} }
   else if(settings.grain!==false){ settings.grain = false; saveSettings(settings); try{ syncGraphicsUI(); }catch(e){} }
 }
+// v489: frame-rate target (Settings > Graphics: 30 or 60). Frames that arrive early are skipped, which also keeps
+// 90/120Hz phones at 60 instead of drawing (and heating up) twice as often.
+function fpsFrameMs(){ return (settings && +settings.fpsCap===30) ? 1000/30 : 1000/60; }
 function loop(t){
+  if(t-lastT < fpsFrameMs()*0.65 && t>lastT){ requestAnimationFrame(loop); return; }
   try{ moodAutoTune(t-lastT); }catch(err){}
   try{ gfxAutoTune(t-lastT); }catch(err){}
   const dt = Math.min((t-lastT)/1000, 0.05);

@@ -169,7 +169,7 @@ function makeLighthouseFloor(floor){
     // A waypoint just inside floor 1, near the entrance -- nudged off to
     // the side and back from the entrance's own centerline, same "nudge
     // clear of the geometry" placement rule Sunlit Plains' own waypoint uses.
-    waypoint = {x: entrance.x + (entranceSide==='right' ? -150 : 150), y: h/2 - 150, r:22};
+    waypoint = null;   // v489: the floor-1 waypoint is removed
   }
   // v94 (quest feature): the rooftop's own second waypoint is REMOVED --
   // floor 5 no longer has a waypoint at all. In its place, clearing the
@@ -221,7 +221,7 @@ function makeLighthouseMazeFloor(floor){
   const far = Math.max(...distTo), farCells = cells.filter((cl,i)=>distTo[i]===far);
   const sc = farCells[Math.floor(rnd()*farCells.length)];
   const stairs = {x: sc.cx + (rnd()-0.5)*cw*0.4, y: sc.cy + (rnd()-0.5)*ch*0.35, r:30};
-  const waypoint = floor===1 ? {x: entrance.x + (entranceSide==='right' ? -170 : 170), y: entrance.y - 120, r:22} : null;
+  const waypoint = null;   // v489: the floor-1 waypoint is removed
   // crates and rubble in the rooms
   for(const cl of cells){
     const n = Math.floor(rnd()*3);

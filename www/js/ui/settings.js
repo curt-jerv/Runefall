@@ -134,6 +134,7 @@ const graphicsOverlay = document.getElementById('graphicsOverlay');
 function syncGraphicsUI(){
   const gq = settings.gfxQ || 'auto';
   document.querySelectorAll('#gfxSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===gq));
+  document.querySelectorAll('#fpsSeg button').forEach(b=>b.classList.toggle('on', +b.dataset.v===(+settings.fpsCap===30 ? 30 : 60)));
   const v = settings.atmos===false ? 'off' : (settings.atmos==='low' ? 'low' : 'high');
   document.querySelectorAll('#atmosSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
   setToggleUI(document.getElementById('toggleGrain'), settings.grain!==false);
@@ -163,6 +164,7 @@ applyOrientation(); goImmersive();
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ goImmersive(); applyOrientation(); } });
 window.addEventListener('resize', ()=>{ setTimeout(goImmersive, 300); });
 document.querySelectorAll('#gfxSeg button').forEach(b=>b.addEventListener('click', ()=>{ settings.gfxQ = b.dataset.v; saveSettings(settings); gfxInit(); syncGraphicsUI(); }));
+document.querySelectorAll('#fpsSeg button').forEach(b=>b.addEventListener('click', ()=>{ settings.fpsCap = +b.dataset.v; saveSettings(settings); syncGraphicsUI(); }));
 document.querySelectorAll('#atmosSeg button').forEach(b=>b.addEventListener('click', ()=>{ const v = b.dataset.v; settings.atmos = v==='off' ? false : (v==='low' ? 'low' : true); settings.atmosChosen = true; saveSettings(settings); syncGraphicsUI(); }));
 document.getElementById('toggleGrain').addEventListener('click', ()=>{ settings.grain = (settings.grain===false); settings.atmosChosen = true; saveSettings(settings); syncGraphicsUI(); });
 const combatOverlay = document.getElementById('combatOverlay');

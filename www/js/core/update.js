@@ -3646,7 +3646,7 @@ function updateStep(dt){
     // generic portal/chest-spawn flow to hook into).
     updatePortalChoice(false);
     const nearSunlitGate = dist(p, g.lake.sunlitGate) < g.lake.sunlitGate.r + p.r + 22;
-    const nearLakeWaypoint = dist(p, g.lake.waypoint) < g.lake.waypoint.r + p.r + 24;
+    const nearLakeWaypoint = !g.lake.waypoint.off && dist(p, g.lake.waypoint) < g.lake.waypoint.r + p.r + 24;
     if(nearLakeWaypoint) discoverWaypoint('reachedLakesideRuins');
     const nearRuinsSpot = dist(p, g.lake.ruinsSpot) < g.lake.ruinsSpot.r + p.r + 22;
     const ruinsKind = nearRuinsSpot ? (p.ruinsEntranceOpen ? 'toAncientRuins' : (canStudyRuins(p) ? 'studyRuins' : null)) : null;
