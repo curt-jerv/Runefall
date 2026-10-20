@@ -3069,7 +3069,8 @@ function updateStep(dt){
       // further down in update().
       if(g.enemies[i].isBoss || g.enemies[i].isLairBoss) g.bossKilled = true;
       try{ bossRecipeDrop(g, g.enemies[i]); }catch(err){}   // v464
-      { const rk = bossRekillFlag(g.enemies[i]); if(rk && p[rk]) bossRekillRare(g, g.enemies[i]); }   // v489: re-killed bosses drop a rare instead of their quest item
+      { const rk = bossRekillFlag(g.enemies[i]); if(rk && p[rk]) bossRekillRare(g, g.enemies[i]); }
+      if(g.enemies[i].bkBoss && g.tower) g.tower.bkDeath = {x:g.enemies[i].x, y:g.enemies[i].y};   // v490: the Bandit King's chest and portal appear where he fell   // v489: re-killed bosses drop a rare instead of their quest item
       if(g.enemies[i].mastodon) huntBossKilled('hunt_mastodon');
       if(g.enemies[i].minotaur) huntBossKilled('hunt_minotaur');
       if(g.enemies[i].defiler) defilerSlain(g, g.enemies[i]);
@@ -3489,6 +3490,10 @@ function updateStep(dt){
       const sst = p.shrineStage||0;
       izKind = sst>=2 ? 'shrineAltar' : (sst===0 && findRunestone(p)) ? 'shrineInsert' : 'shrineSealed';
     }
+    if(iz.kind==='shrine' && iz.altar && (p.shrineStage||0)>=3 && !izKind){   // v490: a portal home once the runestone is awakened
+      iz.homePortal = iz.homePortal || {x:iz.altar.x, y:iz.altar.y+170, r:26};
+      if(dist(p, iz.homePortal) < iz.homePortal.r + p.r + 22) izKind = 'shrineToTown';
+    }
     if(iz.kind==='shrine' && iz.protectorsSpawned && !iz.protectorsDown && !g.enemies.some(e=>e.prot && e.hp>0)){
       iz.protectorsDown = true;
       p.shrineStage = Math.max(p.shrineStage||0, 2);
@@ -3612,11 +3617,12 @@ function updateStep(dt){
     // v237: floors 1-4 never spawn a portal (stairs only). The rooftop's portal appears only once the
     // floor is clear AND the beacon is lit, tucked in the far corner so nobody walks into it by accident.
     if(!t.clearPortal && g.enemies.length===0 && !t.ft && t.rooftop && t.beacon){   // v486: a portal home as soon as the King and his crew are dead
-      t.clearPortal = {x:clamp(t.beacon.x - 100, 60, t.w-60), y:clamp(t.beacon.y + 80, 60, t.h-60), r:24, toTown:true};
+      const at = t.bkDeath || {x:t.beacon.x - 30, y:t.beacon.y + 20};
+      t.clearPortal = fixLootSpot(g, {x:clamp(at.x + 110, 60, t.w-60), y:clamp(at.y + 50, 60, t.h-60), r:24, toTown:true});
       showMsg('A portal to Mistfall opens.', 2.6, '#9fd8ff');
     }
     if(t.rooftop && !t.ft && g.enemies.length===0){
-      if(!p.lighthouseChestLooted && !g.chest) g.chest = {x:t.beacon.x + 70, y:t.beacon.y + 60, r:20, opened:false};
+      if(!p.lighthouseChestLooted && !g.chest){ const at = t.bkDeath || {x:t.beacon.x + 70, y:t.beacon.y + 60}; g.chest = fixLootSpot(g, {x:clamp(at.x, 60, t.w-60), y:clamp(at.y, 60, t.h-60), r:20, opened:false}); }
       if(!p.lighthouseFloor5Cleared){
         p.lighthouseFloor5Cleared = true;
         saveGame();

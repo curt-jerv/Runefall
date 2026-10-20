@@ -382,6 +382,9 @@
   @keyframes bmPop{ 0%{opacity:0; transform:translate(-50%,var(--bmY)) scale(1.04);} 18%{opacity:1; transform:translate(-50%,var(--bmY)) scale(1);} 100%{transform:translate(-50%,var(--bmY)) scale(1);} }
   /* v441: every banner (beasts too) sits at the top, just under the HUD -- top is set live in JS */
   #bigMsg.show{ animation:bmPop .6s ease-out both; }
+  /* v490: a spoken line -- mixed case, italic, warm */
+  #bigMsg.speech .bmTitle{ text-transform:none; font-style:italic; letter-spacing:.06em; font-family:'Alegreya',Georgia,serif; color:#e9d6a8; font-size:clamp(13px,3vw,19px); white-space:normal; }
+  #bigMsg.speech .bmRule{ display:none; }
 
   #overlay{
     position:absolute; inset:0; z-index:10; display:none;
@@ -1269,3 +1272,6 @@ body.noPotionBtn #actionCluster .interactBtn{ bottom:104px !important; }
 .kSlotBox.full{ border-style:solid; }
 .kSlotBox .kLbl{ font:700 10px var(--f-display, Alegreya, Georgia, serif); color:var(--bone-dim); letter-spacing:.05em; text-transform:uppercase; }
 .kSlotBox > *:not(.kLbl){ max-width:100%; max-height:100%; }
+
+/* v490: one place per kind of message -- story banners top-centre, achievements top-left, monster parts just under them */
+#partToast{ top:calc(78px + env(safe-area-inset-top,0px)) !important; left:calc(12px + env(safe-area-inset-left,0px)) !important; transform:none !important; text-align:left !important; max-width:min(46vw, 360px); white-space:normal !important; font-size:12px !important; padding:5px 10px !important; }

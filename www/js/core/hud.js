@@ -196,7 +196,7 @@ function updateHudNums(p){
   if(g && g.enemies && g._bossBarReset){ g._bossBarReset = false; for(const e of g.enemies){ e._barOn = false; e._barHp = e.hp; } }
   if(g && g.enemies && g.scene!=='town'){
     for(const e of g.enemies){
-      if(e.hp<=0 || !(e.isBoss||e.isLairBoss||e.lr||e.rev||e.lvBoss||e.mastodon||e.bkBoss)) continue;
+      if(e.hp<=0 || !(e.isBoss||e.isLairBoss||e.lr||e.rev||e.lvBoss||e.mastodon||e.bkBoss||e.hwGuardian)) continue;   // v490: + the Highward Warden
       if(e.lvBoss && !e.active) continue;
       if(e.wlState==='intro' && e.wlAlpha!=null && e.wlAlpha<0.85) continue;   // v435: the Wraith Lord's bar waits until he has appeared
       const d = dist(e,p);

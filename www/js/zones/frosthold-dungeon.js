@@ -850,9 +850,22 @@ function hudTextAnchor(belowBanner){
   }
   return y;
 }
-function showBigMsg(title, sub, dur, small, beast){
+// v490: banners queue up (one after another) instead of overwriting each other; `speech` shows a quoted line in mixed case
+const _bmQueue = [];
+function showBigMsg(title, sub, dur, small, beast, speech){
+  const now = Date.now();
+  if(now < (showBigMsg._until||0)){
+    if(_bmQueue.length < 5 && !_bmQueue.some(q=>q[0]===title && q[1]===(sub||''))) _bmQueue.push([title, sub||'', dur, small, beast, speech]);
+    return;
+  }
+  showBigMsgNow(title, sub, dur, small, beast, speech);
+}
+function showBigMsgNext(){ const q = _bmQueue.shift(); if(q) showBigMsgNow.apply(null, q); }
+function showBigMsgNow(title, sub, dur, small, beast, speech){
   const el = document.getElementById('bigMsg');
-  el.classList.toggle('small', !!small); el.classList.toggle('beast', !!beast);
+  dur = dur || 4.5; showBigMsg._until = Date.now() + dur*1000 + 250;
+  clearTimeout(showBigMsg._q); showBigMsg._q = setTimeout(showBigMsgNext, dur*1000 + 300);
+  el.classList.toggle('small', !!small); el.classList.toggle('beast', !!beast); el.classList.toggle('speech', !!speech);
   el.querySelector('.bmTitle').textContent = title; el.querySelector('.bmSub').textContent = sub || '';
   try{ hudTextAnchor(false); }catch(e){}
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
@@ -861,9 +874,10 @@ function showBigMsg(title, sub, dur, small, beast){
   clearTimeout(showBigMsg._t); showBigMsg._t = setTimeout(()=>{ el.style.transition='opacity .8s'; el.style.opacity=0; setTimeout(()=>{el.style.transition='';},900); }, (dur||4.5)*1000);
 }
 // v310: only the great beasts (Leviathan, Kraken, Mastodon, Molten Colossus, Gojira) get the big gold banner; every other boss line is a quiet message
-function bossMsg(title, sub, dur, color){ showMsg(title + (sub ? ' \u2014 ' + sub : ''), Math.min(dur||3, 3.4), color || '#d8c8a8'); }
+function bossMsg(title, sub, dur, color){ showBigMsg(title, sub||'', Math.max(dur||3.6, 3.6), true); }   // v490: boss lines are story banners now (was a small top line)
 // v378: one house style for quest / reward lines: "Quest Accepted · Name", "Quest Complete · Name", "Obtained · Item"
 function stdMsg(text, color){
+  if(typeof text==='string'){ const ob = /^(.+?)\s+obtained!?$/i.exec(text.trim()); if(ob && ob[1].length < 90) text = 'Obtained: '+ob[1]; else text = text.replace(/^Chest:\s*/i, 'Obtained: '); }   // v490: every item line reads 'Obtained · ...'
   const m = /^(New quest|Quest accepted|Quest started|Quest complete|Quest updated|Reward|Obtained|Quest Accepted|Quest Complete)\s*[:\u2014-]\s*(.+)$/i.exec(text||'');
   if(!m) return {text, color};
   const k = m[1].toLowerCase(), head = /^new quest|accepted|started/.test(k) ? 'Quest Accepted' : /complete/.test(k) ? 'Quest Complete' : /updated/.test(k) ? 'Quest Updated' : k==='reward' ? 'Reward' : 'Obtained';
@@ -872,7 +886,22 @@ function stdMsg(text, color){
 const SKILL_USE_MSGS = new Set(['Wrath!','Whirlwind!','War Cry!','Vortex erupts!','Vanish!','Unbreakable!','Trap set!','Tornado!','Thunderstep!','Storm Surge!','Soul Nova!','Soul Gate!','Shadow Step!','Recall!','Rapid Shot!','Rally!','Rain of Arrows!','Rage Burst!','Pyro Torrent!','Precise Shot!','Poison Trap!','Poison Knives!','Plague!','Permafrost!','Nova!','JUGGERNAUT!','Immolate!','Ice Bolt!','Ice Armor explodes!','Hurricane!','Frost Trap!','Flame Vortex!','Fear!','Explosive Trap!','Charge!','Bulwark!','Bloodrage!','Blizzard!','Beast Fury!','Ambush!','A demon rises to serve you!','Consecrate','Field Dress...','Field Dress',"Hunter's Mark!",'Assault! Rage full']);
 function showMsg(text, dur, color, mid){
   if(SKILL_USE_MSGS.has(text)) return;   // v443: active-skill casts no longer print a line at the top of the screen
+  // v490: one house style per kind of message --
+  //   story (quests, recipes, spoken lines) -> the big banner, queued and held a little longer;
+  //   items ("Obtained · ...") -> the lower line, merging pickups that land together; everything else -> the top line.
+  if(typeof text==='string' && !mid){
+    const t = text.trim();
+    if(/^["\u201c\u2018']/.test(t)){ showBigMsg(t, '', Math.max(dur||3, 4.5), true, false, true); return; }
+    const qm = /^(New quest|Quest accepted|Quest started|Quest complete|Quest updated|Quest Accepted|Quest Complete)\s*[:\u2014-]\s*(.+)$/i.exec(t);
+    if(qm){ const k = qm[1].toLowerCase(), head = /^new quest|accepted|started/.test(k) ? 'Quest Accepted' : /complete/.test(k) ? 'Quest Complete' : 'Quest Updated';
+      try{ sfxPlay(head==='Quest Complete' ? 'questDone' : 'questAccept', 1); }catch(e){} showBigMsg(head, qm[2], Math.max(dur||3, 3.8), true); return; }
+    const rm = /^(New recipe discovered|Recipe found on [^:]+|A UNIQUE stone is forged|Recipe learned)\s*:\s*(.+)$/i.exec(t);
+    if(rm){ showBigMsg(/unique/i.test(rm[1]) ? 'Unique Stone Forged' : 'Recipe Learned', rm[2], Math.max(dur||3, 4), true); return; }
+  }
   const _orig = text, s = stdMsg(text, color); text = s.text; color = s.color;
+  if(/^Obtained \u00b7 /.test(text) && game.msgText && /^Obtained \u00b7 /.test(game.msgText) && game.msgT > (dur||3)*1.4 - 0.6 && game.msgText.length < 110){
+    game.msgText += ', ' + text.slice(11); game.msgT = Math.max(game.msgT, (dur||3)*1.4); return;   // several items at once read as one line
+  }
   try{ if(/^Quest Accepted/.test(text)) sfxPlay('questAccept',1); else if(/^Quest Complete/.test(text)) sfxPlay('questDone',1); else if(/^(Reward|Obtained)/.test(text)) sfxPlay('lootRare',0.8); }catch(e){}
   game.msgText = text; game.msgT = (dur||3)*1.4; game.msgColor = color || ''; game.msgPos = mid ? 'mid' : (s.text!==_orig ? 'low' : 'top');
 }

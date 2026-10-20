@@ -180,8 +180,11 @@ function fhCmdHit(g, e, tgt, mult){
   if(tgt===g.player) playerDamage(g, dm, e); else applyFollowerDamage(g, tgt, dm, e);
 }
 function fhCmdTargets(g){ return [g.player].concat(g.followers||[]); }
+// v490: a boss speaks once when you first come close
+function bossGreet(g, e, line, r){ if(e._greeted || !g.player || dist(e, g.player) > (r||420) || !enemyLOS(g, e, g.player)) return; e._greeted = true; showMsg(line, 5); }
 function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, room){
   const p = g.player, st = e.cState;
+  bossGreet(g, e, '\u201cThe mountain\u2019s treasures belong to us!\u201d');
   const face = a=>{ e.facing = {x:Math.cos(a), y:Math.sin(a)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y); };
   const F = e.cPhase===2 ? 1.6 : 1;   // v490: phase 2 telegraphs/recoveries are twice as long as before (was 0.8 -- far too quick)
   if(e.cPhase===1 && e.hp <= e.maxHp*0.5 && st!=='awaken'){

@@ -398,6 +398,7 @@ function render(){
       if(iz.altar){
         drawables.push({depth:iz.altar.x+iz.altar.y, draw:()=>drawShrineAltarIso(iz.altar, g.clock||0)});
         drawables.push({depth:iz.altar.x+iz.altar.y+1, draw:()=>drawEdgeLabelIso(iz.altar, 'SHRINE')});
+        if(iz.homePortal){ const hp = iz.homePortal; drawables.push({depth:hp.x+hp.y-1, draw:()=>drawBluePortalIso(hp, g.clock||0)}); drawables.push({depth:hp.x+hp.y, draw:()=>drawEdgeLabelIso(hp, 'MISTFALL')}); }   // v490
       }
       if(iz.chestSpot) drawables.push({depth:iz.chestSpot.x+iz.chestSpot.y, draw:()=>drawChestIso(iz.chestSpot)});
     }
@@ -769,6 +770,10 @@ function render(){
     if(t.stairs){
       drawables.push({depth:t.stairs.x+t.stairs.y-1, draw:()=>drawStairsDownIso(t.stairs, g.clock||0)});
       drawables.push({depth:t.stairs.x+t.stairs.y, draw:()=>drawEdgeLabelIso(t.stairs, 'STAIRS UP')});
+    }
+    if(t.clearPortal){   // v490: the Commander's way out was never drawn in the tower
+      drawables.push({depth:t.clearPortal.x+t.clearPortal.y-1, draw:()=>drawBluePortalIso(t.clearPortal, g.clock||0)});
+      drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, 'FROSTHOLD KEEP')});
     }
     if(g.chest) drawables.push({depth:g.chest.x+g.chest.y, draw:()=>drawChestIso(g.chest)});
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});

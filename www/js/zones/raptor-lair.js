@@ -25,7 +25,7 @@ function updateLightningRaptor(g, e, dt, target, d, isFollowerTarget, chillMult,
   const face = (ang)=>{ e.facing = {x:Math.cos(ang), y:Math.sin(ang)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y); };
   e.moving = false;
   if(!e.lrAwake){
-    if(d < 720 || e.hp < e.maxHp){ e.lrAwake = true; showMsg('The Flame Raptor screeches!', 2.2, '#ffb060'); shakeScreen(g, 6, 0.4); }
+    if(d < 720 || (e.hp < e.maxHp && !e.lrCalm) || (e.lrCalm && (e.lastAttackedT||0) > 0)){ e.lrAwake = true; e.lrCalm = false; showMsg('The Flame Raptor screeches!', 2.2, '#ffb060'); shakeScreen(g, 6, 0.4); }
     else return;
   }
   const frac = e.hp/e.maxHp, enr = frac < 0.3;

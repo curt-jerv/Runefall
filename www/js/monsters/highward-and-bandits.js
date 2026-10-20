@@ -260,6 +260,7 @@ function drawHwStatusFx(e){
 // ---- v461 The Bandit King: Lighthouse Tower rooftop boss ----
 const BK_LEAP_R = 115, BK_LEAP_WIND = 0.55, BK_LEAP_AIR = 0.6, BK_FAN_WIND = 0.6;
 function updateBanditKing(g, e, dt, target, d, isFT, chill, room){
+  bossGreet(g, e, '\u201cThis lighthouse is mine, and so is everything you carry!\u201d');   // v490
   const p = g.player, reach = e.r+target.r+6;
   // v480: the opening -- he watches from behind the beacon, untouchable, until his crew is dead
   if(e.bkHold){
