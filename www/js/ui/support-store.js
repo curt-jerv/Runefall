@@ -44,7 +44,9 @@ function iapRestore(manual){
       const list = (res && res.purchases) || [];
       const owned = id=>list.some(p0=>p0 && p0.productIdentifier===id && (p0.purchaseState==null || p0.purchaseState==='1' || /PURCHASED/i.test(String(p0.purchaseState))));
       let got = 0;
-      for(const k of Object.keys(IAP)){ const has = owned(IAP[k].sku); if(has && !settings[IAP[k].own]) got++; settings[IAP[k].own] = has; if(!has){ if(k==='cat') settings.catCompanion = false; if(k==='stash') settings.expandedStash = false; } }
+      // v489: a restore only ever ADDS purchases. Google Play can answer with an empty or still-pending list right after
+      // launch (billing not connected yet, a test purchase still settling), which used to wipe what had been bought.
+      for(const k of Object.keys(IAP)){ const has = owned(IAP[k].sku); if(has && !settings[IAP[k].own]){ got++; settings[IAP[k].own] = true; } }
       saveSettings(settings);
       try{ refreshSupportToggles(); if(game && game.started && game.player) ensureFollowers(game); }catch(e){}
       if(manual) showMsg(got ? 'Purchases restored ('+got+')' : 'Purchases are up to date', 2.2, '#f4d36a');
@@ -56,7 +58,8 @@ function iapRestore(manual){
     try{ refreshSupportToggles(); }catch(e){}
   }).catch(()=>{}); }catch(e){}
 }
-setTimeout(()=>iapRestore(false), 1500);
+setTimeout(()=>iapRestore(false), 1500); setTimeout(()=>iapRestore(false), 9000);   // v489: a second pass once billing has surely connected
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) iapRestore(false); });
 let supportFromCat = false;
 function openSupport(fromCat){
   supportFromCat = fromCat===true;

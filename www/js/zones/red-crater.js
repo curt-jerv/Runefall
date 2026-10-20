@@ -2,7 +2,7 @@
 // A huge circular crater cut into three terraces (top rim, mid rim, scorched floor). Height is a per-tile field:
 // tiers are flat, cliffs are impassable lips, and four ramps blend one tier into the next. Everything that is
 // projected goes through toIso(), which subtracts crElevAt(), so units, shadows and effects follow the ground.
-const CR_W = 6000, CR_H = 6000, CR_TS = 50, CR_DEPTH = 52, /* v483: was 47 */ CR_CX = 3000, CR_CY = 3000;
+const CR_W = 6000, CR_H = 6000, CR_TS = 50, CR_DEPTH = 45, /* v489: was 52 */ CR_CX = 3000, CR_CY = 3000;
 const CR_R_FLOOR = 1000, CR_R_MID = 1850, CR_R_TOP = 2650, CR_WALL_THICK = 340, CR_GATE_HALF = 230;
 const CR_ELEV = [0, 70, 140], CR_WALL_ELEV = 250, CR_STEP = 22;
 const CR_RAMP_LEN = 300, CR_RAMP_HALF = 150;

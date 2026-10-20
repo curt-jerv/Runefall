@@ -296,6 +296,7 @@ function pushEnemyDrawables(drawables, e){
   if(e.lvBoss && (e.lvState==='surgeTele'||e.lvState==='emergeTele'||(e.krStrikes&&e.krStrikes.length))) drawables.push({depth:e.x+e.y-2, draw:()=>drawLeviathanTelegraph(e)});
   if(e.prot && protHasTelegraph(e)) drawables.push({depth:e.x+e.y-2, draw:()=>drawProtectorTelegraph(e)});
   if(e.windT>0) drawables.push({depth:e.x+e.y-1, draw:()=>drawEnemyTell(e)});
+  if(e.fearVulnT>0 && e.hp>0) drawables.push({depth:e.x+e.y+1, draw:()=>drawFearMark(e)});   // v489: cursed by Fear
   if((e.type==='bear'||e.type==='ram') && e.chargeState==='wind') drawables.push({depth:e.x+e.y-1, draw:()=>drawBearChargeLane(e)});
   if(e.type==='frozenzombie' && e.zChargeState==='wind') drawables.push({depth:e.x+e.y-1, draw:()=>drawBearChargeLane(e)});
   if(e.type==='boar' && e.boarChargeState==='wind') drawables.push({depth:e.x+e.y-1, draw:()=>drawBearChargeLane(e)});

@@ -133,6 +133,17 @@ function pickRarity(charLevel, category, magicFindPct){
 }
 // (v345) Rarity for special sources. Elites/bosses/packs: Magic at worst, Rare chance climbs with level.
 function eliteRarity(L){ return Math.random() < clamp(0.04 + 0.005*(L-4), 0.04, 0.22) ? 'rare' : 'magic'; }
+// v489: every boss can be fought again. The saved flag that says its quest item was already earned also marks a re-kill,
+// which drops a guaranteed rare in place of that quest item.
+function bossRekillFlag(e){
+  if(!e || e.brBoss) return null;
+  return e.kraken ? 'krakenSlain' : e.lvBoss ? 'leviathanSlain' : e.colossus ? 'colossusSlain' : e.mastodon ? 'partMastodon' : e.minotaur ? 'heartstoneTaken'
+    : e.fhCmd ? 'fhCmdLooted' : e.dwc ? 'fhDungeonDone' : e.defiler ? 'inscriptionTaken' : null;
+}
+function bossRekillRare(g, at){
+  const p = g.player, it = classRewardItem(p, Math.max(p.level, monsterLevel(g)), 'rare');
+  g.loot.push({type:'item', x:at.x+rand(-14,14), y:at.y+rand(-14,14), r:8, item:it});
+}
 function bossRarity(L){ return Math.random() < clamp(0.15 + 0.012*(L-5), 0.15, 0.40) ? 'rare' : 'magic'; }
 function packRarity(L){ return Math.random() < clamp(0.02 + 0.003*L, 0.02, 0.10) ? 'rare' : 'magic'; }
 // Chests/quest rewards: Rare chance scales with level (0 at L8 and below, 75% cap); otherwise a guaranteed 2-mod Magic.

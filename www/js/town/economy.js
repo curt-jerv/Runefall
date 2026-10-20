@@ -1,13 +1,22 @@
 // ---------- Town & Blacksmith ----------
 // (v250) Sell value scales gently with item level, rarity and mod tiers, with a modest hard ceiling per rarity.
 const SELL_BASE = {common:6, magic:16, rare:44}, SELL_CAP = {common:45, magic:130, rare:380};
-function priceFor(item){
+function basePriceFor(item){   // (v250) the vendors' buy prices are still built on this
   const r = item.rarity||'common', il = item.ilvl || ({1:10,2:38,3:60}[item.tier||1]||10);
   let v = (SELL_BASE[r]||6) * (1 + il*0.06);
   for(const a of (item.affixes||[])) if(!a.implicit && typeof a.value==='number') v += 2.5*(a.mt||1);
   return Math.max(1, Math.min(SELL_CAP[r]||45, Math.round(v)));
 }
-function buyPriceFor(item){ return item.fixedPrice || Math.round(priceFor(item)*2.5); }
+// v489: selling pays more -- rares and jewelry especially, and the gap grows with item level
+const SELL2_BASE = {common:6, magic:18, rare:62}, SELL2_CAP = {common:80, magic:300, rare:1400};
+function priceFor(item){
+  const r = item.rarity||'common', il = item.ilvl || ({1:10,2:38,3:60}[item.tier||1]||10);
+  let v = (SELL2_BASE[r]||6) * (1 + il*0.09);
+  for(const a of (item.affixes||[])) if(!a.implicit && typeof a.value==='number') v += 3.5*(a.mt||1);
+  if(item.slotType==='ring' || item.slotType==='amulet') v *= 1.5;
+  return Math.max(1, Math.min(SELL2_CAP[r]||80, Math.round(v)));
+}
+function buyPriceFor(item){ return item.fixedPrice || Math.round(basePriceFor(item)*2.5); }
 // (v120) The Blacksmith now sells ONLY Warrior gear: plate armor plus swords,
 // greatswords and shields. Stock is keyed off the player's level like the other vendors.
 const SMITH_ARMOR_CATEGORIES = ['helm','armor','gloves','boots'];

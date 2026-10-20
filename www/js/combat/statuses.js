@@ -269,11 +269,11 @@ const TRAP_BASE_DMG = 18, TRAP_ROOT_DURATION = 2, TRAP_ROOT_STEP = 0.15;
 // Tactics (a jump-attack trigger for wolf/bear followers), Summon Bear
 // repositioned as the capstone, and Field Dress (a stand-still HP-regen
 // channel that cancels on movement and reveals the player out of stealth).
-const CRIPPLING_SHOT_CD = 4, CRIPPLING_SHOT_BASE_DMG = 10;
+const CRIPPLING_SHOT_CD = 3, EXPLOSIVE_SHOT_CD = 3, CRIPPLING_SHOT_BASE_DMG = 10;
 const CRIPPLING_SHOT_BLEED_PCT_BASE = 0.30, CRIPPLING_SHOT_BLEED_PCT_STEP = 0.075; // 30%/s at Rank1 -> 60%/s at Rank5
 const CRIPPLING_SHOT_BLEED_DUR = 4;
 function cripplingShotBleedPct(rank){ return rank>0 ? CRIPPLING_SHOT_BLEED_PCT_BASE + CRIPPLING_SHOT_BLEED_PCT_STEP*(rank-1) : 0; }
-const STUN_SHOT_CD = 6, STUN_SHOT_BASE_DMG = 20;
+const STUN_SHOT_CD = 4, STUN_SHOT_BASE_DMG = 20;
 const STUN_SHOT_STUN_BASE = 0.4, STUN_SHOT_STUN_STEP = 0.1; // v267: 0.4s at Rank1 -> 0.8s at Rank5 (but only a chance to land, see below)
 const STUN_SHOT_CHANCE_BASE = 0.08, STUN_SHOT_CHANCE_STEP = 0.03; // 8% at Rank1 -> 20% at Rank5: no stun-locking
 function stunShotStunChance(rank){ return rank>0 ? STUN_SHOT_CHANCE_BASE + STUN_SHOT_CHANCE_STEP*(rank-1) : 0; }

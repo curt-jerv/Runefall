@@ -14,6 +14,11 @@ const ACH = [
   {id:'lvl10',      icon:'\u{1F4C8}', name:'Blooded',          desc:'Reach level 10',                        stat:'level',   goal:10},
   {id:'lvl25',      icon:'\u{1F6E1}\uFE0F', name:'Veteran',    desc:'Reach level 25',                        stat:'level',   goal:25},
   {id:'lvl50',      icon:'\u{1F3C6}', name:'Legend',           desc:'Reach level 50',                        stat:'level',   goal:50},
+  {id:'lvl60',      icon:'\u{1F31F}', name:'Mythic',           desc:'Reach level 60',                        stat:'level',   goal:60},
+  {id:'allQuests',  icon:'\u{1F4DC}', name:'Loremaster',       desc:'Contain the Breach with every quest in your log completed', flag:'allQuests'},
+  {id:'stoneCraft', icon:'\u2697\uFE0F', name:'Alchemist',     desc:'Craft your first stone from parts',     flag:'stoneCraft'},
+  {id:'amberCraft', icon:'\u{1F7E0}', name:'Amber Smith',      desc:'Craft your first unique amber stone',   flag:'amberCraft'},
+  {id:'obsidianLoss',icon:'\u{1F311}', name:'Ash and Regret',  desc:'Lose an item to the Obsidian Obelisk',  flag:'obsidianLoss'},
   {id:'rare',       icon:'\u{1F48D}', name:'Fine Steel',       desc:'Equip a rare item',                     flag:'rare'},
   {id:'fullKit',    icon:'\u{1F9E5}', name:'Fully Armed',      desc:'Fill every equipment slot',             stat:'slots',   goal:EQUIP_SLOTS.length},
   {id:'socket',     icon:'\u{1F48E}', name:'Stonesetter',      desc:'Wear an item with a socketed stone',    flag:'socket'},
@@ -35,7 +40,7 @@ function achStatVal(a, p){
 }
 const _achQ = [];
 function achToast(a){
-  if(typeof settings!=='undefined' && settings && settings.hideAch!==false) return;   // v484: pop-ups are off unless turned on in Settings
+  if(typeof settings!=='undefined' && settings && settings.hideAch===true) return;   // v489: pop-ups are on unless hidden in Settings
   _achQ.push(a); if(_achQ.length>1) return;
   const run = ()=>{ const x = _achQ[0]; if(!x) return; const el = document.getElementById('achToast'); if(!el) return;
     el.querySelector('.achIco').textContent = x.icon; el.querySelector('.t2').textContent = x.name; el.classList.add('on');
@@ -71,6 +76,7 @@ function achTick(g, dt){
   if(p.hp>0 && p.maxHp>0 && p.hp < p.maxHp*0.05) achFlag('closeCall');
   _achT -= dt; if(_achT > 0) return; _achT = 1;
   if((p.deaths||0) > 0) achFlag('fallen');
+  if(p.breachContained && (p.quests||[]).length && p.quests.every(q=>q && q.status==='complete')) achFlag('allQuests');
   if(p.equipment){ for(const k of EQUIP_SLOTS){ const it = p.equipment[k]; if(!it) continue; if(it.rarity==='rare') achFlag('rare'); if(Array.isArray(it.socketed) && it.socketed.some(Boolean)) achFlag('socket'); } }
   const d = achLoad(); const dirty = d._dirty; delete d._dirty;
   achCheck(p); if(dirty) achSave();

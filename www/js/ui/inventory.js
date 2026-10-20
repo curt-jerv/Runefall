@@ -96,6 +96,7 @@ function statInfoText(key, p){
     'PROJ SPD': 'Projectiles fly '+pc(p.projectileSpeedPct||0)+'% faster.',
     BLEED: pc(p.bleedChancePct||0)+'% chance for your hits to cause Bleed.',
     'AILMENT DUR': 'Your ailments last '+pc((p.statusDurPct||0)*100)+'% longer (gear cap 75%).',
+    'SKILL DUR': 'Your skill effects last '+pc((p.skillDurPct||0)*100)+'% longer: ailments, ground effects (Blizzard, Meteor fire, Consecrate, Plague, trap clouds), Hurricane, Tornado, Flame Vortex, banners and the Mirage decoy (gear cap 50%).',
     'VS ELITES': '+'+pc((p.dmgVsElitePct||0)*100)+'% damage to elite monsters (gear cap 5%).',
     MINION: 'Followers and minions deal +'+pc((p.followerDmgPct||0)*100)+'% damage.',
     LEECH: pc(totalLeechPct(p))+'% of damage dealt heals you (cap '+LEECH_TOTAL_CAP+'%). Full on normal monsters, less on magic, elites and bosses.',
@@ -114,7 +115,7 @@ function statInfoText(key, p){
     FIRE: res('fire','Fire'), COLD: res('cold','Cold'), LTNG: res('lightning','Lightning'), PSN: res('poison','Poison'),
     'MAGIC FIND': '+'+pc(p.magicFindPct||0)+'% chance for magic, rare and better drops.',
     'GOLD FIND': '+'+pc(p.goldFindPct||0)+'% gold from drops.',
-    'POTION STR': '+'+pc((p.potionStrPct||0)*100)+'% mana potion strength and beer/coffee duration (gear cap 75%).',
+    'POTION STR': '+'+pc((p.potionStrPct||0)*100)+'% potion strength: health potions heal more (both the instant heal and the heal over time), mana potions restore more, and beer/coffee last longer (gear cap 75%).',
     BREACH: 'Deepest Breach floor cleared.',
     PLAYTIME: 'Time played on this character: '+fmtPlayTime(p.playTime||0, true)+'.',
     KILLS: 'Enemies this character has slain.'
@@ -177,6 +178,7 @@ function statSummaryHtml(p){
     pct('PROJ SPD','PROJ SPD',p.projectileSpeedPct||0,true)+
     pct('BLEED','BLEED',p.bleedChancePct||0)+
     pct('AILMENT DUR','AILMENT DUR',(p.statusDurPct||0)*100,true)+
+    pct('SKILL DUR','SKILL DUR',(p.skillDurPct||0)*100,true)+
     pct('VS ELITES','VS ELITES',(p.dmgVsElitePct||0)*100,true)+
     pct('MINION','MINION DMG',(p.followerDmgPct||0)*100,true)+
     pct('LEECH','LEECH',totalLeechPct(p))+
@@ -205,7 +207,7 @@ function statSummaryHtml(p){
 function resourceInfoHtml(p){
   if(false) return '<b>Conviction</b><br>Templars transmute Rage into <b>Conviction</b>: the same bar, burning with holy purpose. It does not refill on its own and fades while you are idle.<br><br><b>Gain Conviction</b> by Smiting (+'+SMITE_CONV+', Wrath +'+WRATH_CONV+'), landing Vengeance (+'+VENG_CONV+' per foe), planting Banners (+'+BANNER_CONV+'), standing in Consecrate, and by fighting as any warrior does.<br><br><b>Spend it</b> on Judgment ('+JUDG_COST+'). Your followers deal most of your damage, so keep them alive: Smite heals them.';
   if(p.cls==='warrior') return '<b>Rage</b><br>'+(isTemplar(p) ? '<i>As a Templar you transmute Rage into <b>Conviction</b>: the same bar, burning with holy purpose, spent on your Templar skills.</i><br><br>' : 'Templars transmute Rage into <b>Conviction</b> for their skills; it is the same bar.<br><br>')+'Rage is the fuel for your skills. It does <b>not</b> refill on its own. It drains as you cast and fades on its own, faster the longer you go without fighting.<br><br><b>Gain Rage</b> by fighting: +'+RAGE_ON_HIT+' each time you land a hit, and up to +'+RAGE_ON_HURT_MAX+' each time you get hit (the bigger the hit, the more). With <b>Riposte</b>, blocking a hit gives '+RIPOSTE_RAGE_BASE+' to '+(RIPOSTE_RAGE_BASE+RIPOSTE_RAGE_MAX_BONUS)+' Rage depending on how hard it was.<br><br>Tip: taking hits and blocking fills the bar fastest, so a Warrior who stays in the fight always has Rage to spend.';
-  if(p.cls==='ranger') return '<b>Stamina</b><br>Stamina powers your skills, and your big skills are expensive: Rapid Shot costs 30% of the bar, Aimed Shot 33% and Rain of Arrows 40%. Traps and Hunter\'s Mark take a slice too, while Crippling and Stun Shot are cheap at 6% and 8%. It barely refills on its own (about '+(STAMINA_REGEN_PCT*100).toFixed(1)+'% per second). <b>Dodging restores '+Math.round(STAMINA_DODGE_PCT*100)+'% of your Stamina</b>, and every basic shot or Multi Shot volley restores '+Math.round(STAMINA_ON_SHOT_PCT*100)+'%, so dodge, shoot, and unload your skills in bursts. Crits (Deadeye) restore a little more. The pool grows a little every level.';
+  if(p.cls==='ranger') return '<b>Stamina</b><br>Stamina powers your big shots and traps. Basic shots -- Strike, Rapid Shot, Splinter Shot and Multi Shot volleys -- are free and each one restores '+STAMINA_ON_SHOT+' Stamina. Heavy skills (Crippling, Stun and Explosive Shot, Aimed Shot, Rain of Arrows, traps, Hunter\'s Mark) cost a set amount that rises with their rank, and have cooldowns. Stamina also refills slowly on its own (about '+(STAMINA_REGEN_PCT*100).toFixed(1)+'% per second), and the Survivalist\'s <b>Evasion</b> passive makes every dodge restore Stamina. The pool grows a little every level.';
   return '<b>Mana</b><br>Mana powers your spells. It refills slowly on its own (about '+Math.round(MANA_REGEN_PCT*100)+'% of the bar per second), you get '+Math.round(MANA_ON_KILL_PCT*100)+'% back on each kill, and your basic spells give some back on every hit. Mana potions restore '+Math.round(MANA_POTION_PCT*100)+'%.';
 }
 (function(){
@@ -553,10 +555,10 @@ function setInvTab(t){
   document.getElementById('invTabGear').classList.toggle('active', t==='gear');
   document.getElementById('invTabParts').classList.toggle('active', t==='parts');
   document.getElementById('invTabKnights').classList.toggle('active', t==='knights');
-  document.getElementById('bagGrid').style.display = t==='gear' ? '' : 'none';
+  document.getElementById('bagGrid').style.display = (t==='gear' || t==='knights') ? '' : 'none';   // v489: the bag stays under the Knights slots
   document.getElementById('partsBag').style.display = t==='parts' ? 'block' : 'none';
   document.getElementById('knightsBag').style.display = t==='knights' ? 'block' : 'none';
-  document.getElementById('bagDivider').textContent = t==='gear' ? 'Bag \u2014 tap an item for stats, or drag to equip' : t==='knights' ? 'Knights \u2014 shared gear for every Squire' : 'Parts Bag';
+  document.getElementById('bagDivider').textContent = t==='gear' ? 'Bag \u2014 tap an item for stats, or drag to equip' : t==='knights' ? 'Bag \u2014 drag an item onto a Knight slot, or tap it and choose Equip on Knights' : 'Parts Bag';
   renderPartsBag(); renderKnightsBag();
 }
 function renderPartsBag(){
@@ -573,6 +575,17 @@ document.getElementById('invTabGear').addEventListener('click', ()=>setInvTab('g
 document.getElementById('invTabParts').addEventListener('click', ()=>setInvTab('parts'));
 document.getElementById('invTabKnights').addEventListener('click', ()=>setInvTab('knights'));
 let knightPick = null;
+// v489: Knights tab -- the four shared Squire slots sit on top like your own paperdoll; the normal bag stays below.
+// Drag an item onto a slot or tap it and choose "Equip on Knights"; tap a filled slot to take the item back.
+function knightSlotFor(it){ if(!it || (it.socketed && it.socketed.some(Boolean))) return null; const s = KNIGHT_SLOTS.find(k=>k[2]===it.slotType); return s ? s[0] : null; }
+function knightEquipFromBag(p, invIdx){
+  const it = p.inventory[invIdx], key = knightSlotFor(it);
+  if(!key){ showMsg(it && it.socketed && it.socketed.some(Boolean) ? 'Knights cannot wear items with socketed parts' : 'Knights can only wear a helm, armor, a sword or a shield', 1.6); return false; }
+  const ke = knightEq(p); p.inventory.splice(invIdx,1);
+  if(ke[key]) forceAddToBag(p, ke[key]);
+  ke[key] = it; knightGearChanged(); saveGame(); showMsg('Knights: '+it.name, 1.2);
+  return true;
+}
 function renderKnightsBag(){
   const p = game.player, el = document.getElementById('knightsBag'); if(!el) return;
   const has = uq(p,'uq_templar');
@@ -580,43 +593,26 @@ function renderKnightsBag(){
   if(!has){ if(invTab==='knights'){ invTab = 'gear'; setInvTab('gear'); } return; }
   if(invTab!=='knights') return;
   const ke = knightEq(p), kg = knightGear(p);
-  let h = '<div style="font-size:11.5px; color:var(--bone-dim); margin-bottom:6px;">Knighthood: every Squire wears this gear. Tap a slot to choose or swap an item from your bag.</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">';
+  let h = '<div class="kSlotRow">';
   for(const [key,label] of KNIGHT_SLOTS){
     const it = ke[key];
-    h += '<div class="partCard kSlot'+(knightPick===key?' sel':'')+'" data-kslot="'+key+'" style="flex-direction:column; text-align:center; cursor:pointer; margin:0; min-height:54px; justify-content:center;"><div style="font-size:10.5px; color:var(--bone-dim);">'+label+'</div>'+(it ? '<div style="color:'+it.color+'; font-size:11.5px;"><b>'+it.name+'</b></div><div class="pSub">tap to take off</div>' : '<div style="opacity:.5; font-size:11.5px;">Empty</div>')+'</div>';
+    h += '<div class="kSlotBox'+(it?' full':'')+'" data-kslot="'+key+'" title="'+(it ? it.name : label)+'" style="'+(it ? 'border-color:'+it.color : '')+'">'+(it ? bagItemHtml(it) : '<span class="kLbl">'+label+'</span>')+'</div>';
   }
   h += '</div>';
-  if(knightPick){
-    const want = KNIGHT_SLOTS.find(s=>s[0]===knightPick)[2];
-    const list = p.inventory.filter(it=>it && it.slotType===want && !(it.socketed && it.socketed.some(Boolean)));
-    h += '<div style="font-size:11.5px; color:var(--bone-dim); margin-bottom:4px;">Choose a '+KNIGHT_SLOTS.find(s=>s[0]===knightPick)[1].toLowerCase()+' (items with socketed parts are not allowed):</div>';
-    h += list.length ? list.map(it=>'<div class="partCard"><div class="pMain" style="color:'+it.color+'"><b>'+it.name+'</b><div class="pSub">'+it.affixes.map(affixTooltipLine).join(', ')+'</div></div><div class="partBtn" data-kpick="'+it.id+'">Equip</div></div>').join('') : '<div style="color:var(--bone-dim); font-size:12px; padding:6px;">No suitable item in your bag.</div>';
-  }
-  h += '<div class="pSub" style="margin-top:8px;">Knight gear bonus: '+(kg.any ? ('+'+Math.round(kg.dmg*0.75)+' damage'+(kg.dmgPct?', +'+kg.dmgPct+'% damage':'')+', +'+Math.round(kg.hp+kg.armor*1.5)+' life, '+Math.round(knightGearDr(p)*100)+'% damage reduction'+(kg.block?', '+Math.min(40,kg.block)+'% block':'')) : 'none yet')+'</div>';
+  h += '<div class="pSub" style="margin:4px 0 6px; text-align:center;">Every Squire wears this gear. Knight gear bonus: '+(kg.any ? ('+'+Math.round(kg.dmg*0.75)+' damage'+(kg.dmgPct?', +'+kg.dmgPct+'% damage':'')+', +'+Math.round(kg.hp+kg.armor*1.5)+' life'+(kg.block?', '+Math.round(kg.block)+'% block':'')) : 'none yet')+'</div>';
   el.innerHTML = h;
 }
 document.getElementById('knightsBag').addEventListener('click', (e)=>{
   const p = game.player, ke = knightEq(p);
   const sl = e.target.closest('[data-kslot]');
-  if(sl){
-    const key = sl.dataset.kslot;
-    if(ke[key]){ forceAddToBag(p, ke[key]); ke[key] = null; knightGearChanged(); knightPick = key; saveGame(); }
-    else knightPick = (knightPick===key ? null : key);
-    renderInventory(); return;
-  }
-  const pk = e.target.closest('[data-kpick]');
-  if(pk && knightPick){
-    const i = p.inventory.findIndex(it=>it && it.id===pk.dataset.kpick); if(i<0) return;
-    const it = p.inventory[i]; p.inventory.splice(i,1);
-    if(ke[knightPick]) forceAddToBag(p, ke[knightPick]);
-    ke[knightPick] = it; knightPick = null; knightGearChanged(); saveGame(); renderInventory();
-  }
+  if(sl){ const key = sl.dataset.kslot; if(ke[key]){ forceAddToBag(p, ke[key]); ke[key] = null; knightGearChanged(); saveGame(); renderInventory(); } }
 });
 function renderInventory(){
   const p = game.player;
   renderPartsBag(); renderKnightsBag();
   if(fixBagOverlaps(p.inventory)) saveGame();
   document.getElementById('invStats').innerHTML = statSummaryHtml(p);
+  { const ig = document.getElementById('invGold'); if(ig) ig.textContent = (p.gold||0).toLocaleString()+' gold'; }   // v489
   // Class + main talent tree header, top of screen (see mainTreeName above).
   const invClsName = p.cls==='ranger' ? 'Ranger' : p.cls==='mystic' ? 'Mystic' : 'Warrior';
   const invTreeName = mainTreeName(p);
@@ -820,6 +816,7 @@ function openItemDetail(idx, source){
     equipBtn.style.display = 'none'; sellBtn.style.display = 'none';
     if(source==='inv'){ useBtn.style.display = 'flex'; const un = useBtn.querySelector('.schName'); if(un) un.textContent = item.slotType==='potion' ? 'Drink' : 'Use'; }
   }
+  { const lb = equipBtn.querySelector('.schName'), kOn = invTab==='knights' && source==='inv' && !!knightSlotFor(item); if(lb) lb.textContent = kOn ? 'Equip on Knights' : 'Equip'; }   // v489
   document.getElementById('itemDetailOverlay').style.display = 'flex';
   itemDetailOpenedAt = performance.now();
 }
@@ -829,7 +826,7 @@ function closeItemDetail(){
   pendingIdx = null;
   itemDetailSource = 'inv';
 }
-document.getElementById('itemDetailClose').addEventListener('click', closeItemDetail);
+document.getElementById('itemDetailClose').addEventListener('click', ()=>{ if(performance.now()-itemDetailOpenedAt < ITEM_DETAIL_GUARD_MS*3) return; closeItemDetail(); });   // v489: the opening tap must not hit the X
 function closeItemCompare(){ document.getElementById('itemCompareOverlay').style.display = 'none'; }
 document.getElementById('itemCompareClose').addEventListener('click', closeItemCompare);
 document.getElementById('itemCompareOverlay').addEventListener('click', e=>{ if(e.target.id==='itemCompareOverlay') closeItemCompare(); });
@@ -850,6 +847,7 @@ document.getElementById('itemDetailEquip').addEventListener('click', ()=>{
   if(itemDetailSource==='vendorStock') return;
   const p = game.player;
   const item = itemDetailSource==='stash' ? stash.items[pendingIdx] : p.inventory[pendingIdx];
+  if(item && invTab==='knights' && itemDetailSource==='inv' && knightSlotFor(item)){ knightEquipFromBag(p, pendingIdx); closeItemDetail(); renderInventory(); return; }   // v489
   if(item){
     let _stIdx=-1;
     if(itemDetailSource==='stash'){ _stIdx=pendingIdx; stash.items.splice(pendingIdx,1); }
@@ -1063,6 +1061,8 @@ function dragEnd(ev){
   if(!item) return;
   const target = document.elementFromPoint(ev.clientX, ev.clientY);
   if(socketMode() && target && target.closest && target.closest('#socketBench')){ socketBenchSet(item); return; }
+  { const kEl = target && target.closest ? target.closest('[data-kslot]') : null;   // v489: drop onto a Knight slot
+    if(kEl && st.source==='inv'){ knightEquipFromBag(p, st.idx); renderInventory(); return; } }
   const slotEl = target && target.closest ? target.closest('.pdSlot') : null;
   const overStock = target && target.closest ? target.closest('#shopStock') : null;
   const overStashGrid = target && target.closest ? target.closest('#stashGrid') : null;

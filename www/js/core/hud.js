@@ -41,7 +41,7 @@ function updateTown(dt){
     if(dx===0&&dy===0){ dx=p.facing.x; dy=p.facing.y; }
     const d=Math.hypot(dx,dy)||1;
     p.dodgeDir = {x:dx/d, y:dy/d};
-    if(p.cls==='ranger'){ gainResource(p, p.maxMp*STAMINA_DODGE_PCT); survDodgeRegenStart(p); }
+    if(p.cls==='ranger'){ gainResource(p, evasionDodgeStamina(p)); survDodgeRegenStart(p); }
     p.dodging = true; p.dodgeT = p.dodgeDur; if(p.partB && p.partB.sp && p.partB.sp.windroll) p.windT = 3;
     p.dodgeCharges -= 1;
     p.dodgeCdMax = applyCdr(p, finesseDodgeCooldown(p));
@@ -166,8 +166,26 @@ function updateIceArmorHud(p){
   if(mr){ const w = full ? (p.mpReserved/full*100).toFixed(1)+'%' : '0%'; if(mr.style.width!==w) mr.style.width = w; const d = full ? 'block' : 'none'; if(mr.style.display!==d) mr.style.display = d; }
   if(ia){ const fr = (p.iceArmorMax>0 && p.iceArmorHp>0) ? clamp(p.iceArmorHp/p.iceArmorMax, 0, 1) : 0; const w = (fr*100).toFixed(1)+'%'; if(ia.style.width!==w) ia.style.width = w; }
 }
+// v489: the bottom dock's globes and XP bar mirror the (hidden) top bars
+function updateDockHud(p){
+  const st = (id, prop, v)=>{ const el = document.getElementById(id); if(el && el.style[prop]!==v) el.style[prop] = v; };
+  const tx = (id, v)=>{ const el = document.getElementById(id); if(el && el.textContent!==v) el.textContent = v; };
+  st('hpGlobeFill', 'height', clamp(p.hp/Math.max(1,p.maxHp)*100,0,100).toFixed(1)+'%');
+  const full = (p.mpReserved>0 && p.maxMpFull>0) ? p.maxMpFull : p.maxMp;
+  st('resGlobeFill', 'height', clamp((p.mp||0)/Math.max(1,full)*100,0,100).toFixed(1)+'%');
+  st('resGlobeRes', 'height', (p.mpReserved>0 && full ? p.mpReserved/full*100 : 0).toFixed(1)+'%');
+  st('hpGlobeIce', 'height', ((p.iceArmorMax>0 && p.iceArmorHp>0) ? clamp(p.iceArmorHp/p.iceArmorMax,0,1)*100 : 0).toFixed(1)+'%');
+  const rf = document.getElementById('resGlobeFill'); if(rf && rf.dataset.res!==p.cls) rf.dataset.res = p.cls;
+  tx('hpGlobeNum', Math.ceil(Math.max(0,p.hp))+'');
+  tx('resGlobeNum', Math.floor(p.mp||0)+'');
+  st('dockXpFill', 'width', clamp(p.xp/p.xpNext*100,0,100).toFixed(1)+'%');
+  tx('dockXpTxt', 'Lv '+(p.level||1)+' \u00b7 '+Math.floor(clamp(p.xp/p.xpNext,0,1)*100)+'%');
+  // the skill-point flag always shows the real number of unspent points (it used to keep an old count outside town)
+  if(typeof skillsBadge!=='undefined' && skillsBadge){ const n = p.skillPoints||0; const t = n>0 ? String(n) : '!'; if(skillsBadge.textContent!==t) skillsBadge.textContent = t; if(n<=0 && skillsBadge.style.display!=='none') skillsBadge.style.display = 'none'; }
+}
 function updateHudNums(p){
   updateBoltBtn();
+  try{ updateDockHud(p); }catch(e){}
   const set = (id, txt)=>{ const el = document.getElementById(id); if(el && el.textContent!==txt) el.textContent = txt; };
   set('hpnum', Math.ceil(Math.max(0,p.hp))+' / '+Math.round(p.maxHp));
   set('mpnum', Math.floor(p.mp||0)+' / '+Math.round((p.mpReserved>0 ? p.maxMpFull : p.maxMp)||0));

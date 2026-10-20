@@ -104,7 +104,7 @@ function makeLakesideRuins(){
 
   // A dedicated permanent waypoint, same shared mechanism/art as every
   // other zone's -- nudged onto the near (west) shoreline, off the road.
-  const waypoint = {x:sunlitGate.x+300, y:LAKE_CY-260, r:22};
+  const waypoint = {x:sunlitGate.x+300, y:LAKE_CY-260, r:22, off:true};   // v489: no waypoint here any more (spot kept as a landing point)
 
   // The island's Stonehenge -- a fixed ring of 9 standing stones around
   // dead center, purely decorative/atmospheric (see drawLakesideStoneIso).

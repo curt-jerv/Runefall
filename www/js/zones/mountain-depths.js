@@ -67,6 +67,7 @@ function makeDeepOrganicFloor(f){
     Object.assign(R, {deep:f, floor:f, name:DEEP_NAMES[f-1], entrance, stairs, entranceSide:'left', entranceSpot:{x:entrance.x+90, y:entrance.y},
       mine:false, fht:false, ft:false, rooftop:false, bossFloor:boss, waypoint:null, beacon:null, witch:null, clearPortal:undefined,
       chestSpot: boss ? {x:HEART_CX, y:HEART_CY, r:24} : null, lavaInset:0, organicDeep:true});
+    if(f===2) R.waypoint = {x:ent.x+60, y:ent.y-105, r:22};   // v489: Ember Caverns waypoint, beside the arrival stairs
     R.waters = R.obstacles.filter(o=>o.isWater);
   } finally { Math.random = saveRand; }
   const room = R;
@@ -144,7 +145,7 @@ function spawnDeepFloor(g, f){
     for(let i=0;i<nBeetle;i++){ const c = spot(160, X1, 120, room.h-120); if(!c) continue; for(let k=0;k<3+Math.floor(Math.random()*2);k++) sp('lavabeetle', around(c,90)); }
     for(let i=0;i<nBat;i++){ const c = spot(160, X1, 120, room.h-120); if(!c) continue; for(let k=0;k<3;k++) sp('firebat', around(c,100)); }
     for(let i=0;i<nGolem;i++){ const c = spot(160, X1, 120, room.h-120); if(!c) continue; sp('magmagolem', c); if(i%3===0) sp('magmagolem', around(c,70)); }
-    if(heart && !g.player.colossusSlain){
+    if(heart){   // v489: the Colossus rises again on every visit
       const e = spawnEnemy(g, 'colossus', {x:HEART_CX+260, y:HEART_CY});
       e.isLairBoss = true; e.bossName = 'The Molten Colossus'; initColossus(e);
       showMsg('The mountain itself stirs...', 2.4, '#ff9a50');
@@ -159,15 +160,15 @@ function enterDeep(floor, opts){
   g.tower = makeDeepFloor(floor); g.room = g.tower;
   g.depth = deepFloorLevel(floor);
   const t = g.tower;
-  if(opts.fromBelow && t.stairs){ p.x = t.stairs.x + (t.entranceSide==='left' ? -70 : 70); p.y = t.stairs.y; }
+  if(opts.atWaypoint && t.waypoint){ p.x = t.waypoint.x; p.y = t.waypoint.y + 40; }
+  else if(opts.fromBelow && t.stairs){ p.x = t.stairs.x + (t.entranceSide==='left' ? -70 : 70); p.y = t.stairs.y; }
   else { p.x = t.entrance.x + (t.entranceSide==='left' ? 70 : -70); p.y = t.entrance.y; }
   p.crX = undefined;
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null; g.bossKilled=false; g.blasts=[];
   showMsg(t.name+'  (Lv. '+g.depth+')', 1.8);
   g.deepStore = g.deepStore || {};
-  if(g.deepStore[floor]) g.enemies = g.deepStore[floor];
+  if(g.deepStore[floor] && !(t.bossFloor && !g.deepStore[floor].some(e=>e.colossus && e.hp>0))) g.enemies = g.deepStore[floor];   // v489: a slain Colossus floor refills
   else spawnDeepFloor(g, floor);
-  if(t.bossFloor && p.colossusSlain) colossusAftermath(g);
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = p.x; f.y = p.y; }
@@ -482,6 +483,7 @@ function updateDeep(g, dt){
   if(dist(p, t.entrance) < t.entrance.r + p.r + 22) dk = t.floor===1 ? 'depthsToPass' : 'deepUp';
   else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) dk = 'deepDown';
   else if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) dk = 'toTownFromTower';
+  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ dk = 'waypointDeep'; discoverWaypoint('reachedDeepWp'); }
   if(t.isDeepMine){
     updateDeepMine(g, dt);
     if(!dk && g.miners && !g.minerRun && g.miners.some(m=>dist(p,m) < 80)) dk = 'depthsMiner';

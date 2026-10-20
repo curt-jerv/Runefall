@@ -496,8 +496,10 @@ function render(){
       drawables.push({depth:g.lake.sunlitGate.x+g.lake.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.sunlitGate, 'SUNLIT PLAINS')});
       drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y, draw:()=>drawRuinsGateIso(g.lake.marshGate, g.clock||0)});
       drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.marshGate, 'BLACK MARSH')});
-      drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y-1, draw:()=>drawWaypointIso(g.lake.waypoint, g.clock||0, true)});
-      drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y, draw:()=>drawEdgeLabelIso(g.lake.waypoint, 'WAYPOINT')});
+      if(!g.lake.waypoint.off){
+        drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y-1, draw:()=>drawWaypointIso(g.lake.waypoint, g.clock||0, true)});
+        drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y, draw:()=>drawEdgeLabelIso(g.lake.waypoint, 'WAYPOINT')});
+      }
     }
     if(g.chest) drawables.push({depth:g.chest.x+g.chest.y, draw:()=>drawChestIso(g.chest)});
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -687,6 +689,7 @@ function render(){
       drawables.push({depth:t.clearPortal.x+t.clearPortal.y-1, draw:()=>drawBluePortalIso(t.clearPortal, g.clock||0)});
       drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, 'MISTFALL')});
     }
+    if(t.waypoint){ drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, true)}); drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')}); }   // v489: Ember Caverns
     drawables.push({depth:-99999, draw:()=>drawBlasts(g)});
     if(g.chest) drawables.push({depth:g.chest.x+g.chest.y, draw:()=>drawChestIso(g.chest)});
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -899,6 +902,7 @@ function render(){
     ctx.save(); try{ ctx.filter = 'saturate(0.35) brightness(1.35)'; }catch(e){} drawRanger(ghost); ctx.restore();
   }}); }
   if(p.skills && effectiveRank(p,'storm')>0) drawables.push({depth:playerDepth+2000, draw:()=>drawStormCloudIso(p, g.clock||0)});
+  if(p.cls==='mystic' && (p.souls||0)>0 && p.skills && effectiveRank(p,'soulShield')>0) drawables.push({depth:playerDepth+0.5, draw:()=>drawSoulShieldOrbs(p, g.clock||0)});   // v489
   // ---- v86: item 7, behind-wall fade -----------------------------------
   // The painter's-algorithm depth sort just below is ALREADY what makes a
   // wall/building visually occlude the player when the player walks behind

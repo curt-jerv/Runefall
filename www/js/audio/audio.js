@@ -246,7 +246,7 @@ const SKILL_SND = {
   rapidShot:'bow', splinterShot:'bow', explosiveShot:'bowHeavy', cripplingShot:'bow', stunShot:'bow', aimedShot:'bowHeavy', rainOfArrows:'bowHeavy', packTactics:'howl', beastFury:'howl', huntersMark:'mark', poisonTrap:'trap', frostTrap:'trap', explosiveTrap:'trap',
   fieldDress:'heal', survivalFieldDress:'heal', recall:'portal',
   nova:'arcane', tornado:'wind', hurricane:'wind', fireball:'fire', iceBolt:'ice', iceArmor:'ice', pyroTorrent:'fire', meteor:'fire', stormcall:'bolt', raiseDead:'summon', blizzard:'ice', immolate:'fire', flameVortex:'fire', permafrost:'ice',
-  fear:'curse', soulNova:'curse', soulSap:'arcane', lightningArc:'bolt', deathBolt:'curse', soulGate:'summon', plague:'poison'
+  fear:'curse', soulFire:'curse', soulSap:'arcane', lightningArc:'bolt', deathBolt:'curse', soulGate:'summon', plague:'poison'
 };
 const SND_ELEM = { fire:'fire', ice:'ice', bolt:'bolt', arcane:'arcane', curse:'arcane', poison:'poison', explode:'fire' };
 const ATK_SHARED = { explosiveShot:1, splinterShot:1, reave:1, strike:1, shieldBash:1, smite:1, vengeance:1, cripplingShot:1, stunShot:1, fireball:1, iceBolt:1, lightningArc:1, soulSap:1, deathBolt:1 };

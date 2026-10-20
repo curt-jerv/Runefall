@@ -1,4 +1,4 @@
-// Runefall loader (v488). The game is split into the files below; their ORDER matters (a file may use things
+// Runefall loader (v489). The game is split into the files below; their ORDER matters (a file may use things
 // set up by an earlier one). All files are fetched first and then run back-to-back in one go, exactly like the
 // old single-file game, so no tap or timer can reach a function that hasn't loaded yet.
 // Adding a file: put it in www/js/<folder>/, add its path to this list, run `node scripts/check-js.js`.
@@ -90,6 +90,7 @@ const RUNEFALL_FILES = [
   'render/town-art.js',
   'render/doorways.js',
   'render/skill-fx.js',
+  'render/necro-fx.js',
   'render/heroes.js',
   'render/monsters.js',
   'render/undead.js',
@@ -99,7 +100,8 @@ const RUNEFALL_FILES = [
   'render/darkness.js',
   'render/render.js',
   'ui/start-screen.js',
-  'core/test-hooks.js'
+  'core/test-hooks.js',
+  'core/resume.js'
 ];
 (function(){
   const run = texts=>{ texts.forEach((t, i)=>{ const s = document.createElement('script'); s.textContent = t + '\n//# sourceURL=' + location.href.replace(/[^/]*$/, '') + 'js/' + RUNEFALL_FILES[i]; document.body.appendChild(s); }); };

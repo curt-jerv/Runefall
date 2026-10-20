@@ -34,9 +34,10 @@ function spawnDefiler(g){
 }
 function defilerSlain(g, e){
   const p = g.player;
-  p.defilerSlain = true;
   if(g.crypt){ g.crypt.bossDone = true; }
   for(const x of g.enemies) if(x.noReward) x.hp = 0;
+  if(p.defilerSlain && p.inscriptionTaken){ bossMsg('THE GRAVEROBBER FALLS', 'The possession breaks once more', 3.2); return; }   // v489: a re-kill
+  p.defilerSlain = true;
   showMsg('The possession breaks. Search the sarcophagus.', 3.2, '#c8b8ff');
   setTimeout(()=>{ try{ showBigMsg('Return to the graverobber camp', '', 4.0, true); }catch(err){} }, 2600);   // v453
   const q = getQuest(p, QUEST_GRAVEROBBERS.id);

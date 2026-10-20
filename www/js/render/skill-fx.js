@@ -142,6 +142,7 @@ function drawAssaultAura(p, iso, s){
 function drawProjectilesIso(list){
   for(const pr of list){
     const iso = toIso(pr.x,pr.y);
+    if(pr.isSoulFire){ drawSoulFireIso(pr, iso); continue; }   // v489
     if(pr.isTornado){
       // v269: pseudo-3D funnel -- stacked, widening ellipses spinning at different speeds, ground dust and flying debris
       const ck = game.clock||0, spin = (pr.life||0)*7, H = 60, baseRx = pr.r*ISO_KX*ISO_SQ2*1.15*0.85;   // v311: shorter and 15% smaller
@@ -1246,7 +1247,7 @@ function drawFollowerIso(f){
   // literally reuse their wild-monster rig verbatim), given neither
   // minion needed a mechanically distinct silhouette.
   if(f.kind!=='demon'){ drawSquireIso(f); return; }
-  { const _iso = toIso(f.x,f.y); drawFloatDemon(_iso, f.r/14.5, f.faceSign||1, f.animT||0, 'summon', {flash:f.hitT>0, moving:f.moving, atk:(f.animT||0)<0.25 && f.atkCd>0});
+  { const _iso = toIso(f.x,f.y); drawBoundDemonIso(_iso, f.r/14.5, f.faceSign||1, f.animT||0, {flash:f.hitT>0, moving:f.moving, atk:(f.animT||0)<0.25 && f.atkCd>0});   // v489: the bound demon has its own heavier body
     if(f.taunting){ ctx.save(); ctx.fillStyle = '#ffd23a'; ctx.font = 'bold 13px Cinzel, Georgia, serif'; ctx.textAlign = 'center'; ctx.fillText('!', _iso.x, _iso.y - 58*(f.r/14.5)); ctx.restore(); }
     drawHpBar(_iso, 52*(f.r/14.5), f.r, f.hp, f.maxHp); return; }
   const isSkeleton = f.kind==='skeleton', isDemon = f.kind==='demon';

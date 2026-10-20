@@ -16,7 +16,7 @@ The owner has no coding experience: explain things plainly, batch changes, and k
 - `.github/workflows/build-android.yml` — manual debug APK. `static.yml` — GitHub Pages deploy of `www/`.
 
 ## Working on the game
-- Version each batch (last: v488 — code split into folders; v487 performance). Bump the save-migration flags (`skillsV4xx`) when a skill tree layout changes and refund points.
+- Version each batch (last: v489 — big gameplay/UI batch; v488 code split into folders; v487 performance). Bump the save-migration flags (`skillsV4xx`, newest `skillsV489`) when a skill tree layout changes and refund points.
 - After every edit: `node scripts/check-js.js` (syntax-checks every file and that `load.js` lists them all). A `// comment` added mid-line swallows the rest of that line — the most common breakage.
 - Code that runs while a file loads (not inside a function) may only use functions/vars from the same or EARLIER files in `load.js`. New file → add it to `load.js`.
 - Testing over http (audio needs it): `cd www && http-server -p 8090`; file:// works too but without audio.
@@ -36,7 +36,12 @@ The owner has no coding experience: explain things plainly, batch changes, and k
 ## Game design notes
 - Classes/trees: Warrior (Defender, Berserker, Templar), Ranger (Survivalist, Marksman, Hunter), Mystic (Djinn, Elementalist, Necromancer).
 - Enemy damage: `dmgType` (pure element) and `dmgSplit` (50/50 physical + element, e.g. Frosthold dwarves cold, raptors/firebats fire, Black Marsh poison).
-- Achievements are account-wide in localStorage (`runefall_ach_v1`); pop-ups hidden by default (Settings toggle).
+- Achievements are account-wide in localStorage (`runefall_ach_v1`); pop-ups shown by default (`settings.hideAch===true` hides them).
+- Resume after the phone sleeps: `core/resume.js` (loaded last) records the last enter*/goToTown* call in `rf_resume_v1` and replays it on reload.
+- Bosses respawn every visit (v489). Their `*Slain` flags stay for quests/doors; `bossRekillFlag`/`bossRekillRare` (monsters/minotaur.js) drop a rare instead of the quest item on a re-kill. Exit portals appear only after that visit's kill.
+- `skDur(p, d)` applies the Skill Duration % mod (`p.skillDurPct`); ailments use it via the status-timer line in update.js.
+- IAP restore (`iapRestore`) only ever adds ownership, never removes it.
+- HUD: `#hudDock` at the bottom (two globes + menu buttons + XP bar), drawn by `updateDockHud`; zone name top-right.
 
 
 

@@ -529,10 +529,12 @@ function makeLeviathanScaleItem(){
     name:"Leviathan's Scale", affixes:[], color:'#3fd6b0', questId:'leviathan_scale', unsellable:true,
     questDesc:'A dinner-plate-sized scale that still glistens with lake water. Quest item -- cannot be sold.' };
 }
+function partFlagSet(p, qid){ return !!(qid==='leviathan_scale' ? p.partLeviathan : qid==='mastodon_hoof' ? p.partMastodon : qid==='molten_shell' ? p.partThunder : qid==='electric_tentacle' ? p.partKraken : false); }
 function setPartFlag(p, qid){ if(qid==='leviathan_scale') p.partLeviathan = true; else if(qid==='mastodon_hoof') p.partMastodon = true; else if(qid==='molten_shell') p.partThunder = true; else if(qid==='electric_tentacle') p.partKraken = true; }
 function grantBossTrophy(qid, mk){
   const p = game.player;
   if(p.witchBrewed) return;
+  if(partFlagSet(p, qid) && !(p.inventory||[]).some(it=>it && it.questId===qid)) return;   // v489: a boss trophy never drops twice (a rare drops instead)
   setPartFlag(p, qid);
   if((p.inventory||[]).some(it=>it && it.questId===qid)) { updatePartsQuest(p); return; }
   forceAddToBag(p, mk());

@@ -205,7 +205,7 @@ function enterDarkCrypt(opts){
   g.scene = 'darkcrypt';
   g.crypt = makeDarkCrypt();
   g.room = g.crypt;
-  if(p.defilerSlain){ g.crypt.bossSpawned = true; g.crypt.bossDone = true; }
+  if(p.defilerSlain && !p.inscriptionTaken){ g.crypt.bossSpawned = true; g.crypt.bossDone = true; }   // v489: once the inscription is taken, the Graverobber rises again each visit
   // Fixed area level (static difficulty)
   g.depth = 19;
   // Waypoint rework: teleporting in via the Teleport menu (opts.atWaypoint)

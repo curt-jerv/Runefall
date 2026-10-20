@@ -155,6 +155,8 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
     }
     return;
   }
+  { const sb = soulShieldBlock(p);   // v489 Soul Shield: the souls you hold turn blows aside
+    if(sb>0 && Math.random()<sb){ showMsg('Blocked!', 0.5); g.particles.push({type:'burst', x:p.x, y:p.y-18, t:0.25, max:0.25, color:'#f4f0ff'}); return; } }
   { const pc = parryChance(p);
     if(pc>0 && Math.random()<pc){
       showMsg('Parried!', 0.5);

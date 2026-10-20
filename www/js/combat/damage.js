@@ -13,8 +13,11 @@ function enemyResist(e, el){
   const t = ENEMY_RESIST_TYPES[e.type]; if(t && t[el]!=null) r = Math.max(r, t[el]);
   if(e.mastodon && el==='cold') r = Math.max(r, ENEMY_BASE_RESIST);
   if(el==='poison' && typeof game!=='undefined' && game && (game.scene==='blackmarsh' || (game.scene==='lighthouse' && game.room && game.room.subzone==='pool'))) r = Math.max(r, ENEMY_BASE_RESIST);
+  if(el==='lightning' && e.stormShredUntil && typeof game!=='undefined' && game && (game.clock||0) < e.stormShredUntil) r -= (e.stormShred||0)*100;   // v489: Storm crits
   return r/100;
 }
+// resistance left after the player's penetration; penetration can't push it below 0, but a shred (negative) still counts
+function resAfterPen(e, el, p){ const r = enemyResist(e, el); return r > 0 ? Math.max(0, r - elemMasteryPen(p, el)) : r; }
 function projElement(pr){
   if(pr.isFireball || pr.spell==='fire') return 'fire';
   if(pr.isIceBolt || pr.spell==='ice') return 'cold';
@@ -75,7 +78,7 @@ const SKILL_WD = {
   guardian:     {t:'physical', c:'weapon', r:[230,440], per:'per trample hit', x:{n:'final burst', t:'physical', r:[145,145]}},
   cleave:       {t:'physical', c:'weapon', r:[310,540], per:'per swing'},
   shieldThrow:  {t:'physical', c:'weapon', r:[180,265], per:'per hit'},
-  leap:         {t:'physical', c:'weapon', r:[80,115],  per:'on landing'},
+  leap:         {t:'physical', c:'weapon', r:[120,175], per:'on landing'},   // v489: was 80-115%
   whirlwind:    {t:'physical', c:'weapon', r:[124,215], per:'per spin tick'},
   riposte:      {t:'physical', c:'weapon', r:[50,75],   per:'per counter-strike'},
   reave:        {t:'physical', c:'weapon', r:[106,128], per:'per hit (plus Bleed)'},
@@ -86,13 +89,13 @@ const SKILL_WD = {
   // --- Ranger ---
   trap:         {t:'physical', c:'weapon', r:[43,62],   per:'when sprung'},
   poisonKnives: {t:'poison',   c:'weapon', r:[70,102],  per:'per knife (plus Poison)'},
-  rapidShot:    {t:'physical', c:'weapon', r:[73,106],  per:'per arrow (3 arrows)'},
-  splinterShot: {t:'physical', c:'weapon', r:[103,148],  per:'per arrow (splinters 70%)'},
-  cripplingShot:{t:'physical', c:'weapon', r:[98,142],   per:'per arrow (plus Bleed)'},
-  explosiveShot:{t:'physical', c:'weapon', r:[120,175], per:'arrow hit', x:{n:'blast', t:'fire', r:[80,115]}},
-  stunShot:     {t:'physical', c:'weapon', r:[106,154],  per:'per arrow'},
-  aimedShot:    {t:'physical', c:'weapon', r:[290,510], per:'held shot (a quick tap: 145%)', tap:145},
-  rainOfArrows: {t:'physical', c:'weapon', r:[220,320], per:'per volley (3 volleys)'},
+  rapidShot:    {t:'physical', c:'weapon', r:[60,85],   per:'per arrow (3 arrows)'},   // v489: free basic shot now
+  splinterShot: {t:'physical', c:'weapon', r:[90,130],  per:'per arrow (splinters 70%)'},   // v489: free basic shot now
+  cripplingShot:{t:'physical', c:'weapon', r:[180,260], per:'per arrow (plus Bleed)'},   // v489: big boost, costs more + cooldown
+  explosiveShot:{t:'physical', c:'weapon', r:[150,215], per:'arrow hit', x:{n:'blast', t:'fire', r:[95,140]}},
+  stunShot:     {t:'physical', c:'weapon', r:[200,290], per:'per arrow'},
+  aimedShot:    {t:'physical', c:'weapon', r:[340,600], per:'held shot (a quick tap: 145%)', tap:145},
+  rainOfArrows: {t:'physical', c:'weapon', r:[260,380], per:'per volley (3 volleys)'},
   poisonTrap:   {t:'poison',   c:'weapon', r:[41,59],   per:'per second in the cloud, rising up to +150% the longer a foe stays in it'},
   frostTrap:    {t:'cold',     c:'weapon', r:[41,59],   per:'burst'},
   explosiveTrap:{t:'fire',     c:'weapon', r:[490,710], per:'explosion (plus Burn)'},
@@ -100,20 +103,20 @@ const SKILL_WD = {
   lightningArc: {t:'lightning',c:'spell',  r:[105,152],  per:'per hit'},
   fireball:     {t:'fire',     c:'spell',  r:[72,104],   per:'per ball'},
   iceBolt:      {t:'cold',     c:'spell',  r:[370,535], per:'per bolt'},
-  nova:         {t:'lightning',c:'spell',  r:[129,187], per:'per enemy'},
+  nova:         {t:'lightning',c:'spell',  r:[145,210], per:'per enemy'},   // v489: slightly stronger, cheaper
   thunderstep:  {t:'lightning',c:'spell',  r:[50,72],   per:'per charge'},
   tornado:      {t:'physical', c:'spell',  r:[97,140],  per:'per hit'},
   hurricane:    {t:'physical', c:'spell',  r:[93,135],  per:'per tick'},
   pyroTorrent:  {t:'fire',     c:'spell',  r:[28,42],   per:'per tick (ramps to x2)'},
   blizzard:     {t:'cold',     c:'spell',  r:[54,79],   per:'per tick'},
-  stormcall:    {t:'lightning',c:'spell',  r:[230,340], per:'strike (Charged targets chain it on at 50%)'},
+  stormcall:    {t:'lightning',c:'spell',  r:[270,400], per:'strike (Charged targets chain it on at 50%)'},
   meteor:       {t:'fire',     c:'spell',  r:[620,900], per:'impact (less at the edge)', x:{n:'burning ground, per second', t:'fire', r:[60,88]}},
   flameVortex:  {t:'fire',     c:'spell',  r:[31,46],   per:'per tick', x:{n:'final blast', t:'fire', r:[250,365]}},
   plague:       {t:'poison',   c:'spell',  r:[47,68],   per:'per second, rising up to +150% the longer a foe stays in it'},
-  soulSap:      {t:'physical', c:'spell',  r:[105,153], per:'per hit (extra targets 50%)'},
+  soulSap:      {t:'poison',   c:'spell',  r:[105,153], per:'per hit (extra targets 50%)'},   // v489: poison
   deathBolt:    {t:'physical', c:'spell',  r:[92,134],  per:'per bolt (x1.5 below half life)'},
-  soulNova:     {t:'cold',     c:'spell',  r:[127,184], per:'per enemy'},
-  sacrifice:    {t:'poison',   c:'spell',  r:[58,84],   per:'per explosion'},
+  soulFire:     {t:'physical', c:'spell',  r:[230,330], per:'explosion, half physical / half poison', split:{t:'poison', f:0.5}},   // v489
+  // v489: sacrifice is life-based now (sacrificeLifePct), not weapon damage
 };
 function swdPct(arr, rank){ const r = Math.max(1, rank||1); return arr[0] + (arr[1]-arr[0])/9*(r-1); }
 function swd(id, rank){ const d = SKILL_WD[id]; return d ? swdPct(d.r, rank)/100 : 1; }
@@ -177,9 +180,9 @@ function gearElemHit(p, e, mainEl){
 function applyEnemyArmor(p, e, dmg, extraPen, el){
   if(e.invulnT>0){ spawnDmgNumber(game, e, 0, false); return 0; }
   if(el==='fire') e.coldHits = 0;   // a fire hit breaks a cold streak
-  if(e.permaArmedT>0){ e.permaArmedT = 0; e.permaCool = 6; coldHit(e, 3); }   // v269 Permafrost: the next hit counts as 3 cold hits
   dmg *= dmgVar();
   dmg *= typedPctMult(p, el);   // v457: +% Physical / +% <Element> / +% Elemental
+  if(el==='cold' && e.permaT>0) dmg *= 1 + (e.permaAmp||0);   // v489: Permafrost cold vulnerability
   if(e.shieldUp>0) dmg *= 0.3;   // v420: Highward shield wall
   if(e.hw || e.wardUntil) dmg *= hwGuardMult(p, e, dmg);   // v461 Bulwark: frontal block + ward
   if(e.exposedT>0) dmg *= 1.25;
@@ -194,7 +197,7 @@ function applyEnemyArmor(p, e, dmg, extraPen, el){
   if(p.cls==='warrior' && !(p.rageGainCd>0)){ p.rageGainCd = RAGE_HIT_INTERVAL; gainResource(p, RAGE_ON_HIT); }
   const armor = el ? 0 : (e.armor||0);
   let final = dmg;
-  if(el){ final = Math.max(1, dmg*(1-Math.max(0, enemyResist(e, el) - elemMasteryPen(p, el)))); if(el==='lightning'){ final = lightningCharge(game, e, final, 'enemy'); staticOnLightningHit(p); } }
+  if(el){ final = Math.max(1, dmg*(1-resAfterPen(e, el, p))); if(el==='lightning'){ final = lightningCharge(game, e, final, 'enemy'); staticOnLightningHit(p); } }
   else if(armor>0){
     const mh = p.equipment && p.equipment.mainhand;
     const rank = (p.skills && effectiveRank(p,'weaponsSpecialist')) || 0;
@@ -213,6 +216,11 @@ function applyEnemyArmor(p, e, dmg, extraPen, el){
   // the target as "currently being attacked by the player" for monster
   // targeting purposes -- see markAttacked/pickEnemyTarget.
   markAttacked(e, p);
+  if(p.cls==='mystic' && game){
+    const clk = game.clock||0;
+    if(lastHitCrit){ const sr = (p.skills && effectiveRank(p,'storm'))||0; if(sr>0){ e.stormShred = stormShredPct(sr); e.stormShredUntil = clk + STORM_SHRED_DUR; } }   // v489 Storm: crits lower lightning resistance
+    if(el==='lightning' && p.staticStunUntil > clk && !isHeavyEnemy(e) && !e.isBoss && !e.isLairBoss){ e.stunT = Math.max(e.stunT||0, STATIC_STUN_DUR); }   // v489: a released Static Buildup stuns what it hits
+  }
   if(lastHitCrit && p.cls==='ranger' && !(p.deadeyeGainCd>0)){ const dr=(p.skills && effectiveRank(p,'deadeye'))||0; if(dr>0){ gainResource(p, p.maxMp*DEADEYE_STAMINA_PER_RANK*dr); p.deadeyeGainCd = 0.12; } }
   // Combat feel (v104): floating damage number at the shared chokepoint
   // every direct player hit already passes through (DoT ticks don't).

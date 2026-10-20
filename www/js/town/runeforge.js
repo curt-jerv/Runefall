@@ -156,6 +156,7 @@ function runeforgeDo(){
     for(const k of Object.keys(p.equipment||{})) if(p.equipment[k]===it) p.equipment[k] = null;
     g.socketItem = null;
     msg = nm+' shatters into glowing ash...'; col = '#ff8a6a'; floatTxt = 'Destroyed';
+    try{ achFlag('obsidianLoss'); }catch(e){}   // v489
   }
   if(pick!=='destroy'){
     it.runeforged = (it.runeforged||0)+1;

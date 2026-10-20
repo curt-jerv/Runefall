@@ -21,22 +21,28 @@ function staticArcBonus(p){
   return {mult:1 + n*staticArcPerStack(r), chains: n>=STATIC_MAX ? staticArcChains(r) : 0};
 }
 // spend a full bar on Nova / Tornado / Stormcall: returns {mult, rad, charge} (or a plain result when not empowered)
+const STATIC_STUN_DUR = 0.8, STATIC_STUN_WINDOW = 1.2;   // v489: the release's lightning hits within 1.2s stun normal enemies for 0.8s
 function staticConsume(p){
   const r = staticRank(p);
   if(r<=0 || (p.staticStacks||0) < STATIC_MAX) return {mult:1, rad:1, charge:false, on:false};
   p.staticStacks = 0;
-  if(game) game.particles.push({type:'ring', x:p.x, y:p.y, t:0.45, max:0.45, r:90, color:'#ffffff'});
+  if(game){ game.particles.push({type:'ring', x:p.x, y:p.y, t:0.45, max:0.45, r:90, color:'#ffffff'}); p.staticStunUntil = (game.clock||0) + STATIC_STUN_WINDOW; }   // v489: lightning hits from this release stun briefly
   return {mult:staticEmpowerMult(r), rad:1.3, charge:true, on:true};
 }
 function windRank(p){ return (p && p.cls==='mystic' && p.skills && effectiveRank(p,'windrunner')) || 0; }
 function windDistNeeded(r){ return Math.max(380, 700 - 35*(Math.max(1,r)-1)); }
+const WR_REGEN_RAMP = 5;
+function windRegenPct(r){ r = Math.max(1, r||1); return 0.005 + 0.045*(Math.min(10,r)-1)/9 + 0.002*Math.max(0, r-10); }   // +0.5% max mana/s at rank 1 -> +5%/s at rank 10, after 5s of moving
 function windDmgBonus(r){ return 0.25 + 0.03*(Math.max(1,r)-1); }
 // called once per frame for the player
 function windrunnerTick(g, p, dt){
   if(p._wrCostWin>0) p._wrCostWin -= dt;
   const r = windRank(p);
   const px = p._wrx, py = p._wry; p._wrx = p.x; p._wry = p.y;
-  if(r<=0){ p.windReady = false; p.windDist = 0; return; }
+  if(r<=0){ p.windReady = false; p.windDist = 0; p._wrMoveT = 0; return; }
+  { const md = px!=null ? Math.hypot(p.x-px, p.y-py) : 0;   // v489: moving builds extra mana regeneration over 5s; stopping resets it
+    p._wrMoveT = (md > 0.3 && md < 60) ? Math.min(WR_REGEN_RAMP, (p._wrMoveT||0) + dt) : 0;
+    if(p._wrMoveT>0) gainResource(p, p.maxMp * windRegenPct(r) * (p._wrMoveT/WR_REGEN_RAMP) * dt); }
   if(px!=null && !p.windReady){
     const d = Math.hypot(p.x-px, p.y-py);
     if(d < 60) p.windDist = (p.windDist||0) + d;   // ignore teleports

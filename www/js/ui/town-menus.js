@@ -104,11 +104,12 @@ function openTeleportMenu(from){
   // same rule as reachedSunlitPlains above, and each hides itself only
   // when `from` is that exact floor (so, e.g., standing at the Level 1
   // waypoint still offers a jump straight to Level 5 once discovered).
-  teleportLighthouse1Btn.style.display = (from!=='lighthouse1' && game.player.reachedLighthouseTower) ? '' : 'none';
+  teleportLighthouse1Btn.style.display = 'none';   // v489: Lighthouse floor-1 waypoint removed
   teleportLighthouse5Btn.style.display = 'none'; // rooftop waypoint removed
   // v71: Lakeside Ruins gets its own waypoint, gated on reachedLakesideRuins,
   // same rule as reachedSunlitPlains above.
-  teleportLakesideBtn.style.display = (from!=='lakeside' && game.player.reachedLakesideRuins) ? '' : 'none';
+  teleportLakesideBtn.style.display = 'none';   // v489: Lakeside waypoint removed
+  teleportDeepBtn.style.display = (from!=='deep' && game.player.reachedDeepWp) ? '' : 'none';   // v489: Ember Caverns
   teleportBlackMarshBtn.style.display = (from!=='marsh' && game.player.reachedBlackMarsh) ? '' : 'none';
   teleportForgottenTowerBtn.style.display = (from!=='forgottentower' && game.player.reachedForgottenTower) ? '' : 'none';   // v340: listed right under Black Marsh
   // v72: Cursed Cemetery gets its own waypoint, gated on
@@ -208,6 +209,8 @@ teleportAncientRuinsBtn.addEventListener('click', ()=>{
   closeTeleportMenu();
   enterFloodedTemple({atWaypoint:true});
 });
+const teleportDeepBtn = document.getElementById('teleportDeep');
+teleportDeepBtn.addEventListener('click', ()=>{ closeTeleportMenu(); enterDeep(2, {atWaypoint:true}); });
 teleportMineBtn.addEventListener('click', ()=>{
   // Frosthold Dungeon waypoint (this button's id is a leftover from the retired Abandoned Mine)
   closeTeleportMenu();
