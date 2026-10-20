@@ -306,6 +306,7 @@ function openCmdChest(g){
     if(!getQuest(p, 'frost_depths')) p.quests.push({id:'frost_depths', name:'Beneath Frosthold', desc:'The Commander carried a key to the Frosthold Dungeon. Use it at the great door at the south of the Keep and see what lies beneath.', status:'active', progress:0, total:1});
     if(!getQuest(p, QUEST_HAMMER.id)) p.quests.push({id:QUEST_HAMMER.id, name:QUEST_HAMMER.name, desc:QUEST_HAMMER.descReturn, status:'active', progress:QUEST_HAMMER.total, total:QUEST_HAMMER.total, stage:'return'});
     showMsg('Ancient Smithing Hammer and Frosthold Dungeon Key obtained', 3.4, '#ffd27a');
+    npcMark(p, 'scholar', true);   // v490: the scholar has thoughts on the key
     g.particles.push({type:'burst', x:g.chest.x, y:g.chest.y, t:0.5, max:0.5, color:'#ffb060'});
     updateQuestBadge(); bagPulse(); saveGame();
   }

@@ -112,7 +112,11 @@ function lightRRBeacon(){
   if(p.rrBeacons[id]){ showMsg('The beacon already burns.', 1.8); return; }
   const why = rrBeaconBlocked(g); if(why){ showMsg(why, 3.0); return; }
   p.rrBeacons[id] = true;
-  const n = rrBeaconCount(p), q = getQuest(p, 'rr_towers');
+  const n = rrBeaconCount(p);
+  // v490: lighting the first beacon starts the Wayfarer's quest if you haven't met him yet, and the tracker always shows the count
+  const q = addQuestOnce(p, 'rr_towers', 'The Three Beacons', 'Light the three Templar watchtower beacons in Redridge Canyon.', 3);
+  if(n<3) q.desc = 'Light the three Templar watchtower beacons in Redridge Canyon ('+n+'/3 lit).';
+  if(!p.wayfarerMet) npcMark(p, 'wayfarer', true);
   if(q){ q.progress = n; if(n>=3){ q.status = 'complete'; q.rewarded = false; q.desc = 'All three beacons burn and the skybridge to Highward is whole. Tell the Last Wayfarer.'; npcMark(p, 'wayfarer', true); } }
   g.particles.push({type:'burst', x:t.rrBeacon.x, y:t.rrBeacon.y, t:0.6, max:0.6, color:'#ffcf70'});
   showNpcText(RRT_CLUES[id][0], RRT_CLUES[id][1], 'Continue', ()=>{ showMsg('Beacons lit: '+n+' / 3', 3.0); });

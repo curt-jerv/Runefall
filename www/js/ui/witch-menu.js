@@ -284,10 +284,7 @@ function witchCauldronInteract(){
 }
 function witchTowerInteract(){
   const p = game.player;
-  if(game.enemies.some(e=>e.hp>0 && (e.ftGuard || !game.enemies.some(x=>x.ftGuard)))){
-    showNpcText('The Witch', '"Careful! Defeat the trolls guarding me before you open my cage."', 'Continue');
-    return;
-  }
+  // v490: the cage opens whenever you reach it (a stray, unseen enemy used to keep it shut)
   const wPos = game.tower && game.tower.witch ? {x:game.tower.witch.x, y:game.tower.witch.y} : {x:game.tower.w/2, y:game.tower.h/2};
   showNpcText('The Witch', '"Thank you. Come see me by my camp."', 'Continue', ()=>{
     p.witchRescued = true;

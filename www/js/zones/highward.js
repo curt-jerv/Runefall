@@ -234,6 +234,7 @@ function takeHwRunestone(){
   if(!hwAltarReady(p)) return;
   p.hwRuneTaken = true;
   forceAddToBag(p, makeHighwardRunestoneItem());
+  npcMark(p, 'scholar', true);   // v490
   const q = getQuest(p,'hw_runestone'); if(q){ q.status='complete'; q.rewarded=true; q.progress=q.total; q.desc='You hold the Templar Runestone and its warning.'; }
   bagPulse(); updateQuestBadge(); saveGame();
   showNpcText('Templar Runestone', 'The runestone lifts from its altar, and as your fingers close on it the carved words burn into the air:\n\n\u201C'+HW_WARNING+'\u201D\n\nSomewhere behind the altar a switch waits to open the eastern gate.', 'Take it', ()=>{ showMsg('Templar Runestone obtained', 3.0, '#ffe08a'); });

@@ -38,8 +38,7 @@ function defilerSlain(g, e){
   for(const x of g.enemies) if(x.noReward) x.hp = 0;
   if(p.defilerSlain && p.inscriptionTaken){ bossMsg('THE GRAVEROBBER FALLS', 'The possession breaks once more', 3.2); return; }   // v489: a re-kill
   p.defilerSlain = true;
-  showMsg('The possession breaks. Search the sarcophagus.', 3.2, '#c8b8ff');
-  setTimeout(()=>{ try{ showBigMsg('Return to the graverobber camp', '', 4.0, true); }catch(err){} }, 2600);   // v453
+  showBigMsg('Inspect the crypt', 'The possession breaks -- search the sarcophagus', 4.0, true);   // v490: then 'Return to the graverobbers' once it is searched
   const q = getQuest(p, QUEST_GRAVEROBBERS.id);
   if(q && q.status==='active'){ q.desc = QUEST_GRAVEROBBERS.descDone; q.progress = q.total; }
   npcMark(p, 'graverobbers', true);
@@ -58,6 +57,7 @@ function inspectSarcophagus(){
     if(!getQuest(p, 'scholar_templar') && !p.scholarMeet){ if(!p.quests) p.quests = []; p.quests.push({id:'scholar_templar', name:'Templar Research', desc:'You found an inscription in a Templar crypt. The scholar in the Tavern may be able to read it.', status:'active', progress:0, total:1}); npcMark(p, 'scholar', true); updateQuestBadge(); }   // v456
     showNpcText('The Sarcophagus', 'The lid was shoved aside from the inside. The stone is scored with deep claw marks and the Templar seal on its rim is shattered outward -- whatever slept here did not stay dead. It clawed its way out, long ago. Carved into the inner wall is an inscription, still legible. You take a rubbing.', 'Take the rubbing');
     showMsg('Obtained: Templar Inscription', 2.6, '#c8b0ff'); saveGame();
+    setTimeout(()=>{ try{ showBigMsg('Return to the graverobbers', '', 4.0, true); }catch(err){} }, 400);   // v490
   } else showNpcText('The Sarcophagus', 'Empty. The Templar seal is broken outward -- something escaped.', 'Close');
 }
 function graverobbersMark(p){ const q = getQuest(p, QUEST_GRAVEROBBERS.id); return !q ? !p.defilerSlain : (q.status==='active' && !!p.defilerSlain); }
@@ -98,7 +98,7 @@ function talkWayfarer(){
   if(!p.wayfarerMet){
     showNpcText('The Last Wayfarer', '"Another living face. That fortress above is Highward -- its sky-bridge is the only way across. Light the three old watchtower beacons and it will hold. I’ll mark them on your map."', 'I’ll light them', ()=>{
       p.wayfarerMet = true;
-      addQuestOnce(p, 'rr_towers', 'The Three Beacons', 'Light the three Templar watchtower beacons in Redridge Canyon.', 3);
+      { const q = addQuestOnce(p, 'rr_towers', 'The Three Beacons', 'Light the three Templar watchtower beacons in Redridge Canyon.', 3); q.progress = Math.max(q.progress||0, rrBeaconCount(p)); }   // v490: counts beacons already lit
       npcMark(p, 'wayfarer', false);
       showMsg('New quest: The Three Beacons', 3.0); updateQuestBadge(); saveGame();
     });
@@ -136,23 +136,31 @@ function talkScholar(){
       npcMark(p, 'scholar', false);
       showMsg('New quest: The Stone Draws East', 3.0); updateQuestBadge(); saveGame();
     });
-  } else if(p.fhDungeonDone && !p.scholarWarnedRR){
-    showNpcText('Scholar', '"Two stones now, and they pull east, toward Redridge Canyon. Be careful."', 'Close', ()=>{
+  } else if(p.hwRuneTaken && !p.scholarThirdRead){   // v490: the third runestone
+    showNpcText('Scholar', '"So the legends seem true. When the world needs it, these stones come alive, to hold back some unknown evil of the world. If it\'s as you say, that the Shadow Keep is occupied again, that must be the answer. Good luck, adventurer."', 'Close', ()=>{
+      p.scholarThirdRead = true; p.scholarWarnedRR = true; npcMark(p, 'scholar', false); saveGame();
+    });
+  } else if(p.fhDungeonDone && !p.scholarWarnedRR){   // v490: the second runestone
+    showNpcText('Scholar', '"Amazing -- it seems the shrine in the mountain activated this runestone as well. The ancient Highward fortress, built into the side of Redridge Canyon, can tell us more about what these runestones are."', 'Close', ()=>{
       p.scholarWarnedRR = true; npcMark(p, 'scholar', false); saveGame();
+    });
+  } else if(p.fhDungeonKey && !p.fhDungeonDone && !p.scholarKeyTalk){   // v490: after the Commander's key
+    showNpcText('Scholar', '"So it seems the dwarves might have a runestone of their own, locked away in their dungeon. Descend through their fortress and recover it. Perhaps it will reveal more secrets about their purpose."', 'Close', ()=>{
+      p.scholarKeyTalk = true; npcMark(p, 'scholar', false); saveGame();
     });
   } else if(p.scholarMeet){
     const rs = findRunestone(p);
     if(rs && !p.scholarRead){
-      showNpcText('Scholar', '"It seems there is a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 Ascend the mountain from the Dark Forest and see what you find. I\'ve heard an ancient shrine is atop the summit. Good luck, adventurer."', 'Continue', ()=>{
+      showNpcText('Scholar', '"It seems there is a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
         p.scholarRead = true;
         { const si = classRewardItem(p, Math.max(p.level||1, 23), 'reward'); forceAddToBag(p, si); p.gold += 300; } bagPulse();
         const q = getQuest(p, 'scholar_ruins'); if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'You found the first runestone below the lake.'; }
-        if(!getQuest(p, 'shrine_stone')) p.quests.push({id:'shrine_stone', name:'The Mountain Judges', desc:'\u2018From stone to stone, the Mountain will judge its bearer.\u2019 Ascend the mountain from the Dark Forest and see what you find.', status:'active', progress:0, total:1});
+        if(!getQuest(p, 'shrine_stone')) p.quests.push({id:'shrine_stone', name:'The Mountain Judges', desc:'\u2018From stone to stone, the Mountain will judge its bearer.\u2019 Find the ancient altar atop the mountain summit: through the Black Marsh and the Barren Highlands to the Mountain Pass, then up.', status:'active', progress:0, total:1});
         npcMark(p, 'scholar', false);
         showMsg('New quest: The Mountain Judges (+ class gear and 300 gold)', 3.0); updateQuestBadge(); saveGame();
       });
     } else if(p.scholarRead && (p.shrineStage||0)>=3) showNpcText('Scholar', '"The stone pulls east. Climb the Frosthold Tower and see what the dwarves guard."', 'Close');
-    else if(p.scholarRead) showNpcText('Scholar', '"\u2018From stone to stone, the Mountain will judge its bearer.\u2019 Ascend the mountain from the Dark Forest."', 'Close');
+    else if(p.scholarRead) showNpcText('Scholar', '"There is an ancient altar atop the mountain summit. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way."', 'Close');
     else showNpcText('Scholar', '"Descend through the ancient ruins and share any findings with me."', 'Close');
   } else if(!p.scholarMet){
     showNpcText('Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close', ()=>{

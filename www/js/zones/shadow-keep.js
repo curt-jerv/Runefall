@@ -664,7 +664,10 @@ function enterKeep(area, opts){
   g.tower = makeKeep(area, opts); g.room = g.tower; g.mtn = null;
   g.depth = area===9 ? breachDepth(opts.bf||1) : KP_DEPTH[area-1];
   const t = g.tower;
-  if(t.beacons){ const tb = p.tpBeacons || []; t.beacons.forEach((b,i)=>{ b.lit = !!tb[i]; }); }
+  if(t.beacons){ const tb = p.tpBeacons || []; t.beacons.forEach((b,i)=>{ b.lit = !!tb[i]; });
+    // v490: the Temple beacons get their own quest entry so the tracker shows them
+    const n = t.beacons.filter(x=>x.lit).length;
+    if(n<3){ const q = addQuestOnce(p, 'sk_beacons', 'The Temple Beacons', 'Light the three beacons in the Temple to unlock the Demon Hold.', 3); q.progress = n; updateQuestBadge(); } }
   if(opts.from==='next' && (t.exitDoor||t.holdStairs)){ const ex = t.exitDoor||t.holdStairs; p.x = ex.x-110; p.y = ex.y; }
   else if(opts.from==='wp' && t.waypoint){ p.x = t.waypoint.x; p.y = t.waypoint.y+55; }
   else if(opts.from==='breach' && t.breach){ p.x = t.breach.x; p.y = t.breach.y+140; }
@@ -697,6 +700,8 @@ function lightKeepBeacon(b){
   const n = t.beacons.filter(x=>x.lit).length;
   try{ sfxPlay('banner', 0.5); }catch(e){}
   for(let k=0;k<14;k++) g.particles.push({type:'burst', x:b.x+rand(-26,26), y:b.y+rand(-26,26), t:0.6, max:0.6, color:'#ffb040'});
+  { const q = addQuestOnce(p, 'sk_beacons', 'The Temple Beacons', 'Light the three beacons in the Temple to unlock the Demon Hold.', 3); q.progress = n;   // v490
+    if(n>=3){ q.status = 'complete'; q.rewarded = true; q.desc = 'All three beacons burn. The way to the Demon Hold is open.'; } else q.desc = 'Light the three beacons in the Temple to unlock the Demon Hold ('+n+'/3 lit).'; updateQuestBadge(); }
   showMsg(n>=3 ? 'The way is open  (3/3)' : 'Light the beacons to open the way  ('+n+'/3)', 4.6, '#ffcf7a');
   saveGame();
 }
