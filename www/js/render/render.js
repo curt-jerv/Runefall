@@ -167,7 +167,11 @@ function render(){
   // not as a stone/dungeon-wall block like every other obstacle.
   // v86: item 7 -- .occluder/.wx/.wy tag these as candidates for the
   // behind-wall fade pass below (right before drawables.sort()).
-  for(const o of room.obstacles){ if(o.isWater || o.isFurniture || o.isKeep || o.isProp || o.isCliff || o.bogVoid) continue; drawables.push({depth:(o.x+o.w/2)+(o.y+o.h/2), occluder:!o.bone, wx:o.x+o.w/2, wy:o.y+o.h/2, draw:()=>(
+  // v490: obstacles wholly off screen are skipped (organic caves have 500+ wall cells; drawing them all cost ~15ms a frame on phones)
+  const obCull = !(g.scene==='redcrater' || g.scene==='mountainpass' || g.scene==='redridge' || g.scene==='highlands'), obX0 = cam.x-240, obX1 = cam.x+W+240, obY0 = cam.y-120, obY1 = cam.y+H+260;
+  for(const o of room.obstacles){ if(o.isWater || o.isFurniture || o.isKeep || o.isProp || o.isCliff || o.bogVoid) continue;
+    if(obCull && o.w!=null){ const ixL = (o.x-o.y-o.h)*ISO_KX, ixR = (o.x+o.w-o.y)*ISO_KX, iyT = (o.x+o.y)*ISO_KY, iyB = (o.x+o.w+o.y+o.h)*ISO_KY; if(ixR < obX0 || ixL > obX1 || iyB < obY0 || iyT > obY1) continue; }
+    drawables.push({depth:(o.x+o.w/2)+(o.y+o.h/2), occluder:!o.bone, wx:o.x+o.w/2, wy:o.y+o.h/2, draw:()=>(
     o.bone ? drawBoneBarricade(o)
     : o.woodBarricade ? drawWoodBarricadeIso(o)
     : o.organic ? drawOrganicWall(o)

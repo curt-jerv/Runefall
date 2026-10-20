@@ -7,16 +7,23 @@
 // using room.dryObstacles. Forgotten Tower (far east gate) is a sealed placeholder.
 const BM_W = 7200, BM_H = 3800, BM_DEPTH = 28;
 // v459: the marsh is an arrowhead (>) -- the south arm runs east along the river to the Forgotten Tower at the tip,
-// then the north arm doubles back west to the Barren Highlands. A dead-bog wedge splits the arms until near the tip.
-const BM_MID = 1900, BM_WEDGE_END = 6200, BM_WEDGE_HALF = 420, BM_TIP_SPREAD = 1100;
+// then the north arm doubles back west to the Barren Highlands.
+// v490: the dead-bog wedge between the arms is now the Great Black River -- a wide river through the middle of the
+// whole marsh (west edge to east edge) that bends north near the tip. Its only crossing is one plank bridge just
+// north of the Forgotten Tower door (BM_MID_BRIDGE_X), so the arms meet only there.
+const BM_MID = 1900, BM_TIP_SPREAD = 1100, BM_MID_BRIDGE_X = 7000;
 function bmTopY(x){ return BM_TIP_SPREAD*clamp(x/BM_W,0,1); }                       // outer north edge
 function bmBotY(x){ return BM_H - BM_TIP_SPREAD*clamp(x/BM_W,0,1); }                // outer south edge
-function bmWedgeHalf(x){ return x>=BM_WEDGE_END ? 0 : BM_WEDGE_HALF*(1 - x/BM_WEDGE_END); }
-function bmOpenAt(x, y, m){ m = m||0; if(x < m || x > BM_W-m || y < bmTopY(x)+m || y > bmBotY(x)-m) return false; const wh = bmWedgeHalf(x); return !(wh>0 && Math.abs(y-BM_MID) < wh+m); }
-function bmLowCenter(x){ return ((BM_MID + bmWedgeHalf(x)) + bmBotY(x))/2; }
-function bmLowHalf(x){ return (bmBotY(x) - (BM_MID + bmWedgeHalf(x)))/2; }
-function bmUpTrailY(x){ const top = bmTopY(x), bot = BM_MID - bmWedgeHalf(x); return (top+bot)/2 + 110*Math.sin(x/520+1) * clamp(((bot-top)/2-200)/300, 0.2, 1); }
-const BM_JOIN_X = 6700;
+function bmMidHalf(x){ return 250 - 95*clamp(x/BM_W,0,1); }                         // half-width of the great river
+function bmMidY(x){ const t = clamp((x-5200)/1800,0,1); return BM_MID + 110*Math.sin(x/760+0.6) + 45*Math.sin(x/290+1.3) - 260*t*t*(3-2*t); }
+function bmWedgeHalf(x){ return bmMidHalf(x); }   // (kept for older callers: how far the middle band reaches from its centre line)
+function bmMidGap(c){ return Math.abs(c-BM_MID_BRIDGE_X) < BM_SLICE*1.75; }        // 4 open slices = 160px bridge
+function bmMidRiverAt(x, y){ const c = bmSliceC(x); return !bmMidGap(c) && Math.abs(y-bmMidY(c)) < bmMidHalf(c); }
+function bmOpenAt(x, y, m){ m = m||0; if(x < m || x > BM_W-m || y < bmTopY(x)+m || y > bmBotY(x)-m) return false; return !(Math.abs(y-bmMidY(x)) < bmMidHalf(x)+m); }
+function bmLowCenter(x){ return ((bmMidY(x) + bmMidHalf(x)) + bmBotY(x))/2; }
+function bmLowHalf(x){ return (bmBotY(x) - (bmMidY(x) + bmMidHalf(x)))/2; }
+function bmUpTrailY(x){ const top = bmTopY(x), bot = bmMidY(x) - bmMidHalf(x); return (top+bot)/2 + 110*Math.sin(x/520+1) * clamp(((bot-top)/2-200)/300, 0.2, 1); }
+const BM_JOIN_X = BM_MID_BRIDGE_X;
 const TOAD_SPLASH_R = 78;
 const ARMORDON_TAIL_R = 72, RAPTOR_LEAP_R = 52;   // v490: armordon tail ring was 105 (shrunk with the body, then 20% more)
 const RAPTOR_TELE_T = 0.7, RAPTOR_LEAP_RANGE = 240;   // v490: was 0.4s / 320 -- slower crouch, no leaps from off screen
@@ -33,6 +40,7 @@ function bmRiverAt(x,y){
 }
 function bmOnPlank(x,y){
   const c = bmSliceC(x);
+  if(bmMidGap(c) && Math.abs(y-bmMidY(c)) < bmMidHalf(c)+BM_SLICE*0.6) return true;   // v490: the tower bridge
   return bmGap(c) && Math.abs(y-bmRiverY(c)) < BM_RW+BM_SLICE*0.6;
 }
 // distance from a point to the trail (bank-following segments joined by the two vertical bridge legs)
@@ -57,7 +65,7 @@ function bmTrailPt(x){ // trail centre on the bank it is following at x
   return {x, y:bmRiverY(x)+s*BM_TRAIL_OFF};
 }
 function bmWaterAt(room, x, y){
-  if(bmRiverAt(x,y)) return true;
+  if(bmRiverAt(x,y) || bmMidRiverAt(x,y)) return true;
   const ps = room.ponds;
   for(let i=0;i<ps.length;i++){ const q=ps[i]; if(x>q.x && x<q.x+q.w && y>q.y && y<q.y+q.h) return true; }
   return false;
@@ -92,21 +100,25 @@ function makeBlackMarsh(){
     const yc = bmRiverY(c);
     obstacles.push({x:sx, y:yc-BM_RW, w:BM_SLICE+1, h:BM_RW*2, isWater:true});
   }
+  // v490: the great river through the middle, one slice per 40px; the bridge slices north of the tower stay open
+  for(let sx=0; sx<w; sx+=BM_SLICE){
+    const c = sx+BM_SLICE/2;
+    if(bmMidGap(c)) continue;
+    const yc = bmMidY(c), hh = bmMidHalf(c);
+    obstacles.push({x:sx, y:yc-hh, w:BM_SLICE+1, h:hh*2, isWater:true, bmMid:true});
+  }
   const westGate = {x:16, y:bmTrailPt(16).y, r:34};
   const eastGate = {x:w-16, y:bmTrailPt(w-16).y, r:34};
   const highGate = {x:16, y:bmUpTrailY(16), r:34};   // v459: the north arm's far end -- the road up into the Barren Highlands
-  // (v262) the Marsh Pool: a sinkhole gate in the south edge toward the east end, on the south bank
-  let pgx = w-1100;
-  for(let x=w-1500; x<=w-600; x+=20){ if(bmTrailPt(x).y > bmTrailPt(pgx).y) pgx = x; }
-  const poolGate = {x:pgx, y:bmBotY(pgx)-16, r:34};
-  // the dead-bog outside the two arms: impassable slices (80px) along the outer edges and the central wedge
+  // (v262) the Marsh Pool: a sinkhole gate. v490: moved to the north edge of the north arm, east beyond the tower bridge
+  const pgx = w-850;
+  const poolGate = {x:pgx, y:bmTopY(pgx)+16, r:34};
+  // the dead-bog outside the two arms: impassable slices (80px) along the outer edges (v490: the middle is the river now)
   for(let sx=0; sx<w; sx+=80){
     const x0 = sx, x1 = Math.min(w, sx+80);
     const top = Math.max(bmTopY(x0), bmTopY(x1)), bot = Math.min(bmBotY(x0), bmBotY(x1));
     if(top > 4) obstacles.push({x:x0, y:-400, w:x1-x0, h:top+400, bogVoid:true});
     if(bot < h-4) obstacles.push({x:x0, y:bot, w:x1-x0, h:h-bot+400, bogVoid:true});
-    const wh = Math.max(bmWedgeHalf(x0), bmWedgeHalf(x1));
-    if(wh > 6) obstacles.push({x:x0, y:BM_MID-wh, w:x1-x0, h:wh*2, bogVoid:true});
   }
   // witch's house just inside the entrance, north of the trail; cauldron out front; waypoint beside it
   const hx = 600, hy = bmTrailPt(hx).y - 205;
@@ -121,6 +133,8 @@ function makeBlackMarsh(){
   for(let a=Math.PI*0.62; a<=Math.PI*1.38; a+=0.13){
     const bx = eastGate.x + Math.cos(a)*330, by = eastGate.y + Math.sin(a)*330;
     if(Math.abs(by - bmTrailPt(bx).y) < 70) continue;
+    if(by < eastGate.y && Math.abs(bx - BM_MID_BRIDGE_X) < 110) continue;   // v490: the path down from the tower bridge
+    if(bmMidRiverAt(bx,by) || bmMidRiverAt(bx-30,by) || bmMidRiverAt(bx+30,by) || !bmOpenAt(bx,by,20)) continue;
     const o = {x:Math.round(bx-30), y:Math.round(by-14), w:60, h:28, woodBarricade:true};
     barricades.push(o); obstacles.push(o);
   }
@@ -137,6 +151,8 @@ function makeBlackMarsh(){
     if(dist({x:cx,y:cy}, highGate) < 420) continue;
     const rc = bmRiverY(cx);
     if(Math.abs(cy-rc) < BM_RW+ph/2+70) continue;
+    if(Math.abs(cy-bmMidY(cx)) < bmMidHalf(cx)+ph/2+90) continue;   // v490: off the great river's banks
+    if(Math.abs(cx-BM_MID_BRIDGE_X) < 380 && cy < eastGate.y) continue;
     if(bmTrailDist(cx,cy) < 110+Math.max(pw,ph)/2*0.7) continue;
     if(dist({x:cx,y:cy}, house) < 340 || dist({x:cx,y:cy}, waypoint) < 260) continue;
     if(dist({x:cx,y:cy}, eastGate) < 420) continue;
@@ -167,18 +183,15 @@ function makeBlackMarsh(){
         const yt = bmTopY(jx)+off, yb = bmBotY(jx)-off;
         if(gapOK(jx,yt)) trees.push({x:jx, y:yt+rand(-14,14), s:rand(sc[0],sc[1])});
         if(gapOK(jx,yb)) trees.push({x:jx, y:yb+rand(-14,14), s:rand(sc[0],sc[1])});
-        const wh = bmWedgeHalf(jx);
-        if(wh > 40 && wh+off > 0){ trees.push({x:jx, y:BM_MID-wh-off+rand(-14,14), s:rand(sc[0],sc[1])}); trees.push({x:jx, y:BM_MID+wh+off+rand(-14,14), s:rand(sc[0],sc[1])}); }
       }
       for(let y=20; y<h; y+=sp){ if(bmOpenAt(30,y,0) && gapOK(16,y)) trees.push({x:off>0?30:off+10, y:y+rand(-14,14), s:rand(sc[0],sc[1])}); if(bmOpenAt(w-30,y,0) && gapOK(w-16,y)) trees.push({x:w-(off>0?30:off+10), y:y+rand(-14,14), s:rand(sc[0],sc[1])}); }
     }
-    // dead trees scattered thickly over the central wedge so it reads as solid bog
-    for(let i=0;i<260;i++){ const x = rand(40, BM_WEDGE_END), wh = bmWedgeHalf(x); if(wh < 60) continue; trees.push({x, y:BM_MID+rand(-wh+30, wh-30), s:rand(1.0,1.6)}); }
   }
   for(let i=0;i<300;i++){
     const x = rand(120,w-120), y = rand(100,h-100);
     if(!bmOpenAt(x,y,60) || !dryOK(x,y,26) || bmTrailDist(x,y) < 70 || !clearOfBuildings(x,y,50)) continue;
     if(dist({x,y},waypoint) < 90 || dist({x,y},cauldron) < 90) continue;
+    if(Math.abs(x-BM_MID_BRIDGE_X) < 200 && Math.abs(y-bmMidY(x)) < bmMidHalf(x)+220) continue;   // v490: keep the bridge ends clear
     trees.push({x, y, s:rand(0.8,1.3)});
   }
   const reeds = [];
@@ -262,7 +275,7 @@ function enterBlackMarsh(opts){
   if(opts.atWaypoint){
     g.player.x = g.bm.waypoint.x; g.player.y = g.bm.waypoint.y + 40;
   } else if(opts.fromPool){
-    g.player.x = g.bm.poolGate.x; g.player.y = g.bm.poolGate.y - 95;
+    g.player.x = g.bm.poolGate.x; g.player.y = g.bm.poolGate.y + 95;   // v490: the gate is on the north edge now
   } else if(opts.fromTower){
     g.player.x = g.bm.eastGate.x - 90; g.player.y = g.bm.eastGate.y;
   } else if(opts.fromHighlands){
@@ -278,7 +291,7 @@ function enterBlackMarsh(opts){
   }
   for(const a of room.wetAnchors) spawnBlackMarshWet(g, a, room);
   // v456: goblin archers posted behind the barricades
-  for(let k=0;k<6;k++){ const a = Math.PI*0.68 + k*0.13, x = room.eastGate.x + Math.cos(a)*215, y = room.eastGate.y + Math.sin(a)*215; const e = spawnEnemy(g, 'goblinarcher', {x, y}); if(e){ e.wanderRadius = 0; e.leashRange = 260; } }
+  for(let k=0;k<6;k++){ const a = Math.PI*0.68 + k*0.13; let x = room.eastGate.x + Math.cos(a)*215, y = room.eastGate.y + Math.sin(a)*215; if(!room.dryOK(x,y,24)){ const d = bmNearestDry(room, x, y); x = d.x; y = d.y; } if(!room.dryOK(x,y,20)) continue; const e = spawnEnemy(g, 'goblinarcher', {x, y}); if(e){ e.wanderRadius = 0; e.leashRange = 260; } }   // v490: never in the river
   for(let k=0;k<2;k++){ const e = spawnEnemy(g, 'goblin', {x:room.eastGate.x-170, y:room.eastGate.y+(k?60:-60)}); if(e) e.wanderRadius = 20; }
   // (v262) the Leviathan now lives in the Marsh Pool (see enterMarshPool)
   g.followers = [];

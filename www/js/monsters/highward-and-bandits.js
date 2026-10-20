@@ -558,4 +558,5 @@ function drawHwFloorInlay(room, cam){
   }
   ctx.restore();
 }
-function enterFloodedTemple(opts){ if(game.scene==='ancientruins') dungeonPersist(game); enterSubZone('temple', opts); }
+// v490: a fresh temple layout on every visit, except when climbing back up from the Sunken Depths (same temple you went down)
+function enterFloodedTemple(opts){ if(game.scene==='ancientruins') dungeonPersist(game); if(!(opts && opts.atStairs) || !game.templeSeed) game.templeSeed = 1 + Math.floor(Math.random()*1e9); enterSubZone('temple', opts); }

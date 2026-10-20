@@ -278,23 +278,42 @@ function losEnemyHidden(g, e){
 }
 let losCanvas = null, losCtx = null;
 const LOS_RANGE = 640;
+function losMaskRay(m, px, py, dx, dy, maxT){
+  const C = m.CELL; let ix = Math.floor(px/C), iy = Math.floor(py/C);
+  const sx = dx>0 ? 1 : -1, sy = dy>0 ? 1 : -1;
+  let tx = Math.abs(dx)<1e-9 ? 1e9 : ((ix+(dx>0?1:0))*C - px)/dx, ty = Math.abs(dy)<1e-9 ? 1e9 : ((iy+(dy>0?1:0))*C - py)/dy;
+  const ddx = Math.abs(dx)<1e-9 ? 1e9 : C/Math.abs(dx), ddy = Math.abs(dy)<1e-9 ? 1e9 : C/Math.abs(dy);
+  for(let n=0; n<200; n++){
+    let t; if(tx < ty){ t = tx; tx += ddx; ix += sx; } else { t = ty; ty += ddy; iy += sy; }
+    if(t >= maxT) return maxT;
+    if(ix<0 || iy<0 || ix>=m.cols || iy>=m.rows || !m.data[iy*m.cols+ix]) return t;
+  }
+  return maxT;
+}
 function drawLosShadow(g){
   const p = g.player, room = g.room, obs = room && room.obstacles; if(!p || !obs) return;
-  const near = [];
+  // v490: in organic caves the wall cells are walked on the floor-mask grid (a DDA march) instead of slab-testing every
+  // nearby cell against every ray -- the Sunken Depths had ~300 cells x ~3600 rays per frame. Shared cell corners are deduped.
+  const M = (room.organic && room.floorMask) ? room.floorMask : null;
+  const near = [], cellCorners = M ? new Set() : null;
   for(let i=0;i<obs.length;i++){
     const o = obs[i]; if(o.isWater||o.isFurniture||o.isProp) continue;
     if(o.x>p.x+LOS_RANGE || o.x+o.w<p.x-LOS_RANGE || o.y>p.y+LOS_RANGE || o.y+o.h<p.y-LOS_RANGE) continue;
     if(p.x>=o.x && p.x<=o.x+o.w && p.y>=o.y && p.y<=o.y+o.h) continue;
+    if(M && o.organic){ if(Math.abs(o.x+o.w/2-p.x) < 300 && Math.abs(o.y+o.h/2-p.y) < 300) for(const cx of [o.x, o.x+o.w]) for(const cy of [o.y, o.y+o.h]) cellCorners.add(cx*65536+cy); continue; }   // exact corners only close by; 540 even rays cover the rest
     near.push(o);
   }
-  if(!near.length) return;
+  if(!near.length && !M) return;
   const angs = [];
-  for(let i=0;i<72;i++) angs.push(i/72*Math.PI*2-Math.PI);
+  const NU = M ? 540 : 72;
+  for(let i=0;i<NU;i++) angs.push(i/NU*Math.PI*2-Math.PI);
   for(const o of near){ for(const [cx,cy] of [[o.x,o.y],[o.x+o.w,o.y],[o.x,o.y+o.h],[o.x+o.w,o.y+o.h]]){ const a = Math.atan2(cy-p.y, cx-p.x); angs.push(a-0.0004, a, a+0.0004); } }
+  if(cellCorners) for(const k of cellCorners){ const cx = Math.floor(k/65536), cy = k - cx*65536; const a = Math.atan2(cy-p.y, cx-p.x); angs.push(a-0.0004, a, a+0.0004); }
   angs.sort((a,b)=>a-b);
   const pts = [];
   for(const a of angs){
     const dx = Math.cos(a), dy = Math.sin(a); let tm = LOS_RANGE;
+    if(M) tm = losMaskRay(M, p.x, p.y, dx, dy, tm);
     for(const o of near){
       let t0=0, t1=tm;
       if(Math.abs(dx)<1e-9){ if(p.x<o.x||p.x>o.x+o.w) continue; } else { let u=(o.x-p.x)/dx, v=(o.x+o.w-p.x)/dx; if(u>v){const t=u;u=v;v=t;} if(u>t0)t0=u; if(v<t1)t1=v; if(t0>t1) continue; }
