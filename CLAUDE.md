@@ -16,8 +16,8 @@ The owner has no coding experience: explain things plainly, batch changes, and k
 - `.github/workflows/build-android.yml` — manual debug APK. `static.yml` — GitHub Pages deploy of `www/`.
 
 ## Working on the game
-- Version each batch (last: v489 — big gameplay/UI batch; v488 code split into folders; v487 performance). Bump the save-migration flags (`skillsV4xx`, newest `skillsV489`) when a skill tree layout changes and refund points.
-- After every edit: `node scripts/check-js.js` (syntax-checks every file and that `load.js` lists them all). A `// comment` added mid-line swallows the rest of that line — the most common breakage.
+- Version each batch (last: v490 — enemy/boss/quest/zone batch; v489 big gameplay/UI batch; v488 code split into folders; v487 performance). Bump the save-migration flags (`skillsV4xx`, newest `skillsV489`) when a skill tree layout changes and refund points.
+- After every edit: `node scripts/check-js.js` (syntax-checks every file and that `load.js` lists them all, and WARNS about code hidden behind a mid-line `// comment` — the most common breakage; treat any warning as a bug).
 - Code that runs while a file loads (not inside a function) may only use functions/vars from the same or EARLIER files in `load.js`. New file → add it to `load.js`.
 - Testing over http (audio needs it): `cd www && http-server -p 8090`; file:// works too but without audio.
 - Test with Playwright (Chromium is at /opt/pw-browsers/chromium). Hooks: `window.__test` (getGame, stepSim, spawnEnemy, enter*…), `window.__enter` (every zone's enter function), `window.__simPause = true` to step manually.
@@ -41,6 +41,10 @@ The owner has no coding experience: explain things plainly, batch changes, and k
 - Bosses respawn every visit (v489). Their `*Slain` flags stay for quests/doors; `bossRekillFlag`/`bossRekillRare` (monsters/minotaur.js) drop a rare instead of the quest item on a re-kill. Exit portals appear only after that visit's kill.
 - `skDur(p, d)` applies the Skill Duration % mod (`p.skillDurPct`); ailments use it via the status-timer line in update.js.
 - IAP restore (`iapRestore`) only ever adds ownership, never removes it.
+- Messages (v490): `showMsg` routes quotes ("...") to a speech banner, quest/recipe lines to the story banner (`showBigMsg`, queued), "Obtained ·" item lines merge. Achievements toast top-left, parts toast under it. Bosses can `bossGreet` once.
+- Enemy targeting (v490): threat in `pickEnemyTarget`/`threatTick` (closest ally unless another has ~25% of the monster's life more threat). Telegraphed normal-enemy hits go through `teleDmg` (−25%/−40%, capped at 50% max life).
+- Monster level (v490): `monsterLevel` follows an over-levelled player at half speed (max +3/+4).
+- `core/spawn-safety.js` moves ordinary monsters away from waypoints/entrances/stairs after every enter*.
 - HUD: `#hudDock` at the bottom (two globes + menu buttons + XP bar), drawn by `updateDockHud`; zone name top-right.
 
 
