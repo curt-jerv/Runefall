@@ -249,14 +249,15 @@ function drawWalls(room){
   drawBlock({x:-wt,y:room.h,w:room.w+wt*2,h:wt}, hz, top,right,front);
   drawBlock({x:-wt,y:0,w:wt,h:room.h}, hz, top,right,front);
   drawBlock({x:room.w,y:0,w:wt,h:room.h}, hz, top,right,front);
-  const spacing = 150;
+  const spacing = 150, cam = game && game.camera;
+  const sup = (x,y)=>{ if(cam){ const i = toIso(x,y); if(i.x < cam.x-120 || i.x > cam.x+W+120 || i.y < cam.y-60 || i.y > cam.y+H+160) return; } drawMineSupport(x, y, hz); };   // v490: skip supports off screen
   for(let wx=60; wx<room.w; wx+=spacing){
-    drawMineSupport(wx, -wt*0.5, hz);
-    drawMineSupport(wx, room.h+wt*0.5, hz);
+    sup(wx, -wt*0.5);
+    sup(wx, room.h+wt*0.5);
   }
   for(let wy=60; wy<room.h; wy+=spacing){
-    drawMineSupport(-wt*0.5, wy, hz);
-    drawMineSupport(room.w+wt*0.5, wy, hz);
+    sup(-wt*0.5, wy);
+    sup(room.w+wt*0.5, wy);
   }
 }
 
