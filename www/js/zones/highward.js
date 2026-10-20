@@ -1,6 +1,6 @@
 // ---- Highward (v287): the floating Templar fortress. Five floors, an inverted pyramid (each floor wider than the last). ----
 const HW_DEPTH = 46;   // v489: Highward floors are Lv 46-50 (were 50-54)
-const HW_FLOORS = 5, HW_W = [5600,6400,7200,8000,8800], HW_H = [2600,3000,3400,3800,4200];   // v421: rooms-and-halls fortress, ~4x the old floor area
+const HW_FLOORS = 5, HW_W = [5600,6400,7200,8000,2400], HW_H = [2600,3000,3400,3800,2500];   // v490: floor 5 is just the entrance room and the Warden's sanctum   // v421: rooms-and-halls fortress, ~4x the old floor area
 const HW_UP_FRAC = [0.5,0.82,0.18,0.82,null], HW_DOWN_FRAC = [null,0.5,0.82,0.18,0.82];
 const HW_WARNING = 'When shadows wake beneath the Hold, three bearers bind what none may hold.';
 function makeHighwardRunestoneItem(){
@@ -19,7 +19,7 @@ function makeHighward(f){
   if(f===1){ start = add(Math.round(w/2-650), h-M-900, 1300, 900, 'start'); endR = add(w-M-800, M, 800, 900, 'end'); }   // v425: one wide lobby (west + east gates, waypoint in the middle)
   else if(f<5){ const left = f%2===1; start = add(left?M:w-M-700, h-M-700, 700, 700, 'start'); endR = add(left?w-M-700:M, M, 700, 700, 'end'); }
   else { start = add(w/2-350, h-M-700, 700, 700, 'start'); boss = add(w/2-700, M, 1400, 900, 'boss'); }
-  const target = [8,10,12,14,15][f-1];
+  const target = [8,10,12,14,0][f-1];
   for(let tries=0; rooms.length < target+2 && tries<4000; tries++){
     const t = rnd(); let rw, rh, kind;
     if(t<0.22){ if(rnd()<0.5){ rw = Ri(1400,1900); rh = Ri(500,650); } else { rw = Ri(500,650); rh = Ri(1400,1900); } kind = 'hall'; }
@@ -42,7 +42,7 @@ function makeHighward(f){
     edges.push(best); inT.add(best.b.id);
   }
   if(f===1) edges.push({a:start, b:hwFirst, anchor:true});
-  if(boss){ let best = null; for(const a of nodes){ if(a===start) continue; const d = dd(a,boss); if(!best || d<best.d) best = {a, b:boss, d}; } edges.push(best); }
+  if(boss){ let best = null; for(const a of nodes){ if(a===start) continue; const d = dd(a,boss); if(!best || d<best.d) best = {a, b:boss, d}; } edges.push(best || {a:start, b:boss, d:dd(start,boss)}); }   // v490: floor 5 links the entrance straight to the sanctum
   for(const e of edges){ e.a.deg++; e.b.deg++; }
   for(let k=0, tries=0; k<2 && tries<60; tries++){
     const a = nodes[Math.floor(rnd()*nodes.length)], b = nodes[Math.floor(rnd()*nodes.length)];
@@ -157,7 +157,7 @@ function spawnHighward(g){
       for(const [dx,dy,tp] of [[0,320,'hwmendicant'],[-160,300,'hwbulwark'],[160,300,'hwbulwark']]){ const e = spawnEnemy(g, tp, {x:room.guardPos.x+dx, y:room.guardPos.y+dy}); if(e){ e.hwSentry = true; made.push(e); } }
       {   // v489: the Warden stands again on every visit
         const gd = spawnEnemy(g, 'hwguardian', room.guardPos);
-        if(gd){ gd.eliteName = 'Ancient Warden'; gd.hwGuardian = true; gd.leashRange = 99999; gd.xpMul = 10; }
+        if(gd){ gd.eliteName = 'Ancient Warden'; gd.bossName = 'Ancient Warden'; gd.hwGuardian = true; gd.leashRange = 99999; gd.xpMul = 10; }
       }
       continue;
     }
@@ -234,6 +234,7 @@ function takeHwRunestone(){
   if(!hwAltarReady(p)) return;
   p.hwRuneTaken = true;
   forceAddToBag(p, makeHighwardRunestoneItem());
+  npcMark(p, 'scholar', true);   // v490
   const q = getQuest(p,'hw_runestone'); if(q){ q.status='complete'; q.rewarded=true; q.progress=q.total; q.desc='You hold the Templar Runestone and its warning.'; }
   bagPulse(); updateQuestBadge(); saveGame();
   showNpcText('Templar Runestone', 'The runestone lifts from its altar, and as your fingers close on it the carved words burn into the air:\n\n\u201C'+HW_WARNING+'\u201D\n\nSomewhere behind the altar a switch waits to open the eastern gate.', 'Take it', ()=>{ showMsg('Templar Runestone obtained', 3.0, '#ffe08a'); });
@@ -253,7 +254,7 @@ function updateHighward(g, dt){
   if(t.hwFloor===1 && dist(p, t.entrance) < t.entrance.r + p.r + 22) k = 'hwToCanyon';
   else if(t.hwDown && dist(p, t.hwDown) < t.hwDown.r + p.r + 22) k = 'hwDown';
   else if(t.hwUp && dist(p, t.hwUp) < t.hwUp.r + p.r + 22) k = 'hwUp';
-  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ k = 'waypointHighward'; discoverWaypoint('reachedHighwardWp'); }
+  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ k = 'waypointHighward'; }
   else if(t.hwReturn && p.hwSwitchOn && dist(p, t.hwReturn) < t.hwReturn.r + p.r + 24) k = 'hwReturn';
   else if(t.altar && hwAltarReady(p) && dist(p, t.altar) < t.altar.r + p.r + 24) k = 'hwAltar';
   else if(t.hwSwitch && hwSwitchReady(p) && dist(p, t.hwSwitch) < t.hwSwitch.r + p.r + 24) k = 'hwSwitch';
@@ -353,20 +354,13 @@ function drawHwKnightIso(e){
     ctx.strokeStyle='rgba(255,226,140,'+(0.5+0.3*Math.sin((game.clock||0)*8))+')'; ctx.lineWidth=3; ctx.shadowColor='#ffd060'; ctx.shadowBlur=12;
     ctx.beginPath(); ctx.arc(0,0,e.r*1.25,0,7); ctx.stroke(); ctx.restore();
   }
-  if(kind==='guardian'){
-    // unique look: a pulsing gold aura and a floating crown of hammers above the helm
-    const tm = game.clock||0, top = iso.y - pv.r*4.1;
+  if(kind==='guardian'){   // v490: a pulsing gold aura (the floating crown and name are gone -- the boss bar names him now)
+    const tm = game.clock||0;
     ctx.save(); ctx.globalCompositeOperation='lighter';
     const ag = ctx.createRadialGradient(iso.x, iso.y-pv.r*1.6, 8, iso.x, iso.y-pv.r*1.6, pv.r*3.2); ag.addColorStop(0,'rgba(255,200,80,'+(0.22+0.08*Math.sin(tm*3))+')'); ag.addColorStop(1,'rgba(255,160,40,0)');
     ctx.fillStyle=ag; ctx.beginPath(); ctx.arc(iso.x, iso.y-pv.r*1.6, pv.r*3.2, 0, 7); ctx.fill(); ctx.restore();
-    ctx.save(); ctx.translate(iso.x, top+Math.sin(tm*2)*2); ctx.fillStyle='#ffd66a'; ctx.strokeStyle='#6a4a10'; ctx.lineWidth=1.2; ctx.shadowColor='#ffcf5a'; ctx.shadowBlur=10;
-    ctx.beginPath(); ctx.moveTo(-18,0); ctx.lineTo(-18,-12); ctx.lineTo(-9,-5); ctx.lineTo(0,-16); ctx.lineTo(9,-5); ctx.lineTo(18,-12); ctx.lineTo(18,0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
   }
-  if(kind==='guardian'){
-    ctx.save(); ctx.font='bold 12px Alegreya,Georgia, serif'; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.85)'; ctx.fillStyle='#ffe08a';
-    ctx.strokeText('Ancient Warden', iso.x, iso.y-pv.r*4.5-18); ctx.fillText('Ancient Warden', iso.x, iso.y-pv.r*4.5-18); ctx.restore();
-  }
-  drawHpBar(iso, pv.r*(kind==='guardian'?4.5:4.6), kind==='guardian' ? e.r*1.5 : e.r, e.hp, e.maxHp);
+  if(kind!=='guardian')   drawHpBar(iso, pv.r*(kind==='guardian'?4.5:4.6), kind==='guardian' ? e.r*1.5 : e.r, e.hp, e.maxHp);
 }
 function drawHwTelegraph(e){
   drawHwStatusFx(e);

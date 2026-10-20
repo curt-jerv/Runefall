@@ -112,7 +112,11 @@ function lightRRBeacon(){
   if(p.rrBeacons[id]){ showMsg('The beacon already burns.', 1.8); return; }
   const why = rrBeaconBlocked(g); if(why){ showMsg(why, 3.0); return; }
   p.rrBeacons[id] = true;
-  const n = rrBeaconCount(p), q = getQuest(p, 'rr_towers');
+  const n = rrBeaconCount(p);
+  // v490: lighting the first beacon starts the Wayfarer's quest if you haven't met him yet, and the tracker always shows the count
+  const q = addQuestOnce(p, 'rr_towers', 'The Three Beacons', 'Light the three Templar watchtower beacons in Redridge Canyon.', 3);
+  if(n<3) q.desc = 'Light the three Templar watchtower beacons in Redridge Canyon ('+n+'/3 lit).';
+  if(!p.wayfarerMet) npcMark(p, 'wayfarer', true);
   if(q){ q.progress = n; if(n>=3){ q.status = 'complete'; q.rewarded = false; q.desc = 'All three beacons burn and the skybridge to Highward is whole. Tell the Last Wayfarer.'; npcMark(p, 'wayfarer', true); } }
   g.particles.push({type:'burst', x:t.rrBeacon.x, y:t.rrBeacon.y, t:0.6, max:0.6, color:'#ffcf70'});
   showNpcText(RRT_CLUES[id][0], RRT_CLUES[id][1], 'Continue', ()=>{ showMsg('Beacons lit: '+n+' / 3', 3.0); });
@@ -125,6 +129,9 @@ function updateRRTower(g, dt){
   if(dist(p, t.entrance) < t.entrance.r + p.r + 22) k = (t.rrFloor||1)>1 ? 'rrDown' : 'rrTowerExit';
   else if(t.rrUp && dist(p, t.rrUp) < t.rrUp.r + p.r + 22) k = 'rrUp';
   else if(t.rrBeacon && dist(p, t.rrBeacon) < t.rrBeacon.r + p.r + 26) k = 'rrBeacon';
+  // v490: once the beacon burns, a portal by it takes you straight back outside the tower
+  if(t.rrBeacon && p.rrBeacons && p.rrBeacons[t.rrId] && !t.exitPortal) t.exitPortal = fixLootSpot(g, {x:t.rrBeacon.x-150, y:t.rrBeacon.y+90, r:26});
+  if(t.exitPortal && !k && dist(p, t.exitPortal) < t.exitPortal.r + p.r + 22) k = 'rrTowerExit';
   updateInteractPrompt(k);
   if(t.vents && !g.over && p.hp>0){
     const clk = g.clock||0;

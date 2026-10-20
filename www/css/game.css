@@ -382,6 +382,9 @@
   @keyframes bmPop{ 0%{opacity:0; transform:translate(-50%,var(--bmY)) scale(1.04);} 18%{opacity:1; transform:translate(-50%,var(--bmY)) scale(1);} 100%{transform:translate(-50%,var(--bmY)) scale(1);} }
   /* v441: every banner (beasts too) sits at the top, just under the HUD -- top is set live in JS */
   #bigMsg.show{ animation:bmPop .6s ease-out both; }
+  /* v490: a spoken line -- mixed case, italic, warm */
+  #bigMsg.speech .bmTitle{ text-transform:none; font-style:italic; letter-spacing:.06em; font-family:'Alegreya',Georgia,serif; color:#e9d6a8; font-size:clamp(13px,3vw,19px); white-space:normal; }
+  #bigMsg.speech .bmRule{ display:none; }
 
   #overlay{
     position:absolute; inset:0; z-index:10; display:none;
@@ -766,6 +769,12 @@
   .partCard .pMain{ flex:1;} .partCard .pSub{ font-size:10.5px; color:var(--bone-dim);}
   .partBtn{ padding:6px 10px; border-radius:6px; border:1px solid var(--ember); color:var(--ember); cursor:pointer; font-size:11px; white-space:nowrap; user-select:none;}
   .partBtn.off{ opacity:.35; pointer-events:none;}
+  /* v490: Recipe Book (inventory Parts tab + witch Recipes tab) */
+  .rbHead{ font-family:'Cinzel',serif; font-size:12.5px; color:#e8c860; padding:6px 4px; margin:2px 0 4px; border-bottom:1px solid rgba(232,200,96,.25); cursor:pointer; user-select:none;}
+  .rbRow{ padding:6px 8px; }
+  .rbCheck{ flex:0 0 auto; width:32px; height:32px; border-radius:50%; border:2px solid #4caf50; background:rgba(76,175,80,.18); color:#7fe07f; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:bold; cursor:pointer; user-select:none;}
+  .rbCheck:active{ filter:brightness(1.4); }
+  .rbCheck.off{ border-color:rgba(255,255,255,.12); background:none; cursor:default; }
   .partCard.uq{ border-color:#f2a31b !important; box-shadow:0 0 9px rgba(242,163,27,.4), inset 0 0 8px rgba(242,163,27,.15); }
   .partCard.kSlot.sel{ border-color:var(--ember); background:rgba(232,140,60,.14); }
   .invDivider{ font-size:11px; color:var(--bone-dim); letter-spacing:.05em; margin:10px 0 6px; text-transform:uppercase;}
@@ -1263,3 +1272,6 @@ body.noPotionBtn #actionCluster .interactBtn{ bottom:104px !important; }
 .kSlotBox.full{ border-style:solid; }
 .kSlotBox .kLbl{ font:700 10px var(--f-display, Alegreya, Georgia, serif); color:var(--bone-dim); letter-spacing:.05em; text-transform:uppercase; }
 .kSlotBox > *:not(.kLbl){ max-width:100%; max-height:100%; }
+
+/* v490: one place per kind of message -- story banners top-centre, achievements top-left, monster parts just under them */
+#partToast{ top:calc(78px + env(safe-area-inset-top,0px)) !important; left:calc(12px + env(safe-area-inset-left,0px)) !important; transform:none !important; text-align:left !important; max-width:min(46vw, 360px); white-space:normal !important; font-size:12px !important; padding:5px 10px !important; }

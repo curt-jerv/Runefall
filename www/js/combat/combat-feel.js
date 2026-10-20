@@ -445,6 +445,11 @@ function dungeonRespawn(g, p){
       const inTomb = !!(TR && dp.x>TR.x && dp.x<TR.x+TR.w && dp.y>TR.y && dp.y<TR.y+TR.h);
       if(g.crypt && g.crypt.hallDoor && (inTomb || g.enemies.some(e=>(e.defiler||e.wraith) && e.hp>0))){ p.x = g.crypt.hallDoor.x; p.y = g.crypt.hallDoor.y + 85; return; } }
     if(p.reachedDarkCrypt && g.room && g.room.waypoint){ p.x = g.room.waypoint.x; p.y = g.room.waypoint.y + 45; } return; }
+  if(mf.key==='rlair' && cur===2 && g.rlair && g.rlair.entrance){   // v490: wake just inside the Ember Den, and the Flame Raptor goes back to the middle of its arena, calm again
+    const R = g.rlair; p.x = R.entrance.x + 70; p.y = R.entrance.y;
+    for(const e of g.enemies) if(e.lr && e.hp>0){ e.x = R.bossSpot.x - 380; e.y = R.bossSpot.y; e.lrAwake = false; e.lrCalm = true; e.lastAttackedT = 0; e.lrState = 'chase'; e.lrT = 0; e.lrCd = 2.0; e.windT = 0; e.moving = false; }
+    g.projectiles = []; return;
+  }
   let wpFloor = 0;
   if(mf.key==='lh' && p.reachedLighthouseTower) wpFloor = 1;
   else if(mf.key==='ruins' && p.reachedAncientRuins) wpFloor = 2;
@@ -503,6 +508,13 @@ function respawnInRegion(){
     if(g.room) g.room.lavaInset = 0;
   }
   if(g.room && g.room.deep===3) g.enemies = g.enemies.filter(x=>!x.colAdd);
+  // v490: dying mid-trial at the Mountain Top Shrine resets it -- the Protectors sink back and the runestone returns to you
+  if(g.scene==='icyzone' && g.iz && g.iz.kind==='shrine' && (p.shrineStage||0)===1){
+    g.enemies = g.enemies.filter(e=>!e.prot); g.iz.protectorsSpawned = false; g.iz.protectorsDown = false; p.shrineStage = 0;
+    if(!findRunestone(p)) forceAddToBag(p, makeTemplarRunestoneItem());
+    setTimeout(()=>{ try{ showMsg('The Protectors sink back into the stone. Place the runestone at the shrine to try again.', 4.0, '#9fe0ff'); }catch(e){} }, 600);
+    saveGame();
+  }
   let sp = (g.room && g.room.entrySpawn) || g.regionSpawn || (g.room && g.room.entranceSpot) || {x:p.x, y:p.y};
   if(g.room && g.room.w && (sp.x<0 || sp.y<0 || sp.x>g.room.w || sp.y>g.room.h)) sp = g.room.entranceSpot || {x:p.x, y:p.y};   // v283: never respawn off the map
   g._deathPos = {x:p.x, y:p.y};

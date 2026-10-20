@@ -123,6 +123,16 @@ function spawnForgottenTowerFloor(g, floor){
     showMsg('The witch\'s captors wait in the great hall...', 2.0);
   }
 }
+// v490: a Map Bearer (ringed in gold) holds the first floor; slaying it charts every Forgotten Tower floor (p.ftMapFound)
+function ftEnsureMapBearer(g){
+  const room = g.room, p = g.player;
+  if(!room || room.floor!==1 || p.ftMapFound || g.enemies.some(e=>e.ftMapCarrier && e.hp>0)) return;
+  const ent = room.entrance;
+  const cand = g.enemies.filter(e=>e.hp>0 && !e.ftGuard && (e.type==='goblin' || e.type==='cavetroll')).map(e=>({e, d:Math.hypot(e.x-ent.x, e.y-ent.y)})).filter(c=>c.d>=450).sort((a,b)=>Math.abs(a.d-800)-Math.abs(b.d-800));
+  const e = cand.length ? cand[0].e : null; if(!e) return;
+  e.ftMapCarrier = true; e.mapCarrier = true; e.mapHolder = true;
+  e.hp = Math.round(e.hp*2); e.maxHp = Math.round(e.maxHp*2); e.r = Math.round(e.r*1.12); e.xpMul = Math.max(e.xpMul||1, 2.5);
+}
 function enterForgottenTower(floor, opts){
   opts = opts || {};
   const g = game;
@@ -144,6 +154,7 @@ function enterForgottenTower(floor, opts){
   g.ftStore = g.ftStore || {};
   if(g.ftStore[floor]) g.enemies = g.ftStore[floor];
   else spawnForgottenTowerFloor(g, floor);
+  ftEnsureMapBearer(g);   // v490
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = g.player.x; f.y = g.player.y; }

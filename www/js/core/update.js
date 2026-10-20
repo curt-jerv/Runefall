@@ -1180,7 +1180,8 @@ function updateStep(dt){
       if(tg){ ang = Math.atan2(tg.y-p.y, tg.x-p.x); dd = Math.max(40, Math.hypot(tg.x-p.x, tg.y-p.y) - (tg.r+p.r+6)); }
       else { ang = Math.atan2(p.facing.y, p.facing.x); dd = LEAP_BLIND; }
       p.leapDir = {x:Math.cos(ang), y:Math.sin(ang)}; p.leapDistLeft = dd; p.leapSpd = dd/LEAP_TIME;
-      p.leapT = LEAP_TIME; p.leapRank = lRank; p.leapTarget = tg || null;   // v489: the charge follows its target (it used to fly to where the enemy stood and often whiffed) p.facing = {x:p.leapDir.x, y:p.leapDir.y}; p.faceSign = screenFacingSign(p.facing.x,p.facing.y);
+      p.leapT = LEAP_TIME; p.leapRank = lRank; p.leapTarget = tg || null;   // v489: the charge follows its target (it used to fly to where the enemy stood and often whiffed)
+      p.facing = {x:p.leapDir.x, y:p.leapDir.y}; p.faceSign = screenFacingSign(p.facing.x,p.facing.y);
       p.invuln = Math.max(p.invuln||0, LEAP_TIME+0.05);
       p.leapCdMax = leapCdForRank(lRank); p.leapCd = applyCdr(p, p.leapCdMax);
       showMsg('Charge!', 0.5);
@@ -1917,7 +1918,8 @@ function updateStep(dt){
     if(p.immolateT>0){ p.immolateT = 0; showMsg('The flames die down', 0.8); }   // v304: press again to extinguish
     else if(imR>0 && !(p.immolateCd>0) && p.hp <= p.maxHp*IMMOLATE_MIN_HP){ showMsg('Too weak to Immolate (needs over '+Math.round(IMMOLATE_MIN_HP*100)+'% life)', 1.2); }   // v481
     else if(imR>0 && !(p.immolateCd>0)){
-      p.immolateDurMax = 1e9; p.immolateT = 1e9;   // v489: no duration -- burns until pressed again or you drop to 25% life p.immolatePol = polarityCast(p,'fire');   // v489: fire cast for Elemental Polarity
+      p.immolateDurMax = 1e9; p.immolateT = 1e9;   // v489: no duration -- burns until pressed again or you drop to 25% life
+      p.immolatePol = polarityCast(p,'fire');   // v489: fire cast for Elemental Polarity (v490: was hidden behind the comment above)
       p.immolateCdMax = applyCdr(p, IMMOLATE_CD); p.immolateCd = p.immolateCdMax;
       showMsg('Immolate!', 0.9);
       g.particles.push({type:'ring', x:p.x, y:p.y, t:0.5, max:0.5, r:90, color:'#ff7a3d'});
@@ -1943,6 +1945,7 @@ function updateStep(dt){
       showMsg('Flame Vortex!', 0.9);
     }
   }
+  pyreHeartTick(p);   // v490: Pyre Heart keeps a Flame Vortex going while Immolate burns
   if(p.vortex){
     const v = p.vortex;
     v.t += dt; v.tick -= dt; v.spin += dt*5.5;
@@ -2428,7 +2431,7 @@ function updateStep(dt){
       if(e.slamState==='telegraph'){
         e.slamTelegraphT -= dt;
         if(e.slamTelegraphT<=0){
-          const slamDmg = e.dmg*BOSS_SLAM_DMG_MULT*TELE_DMG_MULT;
+          const slamDmg = teleDmg(e, BOSS_SLAM_DMG_MULT);
           if(dist(p, e.slamPos) < BOSS_SLAM_RADIUS+p.r) playerDamage(g, slamDmg, e);
           if(g.followers) for(const f of g.followers){
             if(dist(f, e.slamPos) < BOSS_SLAM_RADIUS+f.r) applyFollowerDamage(g, f, slamDmg, e);
@@ -2476,6 +2479,7 @@ function updateStep(dt){
     } else if(e.type==='archer' || e.type==='spider' || e.type==='banditarcher' || e.type==='skeletonarcher' || e.type==='goblinarcher' || e.type==='fhaxe' || e.type==='coilsentry' || e.type==='cultist'){
       updateStuckTracking(e, dt);
       if(e.type==='cultist') cultistSummon(g, e, target, d, dt);
+      const _sx = e.x, _sy = e.y;
       if(d < e.preferRange-20){
         // (v122) backing away is slower than chasing, so melee can close the gap
         const ang=Math.atan2(e.y-target.y,e.x-target.x);
@@ -2489,7 +2493,9 @@ function updateStep(dt){
       // v272: ranged enemies need a moment of clear sight before the first shot (no instant shots when you round a corner)
       const canSeeT = d < (e.type==='skeletonarcher'?336:420) && enemyLOS(g,e,target);
       if(canSeeT) e.losT = (e.losT||0) + dt; else e.losT = 0;
-      if(canSeeT && e.atkCd<=0 && e.losT >= RANGED_AIM_DELAY){
+      // v490: ...and must stand still for a moment before loosing (no shooting on the run)
+      e._stillT = (Math.abs(e.x-_sx) + Math.abs(e.y-_sy) > 0.01) ? 0 : (e._stillT||0) + dt;
+      if(canSeeT && e.atkCd<=0 && e.losT >= RANGED_AIM_DELAY && e._stillT >= RANGED_STILL_T){
         e.atkCd = e.atkCdMax * (e.type==='skeletonarcher' ? 0.9+Math.random()*0.5 : 1);   // (v245) skeleton archers: -20% range, de-synced volleys
         e.atkAnimT = 0.22;
         const ang=Math.atan2(target.y-e.y,target.x-e.x);
@@ -2533,7 +2539,7 @@ function updateStep(dt){
         e.x += Math.cos(e.lungeDir)*400*dt; e.y += Math.sin(e.lungeDir)*400*dt; e.moving = true;
         if(!e.lungeHit && dist(e,target) < e.r+target.r+8){
           e.lungeHit = true;
-          const lungeDmg = e.dmg*0.75*TELE_DMG_MULT;   // v456: halved
+          const lungeDmg = teleDmg(e, 0.75);   // v456: halved
           if(isFollowerTarget) applyFollowerDamage(g, target, lungeDmg, e);
           else playerDamage(g, lungeDmg, e);
           g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#8fd06a'});
@@ -2585,7 +2591,7 @@ function updateStep(dt){
         e.hop = Math.sin(k*Math.PI)*48; e.moving = true;
         if(e.tT<=0){
           e.tState='idle'; e.hop=0; e.atkCd = e.atkCdMax*0.8;
-          const R = TOAD_SPLASH_R, dm = e.dmg*1.4*TELE_DMG_MULT;
+          const R = TOAD_SPLASH_R, dm = teleDmg(e, 1.4);
           if(dist(p,e) < R+p.r) playerDamage(g, dm, e);
           if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, e);
           g.particles.push({type:'ring', x:e.x, y:e.y, t:0.45, max:0.45, r:R, color:'#8fe65a'});
@@ -2645,7 +2651,7 @@ function updateStep(dt){
       } else if(e.tState==='tele'){
         e.tT -= dt; e.moving = false; e.atkAnimT = 0.1;
         if(e.tT<=0){
-          const R = e.slamR||TROLL_SLAM_R, dm = e.dmg*1.5*TELE_DMG_MULT;
+          const R = e.slamR||TROLL_SLAM_R, dm = teleDmg(e, 1.5);
           if(dist(p,e.tPt) < R) playerDamage(g, dm, e);
           if(g.followers) for(const f of g.followers) if(dist(f,e.tPt) < R) applyFollowerDamage(g, f, dm, e);
           g.particles.push({type:'ring', x:e.tPt.x, y:e.tPt.y, t:0.45, max:0.45, r:R, color:'#d9a066'});
@@ -2681,7 +2687,7 @@ function updateStep(dt){
         e.tT -= dt; e.moving = false;
         if(!e.tHit){
           e.tHit = true;
-          const R = ARMORDON_TAIL_R, dm = e.dmg*1.0*TELE_DMG_MULT;
+          const R = ARMORDON_TAIL_R, dm = teleDmg(e, 1.0);
           if(dist(p,e) < R+p.r) playerDamage(g, dm, e);
           if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, e);
           g.particles.push({type:'ring', x:e.x, y:e.y, t:0.45, max:0.45, r:R, color:'#e8a060'});
@@ -2725,7 +2731,7 @@ function updateStep(dt){
             }
           }
           if(e.tGrab){
-            const dm = e.dmg*0.6*TELE_DMG_MULT;
+            const dm = teleDmg(e, 0.6);
             if(e.tGrab===p) playerDamage(g, dm, e); else applyFollowerDamage(g, e.tGrab, dm, e);
             e.tState = 'pull'; e.tT = 0.45;
             g.particles.push({type:'burst', x:e.tGrab.x, y:e.tGrab.y, t:0.25, max:0.25, color:'#e8808a'});
@@ -2746,8 +2752,10 @@ function updateStep(dt){
         if(e.tT<=0){ e.tState='idle'; e.tGrab=null; e.atkCd = 0; }
       } else {
         e.tCd -= dt;
-        if(e.tCd<=0 && d<CRAWLER_TONGUE_LEN-40 && d>e.r+target.r+70 && enemyLOS(g,e,target)){
-          e.tDir = Math.atan2(target.y-e.y, target.x-e.x); e.tState='tele'; e.tT=CRAWLER_TONGUE_WIND; e.tCd=rand(4.5,6.5); e.windT=0;
+        // v490: a pack takes turns -- only one tongue at a time nearby, at most two per pack in a few seconds
+        const tongueBusy = ()=>{ let n = 0; const now = g.clock||0; for(const o of g.enemies){ if(o===e || o.type!=='crawler' || !(o.hp>0) || dist(o,e) > 700) continue; if(o.tState==='tele'||o.tState==='lash'||o.tState==='pull') return true; if(now - (o.tLastT||-99) < 4) n++; } return n>=2; };
+        if(e.tCd<=0 && d<CRAWLER_TONGUE_LEN-40 && d>e.r+target.r+70 && enemyLOS(g,e,target) && !tongueBusy()){
+          e.tDir = Math.atan2(target.y-e.y, target.x-e.x); e.tState='tele'; e.tT=CRAWLER_TONGUE_WIND; e.tCd=rand(7,11); e.windT=0; e.tLastT = g.clock||0;
         } else if(tickEnemyWindup(g, e, target, isFollowerTarget, reach, dt)){
           // mid bite
         } else if(d>reach){
@@ -2772,7 +2780,7 @@ function updateStep(dt){
         e.hop = Math.sin(k*Math.PI)*42; e.moving = true;
         if(e.tT<=0){
           e.tState='idle'; e.hop=0; e.atkCd = e.atkCdMax*0.6;
-          const R = RAPTOR_LEAP_R, dm = e.dmg*1.3*TELE_DMG_MULT;
+          const R = RAPTOR_LEAP_R, dm = teleDmg(e, 1.3);
           if(dist(p,e) < R+p.r) playerDamage(g, dm, e);
           if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, e);
           g.particles.push({type:'ring', x:e.x, y:e.y, t:0.35, max:0.35, r:R, color:'#e8b060'});
@@ -2782,8 +2790,8 @@ function updateStep(dt){
         e.tCd -= dt;   // v482: raptors circle too
       } else {
         e.tCd -= dt;
-        if(e.tCd<=0 && d<320 && d>110 && enemyLOS(g,e,target)){
-          e.tPt = {x:target.x, y:target.y}; e.tState='tele'; e.tT=0.4; e.tCd=3+Math.random()*2; e.windT=0;
+        if(e.tCd<=0 && d<RAPTOR_LEAP_RANGE && d>110 && enemyLOS(g,e,target)){
+          e.tPt = {x:target.x, y:target.y}; e.tState='tele'; e.tT=RAPTOR_TELE_T; e.tCd=3+Math.random()*2; e.windT=0;   // v490: a longer crouch before the leap
         } else if(tickEnemyWindup(g, e, target, isFollowerTarget, reach, dt)){
           // mid bite
         } else if(d>reach){
@@ -2878,7 +2886,7 @@ function updateStep(dt){
         e.moving = true;
         if(!e.boarChargeHit && dist(e,target) < e.r+target.r+8){
           e.boarChargeHit = true;
-          const chargeDmg = e.dmg*BOAR_CHARGE_DMG_MULT*TELE_DMG_MULT;
+          const chargeDmg = teleDmg(e, BOAR_CHARGE_DMG_MULT);
           const kb = null; // knockback removed (buggy)
           if(isFollowerTarget) applyFollowerDamage(g, target, chargeDmg, e);
           else playerDamage(g, chargeDmg, e, kb);
@@ -2924,7 +2932,7 @@ function updateStep(dt){
         e.moving = true;
         if(!e.chargeHit && dist(e,target) < e.r+target.r+8+BEAR_CHARGE_HIT_BONUS){
           e.chargeHit = true;
-          const chargeDmg = e.dmg*BEAR_CHARGE_DMG_MULT*TELE_DMG_MULT;
+          const chargeDmg = teleDmg(e, BEAR_CHARGE_DMG_MULT);
           if(isFollowerTarget) applyFollowerDamage(g, target, chargeDmg, e);
           else playerDamage(g, chargeDmg, e, e.type==='ram' ? {x:Math.cos(e.chargeDir)*85, y:Math.sin(e.chargeDir)*85} : null);   // v459: rams bowl you over
           g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#c98a4a'});
@@ -2939,7 +2947,7 @@ function updateStep(dt){
         if(e.chargeWindT<=0){ e.chargeState = 'charging'; e.chargeT = BEAR_CHARGE_DUR; e.chargeHit = false; e.moving = true; }
       } else {
         e.chargeCd -= dt;
-        if(e.chargeCd<=0 && d < BEAR_CHARGE_RANGE && d > e.r+target.r+meleeRangePad+20 && enemyLOS(g,e,target)){
+        if(e.chargeCd<=0 && d < (e.type==='ram' ? 300 : BEAR_CHARGE_RANGE) && d > e.r+target.r+meleeRangePad+20 && enemyLOS(g,e,target)){   // v490: rams charge from 300, not off screen
           e.chargeState = 'wind'; e.chargeWindT = BEAR_CHARGE_WIND; e.chargeHit = false; e.windT = 0;
           e.chargeDir = Math.atan2(target.y-e.y, target.x-e.x);
           e.chargeCd = BEAR_CHARGE_CD;
@@ -2947,6 +2955,8 @@ function updateStep(dt){
           g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#e0b070'});
         } else if(tickEnemyWindup(g, e, target, isFollowerTarget, e.r+target.r+meleeRangePad, dt)){
           // mid wind-up (claw swipe) -- the shared telegraph is drawn in drawEnemyTells
+        } else if(e.type==='ram' && !isFollowerTarget && wolfCircle(g, e, target, d, dt, chillMult, room)){
+          // v490: rams hold off and circle while a herd-mate is already butting you
         } else if(d>e.r+target.r+meleeRangePad){
           const ang = steerAngleTo(e, target.x, target.y, room.obstacles);
           e.x += Math.cos(ang)*e.speed*chillMult*dt; e.y += Math.sin(ang)*e.speed*chillMult*dt;
@@ -2974,7 +2984,7 @@ function updateStep(dt){
         e.moving = true;
         if(!e.zChargeHit && dist(e,target) < e.r+target.r+8){
           e.zChargeHit = true;
-          const chargeDmg = e.dmg*ZOMBIE_CHARGE_DMG_MULT*TELE_DMG_MULT;
+          const chargeDmg = teleDmg(e, ZOMBIE_CHARGE_DMG_MULT);
           if(isFollowerTarget) applyFollowerDamage(g, target, chargeDmg, e);
           else playerDamage(g, chargeDmg, e);
           g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#9fe6f5'});
@@ -3059,7 +3069,8 @@ function updateStep(dt){
       // further down in update().
       if(g.enemies[i].isBoss || g.enemies[i].isLairBoss) g.bossKilled = true;
       try{ bossRecipeDrop(g, g.enemies[i]); }catch(err){}   // v464
-      { const rk = bossRekillFlag(g.enemies[i]); if(rk && p[rk]) bossRekillRare(g, g.enemies[i]); }   // v489: re-killed bosses drop a rare instead of their quest item
+      { const rk = bossRekillFlag(g.enemies[i]); if(rk && p[rk]) bossRekillRare(g, g.enemies[i]); }
+      if(g.enemies[i].bkBoss && g.tower) g.tower.bkDeath = {x:g.enemies[i].x, y:g.enemies[i].y};   // v490: the Bandit King's chest and portal appear where he fell   // v489: re-killed bosses drop a rare instead of their quest item
       if(g.enemies[i].mastodon) huntBossKilled('hunt_mastodon');
       if(g.enemies[i].minotaur) huntBossKilled('hunt_minotaur');
       if(g.enemies[i].defiler) defilerSlain(g, g.enemies[i]);
@@ -3082,6 +3093,7 @@ function updateStep(dt){
       if(g.enemies[i].sapMarked && !g.enemies[i].soulTaken){ g.enemies[i].soulTaken = true; p.souls = Math.min(SOUL_CAP, (p.souls||0) + SOUL_SAP_SOULS_PER_KILL); checkDemonBindThreshold(g); }
       if(g.enemies[i].deathNova) specialDeathNova(g, g.enemies[i]);
       if(isGlobeBoss(g.enemies[i]) && !g.enemies[i]._globeDead){ g.enemies[i]._globeDead = true; dropGlobes(g, g.enemies[i], 2); }
+      if(g.enemies[i].ftMapCarrier && !p.ftMapFound){ p.ftMapFound = true; showMsg('Forgotten Tower map found \u2014 every floor is now charted', 3.4, '#e8c44a'); saveGame(); }   // v490
       if(g.enemies[i].hwMapCarrier && !p.hwMapFound){ p.hwMapFound = true; showMsg('Highward map found — every floor is now charted', 3.4, '#e8c44a'); saveGame(); }
       if(g.enemies[i].mapBrute && room.subzone==='keep'){ p.keepMaps = p.keepMaps || {}; if(!p.keepMaps[room.kpArea]){ p.keepMaps[room.kpArea] = true; showMsg('Floor map found \u2014 this floor is now charted', 3.4, '#e8c44a'); saveGame(); } }
       if(room.floorRects && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; showMsg('Dungeon map found', 2.8, '#e8c44a'); }
@@ -3089,7 +3101,7 @@ function updateStep(dt){
         dropLoot(g, dp.x, dp.y, g.enemies[i].type, g.enemies[i].isLairBoss, g.enemies[i]);
         partsMaybeDrop(g, g.enemies[i]);
         if(uq(g.player,'uq_crater')){ g.player.apexStacks = Math.min(5,(g.player.apexStacks||0)+1); g.player.apexT = 6; } }
-      { const ml0 = g.enemies[i].ml || g.depth; gainXp(g, Math.max(1, Math.round(xpForKill(ml0, !!(g.enemies[i].isBoss||g.enemies[i].isLairBoss)) * (g.enemies[i].elite ? XP_ELITE_MULT : g.enemies[i].magic ? XP_MAGIC_MULT : 1) * (g.enemies[i].xpMul||1) * xpLevelMult(g.player.level, ml0)))); }
+      { const ml0 = g.enemies[i].ml || g.depth; gainXp(g, Math.max(1, Math.round(xpForKill(ml0, !!(g.enemies[i].isBoss||g.enemies[i].isLairBoss)) * (g.enemies[i].elite ? XP_ELITE_MULT : g.enemies[i].magic ? XP_MAGIC_MULT : 1) * (g.enemies[i].xpMul||1) * ((g.enemies[i].isBoss||g.enemies[i].isLairBoss) ? 1 : (g.enemies[i].hpXp||1)) * xpLevelMult(g.player.level, ml0)))); }
       if(g.player.cls==='mystic') gainResource(g.player, g.player.maxMp*MANA_ON_KILL_PCT);
       if(g.player.lifeOnKill>0 && g.player.hp>0) g.player.hp = Math.min(g.player.maxHp, g.player.hp + g.player.lifeOnKill*(1+g.player.level*0.1));
       if(g.player.manaOnKill>0) gainResource(g.player, g.player.manaOnKill*(1+g.player.level*0.1));
@@ -3427,7 +3439,6 @@ function updateStep(dt){
     const nearForestGate = dist(p, g.mtn.forestGate) < g.mtn.forestGate.r + p.r + 22;
     const nearMineGate = dist(p, g.mtn.mineGate) < g.mtn.mineGate.r + p.r + 22;
     const nearMtnWaypoint = dist(p, g.mtn.waypoint) < g.mtn.waypoint.r + p.r + 24;
-    if(nearMtnWaypoint) discoverWaypoint('reachedMountainPass');
     const nearSummitGate = dist(p, g.mtn.summitGate) < g.mtn.summitGate.r + p.r + 22;
     const nearFrostGate = dist(p, g.mtn.frostGate) < g.mtn.frostGate.r + p.r + 22;
     updateInteractPrompt(nearForestGate ? 'toForestFromMountain' : nearMineGate ? 'toMountainDepths' : nearFrostGate ? (snowWallOpen(p) ? 'toFrosthold' : 'snowWall') : nearSummitGate ? 'toIcySummit' : nearMtnWaypoint ? 'waypointMtn' : null);
@@ -3440,7 +3451,7 @@ function updateStep(dt){
     if(rrKind==='redridgeEastSealed' && rrBeaconCount(p)>=3) rrKind = 'redridgeBridgeOpen';
     if(!rrKind && rr.camp && dist(p, rr.camp) < rr.camp.r + p.r + 30) rrKind = 'wayfarer';
     if(!rrKind){ for(const tw of rr.towers){ if(dist(p, tw.door) < tw.door.r + p.r + 22){ rrKind = 'rrTower'; g._rrTowerNear = tw; break; } } }
-    if(rr.waypoint && dist(p, rr.waypoint) < rr.waypoint.r + p.r + 24){ discoverWaypoint('reachedRedridge'); if(!rrKind) rrKind = 'waypointRedridge'; }
+    if(rr.waypoint && dist(p, rr.waypoint) < rr.waypoint.r + p.r + 24){ if(!rrKind) rrKind = 'waypointRedridge'; }
     updateInteractPrompt(rrKind);
   } else if(g.scene==='highlands'){
     updatePortalChoice(false);
@@ -3448,7 +3459,7 @@ function updateStep(dt){
     updateHighlandsWeather(g, dt);
     let hk = null;
     for(const gt of g.hl.gates){ if(dist(p, gt) < gt.r + p.r + 22){ hk = gt.act; break; } }
-    if(dist(p, g.hl.waypoint) < g.hl.waypoint.r + p.r + 24){ discoverWaypoint('reachedHighlands'); if(!hk) hk = 'waypointHighlands'; }
+    if(dist(p, g.hl.waypoint) < g.hl.waypoint.r + p.r + 24){ if(!hk) hk = 'waypointHighlands'; }
     updateInteractPrompt(hk);
   } else if(g.scene==='redcrater'){
     updatePortalChoice(false);
@@ -3464,7 +3475,7 @@ function updateStep(dt){
     updatePortalChoice(false);
     let fhKind = null;
     for(const gt of g.fh.gates){ if(dist(p, gt) < gt.r + p.r + 22){ fhKind = gt.act; break; } }
-    if(dist(p, g.fh.waypoint) < g.fh.waypoint.r + p.r + 24){ discoverWaypoint('reachedFrostholdWp'); if(!fhKind) fhKind = 'waypointFrosthold'; }
+    if(dist(p, g.fh.waypoint) < g.fh.waypoint.r + p.r + 24){ if(!fhKind) fhKind = 'waypointFrosthold'; }
     if(fhKind==='toFhDungeon' && !fhDungeonUnlocked(p)) fhKind = hasFhKeyItem(p) ? 'fhDungeonKeyhole' : 'fhDungeonLocked';
     if(fhKind==='toRedridge' && !redridgeWallOpen(p)) fhKind = 'redridgeWall';
     updateInteractPrompt(fhKind);
@@ -3474,12 +3485,15 @@ function updateStep(dt){
     let izKind = null;
     for(const gt of iz.gates){ if(dist(p, gt) < gt.r + p.r + 22){ izKind = gt.act; break; } }
     if(iz.waypoint && dist(p, iz.waypoint) < iz.waypoint.r + p.r + 24){
-      discoverWaypoint('reachedIcySummit');
       if(!izKind) izKind = 'waypointIcy';
     }
     if(iz.altar && (p.shrineStage||0)<3 && !izKind && dist(p, iz.altar) < iz.altar.r + p.r + 26){
       const sst = p.shrineStage||0;
       izKind = sst>=2 ? 'shrineAltar' : (sst===0 && findRunestone(p)) ? 'shrineInsert' : 'shrineSealed';
+    }
+    if(iz.kind==='shrine' && iz.altar && (p.shrineStage||0)>=3 && !izKind){   // v490: a portal home once the runestone is awakened
+      iz.homePortal = iz.homePortal || {x:iz.altar.x, y:iz.altar.y+170, r:26};
+      if(dist(p, iz.homePortal) < iz.homePortal.r + p.r + 22) izKind = 'shrineToTown';
     }
     if(iz.kind==='shrine' && iz.protectorsSpawned && !iz.protectorsDown && !g.enemies.some(e=>e.prot && e.hp>0)){
       iz.protectorsDown = true;
@@ -3494,7 +3508,7 @@ function updateStep(dt){
     updateInteractPrompt(izKind);
     // Icy Summit: bitter cold -- flat 1 HP per second, ignores cold resistance.
     if(iz.cold && !g.over && p.hp>0){
-      p.hp -= COLD_DPS*dt;   // flat 1 HP/sec, ignores cold resist
+      p.hp -= Math.max(COLD_DPS, (p.maxHp||0)*COLD_DPS_PCT)*dt;   // ignores cold resist (v490: scales with life now)
       g.coldT = (g.coldT||0) + dt;
       if(p.hp<=0){ p.hp=0; endGame(g); }
     }
@@ -3519,7 +3533,6 @@ function updateStep(dt){
     const nearS = dist(p, rv.southGate) < rv.southGate.r + p.r + 22;
     const nearC = dist(p, rv.caveGate) < rv.caveGate.r + p.r + 22;
     const nearW = dist(p, rv.waypoint) < rv.waypoint.r + p.r + 24;
-    if(nearW) discoverWaypoint('reachedRiverValley');
     updateInteractPrompt(nearN ? 'toForestFromRiver' : nearS ? 'toSunlitPlainsFromRiver' : nearC ? 'toMinotaurCave' : nearW ? 'waypointRiver' : null);
   } else if(g.scene==='sunlitplains'){
     // Sunlit Plains: same open-zone shape as the Forest/Mountain Pass --
@@ -3533,7 +3546,6 @@ function updateStep(dt){
     updatePortalChoice(false);
     const nearForestGate = dist(p, g.sun.forestGate) < g.sun.forestGate.r + p.r + 22;
     const nearSunWaypoint = dist(p, g.sun.waypoint) < g.sun.waypoint.r + p.r + 24;
-    if(nearSunWaypoint) discoverWaypoint('reachedSunlitPlains');
     const nearWestGate = dist(p, g.sun.westGate) < g.sun.westGate.r + p.r + 22;
     const nearEastGate = dist(p, g.sun.eastGate) < g.sun.eastGate.r + p.r + 22;
     const nearSouthGate = dist(p, g.sun.southGate) < g.sun.southGate.r + p.r + 22;
@@ -3582,7 +3594,7 @@ function updateStep(dt){
     else if(t.floor>1 && dist(p, t.entrance) < t.entrance.r + p.r + 22) lhKind = 'lighthouseStairsDown';
     else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) lhKind = 'lighthouseStairsUp';
     if(t.maze && t.stairs && !t.stairsSeen && dist(p, t.stairs) < 520) t.stairsSeen = true;
-    else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ if(t.ft){ lhKind = 'waypointForgottenTower'; discoverWaypoint('reachedForgottenTower'); } else { lhKind = 'waypointLighthouse1'; discoverWaypoint('reachedLighthouseTower'); } }
+    else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ if(t.ft){ lhKind = 'waypointForgottenTower'; } else { lhKind = 'waypointLighthouse1'; } }
     // v94 (quest feature): the rooftop's beacon starts off (p.lighthouseBeaconOn
     // false) -- while it's off, walking up to it shows the same small
     // interact-button prompt every other interactable (stash/vendor/
@@ -3606,11 +3618,12 @@ function updateStep(dt){
     // v237: floors 1-4 never spawn a portal (stairs only). The rooftop's portal appears only once the
     // floor is clear AND the beacon is lit, tucked in the far corner so nobody walks into it by accident.
     if(!t.clearPortal && g.enemies.length===0 && !t.ft && t.rooftop && t.beacon){   // v486: a portal home as soon as the King and his crew are dead
-      t.clearPortal = {x:clamp(t.beacon.x - 100, 60, t.w-60), y:clamp(t.beacon.y + 80, 60, t.h-60), r:24, toTown:true};
+      const at = t.bkDeath || {x:t.beacon.x - 30, y:t.beacon.y + 20};
+      t.clearPortal = fixLootSpot(g, {x:clamp(at.x + 110, 60, t.w-60), y:clamp(at.y + 50, 60, t.h-60), r:24, toTown:true});
       showMsg('A portal to Mistfall opens.', 2.6, '#9fd8ff');
     }
     if(t.rooftop && !t.ft && g.enemies.length===0){
-      if(!p.lighthouseChestLooted && !g.chest) g.chest = {x:t.beacon.x + 70, y:t.beacon.y + 60, r:20, opened:false};
+      if(!p.lighthouseChestLooted && !g.chest){ const at = t.bkDeath || {x:t.beacon.x + 70, y:t.beacon.y + 60}; g.chest = fixLootSpot(g, {x:clamp(at.x, 60, t.w-60), y:clamp(at.y, 60, t.h-60), r:20, opened:false}); }
       if(!p.lighthouseFloor5Cleared){
         p.lighthouseFloor5Cleared = true;
         saveGame();
@@ -3647,7 +3660,6 @@ function updateStep(dt){
     updatePortalChoice(false);
     const nearSunlitGate = dist(p, g.lake.sunlitGate) < g.lake.sunlitGate.r + p.r + 22;
     const nearLakeWaypoint = !g.lake.waypoint.off && dist(p, g.lake.waypoint) < g.lake.waypoint.r + p.r + 24;
-    if(nearLakeWaypoint) discoverWaypoint('reachedLakesideRuins');
     const nearRuinsSpot = dist(p, g.lake.ruinsSpot) < g.lake.ruinsSpot.r + p.r + 22;
     const ruinsKind = nearRuinsSpot ? (p.ruinsEntranceOpen ? 'toAncientRuins' : (canStudyRuins(p) ? 'studyRuins' : null)) : null;
     const nearMarshGate = dist(p, g.lake.marshGate) < g.lake.marshGate.r + p.r + 22;
@@ -3676,7 +3688,6 @@ function updateStep(dt){
     const nearW = dist(p, bm.westGate) < bm.westGate.r + p.r + 22;
     const nearE = dist(p, bm.eastGate) < bm.eastGate.r + p.r + 22;
     const nearWp = dist(p, bm.waypoint) < bm.waypoint.r + p.r + 24;
-    if(nearWp) discoverWaypoint('reachedBlackMarsh');
     const nearC = dist(p, bm.cauldron) < bm.cauldron.r + p.r + 34;
     const cq = getQuest(p,'witch_find');
     const cauldronUsable = p.witchRescued || (cq && cq.status==='active');
@@ -3691,7 +3702,6 @@ function updateStep(dt){
     updatePortalChoice(false);
     const nearSunlitGate = dist(p, g.cem.sunlitGate) < g.cem.sunlitGate.r + p.r + 22;
     const nearCemWaypoint = !!g.cem.waypoint && dist(p, g.cem.waypoint) < g.cem.waypoint.r + p.r + 24;
-    if(nearCemWaypoint) discoverWaypoint('reachedCursedCemetery');
     const nearTomb = dist(p, g.cem.tomb) < g.cem.tomb.r + p.r + 26;
     const nearStatue = !p.cemeteryCleared && !(g.cem.evt && g.cem.evt.stage>0) && dist(p, g.cem.statue) < g.cem.statue.r + p.r + 30;
     updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromCemetery' : nearCemWaypoint ? 'waypointCemetery' : nearTomb ? (p.cemeteryCleared ? 'toDarkCrypt' : 'tombSealed') : nearStatue ? 'cemStatue' : null);
@@ -3707,7 +3717,6 @@ function updateStep(dt){
     updatePortalChoice(false);
     const nearCemeteryGate = dist(p, g.crypt.cemeteryGate) < g.crypt.cemeteryGate.r + p.r + 22;
     const nearCryptWaypoint = dist(p, g.crypt.waypoint) < g.crypt.waypoint.r + p.r + 24;
-    if(nearCryptWaypoint) discoverWaypoint('reachedDarkCrypt');
     // (v120) once the chest is looted a portal appears beside it, leading back to the cemetery
     if(g.crypt.bossDone && p.inscriptionTaken && !g.crypt.returnPortal){   // v326: the portal only opens once the sarcophagus has been searched for the Templar Inscription
       g.crypt.returnPortal = {x:g.crypt.chestSpot.x+70, y:g.crypt.chestSpot.y, r:26};
@@ -3779,7 +3788,6 @@ function updateStep(dt){
     const nearRP = !!(R.returnPortal && dist(p, R.returnPortal) < R.returnPortal.r + p.r + 22);
     const nearHusk = !!(R.husk && !R.husk.taken && dist(p, R.husk) < R.husk.r + p.r + 34);
     const nearFW = !!(R.waypoint && dist(p, R.waypoint) < R.waypoint.r + p.r + 24);
-    if(nearFW) discoverWaypoint('reachedFhdWp');
     updateFhdHazards(g, dt);
     updateInteractPrompt(nearHusk ? 'takeRunestone2' : nearFW ? 'waypointFhd' : nearE ? (R.floor===1 ? 'fhdToKeep' : 'fhdUp') : nearRP ? 'fhdPortalKeep' : nearDn ? 'fhdDown' : null);
   } else if(g.scene==='ancientruins'){
@@ -3788,7 +3796,6 @@ function updateStep(dt){
     const nearEntrance = dist(p, R.entrance) < R.entrance.r + p.r + 22;
     const nearRW = R.waypoint && dist(p, R.waypoint) < R.waypoint.r + p.r + 24;
     const nearDown = R.stairsDown && dist(p, R.stairsDown) < R.stairsDown.r + p.r + 22;
-    if(nearRW) discoverWaypoint('reachedAncientRuins');
     // v413: the stairway to the Flooded Temple opens only once the Templar Revenant is dead (older saves that already reached the temple or looted the chest keep it)
     if(g.bossKilled && !p.ruinsWarlordSlain){ p.ruinsWarlordSlain = true; }
     if(R.chestSpot && !R.templeStairs && (g.bossKilled || p.ruinsWarlordSlain || p.ancientRuinsChestLooted || p.reachedAncientRuins)){

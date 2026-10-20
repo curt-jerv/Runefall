@@ -38,8 +38,7 @@ function defilerSlain(g, e){
   for(const x of g.enemies) if(x.noReward) x.hp = 0;
   if(p.defilerSlain && p.inscriptionTaken){ bossMsg('THE GRAVEROBBER FALLS', 'The possession breaks once more', 3.2); return; }   // v489: a re-kill
   p.defilerSlain = true;
-  showMsg('The possession breaks. Search the sarcophagus.', 3.2, '#c8b8ff');
-  setTimeout(()=>{ try{ showBigMsg('Return to the graverobber camp', '', 4.0, true); }catch(err){} }, 2600);   // v453
+  showBigMsg('Inspect the crypt', 'The possession breaks -- search the sarcophagus', 4.0, true);   // v490: then 'Return to the graverobbers' once it is searched
   const q = getQuest(p, QUEST_GRAVEROBBERS.id);
   if(q && q.status==='active'){ q.desc = QUEST_GRAVEROBBERS.descDone; q.progress = q.total; }
   npcMark(p, 'graverobbers', true);
@@ -58,6 +57,7 @@ function inspectSarcophagus(){
     if(!getQuest(p, 'scholar_templar') && !p.scholarMeet){ if(!p.quests) p.quests = []; p.quests.push({id:'scholar_templar', name:'Templar Research', desc:'You found an inscription in a Templar crypt. The scholar in the Tavern may be able to read it.', status:'active', progress:0, total:1}); npcMark(p, 'scholar', true); updateQuestBadge(); }   // v456
     showNpcText('The Sarcophagus', 'The lid was shoved aside from the inside. The stone is scored with deep claw marks and the Templar seal on its rim is shattered outward -- whatever slept here did not stay dead. It clawed its way out, long ago. Carved into the inner wall is an inscription, still legible. You take a rubbing.', 'Take the rubbing');
     showMsg('Obtained: Templar Inscription', 2.6, '#c8b0ff'); saveGame();
+    setTimeout(()=>{ try{ showBigMsg('Return to the graverobbers', '', 4.0, true); }catch(err){} }, 400);   // v490
   } else showNpcText('The Sarcophagus', 'Empty. The Templar seal is broken outward -- something escaped.', 'Close');
 }
 function graverobbersMark(p){ const q = getQuest(p, QUEST_GRAVEROBBERS.id); return !q ? !p.defilerSlain : (q.status==='active' && !!p.defilerSlain); }
@@ -98,7 +98,7 @@ function talkWayfarer(){
   if(!p.wayfarerMet){
     showNpcText('The Last Wayfarer', '"Another living face. That fortress above is Highward -- its sky-bridge is the only way across. Light the three old watchtower beacons and it will hold. I’ll mark them on your map."', 'I’ll light them', ()=>{
       p.wayfarerMet = true;
-      addQuestOnce(p, 'rr_towers', 'The Three Beacons', 'Light the three Templar watchtower beacons in Redridge Canyon.', 3);
+      { const q = addQuestOnce(p, 'rr_towers', 'The Three Beacons', 'Light the three Templar watchtower beacons in Redridge Canyon.', 3); q.progress = Math.max(q.progress||0, rrBeaconCount(p)); }   // v490: counts beacons already lit
       npcMark(p, 'wayfarer', false);
       showMsg('New quest: The Three Beacons', 3.0); updateQuestBadge(); saveGame();
     });
@@ -136,23 +136,31 @@ function talkScholar(){
       npcMark(p, 'scholar', false);
       showMsg('New quest: The Stone Draws East', 3.0); updateQuestBadge(); saveGame();
     });
-  } else if(p.fhDungeonDone && !p.scholarWarnedRR){
-    showNpcText('Scholar', '"Two stones now, and they pull east, toward Redridge Canyon. Be careful."', 'Close', ()=>{
+  } else if(p.hwRuneTaken && !p.scholarThirdRead){   // v490: the third runestone
+    showNpcText('Scholar', '"So the legends seem true. When the world needs it, these stones come alive, to hold back some unknown evil of the world. If it\'s as you say, that the Shadow Keep is occupied again, that must be the answer. Good luck, adventurer."', 'Close', ()=>{
+      p.scholarThirdRead = true; p.scholarWarnedRR = true; npcMark(p, 'scholar', false); saveGame();
+    });
+  } else if(p.fhDungeonDone && !p.scholarWarnedRR){   // v490: the second runestone
+    showNpcText('Scholar', '"Amazing -- it seems the shrine in the mountain activated this runestone as well. The ancient Highward fortress, built into the side of Redridge Canyon, can tell us more about what these runestones are."', 'Close', ()=>{
       p.scholarWarnedRR = true; npcMark(p, 'scholar', false); saveGame();
+    });
+  } else if(p.fhDungeonKey && !p.fhDungeonDone && !p.scholarKeyTalk){   // v490: after the Commander's key
+    showNpcText('Scholar', '"So it seems the dwarves might have a runestone of their own, locked away in their dungeon. Descend through their fortress and recover it. Perhaps it will reveal more secrets about their purpose."', 'Close', ()=>{
+      p.scholarKeyTalk = true; npcMark(p, 'scholar', false); saveGame();
     });
   } else if(p.scholarMeet){
     const rs = findRunestone(p);
     if(rs && !p.scholarRead){
-      showNpcText('Scholar', '"It seems there is a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 Ascend the mountain from the Dark Forest and see what you find. I\'ve heard an ancient shrine is atop the summit. Good luck, adventurer."', 'Continue', ()=>{
+      showNpcText('Scholar', '"It seems there is a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
         p.scholarRead = true;
         { const si = classRewardItem(p, Math.max(p.level||1, 23), 'reward'); forceAddToBag(p, si); p.gold += 300; } bagPulse();
         const q = getQuest(p, 'scholar_ruins'); if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'You found the first runestone below the lake.'; }
-        if(!getQuest(p, 'shrine_stone')) p.quests.push({id:'shrine_stone', name:'The Mountain Judges', desc:'\u2018From stone to stone, the Mountain will judge its bearer.\u2019 Ascend the mountain from the Dark Forest and see what you find.', status:'active', progress:0, total:1});
+        if(!getQuest(p, 'shrine_stone')) p.quests.push({id:'shrine_stone', name:'The Mountain Judges', desc:'\u2018From stone to stone, the Mountain will judge its bearer.\u2019 Find the ancient altar atop the mountain summit: through the Black Marsh and the Barren Highlands to the Mountain Pass, then up.', status:'active', progress:0, total:1});
         npcMark(p, 'scholar', false);
         showMsg('New quest: The Mountain Judges (+ class gear and 300 gold)', 3.0); updateQuestBadge(); saveGame();
       });
     } else if(p.scholarRead && (p.shrineStage||0)>=3) showNpcText('Scholar', '"The stone pulls east. Climb the Frosthold Tower and see what the dwarves guard."', 'Close');
-    else if(p.scholarRead) showNpcText('Scholar', '"\u2018From stone to stone, the Mountain will judge its bearer.\u2019 Ascend the mountain from the Dark Forest."', 'Close');
+    else if(p.scholarRead) showNpcText('Scholar', '"There is an ancient altar atop the mountain summit. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way."', 'Close');
     else showNpcText('Scholar', '"Descend through the ancient ruins and share any findings with me."', 'Close');
   } else if(!p.scholarMet){
     showNpcText('Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close', ()=>{
@@ -179,6 +187,14 @@ function drawSimpleNpcIso(n, clock, o){
   else { roundRect(-7.5,-31,15,20,4); ctx.fill(); ctx.stroke(); }
   ctx.fillStyle = '#d2a57a'; ctx.beginPath(); ctx.arc(0,-36,5.6,0,7); ctx.fill();
   if(n.hood){ ctx.fillStyle = n.hood; ctx.beginPath(); ctx.arc(0,-37,6.6,3.14,6.28); ctx.lineTo(6.6,-31); ctx.lineTo(-6.6,-31); ctx.closePath(); ctx.fill(); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.ellipse(0,-35,4,3.6,0,0,7); ctx.fill(); ctx.fillStyle = '#d2a57a'; ctx.beginPath(); ctx.arc(0,-34.4,3,0,3.14); ctx.fill(); }
+  else if(n.hat==='captain'){   // v490: grey beard, peaked navy cap with a gold band, brass buttons
+    ctx.fillStyle = '#b8b4aa'; ctx.beginPath(); ctx.moveTo(-5,-36); ctx.quadraticCurveTo(0,-26,5,-36); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#1a120c'; ctx.fillRect(-2.6,-38,1.4,1.4); ctx.fillRect(1.2,-38,1.4,1.4);
+    ctx.fillStyle = '#1c2236'; ctx.beginPath(); ctx.ellipse(0,-41,7,3.2,0,3.14,6.28); ctx.fill(); ctx.fillRect(-6,-42,12,2.6);
+    ctx.fillStyle = '#d8b04a'; ctx.fillRect(-6,-40.2,12,1.2);
+    ctx.fillStyle = '#10141f'; ctx.beginPath(); ctx.ellipse(1.5,-39.2,6.5,1.6,0,0,7); ctx.fill();
+    ctx.fillStyle = '#d8b04a'; for(const by of [-27,-22,-17]){ ctx.beginPath(); ctx.arc(0,by,0.9,0,7); ctx.fill(); }
+  }
   else { ctx.fillStyle = '#d8d4c8'; ctx.beginPath(); ctx.arc(0,-38,5.8,3.3,6.1); ctx.fill(); ctx.fillStyle = '#1a120c'; ctx.fillRect(-2.6,-37,1.4,1.4); ctx.fillRect(1.2,-37,1.4,1.4); ctx.strokeStyle = '#2a2418'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(-2,-36.4,2,0,7); ctx.arc(2,-36.4,2,0,7); ctx.stroke(); }
   if(n.tool==='shovel'){ ctx.strokeStyle = '#5a3a1c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(11,-34); ctx.lineTo(12,-1); ctx.stroke(); ctx.fillStyle = '#8a8f98'; ctx.beginPath(); ctx.moveTo(9,-3); ctx.lineTo(15,-3); ctx.lineTo(14,3); ctx.lineTo(10,3); ctx.closePath(); ctx.fill(); }
   else if(n.tool==='lantern'){ const fl = 0.7+0.3*Math.sin(t*9+n.id); ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(11,-26); ctx.lineTo(11,-20); ctx.stroke(); ctx.fillStyle = 'rgba(255,190,90,'+fl+')'; roundRect(8,-20,6,7,1.5); ctx.fill(); ctx.strokeStyle = '#3a2a1a'; ctx.stroke(); }
@@ -270,42 +286,109 @@ function spawnSquid(g, pos){
   e.aggroRange = 480; e.leashRange = 800; e.wanderRadius = 0; e.armor = 2;
   return e;
 }
-const TEMPLE_W = 4600, TEMPLE_H = 1700, TEMPLE_CY = 850, TEMPLE_DEPTH = 25;
-// v456: four halls of an old drowned temple -- an entry hall flanked by flooded aisles, a pillared nave over a great
-// reflecting pool, a flooded cloister crossed by causeways, and the apse with its altar and the stair down.
+const TEMPLE_W = 4600, TEMPLE_H = 2600, TEMPLE_DEPTH = 25;
+// v490: the Flooded Temple is no longer one straight line of halls. Each visit it is a new warren of flooded chambers
+// (a 4x3 grid with a few cells left as solid rock) joined by winding passages: a random spanning tree plus a couple of
+// loops. You arrive on the west side; the stair down waits in one of the chambers furthest from the entrance.
+// The layout keeps its seed while you go down to the Sunken Depths and back (see enterFloodedTemple).
+function templeReachable(R, blocked, from, targets){
+  const m = R.floorMask, C = m.cols, CELL = m.CELL, seen = new Uint8Array(C*m.rows);
+  const open = (ix,iy)=> ix>=0 && iy>=0 && ix<C && iy<m.rows && m.data[iy*C+ix] && !blocked(ix*CELL+CELL/2, iy*CELL+CELL/2);
+  const s = Math.floor(from.y/CELL)*C + Math.floor(from.x/CELL); if(s<0 || s>=seen.length) return false;
+  const q = [s]; seen[s] = 1;
+  for(let h=0; h<q.length; h++){ const i = q[h], x = i%C, y = (i/C)|0; for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx = x+dx, ny = y+dy; if(!open(nx,ny)) continue; const j = ny*C+nx; if(!seen[j]){ seen[j] = 1; q.push(j); } } }
+  return targets.every(t=>seen[Math.floor(t.y/CELL)*C + Math.floor(t.x/CELL)]);
+}
 function makeFloodedTemple(){
-  const w = TEMPLE_W, h = TEMPLE_H, cy = TEMPLE_CY, rnd = subSeeded(5531);
-  const entrance = {x:70, y:cy, r:34};
-  const obstacles = [], pools = [], cols = [];
-  const wallPal = ['#5f6e68','#26302d','#3a4743'];
-  const wall = (x,y,ww,hh)=>obstacles.push({x, y, w:ww, h:hh, mazeWall:true});
-  const water = (x,y,ww,hh)=>{ const q = {x, y, w:ww, h:hh}; pools.push(q); obstacles.push({x, y, w:ww, h:hh, isWater:true}); };
-  const col = (x,y,sz)=>{ const o = {x:Math.round(x-sz/2), y:Math.round(y-sz/2), w:sz, h:sz, col:['#a7b3ab','#4f5a55','#76827b'], hz:96, templeCol:true}; obstacles.push(o); cols.push(o); };
-  // dividing walls with a wide doorway in the middle (the causeway runs straight through)
-  for(const wx of [1150, 2350, 3550]){ wall(wx, 0, 46, cy-150); wall(wx, cy+150, 46, h-cy-150); }
-  // hall 1: flooded side aisles with a colonnade on each side of the walkway
-  water(240, 90, 860, 330); water(240, h-420, 860, 330);
-  for(let x=360; x<1100; x+=170){ col(x, cy-210, 54); col(x, cy+210, 54); }
-  // hall 2: the nave -- a great reflecting pool split by a causeway, ringed by columns
-  water(1260, 110, 980, cy-110-110); water(1260, cy+110, 980, h-cy-110-110);
-  for(let x=1320; x<2250; x+=180){ col(x, 70, 50); col(x, h-70, 50); }
-  // hall 3: the cloister -- four flooded quarters around a cross of causeways, with stepping-stone pillars
-  const hx0 = 2460, hx1 = 3480, mx = (hx0+hx1)/2;
-  water(hx0, 100, mx-90-hx0, cy-100-100); water(mx+90, 100, hx1-mx-90, cy-100-100);
-  water(hx0, cy+100, mx-90-hx0, h-cy-100-100); water(mx+90, cy+100, hx1-mx-90, h-cy-100-100);
-  for(const [x,y] of [[mx-150,cy-150],[mx+150,cy-150],[mx-150,cy+150],[mx+150,cy+150]]) col(x, y, 48);
-  // hall 4: the apse -- shallow channels along both walls, columns guarding the altar
-  water(3660, 80, 760, 220); water(3660, h-300, 760, 220);
-  for(const [x,y] of [[3800,cy-260],[3800,cy+260],[4100,cy-300],[4100,cy+300],[4380,cy-220],[4380,cy+220]]) col(x, y, 58);
-  const stairsDown = {x:w-250, y:cy, r:30};
-  const statues = [{x:620,y:cy-110},{x:620,y:cy+110},{x:mx,y:cy-330},{x:mx,y:cy+330},{x:4250,y:cy-120},{x:4250,y:cy+120}];
-  const braziers = [{x:1180+200,y:cy-90},{x:1180+200,y:cy+90},{x:2330-60,y:cy-90},{x:2330-60,y:cy+90},{x:3580+80,y:cy-100},{x:3580+80,y:cy+100}];
-  for(const st of statues) obstacles.push({x:st.x-18, y:st.y-14, w:36, h:28, isProp:true});
-  obstacles.push({x:w-420-44, y:cy-26, w:88, h:52, isProp:true});
-  const room = { w, h, obstacles, subzone:'temple', waypoint:{x:300, y:cy-140, r:22}, entrance, entranceSide:'left', entranceSpot:{x:entrance.x+90, y:cy}, stairsDown, pools, rocks:[], name:'Flooded Temple',
-    wallPal, pal:['#3e4a46','#36423e','#47554f','#303b37'], templeDeco:{statues, braziers, altar:{x:w-420, y:cy}} };
+  const w = TEMPLE_W, h = TEMPLE_H, g = game;
+  const seed = (g && g.templeSeed) || (1 + Math.floor(Math.random()*1e9)), rnd = subSeeded(seed), saveRand = Math.random;
+  Math.random = rnd;
+  let room, waypoint = null;
+  try{
+    const COLS = 4, ROWS = 3, cw = w/COLS, ch = h/ROWS, ri = (a,b)=>a+Math.floor(rnd()*(b-a+1));
+    const entRow = ri(0, ROWS-1), entId = entRow*COLS;
+    const nb = i=>{ const c = i%COLS, r = (i/COLS)|0, o = []; if(c>0) o.push(i-1); if(c<COLS-1) o.push(i+1); if(r>0) o.push(i-COLS); if(r<ROWS-1) o.push(i+COLS); return o; };
+    // leave 2-3 cells as solid rock, as long as the rest stays connected
+    const keep = new Set(Array.from({length:COLS*ROWS}, (_,i)=>i));
+    const connected = ()=>{ const seen = new Set([entId]), q = [entId]; while(q.length){ const i = q.pop(); for(const n of nb(i)) if(keep.has(n) && !seen.has(n)){ seen.add(n); q.push(n); } } return seen.size===keep.size; };
+    for(let k=0, t=0, drop=ri(2,3); k<drop && t<60; t++){ const i = ri(0, COLS*ROWS-1); if(i===entId || !keep.has(i)) continue; keep.delete(i); if(connected()) k++; else keep.add(i); }
+    const ids = [entId, ...[...keep].filter(i=>i!==entId)];
+    const idx = new Map(ids.map((id,k)=>[id,k]));
+    const chs = ids.map(id=>{
+      const c = id%COLS, r = (id/COLS)|0, ent = id===entId;
+      const rx = ent ? 230 : 250 + rnd()*90, ry = ent ? 200 : 205 + rnd()*70;
+      const x = clamp((c+0.5)*cw + (rnd()-0.5)*260, rx+160, w-rx-160), y = clamp((r+0.5)*ch + (rnd()-0.5)*200, ry+160, h-ry-160);
+      return {x:ent ? Math.max(rx+170, x-120) : x, y, rx, ry, cell:id};
+    });
+    // passages: a random spanning tree over neighbouring cells, then two extra loops
+    const links = [], linked = new Set(), lk = (a,b)=>Math.min(a,b)+'-'+Math.max(a,b);
+    { const seen = new Set([entId]), stack = [entId];
+      while(stack.length){ const cur = stack[stack.length-1], nx = nb(cur).filter(n=>keep.has(n) && !seen.has(n)); if(!nx.length){ stack.pop(); continue; } const n = nx[ri(0,nx.length-1)]; seen.add(n); stack.push(n); links.push([idx.get(cur), idx.get(n)]); linked.add(lk(cur,n)); } }
+    for(let k=0, t=0; k<2 && t<60; t++){ const a = ids[ri(0,ids.length-1)], ns = nb(a).filter(n=>keep.has(n)), b = ns[ri(0, Math.max(0,ns.length-1))]; if(b==null || linked.has(lk(a,b))) continue; linked.add(lk(a,b)); links.push([idx.get(a), idx.get(b)]); k++; }
+    // the stair down: a chamber at (or next to) the greatest passage distance from the entrance
+    const depth = new Array(chs.length).fill(-1); depth[0] = 0;
+    { const q = [0]; while(q.length){ const i = q.shift(); for(const [a,b] of links){ const o = a===i ? b : b===i ? a : -1; if(o>=0 && depth[o]<0){ depth[o] = depth[i]+1; q.push(o); } } } }
+    const maxD = Math.max(...depth), far = chs.map((_,i)=>i).filter(i=>i>0 && depth[i]>=Math.max(1, maxD-1));
+    const sIdx = far[ri(0, far.length-1)];
+    const mains = chs.map((_,i)=>i).filter(i=>i>0);
+    const R = organicCaveBuild({kind:'temple', w, h, chambers:chs, links, tunnelR:100, entranceIdx:0, exitIdx:sIdx, mainIdx:mains});
+    const ent = chs[0], sc = chs[sIdx];
+    const openAround = (x,y,m)=> mineOpenAt(R,x,y) && mineOpenAt(R,x+m,y) && mineOpenAt(R,x-m,y) && mineOpenAt(R,x,y+m) && mineOpenAt(R,x,y-m);
+    const entrance = {x:ent.x-ent.rx*0.55, y:ent.y, r:34};
+    for(let k=0.55; k>0.1 && !openAround(entrance.x, entrance.y, 60); k-=0.08) entrance.x = ent.x-ent.rx*k;
+    for(const [ox,oy] of [[60,-0.55],[60,0.55],[140,-0.4],[140,0.4],[0,-0.45],[0,0.45]]){ const x = ent.x+ox, y = ent.y+oy*ent.ry; if(openAround(x,y,55)){ waypoint = {x, y, r:22}; break; } }
+    if(!waypoint) waypoint = {x:ent.x+80, y:ent.y-90, r:22};
+    const stairsDown = {x:sc.x+40, y:sc.y, r:30};
+    // flooded pools in the chambers (never on the entrance, waypoint or stair), each kept only if every chamber stays reachable
+    const pools = [], targets = [entrance, waypoint, stairsDown, ...chs.map(c=>({x:c.x, y:c.y}))];
+    const wetAt = (x,y,m)=> pools.some(q=>x>q.x-m && x<q.x+q.w+m && y>q.y-m && y<q.y+q.h+m);
+    for(let i=1;i<chs.length;i++){
+      const c = chs[i], n = i===sIdx ? 1 : 2;
+      for(let k=0;k<n;k++){
+        const a = rnd()*6.28, pw = Math.round(c.rx*(0.42+rnd()*0.25)), ph = Math.round(c.ry*(0.36+rnd()*0.22));
+        const cx = c.x+Math.cos(a)*c.rx*0.45, cy = c.y+Math.sin(a)*c.ry*0.45, q = {x:Math.round(cx-pw/2), y:Math.round(cy-ph/2), w:pw, h:ph};
+        let ok = true;
+        for(let yy=q.y-30; yy<=q.y+q.h+30 && ok; yy+=25) for(let xx=q.x-30; xx<=q.x+q.w+30; xx+=25) if(!mineOpenAt(R,xx,yy)){ ok = false; break; }
+        if(!ok || pools.some(o=>q.x<o.x+o.w+80 && q.x+q.w>o.x-80 && q.y<o.y+o.h+80 && q.y+q.h>o.y-80)) continue;
+        if([stairsDown, waypoint, entrance].some(t=>t.x>q.x-110 && t.x<q.x+q.w+110 && t.y>q.y-110 && t.y<q.y+q.h+110)) continue;
+        pools.push(q);
+        if(!templeReachable(R, (x,y)=>wetAt(x,y,22), {x:entrance.x+90, y:entrance.y}, targets)) pools.pop();
+      }
+    }
+    for(const q of pools) R.obstacles.push({x:q.x, y:q.y, w:q.w, h:q.h, isWater:true});
+    // columns, statues and braziers dress the chambers
+    const blockedAt = (x,y,m)=> wetAt(x,y,m) || R.obstacles.some(o=>!o.organic && !o.isWater && x>o.x-m && x<o.x+o.w+m && y>o.y-m && y<o.y+o.h+m);
+    const nearKey = (x,y,d)=> [entrance, waypoint, stairsDown].some(t=>Math.hypot(x-t.x, y-t.y) < d);
+    const statues = [], braziers = [];
+    for(let i=0;i<chs.length;i++){
+      const c = chs[i];
+      if(i>0 && c.rx>=285){
+        for(const [fx,fy] of [[-0.5,-0.42],[0.5,-0.42],[-0.5,0.42],[0.5,0.42]]){
+          if(rnd()<0.35) continue;
+          const x = c.x+fx*c.rx, y = c.y+fy*c.ry, sz = 50;
+          if(!openAround(x,y,70) || blockedAt(x,y,70) || nearKey(x,y,140)) continue;
+          const o = {x:Math.round(x-sz/2), y:Math.round(y-sz/2), w:sz, h:sz, col:['#a7b3ab','#4f5a55','#76827b'], hz:96, templeCol:true};
+          R.obstacles.push(o);
+          const cols = R.obstacles.filter(q=>q.templeCol);
+          if(!templeReachable(R, (px,py)=>wetAt(px,py,22) || cols.some(q=>px>q.x-22 && px<q.x+q.w+22 && py>q.y-22 && py<q.y+q.h+22), {x:entrance.x+90, y:entrance.y}, targets)) R.obstacles.pop();
+        }
+      }
+      for(let t=0;t<8;t++){
+        const a = rnd()*6.28, x = c.x+Math.cos(a)*c.rx*0.6, y = c.y+Math.sin(a)*c.ry*0.6;
+        if(!openAround(x,y,50) || blockedAt(x,y,40) || nearKey(x,y,120)) continue;
+        statues.push({x, y}); R.obstacles.push({x:x-18, y:y-14, w:36, h:28, isProp:true}); break;
+      }
+    }
+    for(const c of [ent, sc]) for(const s of [-1,1]){ const x = c.x+(c===ent?150:-110), y = c.y+s*95; if(mineOpenAt(R,x,y) && !blockedAt(x,y,20)) braziers.push({x, y}); }
+    let altar = {x:sc.x+40, y:sc.y-Math.min(150, sc.ry*0.55)};
+    if(!openAround(altar.x, altar.y, 60) || blockedAt(altar.x, altar.y, 60)) altar = {x:sc.x+40, y:sc.y+Math.min(150, sc.ry*0.55)};
+    if(openAround(altar.x, altar.y, 60) && !blockedAt(altar.x, altar.y, 60)) R.obstacles.push({x:altar.x-44, y:altar.y-26, w:88, h:52, isProp:true});
+    Object.assign(R, { subzone:'temple', entrance, entranceSide:'left', entranceSpot:{x:entrance.x+90, y:entrance.y}, stairsDown, pools, rocks:[], name:'Flooded Temple',
+      wallPal:['#5f6e68','#26302d','#3a4743'], pal:['#3e4a46','#36423e','#47554f','#303b37'], templeDeco:{statues, braziers, altar}, templeSeed:seed });
+    room = R;
+  } finally { Math.random = saveRand; }
   subFinish(room);
-  room.waypoint = {x:300, y:cy-140, r:22};   // v283: Ancient Ruins waypoint, just inside the temple
+  room.waypoint = waypoint;   // v283: Ancient Ruins waypoint, just inside the temple
   room.chestSpot = null;
   return room;
 }
@@ -345,15 +428,17 @@ function drawTempleAltarIso(a){
   ctx.restore();
 }
 function spawnFloodedTemple(g){
+  // v490: packs land on open cave floor (the temple is a cave-style floor mask now, not one open box)
   const room = g.room, av = [{x:room.entrance.x, y:room.entrance.y, r:380}];
+  const okAt = (pt)=> mineOpenAt(room,pt.x,pt.y) && !subWaterAt(room,pt.x,pt.y) && !posBlockedByObstacles(pt.x,pt.y,18,room.obstacles);
   for(let i=0;i<16;i++){
-    const c = subFreeSpot(room, 420, room.w-520, 120, room.h-120, av); if(!c) continue;
-    for(let k=0;k<3+Math.floor(Math.random()*2);k++){ const pt = {x:c.x+rand(-70,70), y:c.y+rand(-70,70)}; if(!subWaterAt(room,pt.x,pt.y) && !posBlockedByObstacles(pt.x,pt.y,18,room.obstacles)) spawnEnemy(g, 'zombie', pt); }
+    const c = deepMineSpot(room, av, 80); if(!c) continue;
+    for(let k=0;k<3+Math.floor(Math.random()*2);k++){ const pt = {x:c.x+rand(-70,70), y:c.y+rand(-70,70)}; if(okAt(pt)) spawnEnemy(g, 'zombie', pt); }
   }
   for(const q of room.pools){ if(Math.random()<0.5){ const sp2 = subWaterSpot(room, q); if(sp2) spawnEel(g, sp2); } }   // v456: eels in the flooded halls
   for(const q of room.pools){
     for(let k=0;k<2;k++){ const sp = subWaterSpot(room, q); if(sp) spawnSquid(g, sp); }
   }
-  for(let i=0;i<3;i++){ const q = room.pools[(i*2)%room.pools.length], sp = subWaterSpot(room, q); if(sp) spawnEnemy(g, 'alligator', sp); }
+  if(room.pools.length) for(let i=0;i<3;i++){ const q = room.pools[(i*2)%room.pools.length], sp = subWaterSpot(room, q); if(sp) spawnEnemy(g, 'alligator', sp); }
 }
 

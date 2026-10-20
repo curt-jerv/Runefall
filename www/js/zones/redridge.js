@@ -6,7 +6,7 @@ const RR_W = 6400, RR_H = 6400, RR_DEPTH = 42;   // v489: was 48 (v483: 43)   //
 // v420: every pack is a single type with 8-12 monsters (armordons 6-9, they are big)
 const RR_PACKS = ['armordon','raptor','sandsnake','crawler','raptor','sandsnake','crawler','armordon'];
 function rrPackSize(type){ return type==='armordon' ? 6+Math.floor(Math.random()*4) : 8+Math.floor(Math.random()*5); }
-const CRAWLER_TONGUE_LEN = 420, CRAWLER_TONGUE_HW = 34, CRAWLER_TONGUE_WIND = 0.6, CRAWLER_PULL_SPEED = 1000;
+const CRAWLER_TONGUE_LEN = 290, CRAWLER_TONGUE_HW = 34, CRAWLER_TONGUE_WIND = 0.6, CRAWLER_PULL_SPEED = 1000;
 // v456: the canyon is two zones now. West: the Last Wayfarer, Watchtower I, the Frosthold gate and the Skybridge.
 // East: Watchtowers II and III, the Raptor Lair and the Crater road. A canyon pass joins them.
 const RR_PARTS = {
@@ -163,17 +163,18 @@ function makeRedridge(part){
   const walk = (x,y)=>{ const ix=Math.floor(x/TS), iy=Math.floor(y/TS); if(ix<0||iy<0||ix>=cols||iy>=rows) return false; const i=iy*cols+ix; return !B[i] && K[i]<3 && Math.abs(CH[i*4]-CH[i*4+2])<14; };
   const flat = (x,y,d)=>walk(x,y)&&walk(x+d,y)&&walk(x-d,y)&&walk(x,y+d)&&walk(x,y-d);
   const okAnchor = (x,y,d)=> flat(x,y,d||70) && (!camp || dist({x,y},camp)>650) && (!waypoint || dist({x,y},waypoint)>650) && dist({x,y},gates[0])>650 && !keepouts.some(k=>dist({x,y},k)<k.r+40);
-  const anchors = []; tries=0;
-  while(anchors.length<PC.anchors && tries<60000){ tries++;
-    const x=rand(M+120,w-M-120), y=rand(M+120,h-M-120);
-    if(!okAnchor(x,y) || anchors.some(a=>dist(a,{x,y})<330)) continue;
-    anchors.push({x,y});
-  }
+  // v490: buffalo herd grounds are picked first (they used to come after the packs and usually found no room, so no buffalo spawned)
   const herdAnchors = []; tries=0;
   while(herdAnchors.length<PC.herds && tries<20000){ tries++;
     const x=rand(M+300,w-M-300), y=rand(M+300,h-M-300);
-    if(!okAnchor(x,y,170) || anchors.some(a=>dist(a,{x,y})<420) || herdAnchors.some(a=>dist(a,{x,y})<900)) continue;
+    if(!okAnchor(x,y,150) || herdAnchors.some(a=>dist(a,{x,y})<900)) continue;
     herdAnchors.push({x,y});
+  }
+  const anchors = []; tries=0;
+  while(anchors.length<PC.anchors && tries<60000){ tries++;
+    const x=rand(M+120,w-M-120), y=rand(M+120,h-M-120);
+    if(!okAnchor(x,y) || anchors.some(a=>dist(a,{x,y})<330) || herdAnchors.some(a=>dist(a,{x,y})<420)) continue;
+    anchors.push({x,y});
   }
   const deco = []; tries=0;
   while(deco.length<260 && tries<30000){ tries++;

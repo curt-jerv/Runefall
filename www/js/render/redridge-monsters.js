@@ -131,7 +131,7 @@ function drawRedridgeTelegraph(e){
     ctx.fillStyle='rgba(255,90,40,'+(swing?0.35:(0.08+frac*0.24))+')';
     ctx.beginPath(); ctx.arc(0,0,swing?R:R*frac,0,7); ctx.fill();
   } else if(e.type==='raptor' && e.tState==='tele' && e.tPt){
-    const frac = clamp(1-e.tT/0.4,0,1), iso = toIso(e.tPt.x,e.tPt.y);
+    const frac = clamp(1-e.tT/RAPTOR_TELE_T,0,1), iso = toIso(e.tPt.x,e.tPt.y);
     ctx.translate(iso.x, iso.y); ctx.scale(1, ISO_KY/ISO_KX);
     ctx.strokeStyle='rgba(255,170,70,'+(0.5+frac*0.5)+')'; ctx.lineWidth=2.5;
     ctx.beginPath(); ctx.arc(0,0,(RAPTOR_LEAP_R+14)*ISO_KX*Math.SQRT2,0,7); ctx.stroke();

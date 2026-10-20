@@ -18,7 +18,7 @@ function updateLavaBeetle(g, e, dt, target, d, isFollowerTarget, chillMult, room
     e.hop = Math.sin(k*Math.PI)*46; e.moving = true;
     if(e.tT<=0){
       e.tState='idle'; e.hop=0; e.atkCd = e.atkCdMax*0.8;
-      const R = BEETLE_LEAP_R, dm = e.dmg*1.3*TELE_DMG_MULT;
+      const R = BEETLE_LEAP_R, dm = teleDmg(e, 1.3);
       if(dist(p,e) < R+p.r) playerDamage(g, dm, e);
       if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, e);
       g.particles.push({type:'ring', x:e.x, y:e.y, t:0.45, max:0.45, r:R, color:'#ff8a3a'});
@@ -94,7 +94,7 @@ function initColossus(e){
 }
 function colArena(e){ return {x0:HEART_AX0+e.r, x1:HEART_AX1-e.r, y0:HEART_AY0+e.r, y1:HEART_AY1-e.r}; }
 function colHit(g, e, tgt, mult, phys){
-  const dm = e.dmg*mult*TELE_DMG_MULT;
+  const dm = teleDmg(e, mult);
   const src = phys ? {dmgType:'normal', hp:0, x:e.x, y:e.y, r:0} : e;
   if(tgt===g.player) playerDamage(g, dm, src); else applyFollowerDamage(g, tgt, dm, src);
 }
@@ -198,7 +198,7 @@ function updateColossus(g, e, dt, target, d, isFollowerTarget, chillMult, room){
       if(mv==='breath' && d > COL_BREATH_LEN+40) mv = 'charge';
       e.cMove = mv;
       const aim = Math.atan2(target.y-e.y, target.x-e.x);
-      if(mv==='charge'){ e.cState='chargeTele'; e.cT=1.1*F; e.cDir=aim; face(aim); }
+      if(mv==='charge'){ e.cState='chargeTele'; e.cT=1.1*F; e.cDir=aim; face(aim); e.cChargeT = e.cCharged ? 1.9 : 0.8; e.cCharged = true; }   // v490: the opening charge is much shorter (it reached the entrance tunnel)
       else if(mv==='stomp'){ e.cState='stompTele'; e.cT=1.0*F; }
       else if(mv==='breath'){ e.cState='breathTele'; e.cT=1.15*F; e.cBreathDir=aim; face(aim); }
       else if(mv==='lava'){ e.cState='lavaTele'; e.cT=0.9*F; }
@@ -212,7 +212,7 @@ function updateColossus(g, e, dt, target, d, isFollowerTarget, chillMult, room){
     } else if(e.atkCd<=0){ beginEnemyMelee(e); }
   } else if(st==='chargeTele'){
     e.cT -= dt; e.atkAnimT = 0.1;
-    if(e.cT<=0){ e.cState='charge'; e.cT=1.9; e.cHit=false; }
+    if(e.cT<=0){ e.cState='charge'; e.cT=e.cChargeT||1.9; e.cHit=false; }
   } else if(st==='charge'){
     e.cT -= dt;
     const sp = P3 ? 700 : 560;
@@ -382,7 +382,7 @@ function drawColossusTelegraph(e){
     ell(s.x, s.y, COL_ERUPT_R*f, 'rgba(255,200,90,'+(0.15+f*0.3)+')');
   }
   if(st==='chargeTele' || st==='charge'){
-    const f = st==='charge' ? 1 : clamp(1-e.cT/1.1,0,1), ca=Math.cos(e.cDir), sa=Math.sin(e.cDir), hw=e.r*0.85, len=1000;
+    const f = st==='charge' ? 1 : clamp(1-e.cT/1.1,0,1), ca=Math.cos(e.cDir), sa=Math.sin(e.cDir), hw=e.r*0.85, len=Math.min(1000, ((e.cPhase===3) ? 700 : 560)*(e.cChargeT||1.9));
     const pts=[[0,-hw],[len,-hw],[len,hw],[0,hw]].map(([u,v])=>toIso(e.x+ca*u-sa*v, e.y+sa*u+ca*v));
     ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y); for(let i=1;i<4;i++) ctx.lineTo(pts[i].x,pts[i].y); ctx.closePath();
     ctx.fillStyle='rgba(255,90,30,'+(0.08+f*0.26)+')'; ctx.fill();

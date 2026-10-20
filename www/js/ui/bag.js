@@ -562,8 +562,10 @@ function recalcStats(p){
   p.goldFindPct = clamp(addGoldFindPct + pb.gold, 0, 100);
   // v83 Commanding (+Follower Damage %): hooks into followerDmg().
   p.followerDmgPct = (clamp(addFollowerDmgPct, 0, 60) + pb.minion)/100;
-  p.statusDurPct = (clamp(addStatusDur, 0, 75) + pb.ailment)/100; p.skillDurPct = clamp(addSkillDur, 0, 50)/100;   // v489 p.dmgVsElitePct = (clamp(addDmgVsElite, 0, 5) + pb.elite)/100; p.potionStrPct = (clamp(addPotionStr, 0, 75) + pb.potion)/100;
-  p.lifeOnKill = addLifeOnKill; p.manaOnKill = addManaOnKill; p.lifeOnKillPct = pb.lok||0; p.manaOnKillPct = pb.mok||0;   // v465: parts give % of max p.critDmgPct = clamp(addCritDmg, 0, 100) + pb.critdmg;
+  p.statusDurPct = (clamp(addStatusDur, 0, 75) + pb.ailment)/100; p.skillDurPct = clamp(addSkillDur, 0, 50)/100;   // v489
+  p.dmgVsElitePct = (clamp(addDmgVsElite, 0, 5) + pb.elite)/100; p.potionStrPct = (clamp(addPotionStr, 0, 75) + pb.potion)/100;   // v490: was hidden behind the comment above
+  p.lifeOnKill = addLifeOnKill; p.manaOnKill = addManaOnKill; p.lifeOnKillPct = pb.lok||0; p.manaOnKillPct = pb.mok||0;   // v465: parts give % of max
+  p.critDmgPct = clamp(addCritDmg, 0, 100) + pb.critdmg;   // v490: was hidden behind the comment above
   // v83 Holy/Regeneration (+Life Regen %, of max HP per second): ticked in
   // the main player-update loop (see the v83 hook there).
   p.lifeRegenPct = clamp(addLifeRegenPct + pb.regen + (p.wellRestedT>0 ? WELL_RESTED_REGEN : 0) + (p.cls==='warrior' ? WARRIOR_BASE_REGEN : 0), 0, 4)/100;   // v479: Warriors have a small base regen   // v399: Well Rested life regen

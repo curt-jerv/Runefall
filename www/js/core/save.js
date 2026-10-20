@@ -49,6 +49,9 @@ const STASH_KEY = 'dc_stash_v1';
 // player-friendly choice vs. discarding them).
 const STASH_TAB_COUNT = 4;
 let stashActiveTab = 0;
+// v490: mana potions no longer exist -- old ones in a save are removed and sold for half price (125g each).
+// Lives here (not town/economy.js) because loadStash runs while this file loads.
+function stripManaPotions(list){ if(!Array.isArray(list)) return 0; let n = 0; for(let i=list.length-1;i>=0;i--){ const it = list[i]; if(it && it.slotType==='potion' && it.potionKind==='mana'){ list.splice(i,1); n++; } } return n*125; }
 function loadStash(){
   try{
     const raw = localStorage.getItem(STASH_KEY);
@@ -64,7 +67,8 @@ function loadStash(){
         // no `tabs` field yet) into Tab 1, leaving the 3 new tabs empty.
         tabs = [Array.isArray(obj.items) ? obj.items : [], [], [], []];
       }
-      return {gold: obj.gold||0, items: tabs[0], tabs};
+      let mg = 0; for(const tb of tabs) mg += stripManaPotions(tb);   // v490: mana potions are gone -- sold for half price
+      return {gold: (obj.gold||0) + mg, items: tabs[0], tabs};
     }
   }catch(e){}
   return {gold:0, items:[], tabs:[[],[],[],[]]};
@@ -112,6 +116,8 @@ syncStashItemsView();
 // across save/reload via the existing p.reachedX fields in saveGame/
 // newGame. flagName is one of those existing player fields (e.g.
 // 'reachedMountainPass') reused as the discovered-waypoint flag.
+// v490: discovery now happens when the player USES the waypoint (interact -> openTeleportMenu, see
+// WAYPOINT_FLAG_BY_FROM in ui/town-menus.js), not on proximity; the waypoint then draws lit (waypointLit).
 function discoverWaypoint(flagName){
   const p = game.player;
   if(!p[flagName]){
@@ -154,7 +160,7 @@ function saveGame(){
       lighthouseFloor5Cleared:p.lighthouseFloor5Cleared||false,
       lighthouseBeaconOn:p.lighthouseBeaconOn||false,
       lighthouseChestLooted:p.lighthouseChestLooted||false,
-      minerQ:p.minerQ||0, sunkenChest2Looted:!!p.sunkenChest2Looted, reachedMineWp:p.reachedMineWp||false, reachedFhdWp:p.reachedFhdWp||false, reachedHighwardWp:p.reachedHighwardWp||false, reachedDeepWp:p.reachedDeepWp||false, reachedCliffWp:p.reachedCliffWp||false, reachedKeepWp:p.reachedKeepWp||false, reachedHoldWp:p.reachedHoldWp||false, sleptAt:p.sleptAt||0, sleptBed:p.sleptBed||0, wellRestedT:p.wellRestedT||0, breachReached:p.breachReached||false, reachedRingWp:p.reachedRingWp||false, breachBest:p.breachBest||0, breachClears:p.breachClears||0, wraithLordSlain:p.wraithLordSlain||false, breachContained:p.breachContained||false, runesPlaced:p.runesPlaced||{}, wlRework427:p.wlRework427||false, wlReset435:p.wlReset435||false, wlSkillReward:p.wlSkillReward||false, skGateOpen:p.skGateOpen||false, keepLore:p.keepLore||{}, keepMaps:p.keepMaps||{}, tpBeacons:p.tpBeacons||[], harpyQueenSlain:p.harpyQueenSlain||false, harpyTalonTaken:p.harpyTalonTaken||false, highwardSlain:p.highwardSlain||false, hwCrossing:p.hwCrossing||false, hwRuneTaken:p.hwRuneTaken||false, hwSwitchOn:p.hwSwitchOn||false, hwMapFound:p.hwMapFound||false, wayfarerMet:p.wayfarerMet||false, scholarWarnedRR:p.scholarWarnedRR||false, rrBeacons:p.rrBeacons||{}, mineDeepest:p.mineDeepest||0, balrogSlain:p.balrogSlain||false, hammerTaken:p.hammerTaken||false, smithSockets:p.smithSockets||false, socketUses:p.socketUses||0,
+      minerQ:p.minerQ||0, sunkenChest2Looted:!!p.sunkenChest2Looted, reachedMineWp:p.reachedMineWp||false, reachedFhdWp:p.reachedFhdWp||false, reachedHighwardWp:p.reachedHighwardWp||false, reachedDeepWp:p.reachedDeepWp||false, reachedCliffWp:p.reachedCliffWp||false, reachedKeepWp:p.reachedKeepWp||false, reachedHoldWp:p.reachedHoldWp||false, sleptAt:p.sleptAt||0, sleptBed:p.sleptBed||0, wellRestedT:p.wellRestedT||0, breachReached:p.breachReached||false, reachedRingWp:p.reachedRingWp||false, breachBest:p.breachBest||0, breachClears:p.breachClears||0, wraithLordSlain:p.wraithLordSlain||false, breachContained:p.breachContained||false, runesPlaced:p.runesPlaced||{}, wlRework427:p.wlRework427||false, wlReset435:p.wlReset435||false, wlSkillReward:p.wlSkillReward||false, skGateOpen:p.skGateOpen||false, keepLore:p.keepLore||{}, keepMaps:p.keepMaps||{}, tpBeacons:p.tpBeacons||[], harpyQueenSlain:p.harpyQueenSlain||false, harpyTalonTaken:p.harpyTalonTaken||false, highwardSlain:p.highwardSlain||false, hwCrossing:p.hwCrossing||false, hwRuneTaken:p.hwRuneTaken||false, hwSwitchOn:p.hwSwitchOn||false, hwMapFound:p.hwMapFound||false, wayfarerMet:p.wayfarerMet||false, scholarWarnedRR:p.scholarWarnedRR||false, scholarThirdRead:p.scholarThirdRead||false, scholarKeyTalk:p.scholarKeyTalk||false, rrBeacons:p.rrBeacons||{}, mineDeepest:p.mineDeepest||0, balrogSlain:p.balrogSlain||false, hammerTaken:p.hammerTaken||false, smithSockets:p.smithSockets||false, socketUses:p.socketUses||0, ftMapFound:p.ftMapFound||false,
       cls:p.cls||'warrior',
       updatedAt: Date.now(),
     };

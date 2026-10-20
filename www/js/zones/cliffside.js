@@ -234,7 +234,7 @@ function updateCliffside(g, dt){
     if(near(R.hwGate)) k = 'cliffToHighward';
     else if(near(R.nestGate)) k = 'toHarpyNest';
     else if(near(R.keepGate, 40)) k = 'shadowKeepGate';
-    else if(dist(p,R.waypoint) < R.waypoint.r + p.r + 24){ discoverWaypoint('reachedCliffWp'); k = 'waypointCliff'; }
+    else if(dist(p,R.waypoint) < R.waypoint.r + p.r + 24){ k = 'waypointCliff'; }
   }
   updateInteractPrompt(k);
 }
@@ -266,7 +266,7 @@ function spawnHarpyQueen(g){
   return e;
 }
 function queenHit(g, e, tgt, mult, kb){
-  const dm = e.dmg*mult*TELE_DMG_MULT;
+  const dm = teleDmg(e, mult);
   if(tgt===g.player) playerDamage(g, dm, e, kb); else applyFollowerDamage(g, tgt, dm, e);
 }
 function updateHarpyQueen(g, e, dt, target, d, isFollowerTarget, chillMult, room){
@@ -632,7 +632,7 @@ function pushCliffDrawables(g, drawables, cam){
     drawables.push({depth:R.nestGate.x+R.nestGate.y, draw:()=>drawEdgeLabelIso(R.nestGate, "HARPY'S NEST", 130)});
     drawables.push({depth:R.keepGate.x+R.keepGate.y-1, draw:()=>fadeWhenBehind(R.keepGate, 260, 340, ()=>drawCliffGateIso(R.keepGate,'keep',hasAllRunestones(g.player),g.clock))});
     drawables.push({depth:R.keepGate.x+R.keepGate.y, draw:()=>drawEdgeLabelIso(R.keepGate, 'SHADOW KEEP', 120)});
-    drawables.push({depth:R.waypoint.x+R.waypoint.y-1, draw:()=>drawWaypointIso(R.waypoint, g.clock||0, true)});
+    drawables.push({depth:R.waypoint.x+R.waypoint.y-1, draw:()=>drawWaypointIso(R.waypoint, g.clock||0, waypointLit())});
     drawables.push({depth:R.waypoint.x+R.waypoint.y, draw:()=>drawEdgeLabelIso(R.waypoint, 'WAYPOINT')});
   }
 }

@@ -17,5 +17,20 @@ for(const f of all){
 for(const f of listed) if(!all.includes(f)){ bad++; console.log('load.js lists a missing file:', f); }
 for(const f of all) if(f!=='load.js' && !listed.includes(f)){ bad++; console.log('not in load.js (will never run):', f); }
 const dup = listed.filter((f, i) => listed.indexOf(f) !== i); if(dup.length){ bad++; console.log('listed twice in load.js:', dup.join(', ')); }
+// Warn about code hidden behind a mid-line // comment (statements written after it never run)
+const hidden = /(\b(p|e|g|t|room|player|f)\.\w+\s*(=|\+=|-=|\*=)\s*[^=\s][^;]*;)|(\bconst \w+ = [^;]+;)/;
+for(const f of all){
+  fs.readFileSync(path.join(JS, f), 'utf8').split('\n').forEach((l, i)=>{
+    let q = null, idx = -1;
+    for(let j=0;j<l.length;j++){ const ch = l[j];
+      if(q){ if(ch==='\\'){ j++; continue; } if(ch===q) q = null; }
+      else if(ch==="'" || ch==='"' || ch==='`') q = ch;
+      else if(ch==='/' && l[j+1]==='/' && l[j-1]!==':'){ idx = j; break; } }
+    if(idx<0 || !l.slice(0, idx).trim()) return;
+    const com = l.slice(idx+2);
+    if(hidden.test(com) && !/\b(was|e\.g\.|i\.e\.|see|like|so|when|if you|means|instead)\b/.test(com.split(';')[0].slice(0, 60)))
+      console.log('WARNING ' + f + ':' + (i+1) + ' code after a // comment never runs: ' + com.trim().slice(0, 100));
+  });
+}
 console.log(bad ? bad + ' problem(s)' : 'OK: ' + all.length + ' files');
 process.exit(bad ? 1 : 0);

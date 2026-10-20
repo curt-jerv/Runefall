@@ -10,6 +10,43 @@ function openWitchParts(tab){
 let cauldronSlots = [null,null,null];
 function cauldronReturn(){ const p = game.player; for(let i=0;i<3;i++){ const id = cauldronSlots[i]; if(id){ const [k,t] = id.split('_'); addPart(p,k,+t); cauldronSlots[i] = null; } } }
 function closeWitchParts(){ cauldronReturn(); witchOverlay.style.display = 'none'; game.modalOpen = false; }
+// ---- v490: Recipe Book helpers (inventory Parts tab + the witch's Recipes tab) ----
+// The cauldron works once the witch is freed and has spoken to you at her camp (p.partsHarvest = "taught").
+function witchCauldronReady(p){ return !!(p && p.witchRescued && p.partsHarvest); }
+// Which part ids (cheapest tier first; Perfect only for amber recipes) would fill this recipe, or null if you lack them.
+function recipePartIds(p, r){
+  const have = Object.assign({}, p.parts||{}), out = [];
+  for(const k of r.parts){
+    let got = null;
+    for(const t of (r.perfect ? [3] : [1,2,3])){ const id = partId(k,t); if((have[id]||0)>0){ got = id; break; } }
+    if(!got) return null;
+    have[got]--; out.push(got);
+  }
+  return out;
+}
+// One recipe row: stone, its parts (green = you hold it) and a green check mark when you hold all three.
+function recipeRowHtml(p, r){
+  const sd = PART_DEFS[r.stone], ids = recipePartIds(p, r), have = Object.assign({}, p.parts||{});
+  const parts = r.parts.map(k=>{
+    let ok = false; for(const t of (r.perfect ? [3] : [1,2,3])){ const id = partId(k,t); if((have[id]||0)>0){ have[id]--; ok = true; break; } }
+    return '<span style="color:'+(ok?'#7fd87f':'var(--bone-dim)')+'">'+(r.perfect?'Perfect ':'')+PART_DEFS[k].name+'</span>';
+  }).join(' + ');
+  return '<div class="partCard rbRow'+(sd.unique?' uq':'')+'"><div class="pIcon">'+sd.icon+'</div><div class="pMain" style="color:'+sd.color+'"><b>'+sd.name+'</b><div class="pSub">'+parts+'</div></div>'
+    + (ids ? '<div class="rbCheck" data-rbload="'+r.id+'" title="Load into the cauldron">\u2714</div>' : '<div class="rbCheck off"></div>')+'</div>';
+}
+// Tap a check mark: open the cauldron with that recipe's parts in the pot. Nothing is brewed until you press Transmute.
+function cauldronLoadRecipe(rid){
+  const p = game.player, r = STONE_RECIPES.find(x=>x.id===rid); if(!p || !r) return false;
+  if(!witchCauldronReady(p)){ showMsg("Bring these to the Witch's cauldron", 2.0, '#e8c860'); return false; }
+  cauldronReturn();
+  const ids = recipePartIds(p, r);
+  if(!ids){ showMsg('You are missing parts for this recipe', 1.6); return false; }
+  for(let i=0;i<3;i++){ const [k,t] = ids[i].split('_'); takePart(p,k,+t,1); cauldronSlots[i] = ids[i]; }
+  if(invOverlay.style.display==='flex') closeInventory();
+  if(witchOverlay.style.display!=='flex') openWitchParts('cauldron'); else { witchTab = 'cauldron'; renderWitchParts(); }
+  showMsg('Parts placed in the cauldron. Press Transmute to brew.', 2.2, PART_DEFS[r.stone].color);
+  return true;
+}
 function witchEnsureStock(p){
   if(!Array.isArray(p.witchStock)){
     p.witchStock = [];
@@ -64,10 +101,11 @@ function renderWitchParts(){
     if(!ids.length) h += '<div style="color:var(--bone-dim); font-size:12px; padding:8px;">You have no parts to experiment with.</div>';
   } else if(witchTab==='recipes'){
     const known = p.recipes||{}, nk = STONE_RECIPES.filter(r=>known[r.id]).length;
-    h += '<div style="font-size:12px; color:var(--bone-dim); margin-bottom:8px;">Recipes discovered: '+nk+' / '+STONE_RECIPES.length+'. Experiment in the cauldron to learn more.</div><div style="font-size:11.5px; color:#f2a31b; margin-bottom:8px;">Amber stones are UNIQUE: they need three Perfect parts, and once socketed they can never be removed.</div>';
+    h += '<div style="font-size:12px; color:var(--bone-dim); margin-bottom:8px;">Recipes discovered: '+nk+' / '+STONE_RECIPES.length+'. Experiment in the cauldron to learn more.</div><div style="font-size:11.5px; color:#f2a31b; margin-bottom:8px;">Amber stones are UNIQUE: they need three Perfect parts and character level 40 to socket, and once socketed they can never be removed.</div>';
     for(const r of STONE_RECIPES){
       const sd = PART_DEFS[r.stone];
-      if(known[r.id]) h += '<div class="partCard'+(sd.unique?' uq':'')+'"><div class="pIcon">'+sd.icon+'</div><div class="pMain" style="color:'+sd.color+'"><b>'+sd.name+'</b><div class="pSub">'+sd.desc+'</div><div class="pSub">Recipe: '+r.parts.map(k=>(r.perfect?'Perfect ':'')+PART_DEFS[k].name).join(' + ')+'</div></div></div>';
+      if(known[r.id]){ const ok = !!recipePartIds(p, r);   // v490: a green check mark loads the cauldron
+        h += '<div class="partCard'+(sd.unique?' uq':'')+'"><div class="pIcon">'+sd.icon+'</div><div class="pMain" style="color:'+sd.color+'"><b>'+sd.name+'</b><div class="pSub">'+sd.desc+'</div><div class="pSub">Recipe: '+r.parts.map(k=>(r.perfect?'Perfect ':'')+PART_DEFS[k].name).join(' + ')+'</div></div>'+(ok ? '<div class="rbCheck" data-rbload="'+r.id+'" title="Load into the cauldron">\u2714</div>' : '')+'</div>'; }
       else h += '<div class="partCard'+(sd.unique?' uq':'')+'" style="opacity:.6;"><div class="pIcon">?</div><div class="pMain"><b>'+(sd.unique?'Unknown unique recipe':'Unknown recipe')+'</b><div class="pSub"><i>'+r.hint+'</i></div></div></div>';
     }
   } else if(witchTab==='sell'){
@@ -98,6 +136,7 @@ document.getElementById('witchTabShop').addEventListener('click', ()=>{ cauldron
 document.getElementById('witchTabSell').addEventListener('click', ()=>{ cauldronReturn(); witchTab='sell'; renderWitchParts(); });
 document.getElementById('witchBody').addEventListener('click', e=>{
   const p = game.player;
+  { const rb = e.target.closest('[data-rbload]'); if(rb){ cauldronLoadRecipe(rb.dataset.rbload); return; } }   // v490
   const c = e.target.closest('[data-combine]');
   if(c){
     const [k,t] = c.dataset.combine.split('_');
@@ -162,21 +201,28 @@ function witchHeartstoneTalk(p){
   }
   return false;
 }
+function witchPotionTalkPending(p){
+  if(p.witchBrewed) return false;
+  if(!p.witchPotionStarted) return !!(hasQItem(p,'electric_tentacle') || p.partKraken);
+  return witchPartsHeld(p) >= WITCH_PARTS_TOTAL;
+}
 function witchCauldronInteract(){
   const p = game.player;
   if(p.witchRescued && p.partsHarvest && !p.witchRecipesGiven){ witchGiveRecipes(p); saveGame(); }   // v483: older saves get their recipes too
   if(p.witchRescued && witchHeartstoneTalk(p)) return;   // v344: the Heartstone is dealt with before she teaches parts harvesting
   // v283: parts harvesting is taught the first time you talk to the freed witch beside her cauldron
   if(p.witchRescued && !p.partsHarvest){
-    showNpcText('The Witch', '"You freed me. Take this as thanks. Cut parts from what you slay -- claw, pelt, tooth and horn -- and I will teach you to bind their power into your gear."', 'Teach me', ()=>{
-      p.partsHarvest = true; witchGiveRecipes(p);
-      if(!p.witchRareGiven){ p.witchRareGiven = true; const wr = classRewardItem(p, Math.max(1, p.level||1), 'rare'); forceAddToBag(p, wr); bagPulse(); showMsg('Parts harvesting unlocked. The witch also gives you: '+wr.name, 4.0); }
-      else showMsg('Parts harvesting unlocked \u2014 find parts in the Parts tab of your inventory', 3.2);
+    showNpcText('The Witch', '"You freed me. Take this as thanks. Bring me the parts you cut from what you slay -- claw, pelt, tooth and horn -- and my cauldron will bind them into stones for your gear."', 'Teach me', ()=>{
+      p.partsHarvest = true; witchGiveRecipes(p);   // v490: partsHarvest now means "the witch taught you" -- parts drop from the start; this opens her cauldron
+      if(!p.witchRareGiven){ p.witchRareGiven = true; const wr = classRewardItem(p, Math.max(1, p.level||1), 'rare'); forceAddToBag(p, wr); bagPulse(); showMsg('The witch\u2019s cauldron is open to you. She also gives you: '+wr.name, 4.0); }
+      else showMsg('The witch\u2019s cauldron is open to you \u2014 transmute your parts into stones', 3.2);
       saveGame(); try{ renderInventory(); }catch(e){}
     });
     return;
   }
-  if(p.witchRescued && p.witchBrewed && p.partsHarvest){
+  // v490: once she has taught you, her cauldron opens straight away (no need to brew her potion first),
+  // unless she has something to say about the potion quest
+  if(p.witchRescued && p.partsHarvest && !witchPotionTalkPending(p)){
     if(false){
       showNpcText('The Witch', '"Cut parts from what you slay and I will teach you to bind their power into your gear."', 'Teach me', ()=>{
         p.partsHarvest = true;
@@ -238,10 +284,7 @@ function witchCauldronInteract(){
 }
 function witchTowerInteract(){
   const p = game.player;
-  if(game.enemies.some(e=>e.hp>0 && (e.ftGuard || !game.enemies.some(x=>x.ftGuard)))){
-    showNpcText('The Witch', '"Careful! Defeat the trolls guarding me before you open my cage."', 'Continue');
-    return;
-  }
+  // v490: the cage opens whenever you reach it (a stray, unseen enemy used to keep it shut)
   const wPos = game.tower && game.tower.witch ? {x:game.tower.witch.x, y:game.tower.witch.y} : {x:game.tower.w/2, y:game.tower.h/2};
   showNpcText('The Witch', '"Thank you. Come see me by my camp."', 'Continue', ()=>{
     p.witchRescued = true;

@@ -100,6 +100,7 @@ const ORGANIC_PAL = {
   grotto:{a:'#24343a', b:'#1f2e33', c:'#2b3d44', wt:'#3c5560', wr:'#101a1e', wf:'#1c2b31'},
   ember:{a:'#2c2428', b:'#262024', c:'#33292c', wt:'#4a3230', wr:'#1a1012', wf:'#2c1a1a'},
   heart:{a:'#2c2428', b:'#262024', c:'#33292c', wt:'#46282a', wr:'#160c0e', wf:'#281416'},
+  temple:{a:'#3e4a46', b:'#36423e', c:'#47554f', wt:'#5f6e68', wr:'#26302d', wf:'#3a4743'},   // v490: the drowned temple's mossy stone
 };
 function drawOrganicFloor(room, cam){
   const TS = 46, P = ORGANIC_PAL[room.organic] || ORGANIC_PAL.bear, m = room.floorMask, kind = room.organic;
@@ -135,6 +136,7 @@ function drawOrganicWall(o){
   ctx.beginPath(); ctx.ellipse(c.x, c.y-hz-2, 36+hh*8, 19+hh*4, 0, 0, 7); ctx.fill(); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.ellipse(c.x-8, c.y-hz-6, 16, 7, 0, 0, 7); ctx.fill();
   if(o.organic==='bear'){ ctx.fillStyle='rgba(90,130,60,0.55)'; ctx.beginPath(); ctx.ellipse(c.x+10, c.y-hz-1, 14, 6, 0, 0, 7); ctx.fill(); }
+  else if(o.organic==='temple'){ ctx.fillStyle='rgba(80,140,90,0.45)'; ctx.beginPath(); ctx.ellipse(c.x-6, c.y-hz, 15, 6, 0, 0, 7); ctx.fill(); }   // v490: moss on the temple stone
   else if(o.organic==='spider'){ ctx.strokeStyle='rgba(220,220,240,0.35)'; ctx.beginPath(); ctx.moveTo(c.x-20,c.y-hz-4); ctx.lineTo(c.x+4,c.y-hz+14); ctx.lineTo(c.x+22,c.y-hz-2); ctx.moveTo(c.x-8,c.y-hz+2); ctx.lineTo(c.x+12,c.y-hz+6); ctx.stroke(); }
   else { ctx.fillStyle='rgba(220,110,40,0.16)'; ctx.beginPath(); ctx.ellipse(c.x+6, c.y-hz, 18, 7, 0, 0, 7); ctx.fill(); }
   ctx.restore();
@@ -249,14 +251,15 @@ function drawWalls(room){
   drawBlock({x:-wt,y:room.h,w:room.w+wt*2,h:wt}, hz, top,right,front);
   drawBlock({x:-wt,y:0,w:wt,h:room.h}, hz, top,right,front);
   drawBlock({x:room.w,y:0,w:wt,h:room.h}, hz, top,right,front);
-  const spacing = 150;
+  const spacing = 150, cam = game && game.camera;
+  const sup = (x,y)=>{ if(cam){ const i = toIso(x,y); if(i.x < cam.x-120 || i.x > cam.x+W+120 || i.y < cam.y-60 || i.y > cam.y+H+160) return; } drawMineSupport(x, y, hz); };   // v490: skip supports off screen
   for(let wx=60; wx<room.w; wx+=spacing){
-    drawMineSupport(wx, -wt*0.5, hz);
-    drawMineSupport(wx, room.h+wt*0.5, hz);
+    sup(wx, -wt*0.5);
+    sup(wx, room.h+wt*0.5);
   }
   for(let wy=60; wy<room.h; wy+=spacing){
-    drawMineSupport(-wt*0.5, wy, hz);
-    drawMineSupport(room.w+wt*0.5, wy, hz);
+    sup(-wt*0.5, wy);
+    sup(room.w+wt*0.5, wy);
   }
 }
 

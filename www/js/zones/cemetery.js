@@ -147,7 +147,7 @@ function cemeterySpawnFromGraves(g, type, n){
   const st = g.cem.statue;
   for(let i=0;i<n;i++){
     // v309: they claw up in a ring close around the statue instead of from the far graves
-    const a = rand(0, Math.PI*2), rr = rand(110, 280);
+    const a = rand(0, Math.PI*2), rr = rand(170, 420);   // v490: spread wider
     const sp = {x:clamp(st.x+Math.cos(a)*rr, 40, g.cem.w-40), y:clamp(st.y+Math.sin(a)*rr*0.8, 40, g.cem.h-40)};
     const e = spawnEnemy(g, type, sp);
     if(!e) continue;
@@ -158,7 +158,7 @@ function cemeterySpawnFromGraves(g, type, n){
 }
 // v453 rework: 5-7 risen dead every 5 seconds for 20 seconds, then 3 skeleton brutes burst out beside the crypt entrance.
 // When every one of them is dead, the crypt opens.
-const CEM_BATCH_EVERY = 5, CEM_BATCH_TIME = 20, CEM_BRUTES = 3;
+const CEM_BATCH_EVERY = 5, CEM_BATCH_TIME = 40, CEM_BRUTES = 3;   // v490: twice the waves (8 over 40s), each about half the size
 function startCemeteryEvent(g){
   g.cem.evt = {stage:1, t:0, nextBatch:0, brutes:false};
   showBigMsg('None shall pass', '', 3.4, true);
@@ -171,7 +171,7 @@ function updateCemeteryEvent(g, p, dt){
   ev.t += dt;
   if(ev.t < CEM_BATCH_TIME){
     if(ev.t >= ev.nextBatch){
-      const n = 5 + Math.floor(Math.random()*3), arch = Math.floor(n/3);
+      const n = 3 + Math.floor(Math.random()*2), arch = Math.floor(n/3);
       cemeterySpawnFromGraves(g, 'skeleton', n-arch); cemeterySpawnFromGraves(g, 'skeletonarcher', arch);
       ev.nextBatch += CEM_BATCH_EVERY;
       showMsg('The dead rise...', 1.6, '#c8b0ff');

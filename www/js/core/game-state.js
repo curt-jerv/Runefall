@@ -75,7 +75,7 @@ function newGame(saved, cls){
     darkCryptChestLooted:false,
     reachedAncientRuins:false, ruinsEntranceOpen:false, ancientRuinsChestLooted:false, sunkenChestLooted:false, poolChestLooted:false, heartChestLooted:false, colossusSlain:false,
     barStock:null, barRestockAt:0, vendorRestockAt:0, beerT:0, coffeeT:0,
-    reachedMineWp:false, reachedFhdWp:false, reachedHighwardWp:false, reachedDeepWp:false, reachedCliffWp:false, reachedKeepWp:false, reachedHoldWp:false, sleptAt:0, sleptBed:0, wellRestedT:0, breachReached:false, reachedRingWp:false, breachBest:0, breachClears:0, wraithLordSlain:false, breachContained:false, runesPlaced:{}, wlRework427:true, wlReset435:true, skGateOpen:false, keepLore:{}, keepMaps:{}, tpBeacons:[], harpyQueenSlain:false, harpyTalonTaken:false, highwardSlain:false, hwCrossing:false, hwRuneTaken:false, hwSwitchOn:false, hwMapFound:false, wayfarerMet:false, scholarWarnedRR:false, rrBeacons:{}, mineDeepest:0, balrogSlain:false, hammerTaken:false, smithSockets:false, socketUses:0,
+    reachedMineWp:false, reachedFhdWp:false, reachedHighwardWp:false, reachedDeepWp:false, reachedCliffWp:false, reachedKeepWp:false, reachedHoldWp:false, sleptAt:0, sleptBed:0, wellRestedT:0, breachReached:false, reachedRingWp:false, breachBest:0, breachClears:0, wraithLordSlain:false, breachContained:false, runesPlaced:{}, wlRework427:true, wlReset435:true, skGateOpen:false, keepLore:{}, keepMaps:{}, tpBeacons:[], harpyQueenSlain:false, harpyTalonTaken:false, highwardSlain:false, hwCrossing:false, hwRuneTaken:false, hwSwitchOn:false, hwMapFound:false, wayfarerMet:false, scholarWarnedRR:false, scholarThirdRead:false, scholarKeyTalk:false, rrBeacons:{}, mineDeepest:0, balrogSlain:false, hammerTaken:false, smithSockets:false, socketUses:0, ftMapFound:false,
     shieldBashCd:0, shieldBashCdMax:BASE_ATK_CD,
     shieldThrowCd:0, shieldThrowCdMax:SHIELD_THROW_CD,
     guardianCd:0, guardianCdMax:GUARDIAN_CD, guardianT:0,
@@ -340,7 +340,7 @@ function newGame(saved, cls){
     player.lighthouseBeaconOn = !!saved.lighthouseBeaconOn;
     player.lighthouseChestLooted = !!saved.lighthouseChestLooted;
     player.minerQ = saved.minerQ||0; player.sunkenChest2Looted = !!saved.sunkenChest2Looted; player.reachedMineWp = !!saved.reachedMineWp; player.reachedFhdWp = !!saved.reachedFhdWp; player.reachedHighwardWp = !!saved.reachedHighwardWp; player.reachedDeepWp = !!saved.reachedDeepWp; player.reachedCliffWp = !!saved.reachedCliffWp; player.reachedKeepWp = !!saved.reachedKeepWp; player.reachedHoldWp = !!saved.reachedHoldWp; player.sleptAt = saved.sleptAt||0; player.sleptBed = saved.sleptBed||0; player.wellRestedT = saved.wellRestedT||0; player.breachReached = !!saved.breachReached; player.reachedRingWp = !!saved.reachedRingWp; player.breachBest = saved.breachBest||0; player.breachClears = saved.breachClears||0; player.wraithLordSlain = !!saved.wraithLordSlain; player.breachContained = !!saved.breachContained; player.runesPlaced = Object.assign({}, saved.runesPlaced||{}); player.wlSkillReward = !!saved.wlSkillReward || !!saved.wraithLordSlain; if(!saved.wlRework427 || !saved.wlReset435){ player.wraithLordSlain = false; player.breachContained = false; } player.wlRework427 = true; player.wlReset435 = true;
-    if(!saved.wlReset435){ player._rpOld = Object.assign({}, saved.runesPlaced||{}); player.runesPlaced = {}; } if(player.breachContained && !(player.runesPlaced.shield && player.runesPlaced.sword && player.runesPlaced.cross)) player.runesPlaced = {shield:true,sword:true,cross:true}; if(!player.wraithLordSlain){ player.breachContained = false; } player.skGateOpen = !!saved.skGateOpen; player.keepLore = saved.keepLore||{}; player.keepMaps = saved.keepMaps||{}; player.tpBeacons = saved.tpBeacons||[]; player.harpyQueenSlain = !!saved.harpyQueenSlain; player.harpyTalonTaken = !!saved.harpyTalonTaken; player.highwardSlain = !!saved.highwardSlain; player.hwCrossing = !!saved.hwCrossing; player.hwRuneTaken = saved.hwRuneTaken!==undefined ? !!saved.hwRuneTaken : !!saved.highwardSlain; player.hwSwitchOn = saved.hwSwitchOn!==undefined ? !!saved.hwSwitchOn : !!saved.highwardSlain; player.hwMapFound = !!saved.hwMapFound; player.wayfarerMet = !!saved.wayfarerMet; player.scholarWarnedRR = !!saved.scholarWarnedRR; player.rrBeacons = saved.rrBeacons||{}; player.mineDeepest = saved.mineDeepest||0; player.balrogSlain = !!saved.balrogSlain; player.hammerTaken = !!saved.hammerTaken; player.smithSockets = !!saved.smithSockets; player.socketUses = saved.socketUses||0;
+    if(!saved.wlReset435){ player._rpOld = Object.assign({}, saved.runesPlaced||{}); player.runesPlaced = {}; } if(player.breachContained && !(player.runesPlaced.shield && player.runesPlaced.sword && player.runesPlaced.cross)) player.runesPlaced = {shield:true,sword:true,cross:true}; if(!player.wraithLordSlain){ player.breachContained = false; } player.skGateOpen = !!saved.skGateOpen; player.keepLore = saved.keepLore||{}; player.keepMaps = saved.keepMaps||{}; player.tpBeacons = saved.tpBeacons||[]; player.harpyQueenSlain = !!saved.harpyQueenSlain; player.harpyTalonTaken = !!saved.harpyTalonTaken; player.highwardSlain = !!saved.highwardSlain; player.hwCrossing = !!saved.hwCrossing; player.hwRuneTaken = saved.hwRuneTaken!==undefined ? !!saved.hwRuneTaken : !!saved.highwardSlain; player.hwSwitchOn = saved.hwSwitchOn!==undefined ? !!saved.hwSwitchOn : !!saved.highwardSlain; player.hwMapFound = !!saved.hwMapFound; player.wayfarerMet = !!saved.wayfarerMet; player.scholarWarnedRR = !!saved.scholarWarnedRR; player.scholarThirdRead = !!saved.scholarThirdRead; player.scholarKeyTalk = !!saved.scholarKeyTalk; player.rrBeacons = saved.rrBeacons||{}; player.mineDeepest = saved.mineDeepest||0; player.balrogSlain = !!saved.balrogSlain; player.hammerTaken = !!saved.hammerTaken; player.smithSockets = !!saved.smithSockets; player.socketUses = saved.socketUses||0; player.ftMapFound = !!saved.ftMapFound;
     player.cls = saved.cls || 'warrior';
     player.quests = Array.isArray(saved.quests) ? saved.quests : [];
   }
@@ -354,6 +354,7 @@ function newGame(saved, cls){
     // v263: the Flame Raptor hunt and its Fire Claw are gone -- the 4th witch part is now the Colossus' Molten Shell Fragment
     player.quests = (player.quests||[]).filter(q=>!(q && (q.id==='hunt_raptor' || q.id==='legend_summit')));
     player.inventory = player.inventory.filter(it=>!(it && it.questId==='fire_claw'));
+    { const mg = stripManaPotions(player.inventory); if(mg>0) player.gold = (player.gold||0) + mg; }   // v490: mana potions are gone -- sold for half price
     // v453: rescue items that loot pickup wrongly 'equipped' into a non-gear slot (e.g. the Molten Shell Fragment)
     if(player.equipment){ for(const k of Object.keys(player.equipment)){ if(EQUIP_SLOTS.indexOf(k)<0 && player.equipment[k]){ const it = player.equipment[k]; delete player.equipment[k]; delete it.gx; delete it.gy; forceAddToBag(player, it); } } }
     // v452: the Frosthold dungeon now only opens through the key-turning sequence. Old saves that already used the key
@@ -815,7 +816,7 @@ function spawnEnemy(g, type, pos){
          atkCd:rand(0.5,2),atkCdMax:2.4,color:'#6a2f7a',state:'chase',hitT:0,armor:0,spitT:0};
   } else if(type==='armordon'){
     // Redridge Canyon (v153): slow armoured dino; reflects part of every hit, telegraphed tail sweep.
-    e = {type,x,y,r:42,hp:90+depth*10,maxHp:90+depth*10,speed:rand(44,54),dmg:(14+depth*2.4)*0.8,
+    e = {type,x,y,r:36,hp:90+depth*10,maxHp:90+depth*10,speed:rand(44,54),dmg:(14+depth*2.4)*0.8,
          atkCd:0,atkCdMax:1.4,color:'#8a5a3a',state:'chase',hitT:0,armor:16,reflect:true,reflectCd:0,reflectFlashT:0,
          tState:'idle',tT:0,tCd:rand(2,4),tHit:false};
   } else if(type==='crawler'){
@@ -1016,11 +1017,12 @@ function spawnEnemy(g, type, pos){
   }
   // health doubled, damage +50%, relative to the previous +10%-flat balance
   e.ml = monsterLevel(g);
+  { const ref = 55 + depth*7; e.hpXp = clamp(Math.sqrt(e.hp/ref), 1, 3); }   // v490: tougher (bigger-life) monsters give more XP -- brutes, treants, giants, trolls
   e.hp = Math.round(e.hp*ENEMY_HP_MULT*mlEnemyHpMult(e.ml)); e.maxHp = e.hp;
   // v228: Dark Forest / Bear Cave bears are softer (smaller life bonus, thinner hide)
   if(type==='bear' && (g.scene==='forest' || g.scene==='bearcave')){ e.hp = Math.round(e.hp*0.65); e.maxHp = e.hp; e.armor = Math.min(e.armor||0, 5); }
   e.dmg = e.dmg*ENEMY_DMG_MULT*mlDmgMult(e.ml);
-  { const gap = Math.min(6, Math.max(0, e.ml - ((g.player&&g.player.level)||1))); if(gap>0){ const k = 1 - 0.04*gap; e.hp = Math.round(e.hp*k); e.maxHp = e.hp; e.dmg *= k; } }   // v237: under-levelled characters face slightly softer monsters (4%/level, max 6 levels) so a 21 can handle a 23 zone
+  { const gap = Math.min(6, Math.max(0, e.ml - ((g.player&&g.player.level)||1))); if(gap>0){ const k = 1 - 0.01*gap;   /* v490: was 4%/level -- harder zones now stay hard */ e.hp = Math.round(e.hp*k); e.maxHp = e.hp; e.dmg *= k; } }   // v237: under-levelled characters face slightly softer monsters (4%/level, max 6 levels) so a 21 can handle a 23 zone
   if(type==='colossus'){   // v354: no over-level scaling for the Colossus (monster level pinned to the area), and its base damage is cut ~40%
     const mlc = Math.min(e.ml, g.depth||e.ml);
     e.hp = Math.round(e.hp*mlEnemyHpMult(mlc)/mlEnemyHpMult(e.ml)); e.maxHp = e.hp;
@@ -1113,6 +1115,11 @@ function spawnEnemy(g, type, pos){
   if(type==='cavetroll'){ e.speed *= 2; e.meleeBonus = 26; e.meleeSplash = true; }           // troll club hits everything in a wider circle
   if(type==='zombie') e.speed *= 1.07;
   if(type==='skeleton') e.speed *= 0.5;   // v486: skeletons shamble at half speed
+  // v490 tuning: skeletons a further 15% slower, goblins half speed, bandits slower too; trolls 10% smaller
+  if(type==='skeleton') e.speed *= 0.85;
+  if(type==='goblin' || type==='goblinarcher') e.speed *= 0.5;
+  if(type==='bandit' || type==='banditarcher') e.speed *= 0.8;
+  if(type==='cavetroll' || type==='mtroll' || type==='trollelder'){ e.r = Math.round(e.r*0.9); if(e.baseR) e.baseR = e.r; }
   if(type==='mtroll'){ e.speed *= 1.6; e.meleeBonus = 22; e.meleeSplash = true; }
   if(type==='giant'){ e.meleeBonus = 34; e.meleeSplash = true; }
   if(type==='treant'){ e.meleeBonus = 22; e.meleeSplash = true; }   // v456: a sweeping branch slam

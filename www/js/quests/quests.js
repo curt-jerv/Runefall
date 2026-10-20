@@ -319,7 +319,7 @@ function talkToBarkeeper(){
   const q = getQuest(p, QUEST_LIGHT_THE_WAY.id);
   if(q && q.status==='active' && q.stage==='return'){
     q.status = 'complete'; q.progress = q.total;
-    const rk = p.cls==='ranger' ? 'coffee' : p.cls==='warrior' ? 'beer' : 'mana';
+    const rk = p.cls==='warrior' ? 'beer' : 'coffee';   // v490: no mana potions; the Mystic gets coffee
     forceAddToBag(p, makePotionItem(rk));
     const li = classRewardItem(p, Math.max(p.level||1, 15), 'reward'); forceAddToBag(p, li); p.gold += 200;   // v483: class gear instead of a Health Potion
     showMsg('Quest complete: '+QUEST_LIGHT_THE_WAY.name+' \u2014 '+li.name+', a free '+POTION_DEFS[rk].name+' and 200 gold!', 3.6);

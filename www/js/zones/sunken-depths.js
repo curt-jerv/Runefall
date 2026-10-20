@@ -77,7 +77,7 @@ function makeSunkenDepths(){
     const rocks = [];
     for(let i=0;i<80;i++){ const c = deepMineSpot(R, null, 20); if(c && !R.obstacles.some(o=>o.isWater && c.x>o.x-30 && c.x<o.x+o.w+30 && c.y>o.y-30 && c.y<o.y+o.h+30)) rocks.push({x:c.x, y:c.y, s:rand(0.6,1.2)}); }
     const crystals = [];
-    for(let i=0;i<70;i++){ const c = deepMineSpot(R, null, 20); if(c) crystals.push({x:c.x, y:c.y, s:rand(0.6,1.3), hue:rnd()<0.5 ? 0 : 1, ph:rnd()*6}); }
+    for(let i=0;i<40;i++){ const c = deepMineSpot(R, null, 20); if(c) crystals.push({x:c.x, y:c.y, s:rand(0.6,1.3), hue:rnd()<0.5 ? 0 : 1, ph:rnd()*6}); }   // v490: 40 glowing crystals (was 70) -- each is an additive blend
     const ch = chs[8];
     const horde = [];
     for(let i=0;i<9;i++){ const a = i/9*6.28 + rnd()*0.4, rr = 70 + rnd()*70; horde.push({x:ch.x+Math.cos(a)*rr*1.2, y:ch.y+Math.sin(a)*rr*0.75, s:0.7+rnd()*0.6, gems:rnd()<0.5}); }
@@ -271,7 +271,7 @@ function updateSubZone(g, dt){
   updatePortalChoice(false);
   let skind = null;
   if(dist(p, t.entrance) < t.entrance.r + p.r + 22) skind = t.subzone==='sunken' ? 'sunkenToTemple' : t.subzone==='temple' ? 'templeToRuins' : 'poolToMarsh';
-  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ skind = 'waypointAncientRuins'; discoverWaypoint('reachedAncientRuins'); }
+  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ skind = 'waypointAncientRuins'; }
   else if(t.stairsDown && dist(p, t.stairsDown) < t.stairsDown.r + p.r + 22) skind = 'toSunkenDepths';
   else if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) skind = 'toTownFromTower';
   updateInteractPrompt(skind);
@@ -315,9 +315,41 @@ function drawKpFloors(room, cam){
     ctx.fillStyle = z.col; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2; ctx.stroke();
   }
 }
+// v490: the Sunken Depths / Flooded Temple ground is baked into the chunk cache; only the water tiles (precomputed once)
+// are repainted live each frame -- the old code walked every tile of the whole cave twice a frame.
+function subWetTiles(room){
+  if(room._wetTiles) return room._wetTiles;
+  const TS = 46, out = [];
+  for(let wx=0; wx<=room.w; wx+=TS) for(let wy=0; wy<=room.h; wy+=TS){
+    if(!subWaterAt(room,wx,wy)) continue;
+    const ix = Math.floor(wx/TS), iy = Math.floor(wy/TS);
+    out.push({wx, wy, s:wx+wy, checker:((ix+iy)%2+2)%2, hh:tileHash(ix,iy)});
+  }
+  out.sort((a,b)=>a.s-b.s);   // sorted by iso row (x+y), so a frame only walks the visible band
+  return (room._wetTiles = out);
+}
+function drawSubWaterLive(room, cam){
+  const TS = 46, clk = (game&&game.clock)||0, L = subWetTiles(room);
+  const s0 = (cam.y-80)/ISO_KY, s1 = (cam.y+H+80)/ISO_KY;
+  let lo = 0, hi = L.length; while(lo<hi){ const m = (lo+hi)>>1; if(L[m].s < s0) lo = m+1; else hi = m; }
+  for(let i=lo; i<L.length; i++){
+    const t = L[i]; if(t.s > s1) break;
+    const iso = toIso(t.wx,t.wy), sx = iso.x-cam.x;
+    if(sx < -80 || sx > W+80) continue;
+    const shim = (Math.floor((t.wx+t.wy)/TS*0.5 + clk*0.7) % 2 + 2) % 2;
+    ctx.fillStyle = (t.checker^shim) ? '#10303e' : '#0c2833'; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
+    if(t.hh>0.9){ ctx.fillStyle='rgba(140,200,230,'+(0.10+0.08*Math.sin(clk*1.6+t.hh*30))+')'; ctx.beginPath(); ctx.ellipse(iso.x+(t.hh-0.95)*120, iso.y, 9, 3.4, 0, 0, 7); ctx.fill(); }
+  }
+}
 function drawSubFloor(room, cam){
   const TS = 46, clk = (game&&game.clock)||0;
   const pool = room.subzone==='pool';
+  if(room.subzone==='sunken' || room.subzone==='temple'){
+    cachedFloor(room, cam, c=>{ drawFloor(room, c); if(FLOOR_PASS!==1) drawSubWaterLive(room, c); }, c=>drawSubWaterLive(room, c));
+    if(room.bridge) drawStoneBridge(room.bridge, 0, 440, false);
+    if(room.woodBridge) drawWoodWalkway(room.woodBridge);
+    return;
+  }
   if(!pool) drawFloor(room, cam);
   if(room.kpFloors) drawKpFloors(room, cam);
   if(room.subzone==='highward') drawHwFloorInlay(room, cam);

@@ -167,7 +167,11 @@ function render(){
   // not as a stone/dungeon-wall block like every other obstacle.
   // v86: item 7 -- .occluder/.wx/.wy tag these as candidates for the
   // behind-wall fade pass below (right before drawables.sort()).
-  for(const o of room.obstacles){ if(o.isWater || o.isFurniture || o.isKeep || o.isProp || o.isCliff || o.bogVoid) continue; drawables.push({depth:(o.x+o.w/2)+(o.y+o.h/2), occluder:!o.bone, wx:o.x+o.w/2, wy:o.y+o.h/2, draw:()=>(
+  // v490: obstacles wholly off screen are skipped (organic caves have 500+ wall cells; drawing them all cost ~15ms a frame on phones)
+  const obCull = !(g.scene==='redcrater' || g.scene==='mountainpass' || g.scene==='redridge' || g.scene==='highlands'), obX0 = cam.x-240, obX1 = cam.x+W+240, obY0 = cam.y-120, obY1 = cam.y+H+260;
+  for(const o of room.obstacles){ if(o.isWater || o.isFurniture || o.isKeep || o.isProp || o.isCliff || o.bogVoid) continue;
+    if(obCull && o.w!=null){ const ixL = (o.x-o.y-o.h)*ISO_KX, ixR = (o.x+o.w-o.y)*ISO_KX, iyT = (o.x+o.y)*ISO_KY, iyB = (o.x+o.w+o.y+o.h)*ISO_KY; if(ixR < obX0 || ixL > obX1 || iyB < obY0 || iyT > obY1) continue; }
+    drawables.push({depth:(o.x+o.w/2)+(o.y+o.h/2), occluder:!o.bone, wx:o.x+o.w/2, wy:o.y+o.h/2, draw:()=>(
     o.bone ? drawBoneBarricade(o)
     : o.woodBarricade ? drawWoodBarricadeIso(o)
     : o.organic ? drawOrganicWall(o)
@@ -220,6 +224,7 @@ function render(){
       if(g.town.outerTrees) for(const tr of g.town.outerTrees){ const io = toIso(tr.x,tr.y); if(io.x>cam.x-160 && io.x<cam.x+W+160 && io.y>cam.y-300 && io.y<cam.y+H+200) drawables.push({depth:tr.x+tr.y, draw:()=>(tr.dead ? drawDeadTreeIso(tr) : drawTreeIso(tr))}); }
       if(g.town.props) for(const pr of g.town.props) drawables.push({depth:pr.x+pr.y+(pr.k==='fence'?pr.len/2:0), draw:()=>drawTownProp(pr, g.clock||0)});
       drawables.push({depth:500+930, draw:()=>drawSignIso({x:500,y:930}, ['DOCKS'])});
+      for(const tn of townTipNpcs(g)) drawables.push({depth:tn.x+tn.y, draw:()=>drawSimpleNpcIso(tn, g.clock||0)});   // v490
       if(tavernIsOpen(p) && g.town.boat){ const bt = g.town.boat; drawables.push({depth:bt.x+bt.y, draw:()=>drawTownBoat(bt, g.clock||0)}); }
       if(g.followers) for(const f of g.followers) drawables.push({depth:f.x+f.y, draw:()=>drawFollowerIso(f)});
       pushNecroDrawables(g, drawables);
@@ -283,7 +288,7 @@ function render(){
       drawables.push({depth:g.mtn.mineGate.x+g.mtn.mineGate.y, draw:()=>drawEdgeLabelIso(g.mtn.mineGate, 'MOUNTAIN DEPTHS', 130)});
       // Mountain Pass's own dedicated waypoint -- always lit/pulsing (see
       // makeMountainPass()'s comment), same art as Town's.
-      drawables.push({depth:g.mtn.waypoint.x+g.mtn.waypoint.y-1, draw:()=>drawWaypointIso(g.mtn.waypoint, g.clock||0, true)});
+      drawables.push({depth:g.mtn.waypoint.x+g.mtn.waypoint.y-1, draw:()=>drawWaypointIso(g.mtn.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:g.mtn.waypoint.x+g.mtn.waypoint.y, draw:()=>drawEdgeLabelIso(g.mtn.waypoint, 'WAYPOINT')});
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -299,7 +304,7 @@ function render(){
         if(gt.art) drawables.push({depth:gt.x+gt.y+(gt.big?120:0)-(gt.art==='keep'?1e5:0), draw:()=>{ if(gt.big){ const io = toIso(gt.x,gt.y); ctx.save(); ctx.translate(io.x,io.y); ctx.scale(gt.big,gt.big); ctx.translate(-io.x,-io.y); drawGateArtIso(gt, g.clock||0); if(gt.id==='bridge') drawGoldPortal(io.x, io.y-50, 24, 47, g.clock||0, rrBeaconCount(g.player)>=3); ctx.restore(); } else drawGateArtIso(gt, g.clock||0); }});
         drawables.push({depth:gt.x+gt.y+(gt.big?121:1), draw:()=>drawEdgeLabelIso(gt, gt.label, gt.labelH!=null ? gt.labelH : gt.big ? 30+70*(gt.big-1)+(typeof gt.art==='string'?80:0) : (typeof gt.art==='string'?150:30))});
       }
-      if(rr.waypoint){ drawables.push({depth:rr.waypoint.x+rr.waypoint.y-1, draw:()=>drawWaypointIso(rr.waypoint, g.clock||0, true)});
+      if(rr.waypoint){ drawables.push({depth:rr.waypoint.x+rr.waypoint.y-1, draw:()=>drawWaypointIso(rr.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:rr.waypoint.x+rr.waypoint.y, draw:()=>drawEdgeLabelIso(rr.waypoint, 'WAYPOINT')}); }
       if(rr.camp) drawables.push({depth:rr.camp.x+rr.camp.y-200, draw:()=>drawRRCamp(rr.camp, g.clock||0)});
       if(rr.camp){ const wf = {x:rr.camp.x, y:rr.camp.y, id:7, robe:'#6a5a3a', hood:'#4a3a28', long:true, tool:'lantern'};
@@ -325,7 +330,7 @@ function render(){
         drawables.push({depth:gt.x+gt.y+120, draw:()=>{ const io = toIso(gt.x,gt.y); ctx.save(); ctx.translate(io.x,io.y); ctx.scale(gt.big,gt.big); ctx.translate(-io.x,-io.y); drawGateArtIso(gt, clk); ctx.restore(); }});
         drawables.push({depth:gt.x+gt.y+121, draw:()=>drawEdgeLabelIso(gt, gt.label, gt.labelH||80)});
       }
-      drawables.push({depth:R.waypoint.x+R.waypoint.y-1, draw:()=>drawWaypointIso(R.waypoint, clk, true)});
+      drawables.push({depth:R.waypoint.x+R.waypoint.y-1, draw:()=>drawWaypointIso(R.waypoint, clk, waypointLit())});
       drawables.push({depth:R.waypoint.x+R.waypoint.y, draw:()=>drawEdgeLabelIso(R.waypoint, 'WAYPOINT')});
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -373,7 +378,7 @@ function render(){
         if(gt.act==='toRedridge' && !redridgeWallOpen(g.player)) drawables.push({depth:gt.x+gt.y+dz+0.5, draw:()=>drawDwarfWallIso(gt, g.clock||0)});
         drawables.push({depth:gt.x+gt.y+dz+1, draw:()=>drawEdgeLabelIso(gt, gt.label, gt.labelH!=null ? gt.labelH : gt.big ? 30+70*(gt.big-1)+(typeof gt.art==='string'?80:0) : (typeof gt.art==='string'?150:30))});
       }
-      drawables.push({depth:fh.waypoint.x+fh.waypoint.y-1, draw:()=>drawWaypointIso(fh.waypoint, g.clock||0, true)});
+      drawables.push({depth:fh.waypoint.x+fh.waypoint.y-1, draw:()=>drawWaypointIso(fh.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:fh.waypoint.x+fh.waypoint.y, draw:()=>drawEdgeLabelIso(fh.waypoint, 'WAYPOINT')});
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -391,12 +396,13 @@ function render(){
       }
       for(const c of (iz.crags||[])) drawables.push({depth:c.x+c.y, draw:()=>drawIceCragIso(c)});
       if(iz.waypoint){
-        drawables.push({depth:iz.waypoint.x+iz.waypoint.y-1, draw:()=>drawWaypointIso(iz.waypoint, g.clock||0, true)});
+        drawables.push({depth:iz.waypoint.x+iz.waypoint.y-1, draw:()=>drawWaypointIso(iz.waypoint, g.clock||0, waypointLit())});
         drawables.push({depth:iz.waypoint.x+iz.waypoint.y, draw:()=>drawEdgeLabelIso(iz.waypoint, 'WAYPOINT')});
       }
       if(iz.altar){
         drawables.push({depth:iz.altar.x+iz.altar.y, draw:()=>drawShrineAltarIso(iz.altar, g.clock||0)});
         drawables.push({depth:iz.altar.x+iz.altar.y+1, draw:()=>drawEdgeLabelIso(iz.altar, 'SHRINE')});
+        if(iz.homePortal){ const hp = iz.homePortal; drawables.push({depth:hp.x+hp.y-1, draw:()=>drawBluePortalIso(hp, g.clock||0)}); drawables.push({depth:hp.x+hp.y, draw:()=>drawEdgeLabelIso(hp, 'MISTFALL')}); }   // v490
       }
       if(iz.chestSpot) drawables.push({depth:iz.chestSpot.x+iz.chestSpot.y, draw:()=>drawChestIso(iz.chestSpot)});
     }
@@ -425,7 +431,7 @@ function render(){
       drawables.push({depth:rv.southGate.x+rv.southGate.y+1, draw:()=>drawEdgeLabelIso(rv.southGate, 'SUNLIT PLAINS')});
       drawables.push({depth:rv.caveGate.x+rv.caveGate.y, draw:()=>drawMinotaurCaveIso(rv.caveGate, clkR)});
       drawables.push({depth:rv.caveGate.x+rv.caveGate.y+2, draw:()=>drawEdgeLabelIso(rv.caveGate, 'MINOTAUR CAVE')});
-      drawables.push({depth:rv.waypoint.x+rv.waypoint.y-1, draw:()=>drawWaypointIso(rv.waypoint, clkR, true)});
+      drawables.push({depth:rv.waypoint.x+rv.waypoint.y-1, draw:()=>drawWaypointIso(rv.waypoint, clkR, waypointLit())});
       drawables.push({depth:rv.waypoint.x+rv.waypoint.y, draw:()=>drawEdgeLabelIso(rv.waypoint, 'WAYPOINT')});
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -445,7 +451,7 @@ function render(){
       drawables.push({depth:g.sun.forestGate.x+g.sun.forestGate.y, draw:()=>drawEdgeLabelIso(g.sun.forestGate, 'RIVER VALLEY')});
       // Sunlit Plains' own dedicated waypoint -- always lit/pulsing, same
       // shared art/mechanism as Town's and Mountain Pass's.
-      drawables.push({depth:g.sun.waypoint.x+g.sun.waypoint.y-1, draw:()=>drawWaypointIso(g.sun.waypoint, g.clock||0, true)});
+      drawables.push({depth:g.sun.waypoint.x+g.sun.waypoint.y-1, draw:()=>drawWaypointIso(g.sun.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:g.sun.waypoint.x+g.sun.waypoint.y, draw:()=>drawEdgeLabelIso(g.sun.waypoint, 'WAYPOINT')});
       // v70: the west reserved exit is now the Lighthouse Tower gate.
       drawables.push({depth:g.sun.westGate.x+g.sun.westGate.y, draw:()=>drawLighthouseTowerIso(g.sun.westGate, g.clock||0)});
@@ -497,7 +503,7 @@ function render(){
       drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y, draw:()=>drawRuinsGateIso(g.lake.marshGate, g.clock||0)});
       drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.marshGate, 'BLACK MARSH')});
       if(!g.lake.waypoint.off){
-        drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y-1, draw:()=>drawWaypointIso(g.lake.waypoint, g.clock||0, true)});
+        drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y-1, draw:()=>drawWaypointIso(g.lake.waypoint, g.clock||0, waypointLit())});
         drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y, draw:()=>drawEdgeLabelIso(g.lake.waypoint, 'WAYPOINT')});
       }
     }
@@ -523,7 +529,7 @@ function render(){
       drawables.push({depth:bm.eastGate.x+bm.eastGate.y+1, draw:()=>drawEdgeLabelIso(bm.eastGate, 'FORGOTTEN TOWER', 180)});
       drawables.push({depth:bm.poolGate.x+bm.poolGate.y, draw:()=>drawSinkholeGateIso(bm.poolGate, g.clock||0)});
       drawables.push({depth:bm.poolGate.x+bm.poolGate.y+1, draw:()=>drawEdgeLabelIso(bm.poolGate, 'MARSH POOL')});
-      drawables.push({depth:bm.waypoint.x+bm.waypoint.y-1, draw:()=>drawWaypointIso(bm.waypoint, g.clock||0, true)});
+      drawables.push({depth:bm.waypoint.x+bm.waypoint.y-1, draw:()=>drawWaypointIso(bm.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:bm.waypoint.x+bm.waypoint.y, draw:()=>drawEdgeLabelIso(bm.waypoint, 'WAYPOINT')});
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -537,7 +543,7 @@ function render(){
       if(g.cem.graves) for(const gr of g.cem.graves) drawables.push({depth:gr.x+gr.y, draw:()=>drawGraveIso(gr)});
       drawables.push({depth:g.cem.sunlitGate.x+g.cem.sunlitGate.y, draw:()=>drawRuinsGateIso(g.cem.sunlitGate, g.clock||0)});
       drawables.push({depth:g.cem.sunlitGate.x+g.cem.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.cem.sunlitGate, 'SUNLIT PLAINS')});
-      if(g.cem.waypoint){ drawables.push({depth:g.cem.waypoint.x+g.cem.waypoint.y-1, draw:()=>drawWaypointIso(g.cem.waypoint, g.clock||0, true)});
+      if(g.cem.waypoint){ drawables.push({depth:g.cem.waypoint.x+g.cem.waypoint.y-1, draw:()=>drawWaypointIso(g.cem.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:g.cem.waypoint.x+g.cem.waypoint.y, draw:()=>drawEdgeLabelIso(g.cem.waypoint, 'WAYPOINT')}); }
       // The sealed tomb -- visually present from the very first visit,
       // its locked/unlocked visual state driven purely by p.cemeteryCleared
@@ -571,7 +577,7 @@ function render(){
       drawables.push({depth:g.crypt.cemeteryGate.x+g.crypt.cemeteryGate.y-1, draw:()=>drawStairsUpIso(g.crypt.cemeteryGate, g.clock||0)});
       drawables.push({depth:g.crypt.cemeteryGate.x+g.crypt.cemeteryGate.y, draw:()=>drawEdgeLabelIso(g.crypt.cemeteryGate, 'CURSED CEMETERY')});
       for(const dr of [g.crypt.hallDoor, g.crypt.tombDoor]) drawables.push({depth:dr.x+dr.y-1, draw:()=>drawTombDoorIso(dr, g.clock||0)});
-      drawables.push({depth:g.crypt.waypoint.x+g.crypt.waypoint.y-1, draw:()=>drawWaypointIso(g.crypt.waypoint, g.clock||0, true)});
+      drawables.push({depth:g.crypt.waypoint.x+g.crypt.waypoint.y-1, draw:()=>drawWaypointIso(g.crypt.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:g.crypt.waypoint.x+g.crypt.waypoint.y, draw:()=>drawEdgeLabelIso(g.crypt.waypoint, 'WAYPOINT')});
       if(g.crypt.returnPortal){
         const rp = g.crypt.returnPortal;
@@ -594,7 +600,7 @@ function render(){
     drawables.push({depth:R.entrance.x+R.entrance.y-1, draw:()=>drawStairsUpIso(R.entrance, g.clock||0)});
     drawables.push({depth:R.entrance.x+R.entrance.y, draw:()=>drawEdgeLabelIso(R.entrance, R.floor===1 ? 'FROSTHOLD KEEP' : 'STAIRS UP')});
     if(R.waypoint){
-      drawables.push({depth:R.waypoint.x+R.waypoint.y-1, draw:()=>drawWaypointIso(R.waypoint, g.clock||0, true)});
+      drawables.push({depth:R.waypoint.x+R.waypoint.y-1, draw:()=>drawWaypointIso(R.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:R.waypoint.x+R.waypoint.y, draw:()=>drawEdgeLabelIso(R.waypoint, 'WAYPOINT')});
     }
     if(R.stairsDown){
@@ -628,7 +634,7 @@ function render(){
         drawables.push({depth:R.stairsDown.x+R.stairsDown.y, draw:()=>drawEdgeLabelIso(R.stairsDown, 'STAIRS DOWN')});
       }
       if(R.waypoint){
-        drawables.push({depth:R.waypoint.x+R.waypoint.y-1, draw:()=>drawWaypointIso(R.waypoint, g.clock||0, true)});
+        drawables.push({depth:R.waypoint.x+R.waypoint.y-1, draw:()=>drawWaypointIso(R.waypoint, g.clock||0, waypointLit())});
         drawables.push({depth:R.waypoint.x+R.waypoint.y, draw:()=>drawEdgeLabelIso(R.waypoint, 'WAYPOINT')});
       }
       if(R.returnPortal){
@@ -689,7 +695,7 @@ function render(){
       drawables.push({depth:t.clearPortal.x+t.clearPortal.y-1, draw:()=>drawBluePortalIso(t.clearPortal, g.clock||0)});
       drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, 'MISTFALL')});
     }
-    if(t.waypoint){ drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, true)}); drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')}); }   // v489: Ember Caverns
+    if(t.waypoint){ drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, waypointLit())}); drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')}); }   // v489: Ember Caverns
     drawables.push({depth:-99999, draw:()=>drawBlasts(g)});
     if(g.chest) drawables.push({depth:g.chest.x+g.chest.y, draw:()=>drawChestIso(g.chest)});
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -713,9 +719,9 @@ function render(){
       for(const b of t.templeDeco.braziers) if(vis(b.x,b.y)) drawables.push({depth:b.x+b.y, draw:()=>drawTempleBrazierIso(b, g.clock||0)});
       if(vis(t.templeDeco.altar.x, t.templeDeco.altar.y)) drawables.push({depth:t.templeDeco.altar.x+t.templeDeco.altar.y, draw:()=>drawTempleAltarIso(t.templeDeco.altar)});
     }
-    if(t.waypoint && t.subzone==='temple'){ drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, true)}); drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')}); }
+    if(t.waypoint && t.subzone==='temple'){ drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, waypointLit())}); drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')}); }
     if(t.subzone==='highward'){
-      if(t.waypoint){ drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, true)}); drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')}); }
+      if(t.waypoint){ drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, waypointLit())}); drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')}); }
       if(t.hwUp){ drawables.push({depth:t.hwUp.x+t.hwUp.y-1, draw:()=>drawStairsUpIso(t.hwUp, g.clock||0)}); drawables.push({depth:t.hwUp.x+t.hwUp.y, draw:()=>drawEdgeLabelIso(t.hwUp, 'STAIRS UP')}); }
       if(t.hwDeco) for(const dc of t.hwDeco) if(vis(dc.x,dc.y)) drawables.push({depth:dc.x+dc.y, draw:()=>(dc.type==='brazier' ? drawHwBrazier(dc, g.clock||0) : dc.type==='statue' ? drawHwStatueIso(dc) : drawHwCrossIso(dc))});
       if(t.chests) for(const c of t.chests) if(vis(c.x,c.y)) drawables.push({depth:c.x+c.y, draw:()=>drawChestIso(c)});
@@ -725,7 +731,7 @@ function render(){
       if(t.eastGates) for(const gt of t.eastGates){ const open = !!g.player.hwSwitchOn; postLos.push({depth:gt.x+gt.y, draw:()=>drawHwGateIso(gt, open, g.clock||0)}); postLos.push({depth:gt.x+gt.y+1, draw:()=>drawEdgeLabelIso(gt, open?'EAST PORTAL':'SEALED', 132)}); }
     }
     if(t.subzone==='keep'){
-      if(t.waypoint){ drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, true)}); drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')}); }
+      if(t.waypoint){ drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, waypointLit())}); drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')}); }
       if(t.kpArea===7 && t.breach && g.player.breachContained && (g.holdShrinkV||0)>0.9){ drawables.push({depth:t.breach.x+t.breach.y-1, draw:()=>drawHellPortal(t.breach, g.clock||0)}); drawables.push({depth:t.breach.x+t.breach.y, draw:()=>drawEdgeLabelIso(t.breach, 'THE BREACH', 112)}); }
       if(t.exitPending && !t.exitDoor){ drawables.push({depth:t.exitPending.x+t.exitPending.y-1, draw:()=>{ ctx.save(); ctx.globalAlpha = 0.3; drawHellPortal(t.exitPending, g.clock||0); ctx.restore(); }}); drawables.push({depth:t.exitPending.x+t.exitPending.y, draw:()=>drawEdgeLabelIso(t.exitPending, 'SEALED — SLAY THE GUARDIANS', 112)}); }
       if(t.exitDoor){ drawables.push({depth:t.exitDoor.x+t.exitDoor.y-1, draw:()=>(t.hell ? drawHellPortal(t.exitDoor, g.clock||0) : drawKeepDoor(t.exitDoor, g.clock||0))}); drawables.push({depth:t.exitDoor.x+t.exitDoor.y, draw:()=>drawEdgeLabelIso(t.exitDoor, (KP_EXIT_LBL[t.kpArea]||'ONWARD'), 112)}); }
@@ -740,6 +746,7 @@ function render(){
       const lit = !!(g.player.rrBeacons && g.player.rrBeacons[t.rrId]);
       if(t.rrBeacon){ drawables.push({depth:t.rrBeacon.x+t.rrBeacon.y, draw:()=>drawRRBeaconIso(t.rrBeacon, g.clock||0, lit)});
       drawables.push({depth:t.rrBeacon.x+t.rrBeacon.y+1, draw:()=>drawEdgeLabelIso(t.rrBeacon, lit?'BEACON LIT':'BEACON')}); }
+      if(t.exitPortal){ const ep = t.exitPortal; drawables.push({depth:ep.x+ep.y-1, draw:()=>drawBluePortalIso(ep, g.clock||0)}); drawables.push({depth:ep.x+ep.y, draw:()=>drawEdgeLabelIso(ep, 'REDRIDGE CANYON')}); }   // v490
       if(t.rrUp){ drawables.push({depth:t.rrUp.x+t.rrUp.y-1, draw:()=>drawStairsUpIso(t.rrUp, g.clock||0)}); drawables.push({depth:t.rrUp.x+t.rrUp.y+1, draw:()=>drawEdgeLabelIso(t.rrUp, 'STAIRS UP · FLOOR '+((t.rrFloor||1)+1))}); }
       for(const v of t.vents) if(vis(v.x,v.y)) drawables.push({depth:v.x+v.y-2, draw:()=>drawRRVentIso(v, g.clock||0)});
       for(const l of t.ladders) if(vis(l.x,l.y)) drawables.push({depth:l.x+l.y, draw:()=>drawRRLadderIso(l)});
@@ -768,6 +775,10 @@ function render(){
     if(t.stairs){
       drawables.push({depth:t.stairs.x+t.stairs.y-1, draw:()=>drawStairsDownIso(t.stairs, g.clock||0)});
       drawables.push({depth:t.stairs.x+t.stairs.y, draw:()=>drawEdgeLabelIso(t.stairs, 'STAIRS UP')});
+    }
+    if(t.clearPortal){   // v490: the Commander's way out was never drawn in the tower
+      drawables.push({depth:t.clearPortal.x+t.clearPortal.y-1, draw:()=>drawBluePortalIso(t.clearPortal, g.clock||0)});
+      drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, 'FROSTHOLD KEEP')});
     }
     if(g.chest) drawables.push({depth:g.chest.x+g.chest.y, draw:()=>drawChestIso(g.chest)});
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -804,7 +815,7 @@ function render(){
         drawables.push({depth:t.beacon.x+t.beacon.y, draw:()=>drawLighthouseBeaconIso(t.beacon, g.clock||0, !!g.player.lighthouseBeaconOn)});
       }
       if(t.waypoint){
-        drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, true)});
+        drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, waypointLit())});
         drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')});
       }
       if(t.clearPortal){
@@ -980,6 +991,7 @@ function render(){
   if(g.scene==='darkcrypt') drawDarkCryptOverlay(g, DARKCRYPT_PLAYER_LIGHT_R, true);
   else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : 1), false, hrt ? '#1c0503' : null); }
   else if(wlDarkFight(g)) drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*0.9, false);   // v434: darkness closes in during the Wraith Lord fight (10% tighter than the caves)
+  if(g.enemies && g.enemies.some(x=>x.dwc && (x.cState==='laser' || x.cState==='flatten'))){ ctx.save(); ctx.translate(-cam.x+shX, -cam.y+shY); for(const x of g.enemies) if(x.dwc) drawDwBeam(x); ctx.restore(); }   // v490: Construct's Furnace Beam glows over the dark
   else if(g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g)) drawDungeonVignette(g);
   if(g.scene==='lighthouse' && g.room && g.room.bridge) drawBridgeGlow(g);
   drawRegionDarkening(g);

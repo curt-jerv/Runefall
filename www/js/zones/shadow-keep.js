@@ -664,7 +664,10 @@ function enterKeep(area, opts){
   g.tower = makeKeep(area, opts); g.room = g.tower; g.mtn = null;
   g.depth = area===9 ? breachDepth(opts.bf||1) : KP_DEPTH[area-1];
   const t = g.tower;
-  if(t.beacons){ const tb = p.tpBeacons || []; t.beacons.forEach((b,i)=>{ b.lit = !!tb[i]; }); }
+  if(t.beacons){ const tb = p.tpBeacons || []; t.beacons.forEach((b,i)=>{ b.lit = !!tb[i]; });
+    // v490: the Temple beacons get their own quest entry so the tracker shows them
+    const n = t.beacons.filter(x=>x.lit).length;
+    if(n<3){ const q = addQuestOnce(p, 'sk_beacons', 'The Temple Beacons', 'Light the three beacons in the Temple to unlock the Demon Hold.', 3); q.progress = n; updateQuestBadge(); } }
   if(opts.from==='next' && (t.exitDoor||t.holdStairs)){ const ex = t.exitDoor||t.holdStairs; p.x = ex.x-110; p.y = ex.y; }
   else if(opts.from==='wp' && t.waypoint){ p.x = t.waypoint.x; p.y = t.waypoint.y+55; }
   else if(opts.from==='breach' && t.breach){ p.x = t.breach.x; p.y = t.breach.y+140; }
@@ -697,6 +700,8 @@ function lightKeepBeacon(b){
   const n = t.beacons.filter(x=>x.lit).length;
   try{ sfxPlay('banner', 0.5); }catch(e){}
   for(let k=0;k<14;k++) g.particles.push({type:'burst', x:b.x+rand(-26,26), y:b.y+rand(-26,26), t:0.6, max:0.6, color:'#ffb040'});
+  { const q = addQuestOnce(p, 'sk_beacons', 'The Temple Beacons', 'Light the three beacons in the Temple to unlock the Demon Hold.', 3); q.progress = n;   // v490
+    if(n>=3){ q.status = 'complete'; q.rewarded = true; q.desc = 'All three beacons burn. The way to the Demon Hold is open.'; } else q.desc = 'Light the three beacons in the Temple to unlock the Demon Hold ('+n+'/3 lit).'; updateQuestBadge(); }
   showMsg(n>=3 ? 'The way is open  (3/3)' : 'Light the beacons to open the way  ('+n+'/3)', 4.6, '#ffcf7a');
   saveGame();
 }
@@ -760,7 +765,7 @@ function updateKeep(g, dt){
   else if(nr(t.exitDoor)) k = 'keepNext';
   else if(t.beacons && t.beacons.some(b=>nr(b,12))){ g._beaconNear = t.beacons.find(b=>nr(b,12)); k = 'keepBeacon'; }
   else if(t.holdStairs && nr(t.holdStairs)) k = 'keepStairs';
-  else if(t.waypoint && dist(p,t.waypoint) < t.waypoint.r + p.r + 24){ discoverWaypoint(a===8 ? 'reachedRingWp' : a===7 ? 'reachedHoldWp' : 'reachedKeepWp'); k = a===8 ? 'waypointRing' : a===7 ? 'waypointHold' : 'waypointKeep'; }
+  else if(t.waypoint && dist(p,t.waypoint) < t.waypoint.r + p.r + 24){ k = a===8 ? 'waypointRing' : a===7 ? 'waypointHold' : 'waypointKeep'; }
   else if(t.altars && p.wraithLordSlain && !p.breachContained && t.altars.some(x=>!(p.runesPlaced||{})[x.rune] && nr(x))){ g._altarNear = t.altars.find(x=>!(p.runesPlaced||{})[x.rune] && nr(x)); k = 'runeAltar'; }
   else if(t.breach && p.breachContained && a===7 && dist(p,t.breach) < (((g.holdShrinkV||0)>0.5) ? 50 : t.breach.r) + p.r + 26){ k = 'breachEnter'; p.breachReached = true; }
   else { for(const l of t.lore){ if(dist(p,l) < l.r + p.r + 16){ k = 'keepLore'; g._keepLoreNear = l; break; } } }

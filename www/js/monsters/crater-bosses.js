@@ -29,7 +29,7 @@ function spawnGojira(g){
 }
 // v182: she hits far harder against high-level players; telegraphed slams also take a slice of max life
 function gjHit(g, e, target, mult, kb){
-  let dmg = e.dmg*mult*TELE_DMG_MULT;
+  let dmg = teleDmg(e, mult);
   if(target===g.player && mult>=0.9) dmg = Math.max(dmg, (g.player.maxHp||100)*(e.pctFloor||0.16)*mult);
   if(target===g.player) playerDamage(g, dmg, e, kb); else applyFollowerDamage(g, target, dmg, e);
 }

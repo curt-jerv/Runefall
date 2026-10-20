@@ -54,7 +54,7 @@ const ZONE_LANDMARKS = {
   minotaurcave: [['River Valley Entrance (back)','R'], ['Minotaur\'s Lair','!']],
   lighthouse: [['Mountain Pass Entrance (back)','M'], ['Tower Ascent','^']],
   lakesideruins: [['Sunlit Plains (west)','S'], ['Ancient Ruins (island)','R'], ['Black Marsh (east)','B']],
-  blackmarsh: [['Lakeside Ruins (west gate)','L'], ["Witch\'s House & Cauldron",'H'], ['Waypoint','W'], ['Forgotten Tower (far east)','T']],
+  blackmarsh: [['Lakeside Ruins (west gate)','L'], ["Witch\'s House & Cauldron",'H'], ['Waypoint','W'], ['Forgotten Tower (far east)','T'], ['Tower Bridge (over the great river)','='], ['Marsh Pool (north edge, east)','P'], ['Barren Highlands (north-west)','B']],
 };
 // Patch (Sept 2026): shared plotting helper, factored out of the old
 // Town-only branch below so the same "plot fixed landmark coords + the
@@ -242,6 +242,73 @@ function renderHwMap(g, p, box){
   if(R.guardPos && !p.highwardSlain) mark(R.guardPos,'!','#e05a5a');
   if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(ox+p.x*k, oy+p.y*k, 9, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, ox+p.x*k, oy+p.y*k, S); }
 }
+// v490: floor plan for the cave-style sub-zones (Sunken Depths, Flooded Temple): the real floor-mask cells with a bronze
+// rim, water in blue, and the landmarks. Charted once the floor's Map Bearer is slain, like the other dungeon maps.
+function renderSubCaveMap(g, p, box){
+  const R = g.tower, m = R.floorMask;
+  box.classList.remove('genericMode');
+  if(!R.mapFound){
+    box.classList.add('genericMode');
+    box.innerHTML = '<div style="padding:28px 12px;text-align:center;color:var(--bone-dim);font-family:Alegreya,Georgia,serif;line-height:1.6;">No map of this floor yet.<br>Slay the Map Bearer (ringed in gold) to find it.</div>';
+    return;
+  }
+  const fit = mapFit(box), PAD = 14;
+  const k = Math.min((fit.W-2*PAD)/R.w, (fit.H-2*PAD)/R.h), CW = Math.round(R.w*k+2*PAD), CH = Math.round(R.h*k+2*PAD), SC = 2;
+  const cv = document.createElement('canvas'); cv.width = CW*SC; cv.height = CH*SC; cv.style.cssText = 'width:'+CW+'px;height:'+CH+'px;display:block;margin:0 auto';
+  box.appendChild(cv);
+  const c = cv.getContext('2d'); c.scale(SC, SC);
+  const ox = PAD, oy = PAD, X = v=>ox+v*k, Y = v=>oy+v*k;
+  c.fillStyle = '#0b0907'; c.fillRect(0,0,CW,CH);
+  c.fillStyle = '#17130e'; c.fillRect(ox-2, oy-2, R.w*k+4, R.h*k+4);
+  const cells = (fn)=>{ for(let iy=0; iy<m.rows; iy++){ let run = -1; for(let ix=0; ix<=m.cols; ix++){ const on = ix<m.cols && m.data[iy*m.cols+ix]; if(on && run<0) run = ix; if(!on && run>=0){ fn(run*m.CELL, iy*m.CELL, (ix-run)*m.CELL, m.CELL); run = -1; } } } };
+  const g2 = Math.max(1.5, 14*k);
+  c.fillStyle = '#9c7f4a'; cells((x,y,w,h)=>c.fillRect(X(x)-g2, Y(y)-g2, w*k+g2*2, h*k+g2*2));   // rim
+  c.fillStyle = '#2a2219'; cells((x,y,w,h)=>c.fillRect(X(x)-g2*0.45, Y(y)-g2*0.45, w*k+g2*0.9, h*k+g2*0.9));
+  c.fillStyle = R.subzone==='temple' ? '#56605a' : '#4f5a5c'; cells((x,y,w,h)=>c.fillRect(X(x), Y(y), w*k+0.6, h*k+0.6));
+  c.fillStyle = '#2f5f86';
+  for(const o of R.obstacles){ if(!o.isWater) continue; c.fillRect(X(o.x), Y(o.y), Math.max(1.5,o.w*k), Math.max(1.5,o.h*k)); }
+  for(const o of R.obstacles){ if(o.templeCol || (o.isProp && !o.organic)){ c.fillStyle = '#8a8070'; c.fillRect(X(o.x), Y(o.y), Math.max(2,o.w*k), Math.max(2,o.h*k)); } }
+  if(R.woodBridge){ const b = R.woodBridge; c.fillStyle = '#9a7444'; c.fillRect(X(b.x0), Y(b.y-b.half), (b.x1-b.x0)*k, b.half*2*k); }
+  if(R.island){ c.fillStyle = '#4f5a5c'; c.beginPath(); c.arc(X(R.island.x), Y(R.island.y), R.island.r*k, 0, 7); c.fill(); }
+  const mark = (pt, ch, col)=>{ if(!pt) return; const x=X(pt.x), y=Y(pt.y); c.fillStyle=col; c.beginPath(); c.arc(x,y,11,0,7); c.fill(); c.strokeStyle='#000'; c.lineWidth=2; c.stroke(); c.fillStyle='#000'; c.font='bold 13px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(ch,x,y+1); };
+  if(R.subzone==='temple'){ mark(R.entrance, 'E', '#7fd87f'); mark(R.waypoint, 'W', '#5fd0ff'); mark(R.stairsDown, '▼', '#e8c44a'); }
+  else {
+    mark(R.entrance, '▲', '#7fd87f');
+    const kr = (g.enemies||[]).find(e=>e.kraken && e.hp>0);
+    if(kr) mark({x:SKP.cx, y:SKP.cy-SKP.ry*0.35}, '!', '#e05a5a');
+    if(g.chest && !g.chest.opened) mark(g.chest, '★', '#e8c44a');
+    if(R.extraChest && !R.extraChest.opened) mark(R.extraChest, '★', '#e8c44a');
+    if(R.clearPortal) mark(R.clearPortal, 'M', '#5fd0ff');
+  }
+  if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(X(p.x), Y(p.y), 8, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, X(p.x), Y(p.y), CW); }
+}
+// v490: Forgotten Tower floors -- walls, doorways and stairs; charted on every floor once the Map Bearer on floor 1 is slain
+function renderFtMap(g, p, box){
+  const R = g.tower;
+  box.classList.remove('genericMode');
+  if(!p.ftMapFound){
+    box.classList.add('genericMode');
+    box.innerHTML = '<div style="padding:28px 12px;text-align:center;color:var(--bone-dim);font-family:Alegreya,Georgia,serif;line-height:1.6;">No map of the Forgotten Tower yet.<br>Slay the Map Bearer (ringed in gold) on the first floor to find it.</div>';
+    return;
+  }
+  const fit = mapFit(box), PAD = 14;
+  const k = Math.min((fit.W-2*PAD)/R.w, (fit.H-2*PAD)/R.h), CW = Math.round(R.w*k+2*PAD), CH = Math.round(R.h*k+2*PAD), SC = 2;
+  const cv = document.createElement('canvas'); cv.width = CW*SC; cv.height = CH*SC; cv.style.cssText = 'width:'+CW+'px;height:'+CH+'px;display:block;margin:0 auto';
+  box.appendChild(cv);
+  const c = cv.getContext('2d'); c.scale(SC, SC);
+  const ox = PAD, oy = PAD;
+  c.fillStyle = '#0b0907'; c.fillRect(0,0,CW,CH);
+  c.fillStyle = '#4a4436'; c.fillRect(ox, oy, R.w*k, R.h*k);
+  for(const r of (R.rooms||[])){ c.strokeStyle = 'rgba(224,184,90,.35)'; c.lineWidth = 1; c.strokeRect(ox+r.x0*k+4, oy+r.y0*k+4, (r.x1-r.x0)*k-8, (r.y1-r.y0)*k-8); }
+  if(R.hall){ const h = R.hall; c.fillStyle = '#56503f'; c.fillRect(ox+h.x0*k+3, oy+h.y0*k+3, (h.x1-h.x0)*k-6, (h.y1-h.y0)*k-6); }
+  for(const o of R.obstacles){ c.fillStyle = o.mazeWall ? '#120e09' : '#7a6a50'; c.fillRect(ox+o.x*k, oy+o.y*k, Math.max(1.5,o.w*k), Math.max(1.5,o.h*k)); }
+  c.strokeStyle = '#9c7f4a'; c.lineWidth = 2; c.strokeRect(ox, oy, R.w*k, R.h*k);
+  const mark = (pt, ch, col)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; c.fillStyle=col; c.beginPath(); c.arc(x,y,12,0,7); c.fill(); c.strokeStyle='#000'; c.lineWidth=2; c.stroke(); c.fillStyle='#000'; c.font='bold 14px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(ch,x,y+1); };
+  mark(R.entrance, R.floor===1 ? 'B' : '▼', '#7fd87f'); mark(R.stairs, '▲', '#e8c44a'); mark(R.waypoint, 'W', '#5fd0ff');
+  if(R.witch) mark(R.witch, '?', '#e8c44a');
+  if(R.clearPortal) mark(R.clearPortal, 'M', '#5fd0ff');
+  if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(ox+p.x*k, oy+p.y*k, 9, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, ox+p.x*k, oy+p.y*k, CW); }
+}
 // v481: D2-style finish for every map canvas -- dark vignette, faint grain and a bronze double frame
 function mapFinish(cv, dpr){
   try{
@@ -273,6 +340,8 @@ function renderRegionMap0(){
   if(g.scene==='lighthouse' && g.tower && g.tower.deep){ renderDeepMap(g, p, box); return; }
   if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='highward'){ renderHwMap(g, p, box); return; }
   if(g.scene==='lighthouse' && g.tower && g.tower.maze){ renderLhMazeMap(g, p, box); return; }
+  if(g.scene==='lighthouse' && g.tower && (g.tower.subzone==='sunken' || g.tower.subzone==='temple') && g.tower.floorMask){ renderSubCaveMap(g, p, box); return; }   // v490
+  if(g.scene==='lighthouse' && g.tower && g.tower.ft && !g.tower.subzone){ renderFtMap(g, p, box); return; }   // v490
   // (v147/148) Layout-style maps: real floor plans for maze/room dungeons.
   const LAYOUT = {
     ancientruins: ()=>g.ruins && ({R:g.ruins, marks:[[g.ruins.entrance,'E','#7fd87f'],[g.ruins.stairsDown,'\u25BC','#e8c44a'],[g.ruins.waypoint,'W','#5fd0ff'],...(g.bossKilled?[[g.ruins.chestSpot,'\u2605','#e8c44a']]:[])]}),
@@ -320,7 +389,7 @@ function renderRegionMap0(){
     highlands: ()=>{ const r=g.hl; if(!r) return null; return {w:r.w,h:r.h,pts:[{pos:hlGate(r,'marsh'),label:'Black Marsh',icon:'B'},{pos:hlGate(r,'pass'),label:'Mountain Pass',icon:'M'},{pos:r.waypoint,label:'Waypoint',icon:'W'},...r.camps.map(c=>({pos:c,label:'Troll Camp',icon:'!'}))]}; },
     redcrater: ()=>{ const r=g.crater; return r && {w:r.w,h:r.h,pts:[{pos:r.gates[0],label:'Redridge Canyon',icon:'R'},...(game.player.obsidianTaken?[]:[{pos:r.runeSpot,label:'Obsidian Obelisk',icon:'O'}]),{pos:r.bossSpot,label:game.player.gojiraSlain?'Rex, the Crater King':'Gojira',icon:'!'}]}; },
     lakesideruins: ()=>{ const l=g.lake; return l && {w:l.w,h:l.h,pts:[{pos:l.sunlitGate,label:'Sunlit Plains',icon:'S'},{pos:l.waypoint.off?null:l.waypoint,label:'Waypoint',icon:'W'},{pos:l.ruinsSpot,label:'Ancient Ruins',icon:'R'},{pos:l.marshGate,label:'Black Marsh',icon:'B'}]}; },
-    blackmarsh: ()=>{ const b=g.bm; if(!b) return null; const pts=[{pos:b.westGate,label:'Lakeside Ruins',icon:'L'},{pos:b.house,label:'Witch\u2019s House',icon:'H'},{pos:b.eastGate,label:'Forgotten Tower',icon:'T'}]; for(const bx of BM_BRIDGES) pts.push({pos:{x:bx,y:bmTrailPt(bx).y},label:'Bridge',icon:'='}); return {w:b.w,h:b.h,pts}; },
+    blackmarsh: ()=>{ const b=g.bm; if(!b) return null; const pts=[{pos:b.westGate,label:'Lakeside Ruins',icon:'L'},{pos:b.highGate,label:'Barren Highlands',icon:'B'},{pos:b.house,label:'Witch\u2019s House',icon:'H'},{pos:b.waypoint,label:'Waypoint',icon:'W'},{pos:b.eastGate,label:'Forgotten Tower',icon:'T'},{pos:b.poolGate,label:'Marsh Pool',icon:'P'}]; for(const bx of BM_BRIDGES) pts.push({pos:{x:bx,y:bmTrailPt(bx).y},label:'',icon:'='}); pts.push({pos:{x:BM_MID_BRIDGE_X,y:bmMidY(BM_MID_BRIDGE_X)},label:'Tower Bridge',icon:'='}); return {w:b.w,h:b.h,pts}; },   // v490: the great river and its one bridge
     rivervalley: ()=>{ const r=g.rv; if(!r) return null; const pts=[{pos:r.northGate,label:'Dark Forest',icon:'F'},{pos:r.waypoint,label:'Waypoint',icon:'W'},{pos:r.bridgeC,label:'Old Bridge',icon:'='},{pos:r.southGate,label:'Sunlit Plains',icon:'S'},{pos:r.caveGate,label:'Minotaur Cave',icon:'M'},{pos:r.waterfall,label:'Waterfall',icon:'~'}]; if(!game.player.bridgeCleared) pts.push({pos:{x:RV_BX+300,y:r.bridgeC.y-220},label:'Bandit Camp',icon:'!'}); return {w:r.w,h:r.h,pts}; },
     cursedcemetery: ()=>{ const c=g.cem; return c && {w:c.w,h:c.h,pts:[{pos:c.sunlitGate,label:'Sunlit Plains',icon:'S'},{pos:c.tomb,label:'Dark Crypt',icon:'D'}]}; },
   };

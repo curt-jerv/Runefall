@@ -134,7 +134,8 @@ function nearestEnemyOnScreen(g, from, maxD){
     const io = toIso(e.x, e.y), sx = io.x-cam.x, sy = io.y-cam.y;
     if(sx<0 || sx>W || sy<40 || sy>H) continue;
     const d=dist(from,e) - Math.max(0, (e.r||0)-30) - bigBossReach(e);   // v452/v453: huge monsters are targeted from their edge; the great beasts from further out
-    if(d<bd && hasLOS(g,from,e)){ bd=d; best=e; }
+    const sc = d + (from===g.player && !enemyEngagedWith(e, from) ? 260 : 0);   // v490: monsters already fighting you come first
+    if(d<(maxD||99999) && sc<bd && hasLOS(g,from,e)){ bd=sc; best=e; }
   }
   return best;
 }
@@ -142,12 +143,17 @@ function nearestEnemyOnScreen(g, from, maxD){
 function bigBossReach(e){ return (e && (e.colossus || e.lvBoss || e.kraken || e.balrog || e.gj || e.trex)) ? 240 : 0; }
 function nearestEnemy(g, from, maxD, exclude){
   if(PC.mouseOn && g.player===from){ const r = pcAimPick(g, from, maxD, false, exclude); if(r!==undefined) return r; }
-  let best=null, bd=maxD||99999;
+  const isP = g.player===from;
+  let best=null, bd=maxD||99999, bs=Infinity;
   for(const e of g.enemies){
     if(exclude && exclude.indexOf(e)>=0) continue;
     const d=dist(from,e) - Math.max(0, (e.r||0)-30) - bigBossReach(e);   // v452/v453: huge monsters are targeted from their edge; the great beasts from further out
-    if(d<bd && hasLOS(g,from,e)){ bd=d; best=e; }
+    if(d>=bd) continue;
+    // v490: your own auto-aim skips anything off screen and prefers monsters already fighting you
+    const sc = isP ? d + (enemyEngagedWith(e, from) ? 0 : 260) : d;
+    if(sc<bs && (!isP || enemyOnScreen(g,e)) && hasLOS(g,from,e)){ bs=sc; best=e; }
   }
   return best;
 }
+function enemyEngagedWith(e, p){ return !!(e.aggroed || e.engaged || e._tgt===p || (e.lastAttackedT||0)>0 || e.state==='attack'); }
 

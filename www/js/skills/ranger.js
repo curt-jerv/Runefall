@@ -81,7 +81,10 @@ function finesseDodgeCooldown(p){
   if(rank<=0) return DODGE_CD_BASE;
   return Math.max(FINESSE_DODGE_CD_MIN, rank<=5 ? DODGE_CD_BASE - FINESSE_DODGE_CD_STEP*rank : DODGE_CD_BASE - FINESSE_DODGE_CD_STEP*5 - 0.03*(rank-5));   // v372: -0.1s per rank to Rank 5, then -0.03s (0.40s at Rank 10)
 }
-function dodgeMaxCharges(p){ return (p && p.skills && effectiveRank(p,'finesse')>0) ? 2 : 1; }
+function dodgeMaxCharges(p){
+  if(typeof game!=='undefined' && game && game.scene==='lighthouse' && game.tower && game.tower.subzone==='sunken') return 2;   // v490: two dodges in the Sunken Depths for everyone
+  return (p && p.skills && effectiveRank(p,'finesse')>0) ? 2 : 1;
+}
 // Marksman tree (Ranger's 2nd tree, v58): Bow Expert (passive bow-damage%),
 // Rapid Shot (new button, sequential 3-arrow burst), Multi Shot (passive that
 // turns the plain bow attack into a simultaneous 3/5-arrow spread + attack
@@ -274,6 +277,17 @@ const WHIRLWIND_RAGE_DRAIN = 15, WHIRLWIND_BASE_DUR = 3, WHIRLWIND_RANK_STEP = 0
 const ASSAULT_BASE_DUR = 6, ASSAULT_RANK_STEP = 1.0, ASSAULT_CD = 20;
 // v216: every telegraphed enemy attack hits much harder (Kraken excluded -- separately tuned); 
 const TELE_DMG_MULT = 2;
+// v490: telegraphed hits from normal (non-boss) monsters are 25% softer, the heavy hitters 40%, and none of them can take more
+// than half your life in one blow (before armour). Bosses keep their full telegraph damage.
+const TELE_HEAVY = {alligator:1, giantoad:1, toad:1, cavetroll:1, mtroll:1, trollelder:1, raptor:1, ram:1};
+function teleIsBoss(e){ return !!(e && (e.isBoss||e.isLairBoss||e.bossName||e.bkBoss||e.prot||e.hwGuardian||e.brBoss)); }
+function teleDmg(e, mult){
+  let d = e.dmg*mult*TELE_DMG_MULT;
+  if(teleIsBoss(e)) return d;
+  d *= TELE_HEAVY[e.type] ? 0.6 : 0.75;
+  const p = typeof game!=='undefined' && game && game.player;
+  return p && p.maxHp>0 ? Math.min(d, p.maxHp*0.5) : d;
+}
 // v187 Warrior survivability: built-ins + two new Berserker actives (Leap, Unbreakable)
 const WARRIOR_HP_MULT = 1.2, WARRIOR_BASE_ARMOR = 2, WARRIOR_ARMOR_PER_LEVEL = 0.4;
 const WARRIOR_KILL_HEAL = 0.03, WARRIOR_BIG_KILL_HEAL = 0.08;
@@ -905,26 +919,30 @@ function pickEnemyTarget(g, e){
     }
     if(best) return best;
   }
-  // Tier 2: aggro-swap onto whoever is currently attacking this monster.
-  if((e.lastAttackedT||0) > 0 && e.lastAttacker){
-    const atk = e.lastAttacker;
-    const isPlayer = atk===p;
-    const stillValid = isPlayer
-      ? (!playerVanished && p.hp>0)
-      : (atk.hp>0 && g.followers && g.followers.includes(atk));
-    if(stillValid) return atk;
-  }
-  // Tier 3: the closest valid target (player, unless vanished, or any follower).
-  // Cat Companion (v81) is deliberately excluded here -- it's a non-combat
-  // pet with no attack of its own, so it never appears as lastAttacker
-  // (tier 2 above already can't select it) and shouldn't be a punching
-  // bag enemies pick off just for being nearby either.
-  let best = playerVanished ? null : p;
-  let bestD = playerVanished ? Infinity : dist(e,p) + (enemyLOS(g,e,p) ? 0 : 500);
-  if(g.followers) for(const f of g.followers){
-    if(f.kind==='cat') continue;
-    let d = dist(e,f);
-    if(d < bestD){ d += hasLOS(g,e,f) ? 0 : 500; if(d < bestD){ bestD = d; best = f; } }
-  }
+  // v490 threat: enemies go for the CLOSEST ally (you or a follower). Damage builds threat on whoever dealt it (fading over a few
+  // seconds); someone else only pulls the monster off its closest target with a lot more threat -- about a quarter of its life.
+  const th = threatTick(g, e);
+  const cands = [];
+  if(!playerVanished && p.hp>0) cands.push(p);
+  if(g.followers) for(const f of g.followers){ if(f.kind!=='cat' && f.hp>0) cands.push(f); }
+  if(!cands.length) return null;
+  let closest = null, cd = Infinity;
+  for(const c of cands){ const d = dist(e,c) + ((c===p ? enemyLOS(g,e,c) : hasLOS(g,e,c)) ? 0 : 500); if(d < cd){ cd = d; closest = c; } }
+  // stick with the current target unless the new closest is clearly closer (no ping-ponging between two allies)
+  if(e._tgt && e._tgt!==closest && cands.includes(e._tgt) && dist(e,e._tgt) < cd + 70) closest = e._tgt;
+  const base = th.get(closest)||0, need = Math.max(25, (e.maxHp||100)*THREAT_STEAL_FRAC);
+  let best = closest, bt = base + need;
+  for(const c of cands){ const v = th.get(c)||0; if(c!==closest && v >= bt){ bt = v; best = c; } }
+  e._tgt = best;
   return best;
+}
+const THREAT_STEAL_FRAC = 0.25, THREAT_FADE = 4;   // v490: extra threat needed (share of the monster's life) / fade time in seconds
+function threatTick(g, e){
+  const th = e.threat || (e.threat = new Map()), now = g.clock||0;
+  const dt = Math.max(0, now - (e._thT==null ? now : e._thT)); e._thT = now;
+  if(dt>0){ const k = Math.exp(-dt/THREAT_FADE); for(const [c,v] of th){ const nv = v*k; if(nv < 1 || !(c.hp>0)) th.delete(c); else th.set(c, nv); } }
+  if(e._thHp==null) e._thHp = e.hp;
+  const lost = e._thHp - e.hp; e._thHp = e.hp;
+  if(lost>0 && e.lastAttacker && (e.lastAttackedT||0)>0) th.set(e.lastAttacker, (th.get(e.lastAttacker)||0) + lost);
+  return th;
 }

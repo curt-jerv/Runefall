@@ -542,30 +542,65 @@ function drawBluePortalIso(pr, clock){
   ctx.beginPath(); ctx.ellipse(0,0, rad*0.38, rad*0.38, -clock*1.9, 0, 4.2); ctx.stroke();
   ctx.restore();
 }
-// Town's permanent waypoint landmark. Sits on a small stone pedestal at
-// all times; the swirl above it only lights up and spins (reusing
-// drawBluePortalIso -- the Mine portal's original look, before that became
-// a stairway) once both Teleport unlock conditions are met. Dormant, it's
-// a flat grey disc with no glow or motion, reading clearly as "not yet".
+// v490: which save flag belongs to the waypoint in the zone the player is standing in (null = Town's, always lit).
+// Same flags the teleport menu discovers by (see WAYPOINT_FLAG_BY_FROM in ui/town-menus.js).
+function currentWaypointFlag(){
+  const g = game, s = g && g.scene, t = g && g.tower;
+  if(!s || s==='town') return null;
+  if(s==='mountainpass') return g.mtn && g.mtn.isCliff ? 'reachedCliffWp' : 'reachedMountainPass';
+  if(s==='ancientruins') return g.ruins && g.ruins.fhd ? 'reachedFhdWp' : 'reachedAncientRuins';
+  if(s==='lighthouse'){
+    if(!t) return null;
+    if(t.deep) return 'reachedDeepWp';
+    if(t.subzone==='temple') return 'reachedAncientRuins';
+    if(t.subzone==='highward') return 'reachedHighwardWp';
+    if(t.subzone==='keep') return t.kpArea===8 ? 'reachedRingWp' : t.kpArea===7 ? 'reachedHoldWp' : 'reachedKeepWp';
+    return t.ft ? 'reachedForgottenTower' : 'reachedLighthouseTower';
+  }
+  return {redridge:'reachedRedridge', highlands:'reachedHighlands', frosthold:'reachedFrostholdWp', icyzone:'reachedIcySummit', rivervalley:'reachedRiverValley',
+    sunlitplains:'reachedSunlitPlains', lakesideruins:'reachedLakesideRuins', blackmarsh:'reachedBlackMarsh', cursedcemetery:'reachedCursedCemetery', darkcrypt:'reachedDarkCrypt'}[s] || null;
+}
+// v490: true once this zone's waypoint has been used (interacted with) -- it then draws lit instead of dim
+function waypointLit(){ const f = currentWaypointFlag(); return !f || !!(game.player && game.player[f]); }
+// Every waypoint sits on a small stone pedestal. v490: before it's been used it only gives off a dim,
+// slow blue-grey shimmer; once the player interacts with it (discoverWaypoint) it lights up: bright swirl, halo, motes.
 function drawWaypointIso(pr, clock, unlocked){
-  const iso = toIso(pr.x, pr.y);
+  const iso = toIso(pr.x, pr.y), t = clock||0;
   drawShadow(iso.x, iso.y, pr.r*1.15, 10);
   ctx.save(); ctx.translate(iso.x, iso.y);
   ctx.fillStyle = '#3a3440';
   ctx.beginPath(); ctx.ellipse(0, 5, pr.r*1.15, pr.r*0.5, 0, 0, 7); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1.4; ctx.stroke();
-  ctx.fillStyle = '#4c4656';
+  ctx.fillStyle = unlocked ? '#545a72' : '#4c4656';
   ctx.beginPath(); ctx.ellipse(0, 2, pr.r*0.85, pr.r*0.36, 0, 0, 7); ctx.fill();
+  if(unlocked){   // v490: glowing rim on the pedestal
+    ctx.strokeStyle = 'rgba(140,200,255,'+(0.55+0.2*Math.sin(t*3))+')'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.ellipse(0, 2, pr.r*0.85, pr.r*0.36, 0, 0, 7); ctx.stroke();
+  }
   ctx.restore();
   if(unlocked){
-    drawBluePortalIso(pr, clock);
+    // soft halo behind the swirl, the swirl itself, then a few motes rising off it
+    ctx.save(); ctx.translate(iso.x, iso.y-4); ctx.scale(1, ISO_KY/ISO_KX);
+    const hr = pr.r*ISO_KX*1.9, hg = ctx.createRadialGradient(0,0,2,0,0,hr);
+    hg.addColorStop(0,'rgba(150,210,255,'+(0.38+0.08*Math.sin(t*2.4))+')'); hg.addColorStop(1,'rgba(60,120,255,0)');
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0,0,hr,0,7); ctx.fill();
+    ctx.restore();
+    drawBluePortalIso(pr, t);
+    ctx.save(); ctx.translate(iso.x, iso.y);
+    for(let i=0;i<4;i++){ const ph = (t*0.6+i*0.25)%1, a = i*1.7+t*0.8;
+      ctx.fillStyle = 'rgba(200,235,255,'+(0.8*(1-ph))+')';
+      ctx.beginPath(); ctx.arc(Math.cos(a)*pr.r*0.7, Math.sin(a)*pr.r*0.25 - ph*34, 1.6, 0, 7); ctx.fill(); }
+    ctx.restore();
   } else {
-    const dormant = toIso(pr.x, pr.y);
-    ctx.save(); ctx.translate(dormant.x, dormant.y-6); ctx.scale(1, ISO_KY/ISO_KX);
-    const grad = ctx.createRadialGradient(0,0,1,0,0,pr.r*ISO_KX*0.7);
-    grad.addColorStop(0,'#5a5a64'); grad.addColorStop(1,'rgba(40,40,48,0)');
+    // dim: a faint, slowly breathing blue-grey glow and one lazy ring, no swirl
+    const br = 0.5+0.5*Math.sin(t*1.2);
+    ctx.save(); ctx.translate(iso.x, iso.y-6); ctx.scale(1, ISO_KY/ISO_KX);
+    const R0 = pr.r*ISO_KX*0.75, grad = ctx.createRadialGradient(0,0,1,0,0,R0);
+    grad.addColorStop(0,'rgba(110,130,170,'+(0.45+0.15*br)+')'); grad.addColorStop(1,'rgba(40,44,60,0)');
     ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(0,0,pr.r*ISO_KX*0.7,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,R0,0,7); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,150,200,'+(0.18+0.1*br)+')'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(0,0, R0*0.6, R0*0.6, t*0.4, 0, 4.2); ctx.stroke();
     ctx.restore();
   }
 }

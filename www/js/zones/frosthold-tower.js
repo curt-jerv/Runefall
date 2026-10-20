@@ -162,7 +162,8 @@ function openTemplarChest(g){
 const FHC_SLAM_R = 215, FHC_CHARGE_HALF = 62, FHC_CHARGE_LEN = 560, FHC_ADD_CAP = 5;
 function initFhCommander(e){
   e.fhCmd = true; e.isLairBoss = true; e.bossName = 'Frosthold Commander'; e.engaged = true; e.aggroed = true;
-  e.r = 17; e.hp = Math.round(e.hp*3.2);   // v456: half the old size (was 33) e.maxHp = e.hp; e.dmg = e.dmg*1.25; e.armor = (e.armor||0) + 6; e.baseSpeed = e.speed = 62;
+  e.r = 17;   // v456: half the old size (was 33)
+  e.hp = Math.round(e.hp*3.2); e.maxHp = e.hp; e.dmg = e.dmg*1.25; e.armor = (e.armor||0) + 6; e.baseSpeed = e.speed = 62;   // v490: this line used to sit behind the comment above, so none of it applied
   e.aggroRange = 900; e.leashRange = 99999; e.wanderRadius = 0;
   e.cState = 'chase'; e.cT = 0; e.cTmax = 1; e.cCd = 2.6; e.cPhase = 1; e.cNext = 0; e.cDir = 0; e.cHit = false;
 }
@@ -175,14 +176,17 @@ function spawnFhTurrets(g, room){
   }
 }
 function fhCmdHit(g, e, tgt, mult){
-  const dm = e.dmg*mult*TELE_DMG_MULT;
+  const dm = teleDmg(e, mult);
   if(tgt===g.player) playerDamage(g, dm, e); else applyFollowerDamage(g, tgt, dm, e);
 }
 function fhCmdTargets(g){ return [g.player].concat(g.followers||[]); }
+// v490: a boss speaks once when you first come close
+function bossGreet(g, e, line, r){ if(e._greeted || !g.player || dist(e, g.player) > (r||420) || !enemyLOS(g, e, g.player)) return; e._greeted = true; showMsg(line, 5); }
 function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, room){
   const p = g.player, st = e.cState;
+  bossGreet(g, e, '\u201cThe mountain\u2019s treasures belong to us!\u201d');
   const face = a=>{ e.facing = {x:Math.cos(a), y:Math.sin(a)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y); };
-  const F = e.cPhase===2 ? 0.8 : 1;
+  const F = e.cPhase===2 ? 1.6 : 1;   // v490: phase 2 telegraphs/recoveries are twice as long as before (was 0.8 -- far too quick)
   if(e.cPhase===1 && e.hp <= e.maxHp*0.5 && st!=='awaken'){
     e.cPhase = 2; e.cState = 'awaken'; e.cT = e.cTmax = 1.7; e.moving = false;
     showBigMsg('THE ANCIENT MACHINE AWAKENS', 'Dwarven turrets rise from the floor', 3.4);
@@ -245,14 +249,14 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
     if(mv==='slam'){ if(d < FHC_SLAM_R*0.95 && enemyLOS(g,e,target)){ e.cState='slamTele'; e.cT = e.cTmax = 0.95*F; } else ok = false; }
     else if(mv==='charge'){ if(d > 130 && d < FHC_CHARGE_LEN && enemyLOS(g,e,target)){ e.cDir = Math.atan2(target.y-e.y, target.x-e.x); e.cState='chargeTele'; e.cT = e.cTmax = 0.8*F; } else ok = false; }
     else { if(g.enemies.filter(x=>x.cAdd && x.hp>0).length < FHC_ADD_CAP-1){ e.cState='summonTele'; e.cT = e.cTmax = 0.9*F; } else ok = false; }
-    if(ok){ e.cNext++; e.cCd = (e.cPhase===2 ? 2.0 : 3.0) + Math.random()*1.0; e.windT = 0; return; }
+    if(ok){ e.cNext++; e.cCd = (e.cPhase===2 ? 3.5 : 3.0) + Math.random()*1.0; e.windT = 0; return; }
     e.cCd = 0.45; if(!(mv==='slam' && d>=FHC_SLAM_R*0.95)) e.cNext++;
   }
   if(tickEnemyWindup(g, e, target, isFollowerTarget, reach, dt)){
   } else if(d>reach){
     const ang = steerAngleTo(e, target.x, target.y, room.obstacles);
     face(ang);
-    const sp = e.speed*chillMult*(e.cPhase===2 ? 1.2 : 1);
+    const sp = e.speed*chillMult;   // v490: no phase-2 speed-up
     e.x += Math.cos(ang)*sp*dt; e.y += Math.sin(ang)*sp*dt; e.moving = true;
   } else if(e.atkCd<=0){ beginEnemyMelee(e); }
 }
@@ -302,6 +306,7 @@ function openCmdChest(g){
     if(!getQuest(p, 'frost_depths')) p.quests.push({id:'frost_depths', name:'Beneath Frosthold', desc:'The Commander carried a key to the Frosthold Dungeon. Use it at the great door at the south of the Keep and see what lies beneath.', status:'active', progress:0, total:1});
     if(!getQuest(p, QUEST_HAMMER.id)) p.quests.push({id:QUEST_HAMMER.id, name:QUEST_HAMMER.name, desc:QUEST_HAMMER.descReturn, status:'active', progress:QUEST_HAMMER.total, total:QUEST_HAMMER.total, stage:'return'});
     showMsg('Ancient Smithing Hammer and Frosthold Dungeon Key obtained', 3.4, '#ffd27a');
+    npcMark(p, 'scholar', true);   // v490: the scholar has thoughts on the key
     g.particles.push({type:'burst', x:g.chest.x, y:g.chest.y, t:0.5, max:0.5, color:'#ffb060'});
     updateQuestBadge(); bagPulse(); saveGame();
   }
@@ -462,7 +467,7 @@ function initBalrog(e){
   e.bPools = []; e.bStrikes = []; e.bStormT = 0; e.bStrikeCd = 0;
 }
 function balHit(g, e, target, mult, kb){
-  const dmg = e.dmg*mult*TELE_DMG_MULT;
+  const dmg = teleDmg(e, mult);
   if(target===g.player) playerDamage(g, dmg, e, kb); else applyFollowerDamage(g, target, dmg, e);
 }
 function updateBalrog(g, e, dt, target, d, isFollowerTarget, chillMult, room){

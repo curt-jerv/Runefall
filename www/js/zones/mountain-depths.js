@@ -175,6 +175,7 @@ function enterDeep(floor, opts){
   document.getElementById('buttons').style.display = 'flex';
   document.getElementById('actionCluster').style.display = 'block';
   g.miners = null; g.minerRun = null; if(floor===1) setupMiners(g);
+  g._heatWarned = false;
   updateInteractPrompt(null);
   saveGame();
 }
@@ -391,15 +392,25 @@ function startMinerSwarm(g){
     clusters.push(c);
   }
   if(!clusters.length){ for(let tries=0; tries<400 && clusters.length<2; tries++){ const c = deepMineSpot(room,null,8); if(c && offscreen(c.x,c.y)) clusters.push(c); } }
-  let nG = 0, nT = 0;
-  clusters.forEach((c,ci)=>{
-    for(let k=0;k<10;k++) if(spawnAt(k<8 ? 'goblin' : 'goblinarcher', c, 130)) nG++;
-    if(ci<3 && spawnAt('cavetroll', c, 70)) nT++;
-  });
-  for(let guard=0; nT<3 && guard<30; guard++){ const c = clusters[guard%Math.max(1,clusters.length)]; if(c && spawnAt('cavetroll', c, 160)) nT++; }
-  for(let guard=0; nG<28 && guard<80; guard++){ const c = clusters[guard%Math.max(1,clusters.length)]; if(c && spawnAt(guard%4===3?'goblinarcher':'goblin', c, 180)) nG++; }
+  // v490: the horde arrives as three groups over 15 seconds (was one big group at once), each from its own tunnel
+  g.minerSpawnAt = spawnAt; g.minerClusters = clusters;
+  g.minerWaves = [0, 7.5, 15]; g.minerWaveT = 0;
+  minerSwarmTick(g, 0);
   showBigMsg('THE HORDE COMES', 'Goblins and cave trolls pour from the tunnels', 3.2);
   shakeScreen(g, 4, 0.5);
+}
+function minerSwarmTick(g, dt){
+  if(!g.minerWaves || !g.minerWaves.length) return;
+  g.minerWaveT = (g.minerWaveT||0) + dt;
+  while(g.minerWaves.length && g.minerWaveT >= g.minerWaves[0]){
+    const wi = 3 - g.minerWaves.length; g.minerWaves.shift();
+    const cl = g.minerClusters || [], c = cl.length ? cl[wi % cl.length] : null, spawnAt = g.minerSpawnAt;
+    if(!c || !spawnAt) continue;
+    let nG = 0;
+    for(let k=0;k<14 && nG<9;k++) if(spawnAt(k%4===3 ? 'goblinarcher' : 'goblin', c, 150)) nG++;
+    for(let k=0;k<4;k++) if(spawnAt('cavetroll', c, 90)) break;
+    if(wi>0) showMsg(wi===1 ? 'More goblins pour from the tunnels!' : 'The last of the horde arrives!', 2.2, '#ffb070');
+  }
 }
 function makeMinerRing(p){
   let it = null;
@@ -435,13 +446,14 @@ function updateDeepMine(g, dt){
   const p = g.player, t = g.tower;
   if(!g.miners) setupMiners(g);
   // v456: the last few stragglers that drift far away count as fled (they used to keep the quest from completing)
+  minerSwarmTick(g, dt);
   if(p.minerQ===1 && g.minerSwarmSpawned){
     const left = g.enemies.filter(e=>e.minerSwarm && e.hp>0);
     const qq = getQuest(p, 'miners_lost'); if(qq && left.length) qq.desc = 'Hold off the horde coming for the miners. '+left.length+' remain.';
     if(left.length && left.length<=4) for(const e of left){ if(dist(e,p) > 650){ e._farT = (e._farT||0)+dt; if(e._farT > 5){ e.hp = 0; e.noReward = true; } } else e._farT = 0; }
   }
   // swarm cleared -> the foreman has something for you
-  if(p.minerQ===1 && g.minerSwarmSpawned && !g.enemies.some(e=>e.minerSwarm && e.hp>0)){
+  if(p.minerQ===1 && g.minerSwarmSpawned && !(g.minerWaves && g.minerWaves.length) && !g.enemies.some(e=>e.minerSwarm && e.hp>0)){
     p.minerQ = 2; const qq = getQuest(p, 'miners_lost'); if(qq) qq.desc = 'The horde is beaten. Talk to the miners.';
     showMsg('The horde is beaten. Talk to the miners.', 3.0); updateQuestBadge(); saveGame();
   }
@@ -475,15 +487,22 @@ function openHeartChest(g){
   g.particles.push({type:'burst', x:g.chest.x, y:g.chest.y, t:0.5, max:0.5, color:'#ffb060'});
   bagPulse(); saveGame();
 }
+// v490: the Heart of the Mountain scorches -- 0.6% of max life per second as fire (fire resistance helps), like the Marsh Pool's poison
+const HEART_HEAT_PCT = 0.006;
 function updateDeep(g, dt){
   const p = g.player, t = g.tower;
+  if(t && t.bossFloor && !g.over && p.hp>0){
+    p.hp -= p.maxHp*HEART_HEAT_PCT*(1-elementResist(p,'fire')/100)*dt; g.heatT = (g.heatT||0) + dt;
+    if(!g._heatWarned){ g._heatWarned = true; showMsg('The heat is unbearable -- fire resistance will help here.', 3.4, '#ffb060'); }
+    if(p.hp<=0){ p.hp = 0; endGame(g); }
+  }
   updatePortalChoice(false);
   if(g.deepStore) g.deepStore[t.floor] = g.enemies;
   let dk = null;
   if(dist(p, t.entrance) < t.entrance.r + p.r + 22) dk = t.floor===1 ? 'depthsToPass' : 'deepUp';
   else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) dk = 'deepDown';
   else if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) dk = 'toTownFromTower';
-  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ dk = 'waypointDeep'; discoverWaypoint('reachedDeepWp'); }
+  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ dk = 'waypointDeep'; }
   if(t.isDeepMine){
     updateDeepMine(g, dt);
     if(!dk && g.miners && !g.minerRun && g.miners.some(m=>dist(p,m) < 80)) dk = 'depthsMiner';
@@ -515,7 +534,7 @@ function updateDeep(g, dt){
   }
 }
 function walkerDeath(g, e){
-  const R = 150, dm = e.dmg*TELE_DMG_MULT*1.1, src = {dmgType:'poison', hp:0, x:e.x, y:e.y, r:0};
+  const R = 150, dm = teleDmg(e, 1.1), src = {dmgType:'poison', hp:0, x:e.x, y:e.y, r:0};
   if(dist(g.player,e) < R+g.player.r) playerDamage(g, dm, src);
   if(g.followers) for(const f of g.followers) if(dist(f,e) < R+f.r) applyFollowerDamage(g, f, dm, src);
   g.particles.push({type:'ring', x:e.x, y:e.y, t:0.6, max:0.6, r:R, color:'#8fe05a'});
@@ -531,7 +550,7 @@ function walkerDeath(g, e){
 }
 function golemDeath(g, e){
   g.blasts = g.blasts || [];
-  g.blasts.push({x:e.x, y:e.y, t:1.3, max:1.3, r:140, dmg:e.dmg*TELE_DMG_MULT*1.3});
+  g.blasts.push({x:e.x, y:e.y, t:1.3, max:1.3, r:140, dmg:teleDmg(e, 1.3)});
   showMsg('The golem is about to explode!', 1.2, '#ff9a50');
 }
 function drawBeetleTelegraph(e){

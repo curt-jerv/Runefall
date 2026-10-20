@@ -4,7 +4,7 @@
 const FHD_FLOORS = 5;
 const FHD_INFO = {
   1:{name:'Frozen Vaults', el:'cold'}, 2:{name:'Boiler Halls', el:'fire'}, 3:{name:'Storm Foundry', el:'lightning'},
-  4:{name:'Corroded Depths', el:'poison'}, 5:{name:'Heart of the Machine', el:'lightning'},
+  4:{name:'Corroded Depths', el:'poison'}, 5:{name:'The Grand Engine', el:'lightning'},
 };
 const FHD_PAL = {
   1:['#3c4a58','#2e3a46','#46566a','#34424f'], 2:['#5a3a2c','#46291f','#664434','#4e3024'], 3:['#3b3f5e','#2c3050','#464b6e','#343960'],
@@ -22,7 +22,7 @@ function fhdDepth(f){ return FH_DEPTH + 1 + Math.floor(f/2); }   // v489: Lv 40-
 //   2 Boiler Halls: wide halls with furnace blocks and steam-vent lanes, joined by narrow catwalks.
 //   3 Storm Foundry: central foundry hall inside a ring corridor, assembly belts, coil pylons that call lightning.
 //   4 Corroded Depths: an open cavern of overlapping chambers, acid pools and cover pipes.
-//   5 Heart of the Machine: a big gear chamber, then the boss arena.
+//   5 The Grand Engine: a big gear chamber, then the boss arena.
 const FHD_ICE = ['#8fb8d0','#3a5468','#587c94'], FHD_FURN = ['#8a3a1e','#3a1409','#5a2412'], FHD_PYL = ['#5a7ab8','#1c2a48','#2e4470'], FHD_PIPE = ['#6e8a5a','#24301e','#40543a'], FHD_PILL = ['#8a7a58','#2a2418','#4a4030'];
 function makeFhdFloor(floor){
   const snap = v=>Math.round(v/50)*50;
@@ -223,7 +223,7 @@ function spawnFhdPopulation(g, floor){
     if(!p.constructSlain || p.fhDungeonDone){   // v489: back on every visit once its runestone is taken
       const boss = spawnEnemy(g, 'dwconstruct', {x:er.x+er.w/2, y:er.y+er.h/2});
       initDwConstruct(boss, R);
-      showMsg('Something ancient is awake in the Heart of the Machine...', 2.4, '#ffd9a0');
+      showMsg('Something ancient is awake in the Grand Engine...', 2.4, '#ffd9a0');
     } else {
       R.husk = {x:er.x+er.w/2, y:er.y+er.h/2, r:90, taken:false};
     }
@@ -258,15 +258,49 @@ function enterFhDungeon(floor, opts){
 //   Limbs out: slow walk, Piston Smash (telegraphed ring where you stood), Gear Sweep (ring around itself),
 //   Summon (cogcrawlers). At 66% and 33% life it retracts its limbs, rolls around the arena bouncing off the
 //   walls (armoured, hits hard on contact), then is dizzy -- exposed for +25% damage.
+// v490: Furnace Beam -- legs fold in, the chassis drops flat, and a fire beam sweeps one full circle, always starting at 12 o'clock
+// (screen-up, world angle -3pi/4) and turning clockwise. Storm Call -- the Kraken's telegraphed lightning circles land around you.
+const DWC_LASER_LEN = 820, DWC_LASER_HW = 24, DWC_LASER_TURN = 7.5, DWC_LASER_FLAT = 1.1, DWC_LASER_RISE = 0.8, DWC_LASER_START = -Math.PI*0.75;
+const DWC_STRIKE_R = 62, DWC_STRIKE_T = 1.15;
+function dwcStrikesTick(g, e, dt){
+  if(!e.dwStrikes || !e.dwStrikes.length) return;
+  const src = {dmgType:'lightning', hp:0, x:e.x, y:e.y, r:0, dmg:e.dmg, isLairBoss:true, bossName:e.bossName};
+  for(let i=e.dwStrikes.length-1;i>=0;i--){
+    const k = e.dwStrikes[i]; k.t -= dt; if(k.t>0) continue;
+    const dm = teleDmg(e, 1.1);
+    if(dist(g.player,k) < DWC_STRIKE_R + g.player.r*0.5) playerDamage(g, dm, src);
+    if(g.followers) for(const f of g.followers) if(dist(f,k) < DWC_STRIKE_R + (f.r||12)*0.5) applyFollowerDamage(g, f, dm, src);
+    g.particles.push({type:'burst', x:k.x, y:k.y, t:0.35, max:0.35, color:'#fff2a0'});
+    g.particles.push({type:'ring', x:k.x, y:k.y, t:0.4, max:0.4, r:DWC_STRIKE_R, color:'#ffe046'});
+    shakeScreen(g, 2, 0.1);
+    e.dwStrikes.splice(i,1);
+  }
+}
+function dwcLaserHits(g, e, dt){
+  e.cLaserTick = (e.cLaserTick||0) - dt; if(e.cLaserTick > 0) return;
+  e.cLaserTick = 0.2;
+  const ca = Math.cos(e.cLaserAng), sa = Math.sin(e.cLaserAng), src = {dmgType:'fire', hp:0, x:e.x, y:e.y, r:0};
+  for(const tg of [g.player].concat(g.followers||[])){
+    if(!(tg.hp>0)) continue;
+    const rx = tg.x-e.x, ry = tg.y-e.y, along = rx*ca+ry*sa, perp = Math.abs(-rx*sa+ry*ca);
+    if(along > e.r*0.4 && along < DWC_LASER_LEN && perp < DWC_LASER_HW + (tg.r||12)*0.6){
+      if(tg===g.player && (g.player.dodging || g.player.invuln>0)) continue;
+      const dm = teleDmg(e, 0.32);
+      if(tg===g.player) playerDamage(g, dm, src); else applyFollowerDamage(g, tg, dm, src);
+    }
+  }
+}
 const DWC_SMASH_R = 160, DWC_SWEEP_R = 204, DWC_ROLL_SPEED = 450, DWC_ROLL_T = 9.5, DWC_DIZZY_T = 3.6, DWC_ADD_CAP = 6;   // v419: attack circles -20%, roll +3s, roll speeds up every use
 function initDwConstruct(e, room){
   e.dwc = true; e.isLairBoss = true; e.bossName = 'Ancient Dwarven Construct'; e.engaged = true; e.aggroed = true; e.baseR = e.r;
+  e.meleeBonus = 50;   // v490: its fists reach well past its own torso
+  e.dwStrikes = []; e.cLaserCd = 6;
   e.armorBase = e.armor || 0; e.cState = 'chase'; e.cT = 0; e.cTmax = 1; e.cCd = 2.6; e.cNext = 0; e.cRolls = 0; e.rollAng = 0; e.rvx = 0; e.rvy = 0; e.cHitT = 0; e.tPt = null;
   const er = room.exitRoom;
   e.arena = {x0:er.x+e.r+30, x1:er.x+er.w-e.r-30, y0:er.y+e.r+30, y1:er.y+er.h-e.r-30};
 }
 function dwcHit(g, e, tg, mult){
-  const dm = e.dmg*mult*TELE_DMG_MULT;
+  const dm = teleDmg(e, mult);
   if(tg===g.player) playerDamage(g, dm, e); else applyFollowerDamage(g, tg, dm, e);
 }
 function updateDwConstruct(g, e, dt, target, d, isFollowerTarget, chillMult, room){
@@ -275,6 +309,18 @@ function updateDwConstruct(g, e, dt, target, d, isFollowerTarget, chillMult, roo
   if(e.exposedT>0) e.exposedT -= dt;
   e.armor = (st==='retract' || st==='roll') ? e.armorBase+60 : e.armorBase;
   const face = a=>{ e.facing = {x:Math.cos(a), y:Math.sin(a)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y); };
+  dwcStrikesTick(g, e, dt);
+  if(e.cLaserCd>0) e.cLaserCd -= dt;
+  if(st==='flatten'){ e.cT -= dt; e.moving = false; if(e.cT<=0){ e.cState = 'laser'; e.cT = DWC_LASER_TURN; e.cLaserAng = DWC_LASER_START; e.cLaserTick = 0; } return; }
+  if(st==='laser'){
+    e.cT -= dt; e.moving = false; e.atkAnimT = 0.1;
+    e.cLaserAng = DWC_LASER_START + (1 - Math.max(0,e.cT)/DWC_LASER_TURN)*Math.PI*2;
+    dwcLaserHits(g, e, dt);
+    if(Math.random() < dt*30){ const rr = rand(e.r, DWC_LASER_LEN); g.particles.push({type:'burst', x:e.x+Math.cos(e.cLaserAng)*rr, y:e.y+Math.sin(e.cLaserAng)*rr, t:0.25, max:0.25, color:'#ffb050'}); }
+    if(e.cT<=0){ e.cState = 'rise'; e.cT = DWC_LASER_RISE; }
+    return;
+  }
+  if(st==='rise'){ e.cT -= dt; e.moving = false; if(e.cT<=0){ e.cState = 'chase'; e.cCd = 1.4; } return; }
   const trig = (e.cRolls===0 && e.hp<=e.maxHp*0.66) || (e.cRolls===1 && e.hp<=e.maxHp*0.33);
   if(trig && (st==='chase' || st==='recover')){
     e.cRolls++; e.cState = 'retract'; e.cT = e.cTmax = 1.2; e.moving = false;
@@ -354,20 +400,34 @@ function updateDwConstruct(g, e, dt, target, d, isFollowerTarget, chillMult, roo
     return;
   }
   // chase / melee
-  const reach = e.r+target.r+4;
+  const reach = e.r+target.r+4 + (e.meleeBonus||0)*0.6;   // v490: swings from further out
   updateStuckTracking(e, dt);
   e.cCd -= dt;
   if(e.cCd<=0){
-    const seq = e.cRolls>=1 ? ['smash','sweep','summon','smash','sweep'] : ['smash','sweep','summon'];
+    const seq = e.cRolls>=1 ? ['smash','storm','sweep','laser','summon','smash','sweep','storm'] : ['smash','sweep','storm','summon','laser'];
     const mv = seq[e.cNext % seq.length];
     let ok = true;
+    if(mv==='laser'){   // v490
+      if(!(e.cLaserCd>0) && d < DWC_LASER_LEN-60){ e.cState = 'flatten'; e.cT = e.cTmax = DWC_LASER_FLAT; e.cLaserCd = 16; e.cNext++; e.cCd = 2.4; e.windT = 0;
+        bossMsg('THE CONSTRUCT DROPS FLAT', 'Its furnace core glows -- keep moving!', 2.4); return; }
+      e.cNext++; e.cCd = 0.4; ok = false;
+    } else if(mv==='storm'){   // v490: telegraphed lightning circles, like the Kraken's Storm Surge
+      if(enemyLOS(g,e,target)){ const n = e.cRolls>=1 ? 6 : 4;
+        for(let i=0;i<n;i++){ const a = Math.random()*Math.PI*2, r0 = i===0 ? 0 : rand(60,220);
+          e.dwStrikes.push({x:clamp(target.x+Math.cos(a)*r0, A.x0-e.r, A.x1+e.r), y:clamp(target.y+Math.sin(a)*r0, A.y0-e.r, A.y1+e.r), t:DWC_STRIKE_T+i*0.12, max:DWC_STRIKE_T+i*0.12}); }
+        showMsg('Lightning crackles through the halls!', 1.0, '#9fd8ff'); e.cNext++; e.cCd = 2.0 + Math.random(); e.windT = 0; return; }
+      e.cNext++; e.cCd = 0.4; ok = false;
+    }
+    if(mv==='laser' || mv==='storm'){ }
+    else {
     if(mv==='smash'){ if(d < 520 && enemyLOS(g,e,target)){ e.tPt = {x:target.x, y:target.y}; e.cState = 'smashTele'; e.cT = e.cTmax = 1.05*F; } else ok = false; }
     else if(mv==='sweep'){ if(d < DWC_SWEEP_R*1.1){ e.cState = 'sweepTele'; e.cT = e.cTmax = 1.0*F; } else ok = false; }
     else { if(g.enemies.filter(x=>x.cAdd && x.hp>0).length < DWC_ADD_CAP-2){ e.cState = 'summonTele'; e.cT = e.cTmax = 0.95*F; } else ok = false; }
     if(ok){ e.cNext++; e.cCd = 2.6 + Math.random()*1.0; e.windT = 0; return; }
     e.cCd = 0.5; e.cNext++;
+    }
   }
-  if(tickEnemyWindup(g, e, target, isFollowerTarget, reach, dt)){
+  if(tickEnemyWindup(g, e, target, isFollowerTarget, e.r+target.r+4, dt)){
   } else if(d>reach){
     const ang = steerAngleTo(e, target.x, target.y, room.obstacles);
     face(ang);
@@ -406,7 +466,32 @@ function takeRunestone2(){
   npcMark(p, 'scholar', true);
   bagPulse(); updateQuestBadge(); saveGame();
 }
+// v490: drawn after the dungeon darkness so the beam glows (see render.js)
+function drawDwBeam(e){
+  if(e.cState==='flatten' || e.cState==='laser'){
+    const ang = e.cState==='laser' ? e.cLaserAng : DWC_LASER_START, L = e.cState==='laser' ? DWC_LASER_LEN : DWC_LASER_LEN*clamp(1-e.cT/DWC_LASER_FLAT,0,1);
+    const a = toIso(e.x, e.y), b = toIso(e.x+Math.cos(ang)*L, e.y+Math.sin(ang)*L), fl = 0.75+0.25*Math.sin((e.animT||0)*30);
+    ctx.save(); ctx.lineCap = 'round';
+    if(e.cState==='flatten'){ ctx.strokeStyle='rgba(255,140,60,0.55)'; ctx.lineWidth=3; ctx.setLineDash([10,8]); ctx.beginPath(); ctx.moveTo(a.x,a.y-20); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.setLineDash([]); }
+    else {
+      ctx.globalCompositeOperation='lighter';
+      ctx.strokeStyle='rgba(255,90,20,'+(0.35*fl)+')'; ctx.lineWidth=DWC_LASER_HW*2.6; ctx.beginPath(); ctx.moveTo(a.x,a.y-20); ctx.lineTo(b.x,b.y); ctx.stroke();
+      ctx.strokeStyle='rgba(255,170,60,'+(0.75*fl)+')'; ctx.lineWidth=DWC_LASER_HW*1.2; ctx.stroke();
+      ctx.strokeStyle='rgba(255,245,200,0.95)'; ctx.lineWidth=5; ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
 function drawDwTelegraph(e){
+  // v490: Storm Call circles and the Furnace Beam
+  if(e.dwStrikes) for(const k of e.dwStrikes){
+    const f = clamp(1-k.t/k.max,0,1), iso = toIso(k.x,k.y), Rpx = DWC_STRIKE_R*ISO_KX*Math.SQRT2;
+    ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(1, ISO_KY/ISO_KX);
+    ctx.strokeStyle='rgba(255,224,70,'+(0.55+f*0.45)+')'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(0,0,Rpx,0,7); ctx.stroke();
+    ctx.fillStyle='rgba(255,214,60,'+(0.10+f*0.30)+')'; ctx.beginPath(); ctx.arc(0,0,Rpx*f,0,7); ctx.fill();
+    if(typeof drawZapBolts==='function') drawZapBolts(Rpx, f, k.x*0.013+k.y*0.007);
+    ctx.restore();
+  }
   const st = e.cState; if(st!=='smashTele' && st!=='sweepTele' && st!=='summonTele' && st!=='retract') return;
   const frac = clamp(1-e.cT/(e.cTmax||1),0,1);
   let cx = e.x, cy = e.y, R = e.r+110, col = '143,216,255';
@@ -424,11 +509,11 @@ function drawDwConstructIso(e){
   // v419: redesigned as a blocky, riveted dwarven machine -- slab legs, a cuboid chassis with a square core, box arms and cube fists.
   // Curled up (retract / roll / dizzy) it folds into a spinning octagonal ball of plates.
   const iso = toIso(e.x,e.y), t = e.animT||0, flash = e.hitT>0, dead = !!e.dead;
-  const st = e.cState, curled = !dead && (st==='retract' || st==='roll' || st==='dizzy');
+  const st = e.cState, flat = !dead && (st==='flatten' || st==='laser' || st==='rise'), curled = !dead && (st==='retract' || st==='roll' || st==='dizzy' || flat);   // v490: flat = legs folded for the Furnace Beam
   const s = e.r/46;
   const roll = e.rollAng||0, moving = !!e.moving && !curled;
   drawShadow(iso.x, iso.y, 52*s, 17*s);
-  ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(s, s);
+  ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(s, flat ? s*0.7 : s);
   const ink = '#17120a', brz = flash?'#fff':'#a98a4c', brzD = flash?'#fff':'#6e5830', brzL = flash?'#fff':'#d2b46c', steel = flash?'#fff':'#4d4a40', steelL = flash?'#fff':'#74705f';
   const glow = dead ? '#2a2620' : 'rgba(140,225,255,'+clamp(0.7 + Math.sin(t*4)*0.25 + (st==='dizzy'?Math.sin(t*30)*0.2:0), 0.25, 1)+')';
   ctx.lineJoin = 'miter'; ctx.lineCap = 'butt';
@@ -765,9 +850,22 @@ function hudTextAnchor(belowBanner){
   }
   return y;
 }
-function showBigMsg(title, sub, dur, small, beast){
+// v490: banners queue up (one after another) instead of overwriting each other; `speech` shows a quoted line in mixed case
+const _bmQueue = [];
+function showBigMsg(title, sub, dur, small, beast, speech){
+  const now = Date.now();
+  if(now < (showBigMsg._until||0)){
+    if(_bmQueue.length < 5 && !_bmQueue.some(q=>q[0]===title && q[1]===(sub||''))) _bmQueue.push([title, sub||'', dur, small, beast, speech]);
+    return;
+  }
+  showBigMsgNow(title, sub, dur, small, beast, speech);
+}
+function showBigMsgNext(){ const q = _bmQueue.shift(); if(q) showBigMsgNow.apply(null, q); }
+function showBigMsgNow(title, sub, dur, small, beast, speech){
   const el = document.getElementById('bigMsg');
-  el.classList.toggle('small', !!small); el.classList.toggle('beast', !!beast);
+  dur = dur || 4.5; showBigMsg._until = Date.now() + dur*1000 + 250;
+  clearTimeout(showBigMsg._q); showBigMsg._q = setTimeout(showBigMsgNext, dur*1000 + 300);
+  el.classList.toggle('small', !!small); el.classList.toggle('beast', !!beast); el.classList.toggle('speech', !!speech);
   el.querySelector('.bmTitle').textContent = title; el.querySelector('.bmSub').textContent = sub || '';
   try{ hudTextAnchor(false); }catch(e){}
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
@@ -776,9 +874,10 @@ function showBigMsg(title, sub, dur, small, beast){
   clearTimeout(showBigMsg._t); showBigMsg._t = setTimeout(()=>{ el.style.transition='opacity .8s'; el.style.opacity=0; setTimeout(()=>{el.style.transition='';},900); }, (dur||4.5)*1000);
 }
 // v310: only the great beasts (Leviathan, Kraken, Mastodon, Molten Colossus, Gojira) get the big gold banner; every other boss line is a quiet message
-function bossMsg(title, sub, dur, color){ showMsg(title + (sub ? ' \u2014 ' + sub : ''), Math.min(dur||3, 3.4), color || '#d8c8a8'); }
+function bossMsg(title, sub, dur, color){ showBigMsg(title, sub||'', Math.max(dur||3.6, 3.6), true); }   // v490: boss lines are story banners now (was a small top line)
 // v378: one house style for quest / reward lines: "Quest Accepted · Name", "Quest Complete · Name", "Obtained · Item"
 function stdMsg(text, color){
+  if(typeof text==='string'){ const ob = /^(.+?)\s+obtained!?$/i.exec(text.trim()); if(ob && ob[1].length < 90) text = 'Obtained: '+ob[1]; else text = text.replace(/^Chest:\s*/i, 'Obtained: '); }   // v490: every item line reads 'Obtained · ...'
   const m = /^(New quest|Quest accepted|Quest started|Quest complete|Quest updated|Reward|Obtained|Quest Accepted|Quest Complete)\s*[:\u2014-]\s*(.+)$/i.exec(text||'');
   if(!m) return {text, color};
   const k = m[1].toLowerCase(), head = /^new quest|accepted|started/.test(k) ? 'Quest Accepted' : /complete/.test(k) ? 'Quest Complete' : /updated/.test(k) ? 'Quest Updated' : k==='reward' ? 'Reward' : 'Obtained';
@@ -787,7 +886,22 @@ function stdMsg(text, color){
 const SKILL_USE_MSGS = new Set(['Wrath!','Whirlwind!','War Cry!','Vortex erupts!','Vanish!','Unbreakable!','Trap set!','Tornado!','Thunderstep!','Storm Surge!','Soul Nova!','Soul Gate!','Shadow Step!','Recall!','Rapid Shot!','Rally!','Rain of Arrows!','Rage Burst!','Pyro Torrent!','Precise Shot!','Poison Trap!','Poison Knives!','Plague!','Permafrost!','Nova!','JUGGERNAUT!','Immolate!','Ice Bolt!','Ice Armor explodes!','Hurricane!','Frost Trap!','Flame Vortex!','Fear!','Explosive Trap!','Charge!','Bulwark!','Bloodrage!','Blizzard!','Beast Fury!','Ambush!','A demon rises to serve you!','Consecrate','Field Dress...','Field Dress',"Hunter's Mark!",'Assault! Rage full']);
 function showMsg(text, dur, color, mid){
   if(SKILL_USE_MSGS.has(text)) return;   // v443: active-skill casts no longer print a line at the top of the screen
+  // v490: one house style per kind of message --
+  //   story (quests, recipes, spoken lines) -> the big banner, queued and held a little longer;
+  //   items ("Obtained · ...") -> the lower line, merging pickups that land together; everything else -> the top line.
+  if(typeof text==='string' && !mid){
+    const t = text.trim();
+    if(/^["\u201c\u2018']/.test(t)){ showBigMsg(t, '', Math.max(dur||3, 4.5), true, false, true); return; }
+    const qm = /^(New quest|Quest accepted|Quest started|Quest complete|Quest updated|Quest Accepted|Quest Complete)\s*[:\u2014-]\s*(.+)$/i.exec(t);
+    if(qm){ const k = qm[1].toLowerCase(), head = /^new quest|accepted|started/.test(k) ? 'Quest Accepted' : /complete/.test(k) ? 'Quest Complete' : 'Quest Updated';
+      try{ sfxPlay(head==='Quest Complete' ? 'questDone' : 'questAccept', 1); }catch(e){} showBigMsg(head, qm[2], Math.max(dur||3, 3.8), true); return; }
+    const rm = /^(New recipe discovered|Recipe found on [^:]+|A UNIQUE stone is forged|Recipe learned)\s*:\s*(.+)$/i.exec(t);
+    if(rm){ showBigMsg(/unique/i.test(rm[1]) ? 'Unique Stone Forged' : 'Recipe Learned', rm[2], Math.max(dur||3, 4), true); return; }
+  }
   const _orig = text, s = stdMsg(text, color); text = s.text; color = s.color;
+  if(/^Obtained \u00b7 /.test(text) && game.msgText && /^Obtained \u00b7 /.test(game.msgText) && game.msgT > (dur||3)*1.4 - 0.6 && game.msgText.length < 110){
+    game.msgText += ', ' + text.slice(11); game.msgT = Math.max(game.msgT, (dur||3)*1.4); return;   // several items at once read as one line
+  }
   try{ if(/^Quest Accepted/.test(text)) sfxPlay('questAccept',1); else if(/^Quest Complete/.test(text)) sfxPlay('questDone',1); else if(/^(Reward|Obtained)/.test(text)) sfxPlay('lootRare',0.8); }catch(e){}
   game.msgText = text; game.msgT = (dur||3)*1.4; game.msgColor = color || ''; game.msgPos = mid ? 'mid' : (s.text!==_orig ? 'low' : 'top');
 }
@@ -845,7 +959,34 @@ function potionDropChance(g, en, isLairBoss){
 }
 // v478: health globes drop only from the great bosses -- one each time they lose a quarter of their life, two when they fall
 function isGlobeBoss(e){ return !!(e && (e.bkBoss || e.kraken || e.lvBoss || e.mastodon || e.colossus || e.prot || e.fhCmd || e.type==='dwconstruct' || e.hwGuardian || e.wlord || e.gj || e.balrog) && !e.kAdd && !e.tentacle); }
-function dropGlobes(g, e, n){ for(let k=0;k<n;k++){ const a = Math.random()*6.283, d = rand(40, 90); g.loot.push({type:'potion', x:e.x+Math.cos(a)*d, y:e.y+Math.sin(a)*d, r:9}); } }
+function dropGlobes(g, e, n){ for(let k=0;k<n;k++){ const a = Math.random()*6.283, d = rand(40, 90), l = {type:'potion', x:e.x+Math.cos(a)*d, y:e.y+Math.sin(a)*d, r:9}; fixLootSpot(g, l); g.loot.push(l); } }   // v490: never in water / walls
+// v490: loot (health potions, health globes, items, gold) never lands where you can't reach it: water, lava,
+// walls, rocks or outside a dungeon's floor. A bad spot is nudged to the nearest open one, searching outward and
+// trying the side facing the player first; if nothing is found it lands at the player's feet.
+function lootSpotBad(g, x, y){
+  const rm = g && g.room; if(!rm) return false;
+  if(x<20 || y<20 || x>rm.w-20 || y>rm.h-20) return true;
+  if(rm.floorRects && !rm.floorRects.some(r=>x>r.x+10 && x<r.x+r.w-10 && y>r.y+10 && y<r.y+r.h-10)) return true;
+  try{
+    const wf = rm.waterAt || (g.scene==='lakesideruins' && typeof lakeWaterAt==='function' ? lakeWaterAt : null);
+    if(wf && wf(x,y)) return true;
+    if(Array.isArray(rm.waters) && subWaterAt(rm,x,y)) return true;
+    if(rm.lavaAt && rm.lavaAt(x,y)) return true;
+  }catch(e){}
+  return !!(rm.obstacles && posBlockedByObstacles(x, y, 10, rm.obstacles));
+}
+function fixLootSpot(g, l){
+  if(!l || !lootSpotBad(g, l.x, l.y)) return l;
+  const p = g.player, a0 = p ? Math.atan2(p.y-l.y, p.x-l.x) : 0;
+  for(let r=16; r<=480; r+=16){
+    for(let k=0;k<16;k++){
+      const a = a0 + (k%2 ? 1 : -1)*Math.ceil(k/2)*Math.PI/8, px = l.x+Math.cos(a)*r, py = l.y+Math.sin(a)*r;
+      if(!lootSpotBad(g, px, py)){ l.x = px; l.y = py; return l; }
+    }
+  }
+  if(p){ l.x = p.x + rand(-8,8); l.y = p.y + rand(-8,8); }
+  return l;
+}
 function bossGlobeTick(g){
   if(!g || !g.enemies) return;
   for(const e of g.enemies){
@@ -876,25 +1017,7 @@ function dropLoot(g, x, y, enemyType, isLairBoss, en){
       g.loot.push({type:'item', x:x+rand(-14,14), y:y+rand(-14,14), r:8, item:generateItem(lvl, packRarity(lvl), null, null, g.player)});
     }
   }
-  const rm = g.room;
-  const wf = rm && (rm.waterAt || (g.scene==='lakesideruins' ? lakeWaterAt : null));
-  if(wf){
-    for(let i=n0;i<g.loot.length;i++){
-      const l = g.loot[i];
-      if(!wf(l.x,l.y)) continue;
-      let found = null;
-      if(rm.nearestDry){ found = rm.nearestDry(l.x,l.y); }
-      else {
-        for(let r=24; r<=700 && !found; r+=24){
-          for(let k=0;k<16;k++){
-            const a2 = k/16*Math.PI*2, px = clamp(l.x+Math.cos(a2)*r, 20, rm.w-20), py = clamp(l.y+Math.sin(a2)*r, 20, rm.h-20);
-            if(!wf(px,py)){ found = {x:px,y:py}; break; }
-          }
-        }
-      }
-      if(found){ l.x = found.x; l.y = found.y; }
-    }
-  }
+  for(let i=n0;i<g.loot.length;i++) fixLootSpot(g, g.loot[i]);   // v490: out of water, lava, walls and rocks (was water only)
 }
 function dropLootRaw(g, x, y, enemyType, isLairBoss){
   // v82: item generation is keyed off the character's CURRENT LEVEL, not

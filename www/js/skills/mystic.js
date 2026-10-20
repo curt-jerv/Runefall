@@ -197,6 +197,13 @@ function immolateDuration(rank){ return 6 + 1*(Math.max(1,rank)-1); }
 function immolateBoost(rank){ const r = Math.max(1, rank||1); return r<=5 ? 0.5 + 0.125*(r-1) : 1.0 + 0.2*(Math.min(10,r)-5) + 0.05*Math.max(0, r-10); }   // v489: +50% / +100% at rank 5 / +200% at rank 10
 const FLAME_VORTEX_CD = 14, FLAME_VORTEX_R = 75, FLAME_VORTEX_PULL = 0, FLAME_VORTEX_SELF_PCT = 0.12, FLAME_VORTEX_BLAST_MULT = 4;
 function flameVortexDur(rank){ return 4 + 0.5*(Math.max(1,rank)-1); }
+// v490: Pyre Heart (amber stone): while Immolate burns, a Flame Vortex swirls around you. It uses your Flame Vortex
+// rank (rank 5 if you have none), follows you, never erupts, and fades when Immolate goes out. Called from update.js.
+function pyreHeartTick(p){
+  const on = p.immolateT>0 && uq(p,'uq_pyre');
+  if(on && !p.vortex) p.vortex = {t:0, dur:1e9, tick:0, rank:effectiveRank(p,'flameVortex')||5, pol:1, r:FLAME_VORTEX_R*aoeRadiusMult(p), spin:0, pyre:true};
+  else if(!on && p.vortex && p.vortex.pyre) p.vortex = null;
+}
 const PERMAFROST_CD = 12, PERMAFROST_R = 150, PERMAFROST_CAST_RANGE = 400, PERMAFROST_SLOW = 0.9, PERMAFROST_SPEED = 1.1;
 // v489 Permafrost: enemies inside are slowed 25% (50% at rank 10) and take +20% cold damage (+50% at rank 10);
 // chilled/frozen enemies that die inside shatter, hurting enemies around them. Cooldown 12s -> 8s at rank 10.

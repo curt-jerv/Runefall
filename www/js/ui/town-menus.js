@@ -86,8 +86,15 @@ const teleportMineBtn = document.getElementById('teleportMine');
 // reachedMountainPass (see updateTown's waypointUnlocked), which does NOT
 // imply Sunlit Plains has also been found (a separate branch off the
 // Forest), so it needs its own explicit gate here.
+// v490: a waypoint is discovered (saved and lit) when the player USES it -- pressing interact opens this menu --
+// not just by walking past it. `from` -> that waypoint's save flag (Town's has none: it's always on).
+const WAYPOINT_FLAG_BY_FROM = {mountainpass:'reachedMountainPass', highlands:'reachedHighlands', sunlitplains:'reachedSunlitPlains', rivervalley:'reachedRiverValley',
+  lighthouse1:'reachedLighthouseTower', lighthouse5:'reachedLighthouseTowerTop', lakeside:'reachedLakesideRuins', deep:'reachedDeepWp', marsh:'reachedBlackMarsh',
+  forgottentower:'reachedForgottenTower', cemetery:'reachedCursedCemetery', darkcrypt:'reachedDarkCrypt', ancientruins:'reachedAncientRuins', icysummit:'reachedIcySummit',
+  frosthold:'reachedFrostholdWp', redridge:'reachedRedridge', highward:'reachedHighwardWp', cliffside:'reachedCliffWp', keep:'reachedKeepWp', hold:'reachedHoldWp', ring:'reachedRingWp', fhd:'reachedFhdWp'};
 function openTeleportMenu(from){
   game.modalOpen = true;
+  { const wf = WAYPOINT_FLAG_BY_FROM[from]; if(wf){ const fresh = !game.player[wf]; discoverWaypoint(wf); if(fresh) showMsg('Waypoint activated', 1.8, '#9fd8ff'); } }   // v490
   // Waypoint rework: Town is always listed (never gated on any discovery
   // flag -- see discoverWaypoint/updateTown's comment). Mountain Pass now
   // gates on reachedMountainPass too, same as every other zone below --
@@ -224,6 +231,7 @@ const SOCKETABLE = {helm:1, armor:1, boots:1, gloves:1, shield:1, weapon1h:1, we
 const MAX_SOCKETS = 3, SOCKET_COST_STEP = 1000;
 function isSocketable(it){ return !!(it && SOCKETABLE[it.slotType]); }
 // First socketing is free; every later one costs 1000g more than the last (1000, 2000, 3000, ...).
+const UNIQUE_STONE_LEVEL = 40;   // v490
 function socketCost(p){ return Math.min(SOCKET_COST_MAX, Math.max(0, p.socketUses||0) * SOCKET_COST_STEP); }
 const SOCKET_COST_MAX = 3000;   // v464
 function socketLineHtml(item){
@@ -240,7 +248,7 @@ function socketLineHtml(item){
 }
 function socketButtonsHtml(item){
   const p = game.player;
-  if(!p.partsHarvest || !isSocketable(item) || !(item.sockets>0)) return '';
+  if(!isSocketable(item) || !(item.sockets>0)) return '';   // v490: socketing no longer waits for the witch
   let h = '<div style="margin-top:8px; display:flex; flex-direction:column; gap:5px;">';
   for(let i=0;i<item.sockets;i++){
     const id = item.socketed && item.socketed[i];
@@ -286,11 +294,23 @@ document.getElementById('itemDetailStats').addEventListener('click', e=>{
   if(item.socketed[i]){
     const [k,t] = item.socketed[i].split('_');
     if(PART_DEFS[k] && PART_DEFS[k].unique){ showMsg('A unique stone can never be removed', 2.0, '#f2a31b'); return; }
-    addPart(p,k,+t); item.socketed[i] = null; afterSocketChange();
+    // v490: pulling a Perfect part back out cracks it down to a Greater part
+    const back = (+t>=3 && PART_DEFS[k] && !PART_DEFS[k].stone && !PART_DEFS[k].quest) ? 2 : +t;
+    addPart(p,k,back); item.socketed[i] = null;
+    if(back < +t) showMsg('The '+partName(k,+t)+' cracks as it comes out: '+partName(k,back), 2.6, PART_DEFS[k].color);
+    afterSocketChange();
   } else {
     openPartPicker(id=>{
       const [k,t] = id.split('_');
       if(PART_DEFS[k] && PART_DEFS[k].stone && item.socketed.some(s=>s && PART_DEFS[s.split('_')[0]] && PART_DEFS[s.split('_')[0]].stone)){ showMsg('Only one Stone can be socketed per item', 2.0); return; }
+      // v490: amber (unique) stones need character level 40
+      if(PART_DEFS[k] && PART_DEFS[k].unique && (p.level||1) < UNIQUE_STONE_LEVEL){ showMsg('Amber stones need character level '+UNIQUE_STONE_LEVEL+' to socket (you are '+(p.level||1)+')', 2.6, '#f2a31b'); return; }
+      // v490: only one stone of each kind across everything you wear
+      if(PART_DEFS[k] && PART_DEFS[k].stone){
+        const worn = Object.values(p.equipment||{}).some(e=>e && e!==item && e.socketed && e.socketed.some(s=>s && s.split('_')[0]===k));
+        if(worn && itemDetailSource==='equipped'){ showMsg('You already wear a '+PART_DEFS[k].name+'. Only one of each stone can be socketed in your gear.', 2.8); return; }
+        if(worn) showMsg('You already wear a '+PART_DEFS[k].name+' \u2014 only one counts while both are worn', 2.6);
+      }
       if(PART_DEFS[k] && PART_DEFS[k].unique){
         const eqHas = Object.values(p.equipment||{}).some(e=>e && e!==item && e.socketed && e.socketed.some(s=>s && PART_DEFS[s.split('_')[0]] && PART_DEFS[s.split('_')[0]].unique));
         if(eqHas){ showMsg('Only 1 unique stone can be equipped at a time', 2.4, '#f2a31b'); return; }

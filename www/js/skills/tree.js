@@ -639,10 +639,12 @@ const AREA_LEVEL_BAND = 6, AREA_LEVEL_BAND_EARLY = 2;
 function monsterLevel(g){
   const pl = (g.player && g.player.level) || 1, d = g.depth || 1;
   // v379: full scaling up to 5 levels above the zone, then it drops off heavily (a quarter of a level per extra character level, never more than +1 beyond the 5)
+  // v490: tapers much sooner -- an over-levelled character pulls monsters up only half a level per level (max +3 within 5 levels,
+  // then +0.1 per extra level, never past +4), so old zones really do get easier. Under-levelled: monsters stay at the zone's level.
   const full = d<10 ? AREA_LEVEL_BAND_EARLY : 5;
   if(pl <= d) return d;
-  if(pl <= d+full) return pl;
-  return Math.round(d + full + Math.min(1, (pl-d-full)*0.25));
+  const over = pl - d;
+  return Math.round(d + Math.min(over, full)*0.6 + Math.min(1, Math.max(0, over-full)*0.1));
 }
 function mlHpMult(ml){ return 1 + 0.09*ml + 0.0016*ml*ml; }
 // v228: enemy life grows more gently at low monster level (75% at ML1, full by ML13); minions still use mlHpMult

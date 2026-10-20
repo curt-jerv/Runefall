@@ -71,7 +71,7 @@ function drawDefiler(e){
 function drawBandit(e){
   const iso = toIso(e.x,e.y), kind = e.type, face = e.faceSign||1, t = e.animT||0, moving = e.moving, atk = e.atkAnimT||0, flash = e.hitT>0;
   const king = kind==='banditking', brute = kind==='banditbrute' || king, arch = kind==='banditarcher';
-  const s = arch ? 1.4*15/16 : king ? e.r/16*0.95 : e.r/16*(brute?1.25:1.4);   // v452: archers drawn exactly at bandit size
+  const s = arch ? 1.22*15/16 : king ? e.r/16*0.95 : e.r/16*(brute?1.25:1.22);   // v452: archers drawn exactly at bandit size (v490: both shrunk to the player's height)
   const torsoW = brute?21:arch?13:15, torsoH = brute?23:18, legLen = brute?16:14, headR = brute?8.5:7;
   const F = (c)=>flash ? '#fff' : c;
   const skin = brute ? '#b9805a' : '#d9a87a', tunic = king ? '#8a1c20' : arch ? '#5a6230' : brute ? '#5a3a24' : '#7a5530', vest = king ? '#2a1410' : arch ? '#3a3a1c' : '#2e2016';
