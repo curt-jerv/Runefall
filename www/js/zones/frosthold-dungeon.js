@@ -220,14 +220,12 @@ function spawnFhdPopulation(g, floor){
   }
   if(floor===FHD_FLOORS){
     const er = R.exitRoom;
-    if(!p.constructSlain){
+    if(!p.constructSlain || p.fhDungeonDone){   // v489: back on every visit once its runestone is taken
       const boss = spawnEnemy(g, 'dwconstruct', {x:er.x+er.w/2, y:er.y+er.h/2});
       initDwConstruct(boss, R);
       showMsg('Something ancient is awake in the Heart of the Machine...', 2.4, '#ffd9a0');
-    } else if(!p.fhDungeonDone){
-      R.husk = {x:er.x+er.w/2, y:er.y+er.h/2, r:90, taken:false};
     } else {
-      R.returnPortal = {x:er.x+er.w/2+110, y:er.y+er.h/2, r:26};
+      R.husk = {x:er.x+er.w/2, y:er.y+er.h/2, r:90, taken:false};
     }
   }
 }
@@ -383,16 +381,18 @@ function dwConstructSlain(g, e){
   const R = g.ruins;
   if(R && R.fhd){
     const A = e.arena || {x0:e.x-1,x1:e.x+1,y0:e.y-1,y1:e.y+1};
-    R.husk = {x:clamp(e.x, A.x0, A.x1), y:clamp(e.y, A.y0, A.y1), r:90, taken:false};   // v419: the way back opens only once the runestone is taken
+    const hx = clamp(e.x, A.x0, A.x1), hy = clamp(e.y, A.y0, A.y1);
+    if(p.fhDungeonDone) R.returnPortal = {x:hx+190, y:hy, r:26};   // v489: a re-kill -- the runestone is already yours, the way back opens at once
+    else R.husk = {x:hx, y:hy, r:90, taken:false};   // v419: the way back opens only once the runestone is taken
   }
-  bossMsg('THE ANCIENT CONSTRUCT FALLS', 'Something deep in the mountain grinds open...', 4.0);
+  bossMsg('THE ANCIENT CONSTRUCT FALLS', p.fhDungeonDone ? 'The machine grinds to a halt once more' : 'Something deep in the mountain grinds open...', 4.0);
   shakeScreen(g, 7, 0.9);
-  showMsg('A runestone gleams in the wreckage.', 3.2, '#9fe4ff');
+  if(!p.fhDungeonDone) showMsg('A runestone gleams in the wreckage.', 3.2, '#9fe4ff');
   saveGame();
 }
 function takeRunestone2(){
   const g = game, p = g.player, R = g.ruins;
-  if(!R || !R.husk || R.husk.taken) return;
+  if(!R || !R.husk || R.husk.taken || p.fhDungeonDone) return;   // v489: the runestone never drops twice
   R.husk.taken = true; p.fhDungeonDone = true;
   R.returnPortal = {x:R.husk.x+190, y:R.husk.y, r:26};
   const rs = makeFrostRunestoneItem();

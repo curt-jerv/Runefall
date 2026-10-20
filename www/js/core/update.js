@@ -3059,6 +3059,7 @@ function updateStep(dt){
       // further down in update().
       if(g.enemies[i].isBoss || g.enemies[i].isLairBoss) g.bossKilled = true;
       try{ bossRecipeDrop(g, g.enemies[i]); }catch(err){}   // v464
+      { const rk = bossRekillFlag(g.enemies[i]); if(rk && p[rk]) bossRekillRare(g, g.enemies[i]); }   // v489: re-killed bosses drop a rare instead of their quest item
       if(g.enemies[i].mastodon) huntBossKilled('hunt_mastodon');
       if(g.enemies[i].minotaur) huntBossKilled('hunt_minotaur');
       if(g.enemies[i].defiler) defilerSlain(g, g.enemies[i]);
@@ -3561,8 +3562,7 @@ function updateStep(dt){
       g.chest = {x:t.chestSpot.x, y:t.chestSpot.y, r:24, opened:false, templar:true};
       showMsg('The Frosthold Champions have fallen — a chest appears', 3.0);
     }
-    if(t.cmdFloor && p.fhCmdSlain && !p.fhCmdLooted && !g.chest) g.chest = {x:t.chestSpot.x, y:t.chestSpot.y, r:24, opened:false, cmd:true};
-    if(t.cmdFloor && p.fhCmdSlain && !t.clearPortal) t.clearPortal = {x:t.chestSpot.x, y:t.chestSpot.y+130, r:24};
+    if(t.cmdFloor && p.fhCmdSlain && !p.fhCmdLooted && !g.chest && !g.enemies.some(x=>x.fhCmd && x.hp>0)) g.chest = {x:t.chestSpot.x, y:t.chestSpot.y, r:24, opened:false, cmd:true};
     if(g.chest && !g.chest.opened && g.chest.templar && dist(g.chest,p) < g.chest.r+p.r) openTemplarChest(g);
     if(g.chest && !g.chest.opened && g.chest.cmd && dist(g.chest,p) < g.chest.r+p.r+10) openCmdChest(g);
     if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22){ fkind = 'fhtPortalKeep'; updateInteractPrompt(fkind); }
@@ -3719,7 +3719,7 @@ function updateStep(dt){
     const nearHallDoor = dist(p, hd) < hd.r + p.r + 20, nearTombDoor = dist(p, td) < td.r + p.r + 20;
     updateInteractPrompt((nearCemeteryGate || nearReturnPortal) ? 'toCursedCemeteryFromCrypt' : nearHallDoor ? 'toDefilerTomb' : nearTombDoor ? 'fromDefilerTomb' : nearCryptWaypoint ? 'waypointDarkCrypt' : nearTomb ? 'inspectTomb' : null);
     if(p.darkCryptChestLooted && tm.state==='closed') tm.state = 'open';   // already emptied on an earlier visit
-    if(!g.crypt.bossSpawned && !p.defilerSlain){   // v275: stepping into the Defiler's Tomb wakes the possessed graverobber
+    if(!g.crypt.bossSpawned && (!p.defilerSlain || p.inscriptionTaken)){   // v275: stepping into the Defiler's Tomb wakes the possessed graverobber
       const TR = g.crypt.tombRoom;
       if(p.x>TR.x && p.x<TR.x+TR.w && p.y>TR.y && p.y<TR.y+TR.h-170){ g.crypt.bossSpawned = true; spawnDefiler(g); }   // v310: wakes a few steps inside, not on the doorstep
     }

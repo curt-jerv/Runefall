@@ -230,8 +230,7 @@ function enterSubZone(kind, opts){
   g.poolT = 0;
   showMsg(g.tower.name+'  (Lv. '+g.depth+')', 1.8);
   if(kind==='sunken') spawnSunkenDepths(g); else if(kind==='temple') spawnFloodedTemple(g); else if(kind==='rrtower'){ const key = g.tower.rrId+'_'+(g.tower.rrFloor||1); if(g.rrStore && g.rrStore[key]) g.enemies = g.rrStore[key].filter(e=>e.hp>0); else spawnRRTower(g); } else spawnMarshPool(g);
-  const slain = (kind==='temple'||kind==='rrtower') ? false : kind==='sunken' ? (p.krakenSlain || p.partKraken) : (p.leviathanSlain || p.partLeviathan);
-  if(slain) subBossDown(g);
+  // v489: the boss is back each visit, so the chest/portal only appear after this visit's kill
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = g.player.x; f.y = g.player.y; }

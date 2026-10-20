@@ -155,7 +155,7 @@ function spawnHighward(g){
     if(r.kind==='boss'){
       for(const [dx,dy] of [[-300,-60],[300,-60],[-300,230],[300,230]]){ const e = spawnEnemy(g, Wd, {x:room.guardPos.x+dx, y:room.guardPos.y+dy}); if(e){ e.hwSentry = true; made.push(e); } }
       for(const [dx,dy,tp] of [[0,320,'hwmendicant'],[-160,300,'hwbulwark'],[160,300,'hwbulwark']]){ const e = spawnEnemy(g, tp, {x:room.guardPos.x+dx, y:room.guardPos.y+dy}); if(e){ e.hwSentry = true; made.push(e); } }
-      if(!p.highwardSlain){
+      {   // v489: the Warden stands again on every visit
         const gd = spawnEnemy(g, 'hwguardian', room.guardPos);
         if(gd){ gd.eliteName = 'Ancient Warden'; gd.hwGuardian = true; gd.leashRange = 99999; gd.xpMul = 10; }
       }
@@ -195,7 +195,8 @@ function enterHighward(floor, opts){
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null; g.bossKilled=false;
   g.hwStore = g.hwStore || {};
   const st = g.hwStore[floor];
-  if(st){ g.enemies = st.enemies.filter(e=>e.hp>0); t.greeted = st.greeted; if(st.chests) t.chests.forEach((c,i)=>{ c.opened = !!st.chests[i]; }); }
+  if(st && floor===HW_FLOORS && !st.enemies.some(e=>e.hwGuardian && e.hp>0)){ delete g.hwStore[floor]; spawnHighward(g); }   // v489: the Warden's floor refills after a kill
+  else if(st){ g.enemies = st.enemies.filter(e=>e.hp>0); t.greeted = st.greeted; if(st.chests) t.chests.forEach((c,i)=>{ c.opened = !!st.chests[i]; }); }
   else spawnHighward(g);
   if(floor===1 && !p.hwMapFound && !g.enemies.some(e=>e.hwMapCarrier && e.hp>0)){
     // v425b: make sure the map bearer exists (also repairs floors restored from an older layout)
@@ -271,7 +272,7 @@ function updateHighward(g, dt){
       g.particles.push({type:'burst', x:c.x, y:c.y, t:0.5, max:0.5, color:'#e8c44a'}); bagPulse(); saveGame();
     } else if(!c.opened && dist(p,c) < c.r+p.r+8 && !c.warned){ c.warned = true; showMsg('Clear the room guardians first.', 1.6, '#ffd27a'); }
   }
-  if(t.hasGuardian && !g.enemies.some(e=>e.hwGuardian && e.hp>0)){ t.hasGuardian = false; if(!p.highwardSlain) hwGuardianDown(g); }
+  if(t.hasGuardian && !g.enemies.some(e=>e.hwGuardian && e.hp>0)){ t.hasGuardian = false; if(!p.highwardSlain) hwGuardianDown(g); else { bossRekillRare(g, t.guardPos); showBigMsg('THE ANCIENT WARDEN FALLS', 'A rare treasure lies where it stood', 3.6, false, true); } }
 }
 // v420: a glowing gold portal that fills a gate opening. cx,cy = centre of the opening (local coords), rx/ry = half size.
 function drawGoldPortal(cx, cy, rx, ry, clock, lit){

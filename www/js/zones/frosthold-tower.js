@@ -95,7 +95,7 @@ function spawnFhtFloor(g, f){
       sp('fhcleric', {x:cs.x + (room.entranceSide==='left' ? 120 : -120), y:cs.y});   // v462: a cleric tends the Champions
       showMsg('Seven Frosthold Champions guard the way up...', 2.2, '#dfe8ff');
     }
-  } else if(!g.player.fhCmdSlain){
+  } else {   // v489: the Commander is back on every visit
     const cs = room.chestSpot;
     const c = spawnEnemy(g, 'fhtemplar', {x:cs.x - (room.entranceSide==='left'?1:-1)*220, y:cs.y});
     initFhCommander(c);
@@ -275,8 +275,9 @@ function fhCommanderSlain(g, e){
   p.fhCmdSlain = true;
   for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; }
   if(g.tower && g.tower.fht){
-    g.chest = {x:clamp(e.x,100,g.tower.w-100), y:clamp(e.y,100,g.tower.h-100), r:24, opened:false, cmd:true};
-    g.tower.clearPortal = {x:clamp(g.chest.x+110, 80, g.tower.w-80), y:clamp(g.chest.y+40, 80, g.tower.h-80), r:24};   // v456: right beside the chest
+    const cx = clamp(e.x,100,g.tower.w-100), cy = clamp(e.y,100,g.tower.h-100);
+    if(!p.fhCmdLooted) g.chest = {x:cx, y:cy, r:24, opened:false, cmd:true};   // v489: re-kills drop a rare instead of the chest
+    g.tower.clearPortal = {x:clamp(cx+110, 80, g.tower.w-80), y:clamp(cy+40, 80, g.tower.h-80), r:24};   // v456: right beside the chest
   }
   bossMsg('FROSTHOLD COMMANDER SLAIN', 'The ancient machine falls silent', 3.6);
   shakeScreen(g, 6, 0.6);

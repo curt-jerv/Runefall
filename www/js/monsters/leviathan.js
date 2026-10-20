@@ -11,7 +11,7 @@ function lvZone(x){ return x < LAKE_CX-LAKE_ISLAND_HX ? 'west' : x > LAKE_CX+LAK
 // lives in the Black Marsh river and reuses the same state machine (e.marsh).
 const KR_STRIKE_T = 1.15, KR_STRIKE_R = 62, KR_STRIKE_DMG = 0.945, KR_DMG_TUNE = 0.72;   // v206/v212: Kraken hits softened (~-20%, then another -10%)
 function spawnLeviathanBoss(g, pos, cfg){
-  if(g.player && (g.player.krakenSlain || g.player.partKraken)) return null;   // (v244) the Kraken stays dead
+  // v489: bosses come back on every visit (was: the Kraken stays dead)
   const e = spawnEnemy(g, 'leviathan', pos || {x:LAKE_CX-700, y:LAKE_CY-LV_LANE});
   if(cfg) e.cfg = cfg;
   e.kraken = true; e.dmgType = 'lightning'; e.krStrikes = [];
@@ -34,7 +34,6 @@ function spawnSunkenKraken(g){
   return spawnLeviathanBoss(g, {x:SKP.cx+260, y:SKP.cy}, {free:true, bounds:[SKP.cx-SKP.rx+90, SKP.cx+SKP.rx-90], y0:SKP.cy-SKP.ry+80, y1:SKP.cy+SKP.ry-80, cx:SKP.cx+240, cy:SKP.cy});
 }
 function spawnPoolLeviathan(g){
-  if(g.player && (g.player.leviathanSlain || g.player.partLeviathan)) return null;
   const e = spawnEnemy(g, 'leviathan', {x:POOL_CX-POOL_RX+260, y:POOL_CY});
   e.cfg = {free:true, bounds:[POOL_CX-POOL_RX+80, POOL_CX+POOL_RX-80], y0:POOL_CY-POOL_RY+80, y1:POOL_CY+POOL_RY-80, cx:POOL_CX, cy:POOL_CY};
   e.pool = true; e.lvBoss = true; e.isLairBoss = true; e.bossName = 'The Leviathan';
