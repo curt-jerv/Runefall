@@ -3507,7 +3507,7 @@ function updateStep(dt){
     updateInteractPrompt(izKind);
     // Icy Summit: bitter cold -- flat 1 HP per second, ignores cold resistance.
     if(iz.cold && !g.over && p.hp>0){
-      p.hp -= COLD_DPS*dt;   // flat 1 HP/sec, ignores cold resist
+      p.hp -= Math.max(COLD_DPS, (p.maxHp||0)*COLD_DPS_PCT)*dt;   // ignores cold resist (v490: scales with life now)
       g.coldT = (g.coldT||0) + dt;
       if(p.hp<=0){ p.hp=0; endGame(g); }
     }

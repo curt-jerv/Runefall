@@ -4,10 +4,10 @@
 // Mountain Pass and links east to the Shrine and west to the Cellar. Only the
 // Summit has a waypoint. The Summit is freezing: 1 cold damage per second
 // (flat, ignores cold resistance).
-const COLD_DPS = 1;
+const COLD_DPS = 1, COLD_DPS_PCT = 0.006;   // v490: bitter cold = the larger of 1 HP or 0.6% of max life per second (was a flat 1); the Icy Cellar is just as cold
 const MASTODON_HP_MULT = 11, MASTODON_DMG_MULT = 2.4, MASTODON_R_MULT = 2.1;
 const ICY_ZONE_DEFS = {
-  summit:{ name:'Icy Summit',          w:2000, h:1500, depth:35 },
+  summit:{ name:'Icy Summit',          w:2900, h:2150, depth:35 },   // v490: bigger (was 2000x1500)
   shrine:{ name:'Mountain Top Shrine', w:1500, h:1100, depth:37 },
   cellar:{ name:'Icy Cellar',          w:1700, h:1200, depth:36 },
 };
@@ -19,7 +19,7 @@ const ICY_PACKS = {
 function makeIcyZone(kind){
   const def = ICY_ZONE_DEFS[kind];
   const w = def.w, h = def.h;
-  const z = { kind, name:def.name, w, h, depth:def.depth, obstacles:[], gates:[], rocks:[], packAnchors:[], cold: kind==='summit' };
+  const z = { kind, name:def.name, w, h, depth:def.depth, obstacles:[], gates:[], rocks:[], packAnchors:[], cold: kind==='summit' || kind==='cellar' };
   if(kind==='summit'){
     z.gates.push({id:'pass',   x:w/2, y:h-16, r:38, label:'MOUNTAIN PASS',       act:'toMountainPassFromIcy', art:'cave'});
     z.gates.push({id:'shrine', x:w-16, y:h/2, r:38, label:'MOUNTAIN TOP SHRINE', act:'toIcyShrine',           art:'cave'});
@@ -49,7 +49,7 @@ function makeIcyZone(kind){
   z.crags = [];
   const wallGaps = z.gates.map(gt=>({x:gt.x,y:gt.y,r:120}));
   for(const bp of zoneBorderPoints(w,h,8,52,wallGaps)) z.crags.push({x:bp.x+rand(-8,8),y:bp.y+rand(-8,8),s:rand(0.9,1.5),h:rand(60,110)});
-  const want = kind==='summit' ? 10 : kind==='shrine' ? 6 : 7;
+  const want = kind==='summit' ? 15 : kind==='shrine' ? 6 : 7;   // v490: more packs for the bigger summit
   let tries=0;
   while(z.packAnchors.length<want && tries<1500){
     tries++;

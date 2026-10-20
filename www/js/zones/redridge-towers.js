@@ -129,6 +129,9 @@ function updateRRTower(g, dt){
   if(dist(p, t.entrance) < t.entrance.r + p.r + 22) k = (t.rrFloor||1)>1 ? 'rrDown' : 'rrTowerExit';
   else if(t.rrUp && dist(p, t.rrUp) < t.rrUp.r + p.r + 22) k = 'rrUp';
   else if(t.rrBeacon && dist(p, t.rrBeacon) < t.rrBeacon.r + p.r + 26) k = 'rrBeacon';
+  // v490: once the beacon burns, a portal by it takes you straight back outside the tower
+  if(t.rrBeacon && p.rrBeacons && p.rrBeacons[t.rrId] && !t.exitPortal) t.exitPortal = fixLootSpot(g, {x:t.rrBeacon.x-150, y:t.rrBeacon.y+90, r:26});
+  if(t.exitPortal && !k && dist(p, t.exitPortal) < t.exitPortal.r + p.r + 22) k = 'rrTowerExit';
   updateInteractPrompt(k);
   if(t.vents && !g.over && p.hp>0){
     const clk = g.clock||0;

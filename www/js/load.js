@@ -101,6 +101,7 @@ const RUNEFALL_FILES = [
   'render/render.js',
   'ui/start-screen.js',
   'core/test-hooks.js',
+  'core/spawn-safety.js',
   'core/resume.js'
 ];
 (function(){

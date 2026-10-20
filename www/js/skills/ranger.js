@@ -81,7 +81,10 @@ function finesseDodgeCooldown(p){
   if(rank<=0) return DODGE_CD_BASE;
   return Math.max(FINESSE_DODGE_CD_MIN, rank<=5 ? DODGE_CD_BASE - FINESSE_DODGE_CD_STEP*rank : DODGE_CD_BASE - FINESSE_DODGE_CD_STEP*5 - 0.03*(rank-5));   // v372: -0.1s per rank to Rank 5, then -0.03s (0.40s at Rank 10)
 }
-function dodgeMaxCharges(p){ return (p && p.skills && effectiveRank(p,'finesse')>0) ? 2 : 1; }
+function dodgeMaxCharges(p){
+  if(typeof game!=='undefined' && game && game.scene==='lighthouse' && game.tower && game.tower.subzone==='sunken') return 2;   // v490: two dodges in the Sunken Depths for everyone
+  return (p && p.skills && effectiveRank(p,'finesse')>0) ? 2 : 1;
+}
 // Marksman tree (Ranger's 2nd tree, v58): Bow Expert (passive bow-damage%),
 // Rapid Shot (new button, sequential 3-arrow burst), Multi Shot (passive that
 // turns the plain bow attack into a simultaneous 3/5-arrow spread + attack

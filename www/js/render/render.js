@@ -742,6 +742,7 @@ function render(){
       const lit = !!(g.player.rrBeacons && g.player.rrBeacons[t.rrId]);
       if(t.rrBeacon){ drawables.push({depth:t.rrBeacon.x+t.rrBeacon.y, draw:()=>drawRRBeaconIso(t.rrBeacon, g.clock||0, lit)});
       drawables.push({depth:t.rrBeacon.x+t.rrBeacon.y+1, draw:()=>drawEdgeLabelIso(t.rrBeacon, lit?'BEACON LIT':'BEACON')}); }
+      if(t.exitPortal){ const ep = t.exitPortal; drawables.push({depth:ep.x+ep.y-1, draw:()=>drawBluePortalIso(ep, g.clock||0)}); drawables.push({depth:ep.x+ep.y, draw:()=>drawEdgeLabelIso(ep, 'REDRIDGE CANYON')}); }   // v490
       if(t.rrUp){ drawables.push({depth:t.rrUp.x+t.rrUp.y-1, draw:()=>drawStairsUpIso(t.rrUp, g.clock||0)}); drawables.push({depth:t.rrUp.x+t.rrUp.y+1, draw:()=>drawEdgeLabelIso(t.rrUp, 'STAIRS UP · FLOOR '+((t.rrFloor||1)+1))}); }
       for(const v of t.vents) if(vis(v.x,v.y)) drawables.push({depth:v.x+v.y-2, draw:()=>drawRRVentIso(v, g.clock||0)});
       for(const l of t.ladders) if(vis(l.x,l.y)) drawables.push({depth:l.x+l.y, draw:()=>drawRRLadderIso(l)});

@@ -170,16 +170,16 @@ function spawnDarkCryptPopulation(g){
   }
   // v313: 25 skeletons strung along every tunnel between chambers, plus a pack of 8 in each chamber (except the vampire room)
   { const C = g.crypt, seq = [C.entranceRoom, ...(C.mainPath||C.rooms), C.exitRoom], rects = [C.entranceRoom, ...C.rooms, C.exitRoom];
-    const inRoom = (x,y)=> rects.some(r=> x>r.x-90 && x<r.x+r.w+90 && y>r.y-90 && y<r.y+r.h+90);
+    const inRoom = (x,y)=> rects.some(r=> x>r.x-90 && x<r.x+r.w+90 && y>r.y-90 && y<r.y+r.h+90), e0 = rectCenter(C.entranceRoom);
     for(let i=0;i<seq.length-1;i++){
       const a = rectCenter(seq[i]), bc = rectCenter(seq[i+1]);
       const L1 = Math.abs(bc.x-a.x), L2 = Math.abs(bc.y-a.y), L = L1+L2, sx = Math.sign(bc.x-a.x)||1, sy = Math.sign(bc.y-a.y)||1;
       const cand = [];
       for(let d=0; d<=L; d+=10){
         const x = d<=L1 ? a.x+sx*d : bc.x, y = d<=L1 ? a.y : a.y+sy*(d-L1);
-        if(!inRoom(x,y)) cand.push({x,y,h:d<=L1});
+        if(!inRoom(x,y) && Math.hypot(x-e0.x, y-e0.y) > 450) cand.push({x,y,h:d<=L1});   // v490: the first stretch of tunnel past the entrance stays clear
       }
-      const NT = Math.round(100/(seq.length-1));   // v467: about 100 tunnel skeletons in all, however many chambers the crypt rolled
+      const NT = Math.round(70/(seq.length-1));   // v467: tunnel skeletons spread over however many chambers the crypt rolled (v490: 70 in all, was 100)
       for(let k=0;k<NT && cand.length;k++){
         const c = cand[Math.max(0, Math.min(cand.length-1, Math.floor((k+0.5)/NT*cand.length + rand(-0.4,0.4))))];
         spawnEnemy(g, 'skeleton', {x:c.x+(c.h?rand(-10,10):rand(-38,38)), y:c.y+(c.h?rand(-38,38):rand(-10,10))});
@@ -193,6 +193,9 @@ function spawnDarkCryptPopulation(g){
   { const C = g.crypt, a0 = rectCenter(C.entranceRoom), a1 = rectCenter((C.mainPath||C.rooms)[0]);
     const b = spawnEnemy(g, 'skeletonbrute', {x:(a0.x+a1.x)/2, y:a0.y});
     b.r = Math.round(b.r*1.35); b.maxHp = Math.round(b.maxHp*2.2); b.hp = b.maxHp; b.dmg *= 1.1; }
+  // v490: the entrance / waypoint room is a safe room -- anything that rolled a spot in it goes
+  { const er = g.crypt.entranceRoom, m = 140;
+    g.enemies = g.enemies.filter(e=>!(e.x>er.x-m && e.x<er.x+er.w+m && e.y>er.y-m && e.y<er.y+er.h+m)); }
   // v321: the vampire pack in the chamber before the boss hall is gone
   // v275: elite skeleton wardens guard the hall before the Defiler's Tomb
   { const hr = g.crypt.exitRoom;

@@ -175,6 +175,7 @@ function enterDeep(floor, opts){
   document.getElementById('buttons').style.display = 'flex';
   document.getElementById('actionCluster').style.display = 'block';
   g.miners = null; g.minerRun = null; if(floor===1) setupMiners(g);
+  g._heatWarned = false;
   updateInteractPrompt(null);
   saveGame();
 }
@@ -486,8 +487,15 @@ function openHeartChest(g){
   g.particles.push({type:'burst', x:g.chest.x, y:g.chest.y, t:0.5, max:0.5, color:'#ffb060'});
   bagPulse(); saveGame();
 }
+// v490: the Heart of the Mountain scorches -- 0.6% of max life per second as fire (fire resistance helps), like the Marsh Pool's poison
+const HEART_HEAT_PCT = 0.006;
 function updateDeep(g, dt){
   const p = g.player, t = g.tower;
+  if(t && t.bossFloor && !g.over && p.hp>0){
+    p.hp -= p.maxHp*HEART_HEAT_PCT*(1-elementResist(p,'fire')/100)*dt; g.heatT = (g.heatT||0) + dt;
+    if(!g._heatWarned){ g._heatWarned = true; showMsg('The heat is unbearable -- fire resistance will help here.', 3.4, '#ffb060'); }
+    if(p.hp<=0){ p.hp = 0; endGame(g); }
+  }
   updatePortalChoice(false);
   if(g.deepStore) g.deepStore[t.floor] = g.enemies;
   let dk = null;
