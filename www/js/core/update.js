@@ -1943,6 +1943,7 @@ function updateStep(dt){
       showMsg('Flame Vortex!', 0.9);
     }
   }
+  pyreHeartTick(p);   // v490: Pyre Heart keeps a Flame Vortex going while Immolate burns
   if(p.vortex){
     const v = p.vortex;
     v.t += dt; v.tick -= dt; v.spin += dt*5.5;

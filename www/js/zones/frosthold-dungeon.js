@@ -845,7 +845,34 @@ function potionDropChance(g, en, isLairBoss){
 }
 // v478: health globes drop only from the great bosses -- one each time they lose a quarter of their life, two when they fall
 function isGlobeBoss(e){ return !!(e && (e.bkBoss || e.kraken || e.lvBoss || e.mastodon || e.colossus || e.prot || e.fhCmd || e.type==='dwconstruct' || e.hwGuardian || e.wlord || e.gj || e.balrog) && !e.kAdd && !e.tentacle); }
-function dropGlobes(g, e, n){ for(let k=0;k<n;k++){ const a = Math.random()*6.283, d = rand(40, 90); g.loot.push({type:'potion', x:e.x+Math.cos(a)*d, y:e.y+Math.sin(a)*d, r:9}); } }
+function dropGlobes(g, e, n){ for(let k=0;k<n;k++){ const a = Math.random()*6.283, d = rand(40, 90), l = {type:'potion', x:e.x+Math.cos(a)*d, y:e.y+Math.sin(a)*d, r:9}; fixLootSpot(g, l); g.loot.push(l); } }   // v490: never in water / walls
+// v490: loot (health potions, health globes, items, gold) never lands where you can't reach it: water, lava,
+// walls, rocks or outside a dungeon's floor. A bad spot is nudged to the nearest open one, searching outward and
+// trying the side facing the player first; if nothing is found it lands at the player's feet.
+function lootSpotBad(g, x, y){
+  const rm = g && g.room; if(!rm) return false;
+  if(x<20 || y<20 || x>rm.w-20 || y>rm.h-20) return true;
+  if(rm.floorRects && !rm.floorRects.some(r=>x>r.x+10 && x<r.x+r.w-10 && y>r.y+10 && y<r.y+r.h-10)) return true;
+  try{
+    const wf = rm.waterAt || (g.scene==='lakesideruins' && typeof lakeWaterAt==='function' ? lakeWaterAt : null);
+    if(wf && wf(x,y)) return true;
+    if(Array.isArray(rm.waters) && subWaterAt(rm,x,y)) return true;
+    if(rm.lavaAt && rm.lavaAt(x,y)) return true;
+  }catch(e){}
+  return !!(rm.obstacles && posBlockedByObstacles(x, y, 10, rm.obstacles));
+}
+function fixLootSpot(g, l){
+  if(!l || !lootSpotBad(g, l.x, l.y)) return l;
+  const p = g.player, a0 = p ? Math.atan2(p.y-l.y, p.x-l.x) : 0;
+  for(let r=16; r<=480; r+=16){
+    for(let k=0;k<16;k++){
+      const a = a0 + (k%2 ? 1 : -1)*Math.ceil(k/2)*Math.PI/8, px = l.x+Math.cos(a)*r, py = l.y+Math.sin(a)*r;
+      if(!lootSpotBad(g, px, py)){ l.x = px; l.y = py; return l; }
+    }
+  }
+  if(p){ l.x = p.x + rand(-8,8); l.y = p.y + rand(-8,8); }
+  return l;
+}
 function bossGlobeTick(g){
   if(!g || !g.enemies) return;
   for(const e of g.enemies){
@@ -876,25 +903,7 @@ function dropLoot(g, x, y, enemyType, isLairBoss, en){
       g.loot.push({type:'item', x:x+rand(-14,14), y:y+rand(-14,14), r:8, item:generateItem(lvl, packRarity(lvl), null, null, g.player)});
     }
   }
-  const rm = g.room;
-  const wf = rm && (rm.waterAt || (g.scene==='lakesideruins' ? lakeWaterAt : null));
-  if(wf){
-    for(let i=n0;i<g.loot.length;i++){
-      const l = g.loot[i];
-      if(!wf(l.x,l.y)) continue;
-      let found = null;
-      if(rm.nearestDry){ found = rm.nearestDry(l.x,l.y); }
-      else {
-        for(let r=24; r<=700 && !found; r+=24){
-          for(let k=0;k<16;k++){
-            const a2 = k/16*Math.PI*2, px = clamp(l.x+Math.cos(a2)*r, 20, rm.w-20), py = clamp(l.y+Math.sin(a2)*r, 20, rm.h-20);
-            if(!wf(px,py)){ found = {x:px,y:py}; break; }
-          }
-        }
-      }
-      if(found){ l.x = found.x; l.y = found.y; }
-    }
-  }
+  for(let i=n0;i<g.loot.length;i++) fixLootSpot(g, g.loot[i]);   // v490: out of water, lava, walls and rocks (was water only)
 }
 function dropLootRaw(g, x, y, enemyType, isLairBoss){
   // v82: item generation is keyed off the character's CURRENT LEVEL, not

@@ -49,6 +49,9 @@ const STASH_KEY = 'dc_stash_v1';
 // player-friendly choice vs. discarding them).
 const STASH_TAB_COUNT = 4;
 let stashActiveTab = 0;
+// v490: mana potions no longer exist -- old ones in a save are removed and sold for half price (125g each).
+// Lives here (not town/economy.js) because loadStash runs while this file loads.
+function stripManaPotions(list){ if(!Array.isArray(list)) return 0; let n = 0; for(let i=list.length-1;i>=0;i--){ const it = list[i]; if(it && it.slotType==='potion' && it.potionKind==='mana'){ list.splice(i,1); n++; } } return n*125; }
 function loadStash(){
   try{
     const raw = localStorage.getItem(STASH_KEY);
@@ -64,7 +67,8 @@ function loadStash(){
         // no `tabs` field yet) into Tab 1, leaving the 3 new tabs empty.
         tabs = [Array.isArray(obj.items) ? obj.items : [], [], [], []];
       }
-      return {gold: obj.gold||0, items: tabs[0], tabs};
+      let mg = 0; for(const tb of tabs) mg += stripManaPotions(tb);   // v490: mana potions are gone -- sold for half price
+      return {gold: (obj.gold||0) + mg, items: tabs[0], tabs};
     }
   }catch(e){}
   return {gold:0, items:[], tabs:[[],[],[],[]]};

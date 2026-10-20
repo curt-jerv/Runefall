@@ -330,22 +330,17 @@ function makeRecipeBookItem(){
     questDesc:'A charred, iron-bound tome of the witch\'s craft, found where the Breach was purged. Read it (Use, or right-click) to learn every cauldron recipe.',
   };
 }
-// v464: the great bosses each teach one random cauldron recipe the first time they fall; the Wraith Lord teaches the rest
+// v464: the great bosses each teach one random cauldron recipe the first time they fall (v490: the Wraith Lord too, no longer all of them)
 const BOSS_RECIPE_BOSSES = [
   ['stormraptor', e=>e.stormRaptor, 'the Storm Raptor'], ['mastodon', e=>e.mastodon, 'the Mastodon'], ['colossus', e=>e.colossus, 'the Molten Colossus'],
   ['commander', e=>e.fhCmd, 'the Frosthold Commander'], ['construct', e=>e.type==='dwconstruct', 'the Ancient Dwarven Construct'],
-  ['warden', e=>e.hwGuardian, 'the Ancient Warden'], ['gojira', e=>e.gj, 'Gojira'], ['flameraptor', e=>e.lr && !e.stormRaptor, 'the Flame Raptor']];
+  ['warden', e=>e.hwGuardian, 'the Ancient Warden'], ['gojira', e=>e.gj, 'Gojira'], ['flameraptor', e=>e.lr && !e.stormRaptor, 'the Flame Raptor'],
+  ['wraithlord', e=>e.wlord || e.type==='wraithlord', 'the Wraith Lord']];   // v490: one recipe, like every other boss
 function bossRecipeDrop(g, e){
   const p = g.player; if(!p || !e) return;
   p.recipeBoss = p.recipeBoss || {}; if(!p.recipes) p.recipes = {};
   const unknown = STONE_RECIPES.filter(r=>!p.recipes[r.id]);
-  if(e.wlord || e.type==='wraithlord'){
-    if(p.recipeBoss.wraithlord) return;
-    p.recipeBoss.wraithlord = true;
-    for(const r of unknown) p.recipes[r.id] = true;
-    if(unknown.length) setTimeout(()=>showMsg('The Wraith Lord\u2019s grimoire falls open: every remaining cauldron recipe is yours ('+unknown.length+').', 4.5, '#f2a31b'), 1200);
-    saveGame(); return;
-  }
+  // v490: every boss (the Wraith Lord too) teaches exactly ONE recipe, the first time it falls
   const hit = BOSS_RECIPE_BOSSES.find(b=>b[1](e)); if(!hit || p.recipeBoss[hit[0]]) return;
   p.recipeBoss[hit[0]] = true;
   if(!unknown.length){ saveGame(); return; }
