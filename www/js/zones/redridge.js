@@ -163,17 +163,18 @@ function makeRedridge(part){
   const walk = (x,y)=>{ const ix=Math.floor(x/TS), iy=Math.floor(y/TS); if(ix<0||iy<0||ix>=cols||iy>=rows) return false; const i=iy*cols+ix; return !B[i] && K[i]<3 && Math.abs(CH[i*4]-CH[i*4+2])<14; };
   const flat = (x,y,d)=>walk(x,y)&&walk(x+d,y)&&walk(x-d,y)&&walk(x,y+d)&&walk(x,y-d);
   const okAnchor = (x,y,d)=> flat(x,y,d||70) && (!camp || dist({x,y},camp)>650) && (!waypoint || dist({x,y},waypoint)>650) && dist({x,y},gates[0])>650 && !keepouts.some(k=>dist({x,y},k)<k.r+40);
-  const anchors = []; tries=0;
-  while(anchors.length<PC.anchors && tries<60000){ tries++;
-    const x=rand(M+120,w-M-120), y=rand(M+120,h-M-120);
-    if(!okAnchor(x,y) || anchors.some(a=>dist(a,{x,y})<330)) continue;
-    anchors.push({x,y});
-  }
+  // v490: buffalo herd grounds are picked first (they used to come after the packs and usually found no room, so no buffalo spawned)
   const herdAnchors = []; tries=0;
   while(herdAnchors.length<PC.herds && tries<20000){ tries++;
     const x=rand(M+300,w-M-300), y=rand(M+300,h-M-300);
-    if(!okAnchor(x,y,170) || anchors.some(a=>dist(a,{x,y})<420) || herdAnchors.some(a=>dist(a,{x,y})<900)) continue;
+    if(!okAnchor(x,y,150) || herdAnchors.some(a=>dist(a,{x,y})<900)) continue;
     herdAnchors.push({x,y});
+  }
+  const anchors = []; tries=0;
+  while(anchors.length<PC.anchors && tries<60000){ tries++;
+    const x=rand(M+120,w-M-120), y=rand(M+120,h-M-120);
+    if(!okAnchor(x,y) || anchors.some(a=>dist(a,{x,y})<330) || herdAnchors.some(a=>dist(a,{x,y})<420)) continue;
+    anchors.push({x,y});
   }
   const deco = []; tries=0;
   while(deco.length<260 && tries<30000){ tries++;
