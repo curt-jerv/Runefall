@@ -105,6 +105,7 @@ function updateTown(dt){
   const nearWaypoint = dist(p, g.town.waypoint) < g.town.waypoint.r + p.r + 24;
   const nearStashChest = dist(p, g.town.stashChest) < g.town.stashChest.r + p.r + 24;
   const nearCat = townCatVisible() && dist(p, g.town.cat) < g.town.cat.r + p.r + 24;
+  const tipNpc = nearTownTipNpc(g); g._tipNpcNear = tipNpc;   // v490: townsfolk / ship captain
   // Waypoint rework: Town's own waypoint is NEVER locked -- it's always
   // available/selectable as a fast-travel hub, unlike every other zone's
   // waypoint (which must be discovered by walking up to it first -- see
@@ -118,7 +119,7 @@ function updateTown(dt){
   // the same one NPC, so he's no longer present/interactable out here.
   const nearBarkeeper = !tavernQuestDone && dist(p, g.town.barkeeper) < g.town.barkeeper.r + p.r + 24;
   const nearTavernDoor = dist(p, g.town.tavernDoor) < g.town.tavernDoor.r + p.r + 20;
-  updateInteractPrompt(nearRuneforge && !nearShop ? 'runeforge' : nearShop ? 'shop' : nearGate ? 'toForest' : nearWell ? 'well' : nearStashChest ? 'stash' : nearCat ? 'townCat' : nearWaypoint ? 'waypoint' : nearBonfireHunter ? 'bonfireHunter' : nearBarkeeper ? 'barkeeper' : nearTavernDoor ? (tavernQuestDone ? 'toTavern' : 'tavernLocked') : nearQuestGiver ? 'quest' : null);
+  updateInteractPrompt(nearRuneforge && !nearShop ? 'runeforge' : nearShop ? 'shop' : nearGate ? 'toForest' : nearWell ? 'well' : nearStashChest ? 'stash' : nearCat ? 'townCat' : tipNpc ? tipNpc.kind : nearWaypoint ? 'waypoint' : nearBonfireHunter ? 'bonfireHunter' : nearBarkeeper ? 'barkeeper' : nearTavernDoor ? (tavernQuestDone ? 'toTavern' : 'tavernLocked') : nearQuestGiver ? 'quest' : null);
 
   const pIso = toIso(p.x, p.y);
   g.camera.x = pIso.x - W/2;

@@ -86,8 +86,15 @@ const teleportMineBtn = document.getElementById('teleportMine');
 // reachedMountainPass (see updateTown's waypointUnlocked), which does NOT
 // imply Sunlit Plains has also been found (a separate branch off the
 // Forest), so it needs its own explicit gate here.
+// v490: a waypoint is discovered (saved and lit) when the player USES it -- pressing interact opens this menu --
+// not just by walking past it. `from` -> that waypoint's save flag (Town's has none: it's always on).
+const WAYPOINT_FLAG_BY_FROM = {mountainpass:'reachedMountainPass', highlands:'reachedHighlands', sunlitplains:'reachedSunlitPlains', rivervalley:'reachedRiverValley',
+  lighthouse1:'reachedLighthouseTower', lighthouse5:'reachedLighthouseTowerTop', lakeside:'reachedLakesideRuins', deep:'reachedDeepWp', marsh:'reachedBlackMarsh',
+  forgottentower:'reachedForgottenTower', cemetery:'reachedCursedCemetery', darkcrypt:'reachedDarkCrypt', ancientruins:'reachedAncientRuins', icysummit:'reachedIcySummit',
+  frosthold:'reachedFrostholdWp', redridge:'reachedRedridge', highward:'reachedHighwardWp', cliffside:'reachedCliffWp', keep:'reachedKeepWp', hold:'reachedHoldWp', ring:'reachedRingWp', fhd:'reachedFhdWp'};
 function openTeleportMenu(from){
   game.modalOpen = true;
+  { const wf = WAYPOINT_FLAG_BY_FROM[from]; if(wf){ const fresh = !game.player[wf]; discoverWaypoint(wf); if(fresh) showMsg('Waypoint activated', 1.8, '#9fd8ff'); } }   // v490
   // Waypoint rework: Town is always listed (never gated on any discovery
   // flag -- see discoverWaypoint/updateTown's comment). Mountain Pass now
   // gates on reachedMountainPass too, same as every other zone below --

@@ -3434,7 +3434,6 @@ function updateStep(dt){
     const nearForestGate = dist(p, g.mtn.forestGate) < g.mtn.forestGate.r + p.r + 22;
     const nearMineGate = dist(p, g.mtn.mineGate) < g.mtn.mineGate.r + p.r + 22;
     const nearMtnWaypoint = dist(p, g.mtn.waypoint) < g.mtn.waypoint.r + p.r + 24;
-    if(nearMtnWaypoint) discoverWaypoint('reachedMountainPass');
     const nearSummitGate = dist(p, g.mtn.summitGate) < g.mtn.summitGate.r + p.r + 22;
     const nearFrostGate = dist(p, g.mtn.frostGate) < g.mtn.frostGate.r + p.r + 22;
     updateInteractPrompt(nearForestGate ? 'toForestFromMountain' : nearMineGate ? 'toMountainDepths' : nearFrostGate ? (snowWallOpen(p) ? 'toFrosthold' : 'snowWall') : nearSummitGate ? 'toIcySummit' : nearMtnWaypoint ? 'waypointMtn' : null);
@@ -3447,7 +3446,7 @@ function updateStep(dt){
     if(rrKind==='redridgeEastSealed' && rrBeaconCount(p)>=3) rrKind = 'redridgeBridgeOpen';
     if(!rrKind && rr.camp && dist(p, rr.camp) < rr.camp.r + p.r + 30) rrKind = 'wayfarer';
     if(!rrKind){ for(const tw of rr.towers){ if(dist(p, tw.door) < tw.door.r + p.r + 22){ rrKind = 'rrTower'; g._rrTowerNear = tw; break; } } }
-    if(rr.waypoint && dist(p, rr.waypoint) < rr.waypoint.r + p.r + 24){ discoverWaypoint('reachedRedridge'); if(!rrKind) rrKind = 'waypointRedridge'; }
+    if(rr.waypoint && dist(p, rr.waypoint) < rr.waypoint.r + p.r + 24){ if(!rrKind) rrKind = 'waypointRedridge'; }
     updateInteractPrompt(rrKind);
   } else if(g.scene==='highlands'){
     updatePortalChoice(false);
@@ -3455,7 +3454,7 @@ function updateStep(dt){
     updateHighlandsWeather(g, dt);
     let hk = null;
     for(const gt of g.hl.gates){ if(dist(p, gt) < gt.r + p.r + 22){ hk = gt.act; break; } }
-    if(dist(p, g.hl.waypoint) < g.hl.waypoint.r + p.r + 24){ discoverWaypoint('reachedHighlands'); if(!hk) hk = 'waypointHighlands'; }
+    if(dist(p, g.hl.waypoint) < g.hl.waypoint.r + p.r + 24){ if(!hk) hk = 'waypointHighlands'; }
     updateInteractPrompt(hk);
   } else if(g.scene==='redcrater'){
     updatePortalChoice(false);
@@ -3471,7 +3470,7 @@ function updateStep(dt){
     updatePortalChoice(false);
     let fhKind = null;
     for(const gt of g.fh.gates){ if(dist(p, gt) < gt.r + p.r + 22){ fhKind = gt.act; break; } }
-    if(dist(p, g.fh.waypoint) < g.fh.waypoint.r + p.r + 24){ discoverWaypoint('reachedFrostholdWp'); if(!fhKind) fhKind = 'waypointFrosthold'; }
+    if(dist(p, g.fh.waypoint) < g.fh.waypoint.r + p.r + 24){ if(!fhKind) fhKind = 'waypointFrosthold'; }
     if(fhKind==='toFhDungeon' && !fhDungeonUnlocked(p)) fhKind = hasFhKeyItem(p) ? 'fhDungeonKeyhole' : 'fhDungeonLocked';
     if(fhKind==='toRedridge' && !redridgeWallOpen(p)) fhKind = 'redridgeWall';
     updateInteractPrompt(fhKind);
@@ -3481,7 +3480,6 @@ function updateStep(dt){
     let izKind = null;
     for(const gt of iz.gates){ if(dist(p, gt) < gt.r + p.r + 22){ izKind = gt.act; break; } }
     if(iz.waypoint && dist(p, iz.waypoint) < iz.waypoint.r + p.r + 24){
-      discoverWaypoint('reachedIcySummit');
       if(!izKind) izKind = 'waypointIcy';
     }
     if(iz.altar && (p.shrineStage||0)<3 && !izKind && dist(p, iz.altar) < iz.altar.r + p.r + 26){
@@ -3526,7 +3524,6 @@ function updateStep(dt){
     const nearS = dist(p, rv.southGate) < rv.southGate.r + p.r + 22;
     const nearC = dist(p, rv.caveGate) < rv.caveGate.r + p.r + 22;
     const nearW = dist(p, rv.waypoint) < rv.waypoint.r + p.r + 24;
-    if(nearW) discoverWaypoint('reachedRiverValley');
     updateInteractPrompt(nearN ? 'toForestFromRiver' : nearS ? 'toSunlitPlainsFromRiver' : nearC ? 'toMinotaurCave' : nearW ? 'waypointRiver' : null);
   } else if(g.scene==='sunlitplains'){
     // Sunlit Plains: same open-zone shape as the Forest/Mountain Pass --
@@ -3540,7 +3537,6 @@ function updateStep(dt){
     updatePortalChoice(false);
     const nearForestGate = dist(p, g.sun.forestGate) < g.sun.forestGate.r + p.r + 22;
     const nearSunWaypoint = dist(p, g.sun.waypoint) < g.sun.waypoint.r + p.r + 24;
-    if(nearSunWaypoint) discoverWaypoint('reachedSunlitPlains');
     const nearWestGate = dist(p, g.sun.westGate) < g.sun.westGate.r + p.r + 22;
     const nearEastGate = dist(p, g.sun.eastGate) < g.sun.eastGate.r + p.r + 22;
     const nearSouthGate = dist(p, g.sun.southGate) < g.sun.southGate.r + p.r + 22;
@@ -3589,7 +3585,7 @@ function updateStep(dt){
     else if(t.floor>1 && dist(p, t.entrance) < t.entrance.r + p.r + 22) lhKind = 'lighthouseStairsDown';
     else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) lhKind = 'lighthouseStairsUp';
     if(t.maze && t.stairs && !t.stairsSeen && dist(p, t.stairs) < 520) t.stairsSeen = true;
-    else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ if(t.ft){ lhKind = 'waypointForgottenTower'; discoverWaypoint('reachedForgottenTower'); } else { lhKind = 'waypointLighthouse1'; discoverWaypoint('reachedLighthouseTower'); } }
+    else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ if(t.ft){ lhKind = 'waypointForgottenTower'; } else { lhKind = 'waypointLighthouse1'; } }
     // v94 (quest feature): the rooftop's beacon starts off (p.lighthouseBeaconOn
     // false) -- while it's off, walking up to it shows the same small
     // interact-button prompt every other interactable (stash/vendor/
@@ -3654,7 +3650,6 @@ function updateStep(dt){
     updatePortalChoice(false);
     const nearSunlitGate = dist(p, g.lake.sunlitGate) < g.lake.sunlitGate.r + p.r + 22;
     const nearLakeWaypoint = !g.lake.waypoint.off && dist(p, g.lake.waypoint) < g.lake.waypoint.r + p.r + 24;
-    if(nearLakeWaypoint) discoverWaypoint('reachedLakesideRuins');
     const nearRuinsSpot = dist(p, g.lake.ruinsSpot) < g.lake.ruinsSpot.r + p.r + 22;
     const ruinsKind = nearRuinsSpot ? (p.ruinsEntranceOpen ? 'toAncientRuins' : (canStudyRuins(p) ? 'studyRuins' : null)) : null;
     const nearMarshGate = dist(p, g.lake.marshGate) < g.lake.marshGate.r + p.r + 22;
@@ -3683,7 +3678,6 @@ function updateStep(dt){
     const nearW = dist(p, bm.westGate) < bm.westGate.r + p.r + 22;
     const nearE = dist(p, bm.eastGate) < bm.eastGate.r + p.r + 22;
     const nearWp = dist(p, bm.waypoint) < bm.waypoint.r + p.r + 24;
-    if(nearWp) discoverWaypoint('reachedBlackMarsh');
     const nearC = dist(p, bm.cauldron) < bm.cauldron.r + p.r + 34;
     const cq = getQuest(p,'witch_find');
     const cauldronUsable = p.witchRescued || (cq && cq.status==='active');
@@ -3698,7 +3692,6 @@ function updateStep(dt){
     updatePortalChoice(false);
     const nearSunlitGate = dist(p, g.cem.sunlitGate) < g.cem.sunlitGate.r + p.r + 22;
     const nearCemWaypoint = !!g.cem.waypoint && dist(p, g.cem.waypoint) < g.cem.waypoint.r + p.r + 24;
-    if(nearCemWaypoint) discoverWaypoint('reachedCursedCemetery');
     const nearTomb = dist(p, g.cem.tomb) < g.cem.tomb.r + p.r + 26;
     const nearStatue = !p.cemeteryCleared && !(g.cem.evt && g.cem.evt.stage>0) && dist(p, g.cem.statue) < g.cem.statue.r + p.r + 30;
     updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromCemetery' : nearCemWaypoint ? 'waypointCemetery' : nearTomb ? (p.cemeteryCleared ? 'toDarkCrypt' : 'tombSealed') : nearStatue ? 'cemStatue' : null);
@@ -3714,7 +3707,6 @@ function updateStep(dt){
     updatePortalChoice(false);
     const nearCemeteryGate = dist(p, g.crypt.cemeteryGate) < g.crypt.cemeteryGate.r + p.r + 22;
     const nearCryptWaypoint = dist(p, g.crypt.waypoint) < g.crypt.waypoint.r + p.r + 24;
-    if(nearCryptWaypoint) discoverWaypoint('reachedDarkCrypt');
     // (v120) once the chest is looted a portal appears beside it, leading back to the cemetery
     if(g.crypt.bossDone && p.inscriptionTaken && !g.crypt.returnPortal){   // v326: the portal only opens once the sarcophagus has been searched for the Templar Inscription
       g.crypt.returnPortal = {x:g.crypt.chestSpot.x+70, y:g.crypt.chestSpot.y, r:26};
@@ -3786,7 +3778,6 @@ function updateStep(dt){
     const nearRP = !!(R.returnPortal && dist(p, R.returnPortal) < R.returnPortal.r + p.r + 22);
     const nearHusk = !!(R.husk && !R.husk.taken && dist(p, R.husk) < R.husk.r + p.r + 34);
     const nearFW = !!(R.waypoint && dist(p, R.waypoint) < R.waypoint.r + p.r + 24);
-    if(nearFW) discoverWaypoint('reachedFhdWp');
     updateFhdHazards(g, dt);
     updateInteractPrompt(nearHusk ? 'takeRunestone2' : nearFW ? 'waypointFhd' : nearE ? (R.floor===1 ? 'fhdToKeep' : 'fhdUp') : nearRP ? 'fhdPortalKeep' : nearDn ? 'fhdDown' : null);
   } else if(g.scene==='ancientruins'){
@@ -3795,7 +3786,6 @@ function updateStep(dt){
     const nearEntrance = dist(p, R.entrance) < R.entrance.r + p.r + 22;
     const nearRW = R.waypoint && dist(p, R.waypoint) < R.waypoint.r + p.r + 24;
     const nearDown = R.stairsDown && dist(p, R.stairsDown) < R.stairsDown.r + p.r + 22;
-    if(nearRW) discoverWaypoint('reachedAncientRuins');
     // v413: the stairway to the Flooded Temple opens only once the Templar Revenant is dead (older saves that already reached the temple or looted the chest keep it)
     if(g.bossKilled && !p.ruinsWarlordSlain){ p.ruinsWarlordSlain = true; }
     if(R.chestSpot && !R.templeStairs && (g.bossKilled || p.ruinsWarlordSlain || p.ancientRuinsChestLooted || p.reachedAncientRuins)){

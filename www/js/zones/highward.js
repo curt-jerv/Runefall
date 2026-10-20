@@ -253,7 +253,7 @@ function updateHighward(g, dt){
   if(t.hwFloor===1 && dist(p, t.entrance) < t.entrance.r + p.r + 22) k = 'hwToCanyon';
   else if(t.hwDown && dist(p, t.hwDown) < t.hwDown.r + p.r + 22) k = 'hwDown';
   else if(t.hwUp && dist(p, t.hwUp) < t.hwUp.r + p.r + 22) k = 'hwUp';
-  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ k = 'waypointHighward'; discoverWaypoint('reachedHighwardWp'); }
+  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ k = 'waypointHighward'; }
   else if(t.hwReturn && p.hwSwitchOn && dist(p, t.hwReturn) < t.hwReturn.r + p.r + 24) k = 'hwReturn';
   else if(t.altar && hwAltarReady(p) && dist(p, t.altar) < t.altar.r + p.r + 24) k = 'hwAltar';
   else if(t.hwSwitch && hwSwitchReady(p) && dist(p, t.hwSwitch) < t.hwSwitch.r + p.r + 24) k = 'hwSwitch';

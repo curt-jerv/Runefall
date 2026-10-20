@@ -494,7 +494,7 @@ function updateDeep(g, dt){
   if(dist(p, t.entrance) < t.entrance.r + p.r + 22) dk = t.floor===1 ? 'depthsToPass' : 'deepUp';
   else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) dk = 'deepDown';
   else if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) dk = 'toTownFromTower';
-  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ dk = 'waypointDeep'; discoverWaypoint('reachedDeepWp'); }
+  else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ dk = 'waypointDeep'; }
   if(t.isDeepMine){
     updateDeepMine(g, dt);
     if(!dk && g.miners && !g.minerRun && g.miners.some(m=>dist(p,m) < 80)) dk = 'depthsMiner';

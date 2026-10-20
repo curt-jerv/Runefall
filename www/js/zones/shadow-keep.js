@@ -760,7 +760,7 @@ function updateKeep(g, dt){
   else if(nr(t.exitDoor)) k = 'keepNext';
   else if(t.beacons && t.beacons.some(b=>nr(b,12))){ g._beaconNear = t.beacons.find(b=>nr(b,12)); k = 'keepBeacon'; }
   else if(t.holdStairs && nr(t.holdStairs)) k = 'keepStairs';
-  else if(t.waypoint && dist(p,t.waypoint) < t.waypoint.r + p.r + 24){ discoverWaypoint(a===8 ? 'reachedRingWp' : a===7 ? 'reachedHoldWp' : 'reachedKeepWp'); k = a===8 ? 'waypointRing' : a===7 ? 'waypointHold' : 'waypointKeep'; }
+  else if(t.waypoint && dist(p,t.waypoint) < t.waypoint.r + p.r + 24){ k = a===8 ? 'waypointRing' : a===7 ? 'waypointHold' : 'waypointKeep'; }
   else if(t.altars && p.wraithLordSlain && !p.breachContained && t.altars.some(x=>!(p.runesPlaced||{})[x.rune] && nr(x))){ g._altarNear = t.altars.find(x=>!(p.runesPlaced||{})[x.rune] && nr(x)); k = 'runeAltar'; }
   else if(t.breach && p.breachContained && a===7 && dist(p,t.breach) < (((g.holdShrinkV||0)>0.5) ? 50 : t.breach.r) + p.r + 26){ k = 'breachEnter'; p.breachReached = true; }
   else { for(const l of t.lore){ if(dist(p,l) < l.r + p.r + 16){ k = 'keepLore'; g._keepLoreNear = l; break; } } }

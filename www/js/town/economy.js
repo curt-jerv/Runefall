@@ -488,8 +488,15 @@ function makeTown(charLevel){
     // any single character's save (see the dc_stash_v1 localStorage key)
     // so gold and gear survive a character's death or a switch to a
     // different save slot.
-    stashChest:{x:340, y:620, r:18},
-    cat:{x:162, y:558, r:14},   // v392: the Support cat, sitting a short walk from the stash
+    stashChest:{x:585, y:556, r:18},   // v490: moved to the west (screen-left) edge of the well plaza
+    cat:{x:162, y:558, r:14},   // v392: the Support cat
+    // v490: once the tavern re-opens (tavernIsOpen) two townsfolk stand about the square and the ship's captain
+    // waits on the dock; talking to any of them gives a random tip (talkTownTip)
+    tipNpcs:[
+      {id:1, x:905, y:332, r:18, kind:'townsfolk', name:'Townswoman', robe:'#5a3a4a', hood:'#3a2a34', long:true},
+      {id:2, x:884, y:506, r:18, kind:'townsfolk', name:'Townsman', robe:'#3e4a3a', tool:'lantern'},
+      {id:3, x:172, y:1022, r:18, kind:'dockCaptain', name:'Ship Captain', robe:'#26304a', hat:'captain'},
+    ],
     spawn:{x:160, y:TOWN_ROAD_Y},
     // v86: `stock` is now the CURRENTLY OPEN vendor's stock array --
     // openVendorShop() points it at whichever of the two backing arrays
@@ -550,7 +557,7 @@ function makeTown(charLevel){
     for(let y=TOWN_PIER.y+TOWN_PIER.h+30; y<1230; y+=60) P('reeds',TOWN_SHORE_X-10,y,{s:1.5});
     for(let x=60; x<TOWN_SHORE_X-30; x+=70) P('reeds',x,TOWN_SHORE_Y+10,{s:1.5});
     // hunter's camp: tanning yard behind the tent, spit + stumps by the fire
-    P('tanframe',1538,118,{s:1.3}); P('tanframe',1588,104,{s:1.3,c1:'#8a8a7a',c2:'#5a5a4e'}); P('tanframe',1488,140,{s:1.3,c1:'#b08a58',c2:'#7a5a34'});
+    P('tanframe',1538,118,{s:1.3});   // v490: two of the three tanning racks removed
     P('pelts',1610,150,{len:96}); P('pelts',1440,150,{len:70,axis:'y'});
     P('hidepile',1520,196); P('hidepile',1636,196,{}); P('stump',1500,176,{knife:true}); P('stump',1608,214); P('stump',1450,276); P('stump',1496,298);
     P('spit',1470,210,{s:1.1}); P('antlers',1640,170,{s:1.2}); P('woodpile',1420,230); P('barrel',1646,222); P('crate',1662,238); P('sack',1520,226,{c:'#8a7a58'});
@@ -558,12 +565,11 @@ function makeTown(charLevel){
     P('barrel',122,190); P('barrel',138,206); P('rack',172,190); P('grind',268,190); P('coal',290,172); P('trough',250,222); P('crate',108,230); P('sack',128,168,{c:'#8a7a5a'});
     // tavern frontage
     P('barrel',468,262); P('barrel',484,274); P('crate',702,266); P('bench',508,300,{axis:'x'}); P('bench',690,300,{axis:'x'}); P('board',548,370);
-    // market row
-    P('stall',800,346,{goods:0}); P('stall',890,346,{goods:1,awn:['#2a4a6a','#d0c4a8']}); P('stall',980,346,{goods:2,awn:['#4a6a2a','#d0c4a8']}); P('stall',1070,346,{goods:0,awn:['#8a5a1a','#d0c4a8']});
-    P('crate',850,372); P('barrel',1124,360); P('barrel',1140,350,{open:true}); P('sack',770,362); P('sack',1160,366,{c:'#9a8a68'});
-    // well plaza and stash
-    P('bench',690,548,{axis:'x'}); P('bench',770,548,{axis:'x'}); P('barrel',806,470); P('crate',818,486); P('bench',300,596,{axis:'x'});
-    P('barrel',306,646); P('barrel',372,654); P('crate',296,612);
+    // v490: the market stalls are gone; a couple of barrels are all that's left of the market row
+    P('barrel',1124,360); P('barrel',1140,350,{open:true});
+    // well plaza and stash (v490: benches by the well removed; the stash sits on the plaza's west edge)
+    P('barrel',806,470); P('crate',818,486);
+    P('barrel',562,590); P('crate',548,566);
     // waypoint, east yard, cart
     P('rock',860,664); P('rock',934,672); P('bush',878,590,{flowers:true}); P('cart',1040,540); P('hay',1004,548); P('hay',1022,560);
     P('woodpile',1020,236); P('woodpile',1030,262); P('barrel',1030,200); P('bush',780,236,{flowers:true}); P('bush',1272,210,{flowers:true});
@@ -666,6 +672,31 @@ const GUARD_ATK_CD_MAX = 1.1;
 const GUARD_DMG = 16;
 const GUARD_ARROW_SPEED = 300;
 const GUARD_FLANK_OFFSET = 80; // distance either side of the gate, along the treeline
+// v490: Mistfall townsfolk and the ship's captain share these tips (a random one each time you talk to them)
+const TOWN_TIPS = [
+  "If you try and remove a perfect quality part from an item, it's gunna get damaged.",
+  "You know, bigger belts allow more potions.",
+  "Check the character stat page to learn more about yourself.",
+  "Legend has it, those runestones have a special purpose.",
+  "Only the right type of added damage works with the right attacks. Fire equipment damage for fire attacks, for example.",
+  "Don't forget to interact with a waypoint to return to it later.",
+  "Check your dungeon map page to figure out where to go, if you've found it, that is.",
+  "There are plenty of ways to use monster parts, try different combinations!",
+  "Don't forget to have proper resistance gear for certain enemies.",
+  "Sleeping at a bed in the tavern will make you a well rested adventurer!",
+  "You can't remove perfect parts from your gear without damaging it, ya know.",
+];
+let lastTownTip = -1;
+// the tip-givers standing in town right now (none until the tavern re-opens and the ship is back)
+function townTipNpcs(g){ return (g && g.town && g.town.tipNpcs && g.player && tavernIsOpen(g.player)) ? g.town.tipNpcs : []; }
+function nearTownTipNpc(g){ const p = g.player; let best = null, bd = 1e9; for(const n of townTipNpcs(g)){ const d = dist(p, n); if(d < n.r + p.r + 24 && d < bd){ bd = d; best = n; } } return best; }
+function talkTownTip(n){
+  if(!n) return;
+  let i = Math.floor(Math.random()*TOWN_TIPS.length);
+  if(i===lastTownTip) i = (i+1+Math.floor(Math.random()*(TOWN_TIPS.length-1)))%TOWN_TIPS.length;
+  lastTownTip = i;
+  showNpcText(n.name, '"'+TOWN_TIPS[i]+'"', 'Close');
+}
 function makeTownGuards(gate){
   // Guards sit just inside the Forest from the gate (small +x nudge off the
   // west-edge gate) and are offset north/south from it along the treeline --
