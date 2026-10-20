@@ -96,6 +96,7 @@ function statInfoText(key, p){
     'PROJ SPD': 'Projectiles fly '+pc(p.projectileSpeedPct||0)+'% faster.',
     BLEED: pc(p.bleedChancePct||0)+'% chance for your hits to cause Bleed.',
     'AILMENT DUR': 'Your ailments last '+pc((p.statusDurPct||0)*100)+'% longer (gear cap 75%).',
+    'SKILL DUR': 'Your skill effects last '+pc((p.skillDurPct||0)*100)+'% longer: ailments, ground effects (Blizzard, Meteor fire, Consecrate, Plague, trap clouds), Hurricane, Tornado, Flame Vortex, banners and the Mirage decoy (gear cap 50%).',
     'VS ELITES': '+'+pc((p.dmgVsElitePct||0)*100)+'% damage to elite monsters (gear cap 5%).',
     MINION: 'Followers and minions deal +'+pc((p.followerDmgPct||0)*100)+'% damage.',
     LEECH: pc(totalLeechPct(p))+'% of damage dealt heals you (cap '+LEECH_TOTAL_CAP+'%). Full on normal monsters, less on magic, elites and bosses.',
@@ -114,7 +115,7 @@ function statInfoText(key, p){
     FIRE: res('fire','Fire'), COLD: res('cold','Cold'), LTNG: res('lightning','Lightning'), PSN: res('poison','Poison'),
     'MAGIC FIND': '+'+pc(p.magicFindPct||0)+'% chance for magic, rare and better drops.',
     'GOLD FIND': '+'+pc(p.goldFindPct||0)+'% gold from drops.',
-    'POTION STR': '+'+pc((p.potionStrPct||0)*100)+'% mana potion strength and beer/coffee duration (gear cap 75%).',
+    'POTION STR': '+'+pc((p.potionStrPct||0)*100)+'% potion strength: health potions heal more (both the instant heal and the heal over time), mana potions restore more, and beer/coffee last longer (gear cap 75%).',
     BREACH: 'Deepest Breach floor cleared.',
     PLAYTIME: 'Time played on this character: '+fmtPlayTime(p.playTime||0, true)+'.',
     KILLS: 'Enemies this character has slain.'
@@ -177,6 +178,7 @@ function statSummaryHtml(p){
     pct('PROJ SPD','PROJ SPD',p.projectileSpeedPct||0,true)+
     pct('BLEED','BLEED',p.bleedChancePct||0)+
     pct('AILMENT DUR','AILMENT DUR',(p.statusDurPct||0)*100,true)+
+    pct('SKILL DUR','SKILL DUR',(p.skillDurPct||0)*100,true)+
     pct('VS ELITES','VS ELITES',(p.dmgVsElitePct||0)*100,true)+
     pct('MINION','MINION DMG',(p.followerDmgPct||0)*100,true)+
     pct('LEECH','LEECH',totalLeechPct(p))+

@@ -1066,7 +1066,7 @@ function updateStep(dt){
           // time (a fresh throw simply replaces/refreshes it), matching
           // Plague's own single-zone-per-player convention.
           const dmg = wpnDmg(p) * swd('poisonTrap', tt.rank) * trapDmgMult(p);
-          (p.survPoisonClouds || (p.survPoisonClouds = [])).push({x:tt.x, y:tt.y, t:0, max:POISON_TRAP_CLOUD_DUR, tick:0, dmg, r:tt.r});
+          (p.survPoisonClouds || (p.survPoisonClouds = [])).push({x:tt.x, y:tt.y, t:0, max:skDur(p, POISON_TRAP_CLOUD_DUR), tick:0, dmg, r:tt.r});
           g.particles.push({type:'ring', x:tt.x, y:tt.y, t:0.5, max:0.5, r:tt.r, color:'#7dd45a'});
           g.particles.push({type:'gasBurst', x:tt.x, y:tt.y, t:0.7, max:0.7, r:tt.r, seed:Math.random()*6});
         } else if(tt.kind==='explosive'){
@@ -1086,7 +1086,7 @@ function updateStep(dt){
           // the same generic full-immobilize field Blizzard uses) every
           // enemy in radius for a brief rank-scaled duration, then Chill
           // (e.chillT) afterward so they're slowed once the freeze lifts.
-          const freezeDur = frostTrapFreezeDuration(tt.rank);
+          const freezeDur = skDur(p, frostTrapFreezeDuration(tt.rank));
           const frDmg = wpnDmg(p) * swd('frostTrap', tt.rank) * trapDmgMult(p);   // v237: the burst of cold also hurts
           for(const e of g.enemies){
             if(dist(tt,e) < tt.r+e.r){
@@ -1562,7 +1562,7 @@ function updateStep(dt){
       const tSt = staticConsume(p);
       const tDmg = wpnDmg(p) * swd('tornado', tRank) * assaultDealtMult(p) * weaponDmgMult(p) * tSt.mult;
       g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*TORNADO_SPEED, vy:Math.sin(ang)*TORNADO_SPEED,
-        r:TORNADO_R*tSt.rad, hitR:TORNADO_R*0.85*tSt.rad, dmg:tDmg, from:'player', life:TORNADO_LIFE, color:tSt.on ? '#e8f8ff' : '#c8e0e8', isTornado:true, tickT:0, staticCharge:tSt.charge});   // v316: hit radius shrunk 15% to match the v311 visual
+        r:TORNADO_R*tSt.rad, hitR:TORNADO_R*0.85*tSt.rad, dmg:tDmg, from:'player', life:skDur(p, TORNADO_LIFE), color:tSt.on ? '#e8f8ff' : '#c8e0e8', isTornado:true, tickT:0, staticCharge:tSt.charge});   // v316: hit radius shrunk 15% to match the v311 visual
       showMsg('Tornado!', 0.6);
     }
   }
@@ -1586,7 +1586,7 @@ function updateStep(dt){
     if(hRank>0 && p.hurricaneCd<=0 && !(p.aoeGcd>0)){   // v489: may be recast while still raging -- it restarts its duration
       p.aoeGcd = AOE_GCD;
       p.movementStopT = 0.2;
-      p.hurricaneDurMax = hurricaneDuration(hRank);
+      p.hurricaneDurMax = skDur(p, hurricaneDuration(hRank));
       p.hurricaneT = p.hurricaneDurMax;
       p.hurricaneTick = 0;
       p.hurricaneCdMax = hurricaneCooldown(hRank);
@@ -1906,7 +1906,7 @@ function updateStep(dt){
         g.particles.push({type:'iceshard', x:bz.x+Math.cos(a2)*rr, y:bz.y+Math.sin(a2)*rr, t:0.5, max:0.5, fall:0.32});
       }
     }
-    if(bz.t >= BLIZZARD_DUR) p.blizzardZone = null;
+    if(bz.t >= skDur(p, BLIZZARD_DUR)) p.blizzardZone = null;
   }
 
   // ---------- v269: Immolate / Flame Vortex / Permafrost ----------
@@ -1939,7 +1939,7 @@ function updateStep(dt){
     const fvR = effectiveRank(p,'flameVortex')||0;
     if(fvR>0 && !(p.flameVortexCd>0) && !p.vortex){
       p.flameVortexCdMax = applyCdr(p, FLAME_VORTEX_CD); p.flameVortexCd = p.flameVortexCdMax;
-      p.vortex = {t:0, dur:flameVortexDur(fvR), tick:0, rank:fvR, pol:polarityCast(p,'fire'), r:FLAME_VORTEX_R*aoeRadiusMult(p), spin:0};
+      p.vortex = {t:0, dur:skDur(p, flameVortexDur(fvR)), tick:0, rank:fvR, pol:polarityCast(p,'fire'), r:FLAME_VORTEX_R*aoeRadiusMult(p), spin:0};
       showMsg('Flame Vortex!', 0.9);
     }
   }
@@ -2101,14 +2101,14 @@ function updateStep(dt){
         }
       } else {
         const BR = m.r*0.9;
-        g.particles.push({type:'burnzone', x:m.x, y:m.y, t:0.05, max:0.05, r:BR, prog:m.t/METEOR_BURN_DUR, seed:m.seed});
+        g.particles.push({type:'burnzone', x:m.x, y:m.y, t:0.05, max:0.05, r:BR, prog:m.t/skDur(p, METEOR_BURN_DUR), seed:m.seed});
         m.tick -= dt;
         if(m.tick <= 0){
           m.tick += METEOR_BURN_TICK;
           const dps = m.base * swdX('meteor', m.rank);   // the burn tick applies the fire % mods
           for(const e of g.enemies){ if(e.hp>0 && dist(m,e) < BR+e.r){ e.burnT = Math.max(e.burnT||0, METEOR_BURN_TICK+0.4); e.burnDps = Math.max(e.burnDps||0, dps); } }
         }
-        if(m.t >= METEOR_BURN_DUR) p.meteorFx.splice(i,1);
+        if(m.t >= skDur(p, METEOR_BURN_DUR)) p.meteorFx.splice(i,1);
       }
     }
   }
@@ -2146,7 +2146,7 @@ function updateStep(dt){
     if(plRank>0 && p.plagueCd<=0){
       p.plagueCd = applyCdr(p, p.plagueCdMax);
       const soulsConsumed = 0;   // Plague no longer uses souls
-      p.plagueZone = {x:p.x, y:p.y, t:0, max:plagueDuration(soulsConsumed), tick:0, rank:plRank, r:PLAGUE_RADIUS*aoeRadiusMult(p)};
+      p.plagueZone = {x:p.x, y:p.y, t:0, max:skDur(p, plagueDuration(soulsConsumed)), tick:0, rank:plRank, r:PLAGUE_RADIUS*aoeRadiusMult(p)};
       showMsg('Plague!', 0.9);
       g.particles.push({type:'ring', x:p.x, y:p.y, t:0.5, max:0.5, r:PLAGUE_RADIUS*aoeRadiusMult(p), color:'#3f6a2a'});
       g.particles.push({type:'gasBurst', thin:1, x:p.x, y:p.y, t:0.8, max:0.8, r:PLAGUE_RADIUS*aoeRadiusMult(p), seed:Math.random()*6});
@@ -2193,7 +2193,7 @@ function updateStep(dt){
     if(e.fearVulnT>0) e.fearVulnT -= dt;
     if(e.warCryT>0) e.warCryT -= dt;
     if(e.rev || e.lr || e.gj || e.trex || e.colossus){ e.stunT=0; e.frozenT=0; e.fearT=0; e.staggerT=0; e.trapRootT=0; } // immune to crowd control
-    const sdm = 1/(1+((g.player&&g.player.statusDurPct)||0));   // v440 Status Duration %
+    const sdm = 1/(1+((g.player&&g.player.statusDurPct)||0)+((g.player&&g.player.skillDurPct)||0));   // v440 Status Duration % (+ v489 Skill Duration %)
     // Bleed (Commander Attack stance): ticks even through a stun.
     if(e.bleedT>0){
       e.bleedT -= dt*sdm;

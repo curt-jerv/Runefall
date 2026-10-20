@@ -619,6 +619,7 @@ const STAFF_SPELL_INFO = {
   lightning:  {label:'Lightning Arc', color:'#e6e35a', desc:'Bolt of lightning that briefly stuns an enemy.'},
   soul:       {label:'Soul Sap',      color:'#a06ad0', desc:'Drains the souls of your enemies.'},
 };
+function skDur(p, d){ return d*(1+((p && p.skillDurPct)||0)); }   // v489: the Skill Duration % mod
 const FIRE_DOT_DUR = 2.5, FIRE_DOT_PCT = 0.15; // burn: 15% of hit damage per second for 2.5s
 const ICE_CHILL_DUR = 2.5; // chill: 50% move speed for 2.5s (see chillMult in the enemy update loop)
 const LIGHTNING_STUN_DUR = 0.2;

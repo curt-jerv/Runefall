@@ -301,7 +301,7 @@ function updateSmites(g, dt){
 function placeBanner(g, p, rank){
   const type = p.bannerNext || 'war';
   const old = g.banner; if(old && old.fx) old.fx.t = 0;
-  const dur = bannerDur(rank);
+  const dur = skDur(p, bannerDur(rank));
   const r = BANNER_R * aoeRadiusMult(p);   // v324: same size as Consecrate
   g.banner = {x:p.x, y:p.y, type, t:dur, tMax:dur, r, room:g.room, fx:{type:'bannerFx', x:p.x, y:p.y, t:1, max:1, r, btype:type}};
   g.particles.push(g.banner.fx);
@@ -316,7 +316,7 @@ function castConsecrate(g, p, rank){
   p.mp = Math.max(0, p.mp - CONS_COST);
   const old = g.consecrate; if(old && old.fx) old.fx.t = 0;
   const r = CONS_R * aoeRadiusMult(p);
-  g.consecrate = {x:p.x, y:p.y, r, t:CONS_DUR + 0.5*(rank-1), tick:0, rank, room:g.room, fx:{type:'consecrateFx', x:p.x, y:p.y, t:1, max:1, r}};
+  g.consecrate = {x:p.x, y:p.y, r, t:skDur(p, CONS_DUR + 0.5*(rank-1)), tick:0, rank, room:g.room, fx:{type:'consecrateFx', x:p.x, y:p.y, t:1, max:1, r}};
   g.particles.push(g.consecrate.fx);
   p.consecrateCdMax = applyCdr(p, CONS_CD); p.consecrateCd = p.consecrateCdMax;
   showMsg('Consecrate', 0.8, '#ffe9a0');

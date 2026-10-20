@@ -327,6 +327,7 @@ const PCT_AFFIX_ROLL = {
   blockChancePct:[[2,4],[4,6],[6,9]],
   followerDmgPct:[[5,10],[10,16],[16,24]],
   statusDurPct:[[8,14],[14,22],[22,32]],
+  skillDurPct:[[6,10],[10,16],[16,24]],   // v489
   dmgVsElitePct:[[1,2],[2,3],[3,5]],
   potionStrengthPct:[[10,15],[15,25],[25,40]],
   lifeOnKill:[[2,4],[4,7],[7,11]],
@@ -555,6 +556,7 @@ const BELT_VARIANTS = [{name:'Plated Belt', key:'armor'}, {name:'Leather Belt', 
 const RING_VARIANTS = [{name:'Iron Ring', key:'physDmgPct'}, {name:'Ruby Ring', key:'fireResistPct'}, {name:'Sapphire Ring', key:'coldResistPct'}, {name:'Topaz Ring', key:'lightningResistPct'}, {name:'Emerald Ring', key:'poisonResistPct'}];
 const AMULET_VARIANTS = [{name:'Gold Amulet', key:'goldFindPct'}, {name:'Jade Amulet', key:'magicFindPct'}, {name:'Bone Amulet', key:'lifeRegenPct'}, {name:'Sun Amulet', key:'hp'}];
 const VARIANT_TABLE = {belt:BELT_VARIANTS, ring:RING_VARIANTS, amulet:AMULET_VARIANTS};
+const BOOT_MS_RANGE = [[2,5],[4,7],[5,9],[6,11],[7,13]];   // v489: T1..T5 boot move speed
 const FIXED_IMPLICIT_KEY = {gloves:'atkSpeedPct', boots:'moveSpeedPct', bow:'projectileSpeedPct', staff:'mp'};
 // Returns {affix, variantName} for categories handled by the formula table (everything except the 3 old pct implicits)
 function rollFormulaImplicit(category, material, ilvl){
@@ -563,7 +565,13 @@ function rollFormulaImplicit(category, material, ilvl){
   else if(category==='helm') key = material==='robe' ? 'mp' : 'hp';
   else key = FIXED_IMPLICIT_KEY[category];
   if(!key) return null;
-  const d = IMPLICIT_FORMULA[key]; let v = d.f(Math.max(1, ilvl||1))*rand(0.88,1.12);
+  const d = IMPLICIT_FORMULA[key];
+  if(key==='moveSpeedPct' && category==='boots'){   // v489: boots roll a set range per item-level tier (T1 2-5% ... T5 7-13%)
+    let ti = 0; for(let i=0;i<MOD_TIER_REQ.length;i++) if((ilvl||1)>=MOD_TIER_REQ[i]) ti = i;
+    const [lo,hi] = BOOT_MS_RANGE[ti];
+    return {affix:{key, label:d.label, value:lo+Math.floor(Math.random()*(hi-lo+1)), implicit:true}, variantName};
+  }
+  let v = d.f(Math.max(1, ilvl||1))*rand(0.88,1.12);
   v = d.dec ? Math.max(0.1, Math.round(v*10)/10) : Math.max(1, Math.round(v));
   return {affix:{key, label:d.label, value:v, implicit:true}, variantName};
 }

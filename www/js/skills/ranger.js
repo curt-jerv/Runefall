@@ -875,7 +875,7 @@ function mirageOnDodge(g, p){
   const r = (p.skills && effectiveRank(p,'mirage'))||0;
   if(r<=0 || p.mirageCd>0 || !g || !g.room) return;
   p.mirageCd = mirageCd(r);
-  const d = mirageDur(r);
+  const d = skDur(p, mirageDur(r));
   g.mirage = {x:p.x, y:p.y, r:p.r||14, hp:1, maxHp:1, kind:'mirage', t:d, max:d, facing:{x:p.facing.x, y:p.facing.y}, faceSign:p.faceSign||1, born:(g.clock||0)};
   g.particles.push({type:'burst', x:p.x, y:p.y, t:0.35, max:0.35, color:'#cfe6ff'});
 }

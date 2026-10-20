@@ -122,6 +122,7 @@ document.getElementById('witchBody').addEventListener('click', e=>{
     cauldronSlots = [null,null,null];
     if(rec){
       const sd = PART_DEFS[rec.stone]; addPart(p, rec.stone, 1);
+      try{ achFlag('stoneCraft'); if(sd.unique) achFlag('amberCraft'); }catch(e){}   // v489
       const first = !(p.recipes||{})[rec.id]; if(!p.recipes) p.recipes = {}; p.recipes[rec.id] = true;
       showMsg((sd.unique ? 'A UNIQUE stone is forged: ' : first?'New recipe discovered: ':'Transmuted: ')+sd.name, sd.unique?4.2:3.0, sd.color);
     } else {

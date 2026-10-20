@@ -139,7 +139,9 @@ function equipItem(p, item){
   if(ok && item && item.slotType==='staff' && p && p.cls==='mystic' && p.skillSlots){   // v484: a new staff's spell goes straight onto the Strike button
     const sid = Object.keys(STAFF_SKILL_SPELL).find(k=>STAFF_SKILL_SPELL[k]===(item.spell||'fire'));
     const cur = p.skillSlots.main;
-    if(sid && sid!==cur && (cur==='strike' || !cur || STAFF_SKILL_SPELL[cur]) && (typeof staffBonusFor!=='function' || staffBonusFor(p, sid)>0 || (p.skills&&p.skills[sid]>0))){
+    // v489: only fills an empty Strike button (plain Strike), or one holding a staff spell you can no longer cast
+    const curDead = !!(cur && STAFF_SKILL_SPELL[cur] && !(p.skills && p.skills[cur]>0) && !(typeof staffBonusFor==='function' && staffBonusFor(p, cur)>0));
+    if(sid && sid!==cur && (cur==='strike' || !cur || curDead) && (typeof staffBonusFor!=='function' || staffBonusFor(p, sid)>0 || (p.skills&&p.skills[sid]>0))){
       for(const k of ['slot1','slot2','slot3']) if(p.skillSlots[k]===sid) p.skillSlots[k] = null;
       p.skillSlots.main = sid;
       try{ if(game && game.started && p===game.player){ updateSkillSlotButtonsUI(); showMsg('Strike button: '+((typeof skillNodeName==='function' && skillNodeName(sid)) || sid.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase())), 1.6); } }catch(e){}
@@ -332,7 +334,7 @@ function recalcStats(p){
   let addMagicFindPct=0, addGoldFindPct=0, addArmorPenPct=0, addThornDamage=0;
   let addDmgReductionPct=0, addBlockChancePct=0, addDefensePct=0;
   let addFireResistPct=0, addColdResistPct=0, addLightningResistPct=0, addPoisonResistPct=0, addAllResistPct=0;
-  let addStatusDur=0, addDmgVsElite=0, addPotionStr=0, addLifeOnKill=0, addManaOnKill=0, addCritDmg=0, addFollowerDmgPct=0, addLifeRegenPct=0, addMoveSpeedPct=0, addDefenceFlat=0;
+  let addSkillDur=0, addStatusDur=0, addDmgVsElite=0, addPotionStr=0, addLifeOnKill=0, addManaOnKill=0, addCritDmg=0, addFollowerDmgPct=0, addLifeRegenPct=0, addMoveSpeedPct=0, addDefenceFlat=0;
   let addGlobalCdrPct=0, addProjectileSpeedPct=0, addAoeRadiusPct=0, addDmgPct=0;
   let wMin = 0, wMax = 0, addPhysPct=0, addElemPct=0, addFirePct=0, addColdPct=0, addLightPct=0, addPoisPct=0;   // v457
   let addSlowImmune=false, addFreezeImmune=false;
@@ -386,6 +388,7 @@ function recalcStats(p){
       else if(af.key==='allResistPct') addAllResistPct+=af.value;
       else if(af.key==='followerDmgPct') addFollowerDmgPct+=af.value;
       else if(af.key==='statusDurPct') addStatusDur+=af.value;
+      else if(af.key==='skillDurPct') addSkillDur+=af.value;
       else if(af.key==='dmgVsElitePct') addDmgVsElite+=af.value;
       else if(af.key==='potionStrengthPct') addPotionStr+=af.value;
       else if(af.key==='lifeOnKill') addLifeOnKill+=af.value;
@@ -559,7 +562,7 @@ function recalcStats(p){
   p.goldFindPct = clamp(addGoldFindPct + pb.gold, 0, 100);
   // v83 Commanding (+Follower Damage %): hooks into followerDmg().
   p.followerDmgPct = (clamp(addFollowerDmgPct, 0, 60) + pb.minion)/100;
-  p.statusDurPct = (clamp(addStatusDur, 0, 75) + pb.ailment)/100; p.dmgVsElitePct = (clamp(addDmgVsElite, 0, 5) + pb.elite)/100; p.potionStrPct = (clamp(addPotionStr, 0, 75) + pb.potion)/100;
+  p.statusDurPct = (clamp(addStatusDur, 0, 75) + pb.ailment)/100; p.skillDurPct = clamp(addSkillDur, 0, 50)/100;   // v489 p.dmgVsElitePct = (clamp(addDmgVsElite, 0, 5) + pb.elite)/100; p.potionStrPct = (clamp(addPotionStr, 0, 75) + pb.potion)/100;
   p.lifeOnKill = addLifeOnKill; p.manaOnKill = addManaOnKill; p.lifeOnKillPct = pb.lok||0; p.manaOnKillPct = pb.mok||0;   // v465: parts give % of max p.critDmgPct = clamp(addCritDmg, 0, 100) + pb.critdmg;
   // v83 Holy/Regeneration (+Life Regen %, of max HP per second): ticked in
   // the main player-update loop (see the v83 hook there).

@@ -92,7 +92,7 @@ function itemUsableByClass(p, it){
   if(!p || !it || !it.slotType) return true;
   if(it.slotType==='staff') return p.cls==='mystic';
   if(it.slotType==='bow') return p.cls==='ranger';
-  if(it.slotType==='weapon2h') return p.cls==='warrior';
+  if(it.slotType==='weapon2h' || it.slotType==='weapon1h' || it.slotType==='shield') return p.cls==='warrior';   // v489: swords and shields are Warrior gear for auto pick-up
   if(it.material && typeof canEquipArmorMaterial==='function') return canEquipArmorMaterial(p.cls, it.material);
   return true;
 }
@@ -145,8 +145,8 @@ document.getElementById('graphicsClose').addEventListener('click', ()=>{ graphic
 const soundOverlay = document.getElementById('soundOverlay');
 document.getElementById('settingsSoundBtn').addEventListener('click', ()=>{ settingsOverlay.style.display='none'; soundOverlay.style.display='flex'; });
 document.getElementById('soundClose').addEventListener('click', ()=>{ soundOverlay.style.display='none'; settingsOverlay.style.display='flex'; });
-function syncHideAchUI(){ setToggleUI(document.getElementById('toggleHideAch'), settings.hideAch!==false); }
-document.getElementById('toggleHideAch').addEventListener('click', ()=>{ settings.hideAch = (settings.hideAch===false); saveSettings(settings); syncHideAchUI(); });
+function syncHideAchUI(){ setToggleUI(document.getElementById('toggleHideAch'), settings.hideAch===true); }   // v489: pop-ups shown by default
+document.getElementById('toggleHideAch').addEventListener('click', ()=>{ settings.hideAch = !(settings.hideAch===true); saveSettings(settings); syncHideAchUI(); });
 syncHideAchUI();
 // v486: native helpers -- screen orientation lock and full-screen (system bars hidden) in the Android app
 function nativePlugin(name){ try{ const C = window.Capacitor; if(!C || !(C.isNativePlatform && C.isNativePlatform())) return null; return (C.Plugins && C.Plugins[name]) || (C.registerPlugin ? C.registerPlugin(name) : null); }catch(e){ return null; } }
