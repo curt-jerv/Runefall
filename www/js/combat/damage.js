@@ -116,7 +116,7 @@ const SKILL_WD = {
   soulSap:      {t:'poison',   c:'spell',  r:[105,153], per:'per hit (extra targets 50%)'},   // v489: poison
   deathBolt:    {t:'physical', c:'spell',  r:[92,134],  per:'per bolt (x1.5 below half life)'},
   soulFire:     {t:'physical', c:'spell',  r:[230,330], per:'explosion, half physical / half poison', split:{t:'poison', f:0.5}},   // v489
-  sacrifice:    {t:'poison',   c:'spell',  r:[58,84],   per:'per explosion'},
+  // v489: sacrifice is life-based now (sacrificeLifePct), not weapon damage
 };
 function swdPct(arr, rank){ const r = Math.max(1, rank||1); return arr[0] + (arr[1]-arr[0])/9*(r-1); }
 function swd(id, rank){ const d = SKILL_WD[id]; return d ? swdPct(d.r, rank)/100 : 1; }

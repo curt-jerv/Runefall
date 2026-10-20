@@ -899,6 +899,7 @@ function render(){
     ctx.save(); try{ ctx.filter = 'saturate(0.35) brightness(1.35)'; }catch(e){} drawRanger(ghost); ctx.restore();
   }}); }
   if(p.skills && effectiveRank(p,'storm')>0) drawables.push({depth:playerDepth+2000, draw:()=>drawStormCloudIso(p, g.clock||0)});
+  if(p.cls==='mystic' && (p.souls||0)>0 && p.skills && effectiveRank(p,'soulShield')>0) drawables.push({depth:playerDepth+0.5, draw:()=>drawSoulShieldOrbs(p, g.clock||0)});   // v489
   // ---- v86: item 7, behind-wall fade -----------------------------------
   // The painter's-algorithm depth sort just below is ALREADY what makes a
   // wall/building visually occlude the player when the player walks behind

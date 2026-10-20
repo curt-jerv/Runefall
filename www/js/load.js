@@ -90,6 +90,7 @@ const RUNEFALL_FILES = [
   'render/town-art.js',
   'render/doorways.js',
   'render/skill-fx.js',
+  'render/necro-fx.js',
   'render/heroes.js',
   'render/monsters.js',
   'render/undead.js',
