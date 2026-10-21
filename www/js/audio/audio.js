@@ -88,6 +88,9 @@ const SFX = {
   bolt(t,v,r){ SFX.blaster(t,v,r,1.2); },
   boltHit(t,v,r){ N('highpass', 3000, 3000, 0.7, 0.07, 0.55*v, null, t); V('square', 90, 50, 0.16, 0.2*v, {lp:500}, t); V('sine', 140*r, 60, 0.1, 0.4*v, null, t); },
   arcane(t,v,r){ SFX.blaster(t,v,r*1.1,1); },
+  // v497 Soul Sap: a soft breath-in on the cast, and a wet slurp as the soul is pulled out of each enemy it hits
+  drain(t,v,r){ N('bandpass', 300, 900, 1.4, 0.3, 0.12*v, {att:0.12, brown:true}, t); V('sine', 120*r, 200*r, 0.28, 0.1*v, {att:0.1, send:0.3}, t); },
+  drainHit(t,v,r){ N('bandpass', 600, 2400, 3.2, 0.3, 0.24*v, {att:0.02, brown:true, send:0.25}, t); V('sine', 170*r, 560*r, 0.3, 0.2*v, {att:0.03, send:0.35}, t); V('sine', 75*r, 42, 0.16, 0.34*v, null, t); V('triangle', 340*r, 220*r, 0.1, 0.09*v, {att:0.01}, t+0.1); },
   arcaneHit(t,v,r){ V('sine', 880*r, 440*r, 0.25, 0.2*v, {send:0.35}, t); V('sine', 130*r, 60, 0.12, 0.4*v, null, t); N('bandpass', 2500, 800, 1, 0.1, 0.2*v, null, t); },
   curse(t,v,r){ SFX.blaster(t,v,r*0.8,0.8); },
   poison(t,v,r){ SFX.blaster(t,v*0.9,r*0.95,0.9); },
@@ -251,9 +254,9 @@ const SKILL_SND = {
   rapidShot:'bow', splinterShot:'bow', multiShot:'bow', explosiveShot:'bowHeavy', cripplingShot:'bow', stunShot:'bow', aimedShot:'bowHeavy', rainOfArrows:'bowHeavy', packTactics:'howl', beastFury:'howl', huntersMark:'mark', poisonTrap:'trap', frostTrap:'trap', explosiveTrap:'trap',
   fieldDress:'heal', survivalFieldDress:'heal', recall:'portal',
   nova:'arcane', tornado:'wind', hurricane:'wind', fireball:'fire', iceBolt:'ice', iceArmor:'ice', pyroTorrent:'fire', meteor:'fire', stormcall:'bolt', raiseDead:'summon', blizzard:'ice', immolate:'fire', flameVortex:'fire', permafrost:'ice',
-  fear:'curse', soulFire:'curse', soulSap:'arcane', lightningArc:'arc', deathBolt:'curse', soulGate:'summon', plague:'poison'
+  fear:'curse', soulFire:'curse', soulSap:'drain', lightningArc:'arc', deathBolt:'curse', soulGate:'summon', plague:'poison'
 };
-const SND_ELEM = { arc:'bolt', fire:'fire', ice:'ice', bolt:'bolt', arcane:'arcane', curse:'arcane', poison:'poison', explode:'fire' };
+const SND_ELEM = { drain:'drain', arc:'bolt', fire:'fire', ice:'ice', bolt:'bolt', arcane:'arcane', curse:'arcane', poison:'poison', explode:'fire' };
 const ATK_SHARED = { explosiveShot:1, splinterShot:1, multiShot:1, reave:1, strike:1, shieldBash:1, smite:1, vengeance:1, cripplingShot:1, stunShot:1, fireball:1, iceBolt:1, lightningArc:1, soulSap:1, deathBolt:1 };
 function audWrapTriggers(){
   try{ for(const k in ACTIVE_SKILL_REGISTRY){ const en = ACTIVE_SKILL_REGISTRY[k]; if(en._audW) continue; en._audW = true; const o = en.trigger; en.trigger = function(){ AUD.lastTrig = {id:k, t:performance.now()}; return o.apply(this, arguments); }; } }catch(e){}
@@ -287,7 +290,7 @@ function audioFrame(dt){
         if(!dot && hitCount<3){
           hitCount++; const nr = audNear(e.x, e.y), big = drop > e.maxHp*0.18;
           if(nr>0.05){
-            if(elem==='fire') sfxPlay('fireHit', nr); else if(elem==='ice') sfxPlay('iceHit', nr); else if(elem==='bolt') sfxPlay('boltHit', nr); else if(elem==='arcane'||elem==='poison') sfxPlay('arcaneHit', nr);
+            if(elem==='fire') sfxPlay('fireHit', nr); else if(elem==='ice') sfxPlay('iceHit', nr); else if(elem==='bolt') sfxPlay('boltHit', nr); else if(elem==='drain') sfxPlay('drainHit', nr); else if(elem==='arcane'||elem==='poison') sfxPlay('arcaneHit', nr);
             else if(e._arrowT && (g.clock||0) - e._arrowT < 0.1) sfxPlay('arrowHit', nr);   // v456
             else sfxPlay(audHitKind(e, big), nr);
           }

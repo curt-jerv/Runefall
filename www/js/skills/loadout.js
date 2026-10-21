@@ -267,7 +267,7 @@ function resCost(p,id,rankOverride){
   if(r.step){ const rk = rankOverride!=null ? rankOverride : ((p&&p.skills&&effectiveRank(p,id))||0); c += r.step*Math.max(0,rk-1); }
   if(p && p.cls==='mystic') c *= 1 + 0.02*Math.max(0,(p.level||1)-20);
   if(p && WR_SKILLS[id] && (p.windReady || p._wrCostWin>0)) c *= 0.5;   // v466 Windrunner
-  if(p && p.cls==='ranger' && p.skills){ const ts=effectiveRank(p,'predatorsInstinct')||0; if(ts>0) c *= 1 - 0.05*Math.min(10,ts); }   // v454: Steady Breath is part of Predator's Instinct
+  if(p && p.cls==='ranger' && p.skills){ const ts=effectiveRank(p,'steadyBreathing')||0; if(ts>0) c *= 1 - 0.05*Math.min(10,ts); }   // v497: Steady Breathing is its own Marksman node
   return Math.round(c);
 }
 function resourceAffordable(p,id){ const r=RESOURCE_SKILLS[id]; return !r || (p.mp||0) >= resCost(p,id); }
@@ -359,7 +359,7 @@ function tickResource(p, dt){
     }
   }
   else if(p.cls==='mystic') gainResource(p, p.maxMp*MANA_REGEN_PCT*dt*(p.tsRegenT>0 ? 1+(p.tsRegenBonus||0.3) : 1));
-  else if(p.cls==='ranger'){ if(p.deadeyeGainCd>0) p.deadeyeGainCd -= dt; gainResource(p, p.maxMp*STAMINA_REGEN_PCT*dt*(1+0.03*((p.skills&&effectiveRank(p,'predatorsInstinct'))||0))); }
+  else if(p.cls==='ranger'){ if(p.deadeyeGainCd>0) p.deadeyeGainCd -= dt; gainResource(p, p.maxMp*STAMINA_REGEN_PCT*dt*(1+0.03*((p.skills&&effectiveRank(p,'steadyBreathing'))||0))); }
 }
 // (v244) Aimed Shot: press-and-hold its slot button to raise an aim pad under the thumb
 // (same pad as Pyro Torrent), drag to aim, release to fire. A quick tap still auto-targets.

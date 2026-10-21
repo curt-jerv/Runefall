@@ -383,6 +383,7 @@ const NECRO_SKELETON_BASE_DMG = 8, NECRO_SKELETON_HP_MULT = 0.25, NECRO_SKELETON
 // can summon the instant souls cross 10. The visual is a white soul orb
 // that flies from the killed enemy BACK to the player -- see isSoulOrb in
 // the projectile-hit handler and drawProjectilesIso.
+function soulSapTargets(rank){ return rank>=5 ? 3 : rank>=3 ? 2 : 1; }   // v497: 1 enemy at Rank 1, a 2nd at Rank 3, a 3rd at Rank 5
 const SOUL_SAP_SPLASH_R = 170;   // v484: the two extra drains only reach enemies close to the main target
 const SOUL_CAP = 50, SOUL_SAP_SOULS_PER_KILL = 3, SOUL_SAP_SOULS_PER_CAST = 1, SOUL_ORB_SPEED = 520;   // v489: +1 soul per Soul Sap attack that hits, +3 when a sapped enemy dies
 const SOULSAP_MULT = 1.2;

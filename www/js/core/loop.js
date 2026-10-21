@@ -59,7 +59,9 @@ function loop(t){
     _camShift += (tgt-_camShift) * Math.min(1, dt*10); if(Math.abs(tgt-_camShift)<0.5) _camShift = tgt;
     _cs = _camShift; if(_cs && game.camera) game.camera.x += _cs;
   }catch(err){ _cs = 0; }
-  if(!window.__simPause) render();
+  if(!window.__simPause){ try{ render(); }catch(err){   // v497: one bad frame no longer freezes the whole game (the loop used to stop here and show the error box)
+    window.__renderErrors = (window.__renderErrors||0) + 1; if(window.__renderErrors<=3) console.error('render error', err);
+    try{ ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over'; }catch(e2){} } }
   if(_cs && game.camera) game.camera.x -= _cs;
   requestAnimationFrame(loop);
 }
@@ -100,7 +102,7 @@ function placeSurvTrap(g, trap){
 function enemyOnScreen(g, e){
   const cam = g.camera; if(!cam) return true;
   const io = toIso(e.x, e.y), sx = io.x-cam.x, sy = io.y-cam.y;
-  return sx>=20 && sx<=W-20 && sy>=60 && sy<=H-20;
+  return sx>=0 && sx<=W && sy>=0 && sy<=H;   // v497: exactly the visible screen -- if you can see it, you can auto-target it
 }
 // v315: with the mouse active the PLAYER's auto-target prefers the enemy under the cursor. Nothing under the cursor falls back to the
 // normal nearest-enemy pick, except while the strike button is held: then it returns null so the swing/shot goes toward the cursor.
@@ -129,13 +131,13 @@ function pcAimPick(g, from, maxD, onScreen, exclude){
 function nearestEnemyOnScreen(g, from, maxD){
   if(PC.mouseOn && g.player===from){ const r = pcAimPick(g, from, maxD, true); if(r!==undefined) return r; }
   const cam = g.camera; if(!cam) return nearestEnemy(g, from, maxD);
-  let best=null, bd=maxD||99999;
+  const lim = maxD||99999; let best=null, bs=Infinity;   // v497: bs starts at Infinity (it used to start at maxD, which dropped every enemy that was not already fighting you beyond ~80 units)
   for(const e of g.enemies){
-    const io = toIso(e.x, e.y), sx = io.x-cam.x, sy = io.y-cam.y;
-    if(sx<0 || sx>W || sy<40 || sy>H) continue;
+    if(!enemyOnScreen(g,e)) continue;
     const d=dist(from,e) - Math.max(0, (e.r||0)-30) - bigBossReach(e);   // v452/v453: huge monsters are targeted from their edge; the great beasts from further out
+    if(d>=lim) continue;
     const sc = d + (from===g.player && !enemyEngagedWith(e, from) ? 260 : 0);   // v490: monsters already fighting you come first
-    if(d<(maxD||99999) && sc<bd && hasLOS(g,from,e)){ bd=sc; best=e; }
+    if(sc<bs && hasLOS(g,from,e)){ bs=sc; best=e; }
   }
   return best;
 }

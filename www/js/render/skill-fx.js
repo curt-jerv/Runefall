@@ -823,7 +823,7 @@ function drawParticlesIso(list, pass){
       ctx.restore();
     } else if(pt.type==='burst'){
       ctx.beginPath(); ctx.fillStyle=(pt.color||'#fff'); ctx.globalAlpha=a;
-      ctx.arc(iso.x, iso.y-16, 16*(1-a)+5, 0,7); ctx.fill(); ctx.globalAlpha=1;
+      ctx.arc(iso.x, iso.y-16, Math.max(1, 16*(1-Math.min(1,a))+5), 0,7); ctx.fill(); ctx.globalAlpha=1;   // v497: never a negative radius (an over-long burst used to throw and skip the frame)
     } else if(pt.type==='gasCloud'){
       // v237: billowing green poison cloud (poison trap + plague): soft overlapping puffs that drift, rise and swirl
       const T = game.clock||0, f = Math.max(0, Math.min(1, pt.f==null?1:pt.f)), R = pt.r||90;

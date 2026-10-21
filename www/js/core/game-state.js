@@ -308,8 +308,11 @@ function newGame(saved, cls){
         setTimeout(()=>{ try{ showMsg('Warrior Defender was reworked -- '+rf9+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3000);
       }
     }
-    if(!saved.skillsV495){   // v495: Bulwark now hangs off Mirror of Steel, Multi Shot and Predator's Instinct swapped places, Soul Gate / Soul Hunger moved to the Lv.14 row
-      const lvl = saved.level||player.level||1, nodes = [[SKILL_TREES,'defender'],[RANGER_SKILL_TREES,'marksman'],[MYSTIC_SKILL_TREES,'necromancer']].flatMap(([T,k])=>(T && T[k] && T[k].nodes)||[]);
+    // v497: the Marksman's Predator's Instinct became Steady Breathing (new id, same ranks); its ailment-damage half now lives on the Survivalist's node
+    if((player.skills.predatorsInstinct||0)>0 && !((player.skills.steadyBreathing||0)>0)) player.skills.steadyBreathing = player.skills.predatorsInstinct;
+    delete player.skills.predatorsInstinct;
+    if(!saved.skillsV497){   // v497 (also covers v495): refund any Defender / Marksman / Survivalist / Necromancer node whose prereq or level no longer fits
+      const lvl = saved.level||player.level||1, nodes = [[SKILL_TREES,'defender'],[RANGER_SKILL_TREES,'marksman'],[RANGER_SKILL_TREES,'survivalist'],[MYSTIC_SKILL_TREES,'necromancer']].flatMap(([T,k])=>(T && T[k] && T[k].nodes)||[]);
       let rf495 = 0, changed = true;
       while(changed){ changed = false;
         for(const n of nodes){

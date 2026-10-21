@@ -965,7 +965,7 @@ function updateStep(dt){
         p.atkAnimT = 0.22;
         showMsg('Precise Shot!', 0.6);
         const psRank = effectiveRank(p,'preciseShot')||0;
-        const tsRank = effectiveRank(p,'predatorsInstinct')||0;
+        const tsRank = effectiveRank(p,'steadyBreathing')||0;
         p.preciseShotCdMax = applyCdr(p, preciseShotCooldown(psRank, p.atkCdMax, tsRank));
         p.preciseShotCd = p.preciseShotCdMax;
       }
@@ -1742,7 +1742,7 @@ function updateStep(dt){
     wantSoulSap=false;
     const ssRank = effectiveRank(p,'soulSap')||0;   // v460: Staff of Souls
     const ssTarget = ssRank>0 ? nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0)) : null;
-    const ssTargets = []; if(ssTarget){ ssTargets.push(ssTarget); for(let k=1;k<3;k++){ const t2 = nearestEnemy(g, ssTarget, SOUL_SAP_SPLASH_R, ssTargets); if(!t2) break; ssTargets.push(t2); } }   // v413: drains the 3 nearest
+    const ssTargets = []; if(ssTarget){ ssTargets.push(ssTarget); for(let k=1;k<soulSapTargets(ssRank);k++){ const t2 = nearestEnemy(g, ssTarget, SOUL_SAP_SPLASH_R, ssTargets); if(!t2 || !enemyOnScreen(g,t2)) break; ssTargets.push(t2); } }   // v497: rank 1 hits one enemy, rank 3 two, rank 5 three -- all on screen
     // (v106) Soul Sap is a targeted, instant drain: it needs an enemy in range
     // (no target = no cast, cooldown untouched). No outbound projectile -- a
     // white soul orb simply flies from the enemy back to the player.

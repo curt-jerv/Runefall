@@ -357,6 +357,7 @@ function endGame(g){
 function goToTown(opts){
   opts = opts || {};
   const g = game, p = g.player;
+  faceScreen(p);   // v497
   g.over = false; clearSkillEffects(g, p);
   joyEnd(); mouseDown=false;
   g.scene = 'town';
@@ -481,6 +482,7 @@ function dungeonRespawn(g, p){
 }
 function respawnInRegion(){
   const g = game, p = g.player;
+  faceScreen(p);   // v497: no more respawning with your back to the camera
   g._bossBarReset = true;   // v474: back from the dead, boss bars hide again until the fight resumes
   g.over = false;
   joyEnd(); mouseDown = false;

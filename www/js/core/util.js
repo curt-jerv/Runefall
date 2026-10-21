@@ -228,6 +228,8 @@ const ENGAGE_R = 340; // non-holding scenes: enemies only start acting this clos
 
 // ---------- Isometric projection ----------
 const ISO_KX = 0.85, ISO_KY = 0.425; // 2:1 iso ratio
+// v497: stand facing the screen (login, respawn, back in town) -- never turned away from the camera
+function faceScreen(p){ if(!p) return; p.facing = {x:0.6, y:0.8}; p._backView = false; p.faceSign = screenFacingSign(p.facing.x, p.facing.y); }
 function toIso(x,y){ const z = (game && (game.scene==='redcrater' || game.scene==='mountainpass' || game.scene==='redridge' || game.scene==='highlands')) ? crElevAt(x,y) : 0; return { x:(x-y)*ISO_KX, y:(x+y)*ISO_KY - z }; }
 // Is a world-space point currently within the visible screen (camera is
 // always locked to the player's iso position), plus a small buffer margin

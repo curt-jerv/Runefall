@@ -207,7 +207,7 @@ function statSummaryHtml(p){
     num('DEX','DEX',p.dexterity||0)+
     pct('DMG RED','DMG RED',(p.itemDmgReductionPct||0)*100)+
     cell('REGEN','LIFE REGEN',r1((p.lifeRegenPct||0)*100)+'%/s', !((p.lifeRegenPct||0)>0))+
-    (p.cls==='mystic' ? cell('RESREGEN','MANA REGEN',r1(MANA_REGEN_PCT*100)+'%/s') : p.cls==='ranger' ? cell('RESREGEN','STAMINA REGEN',r1(STAMINA_REGEN_PCT*100*(1+0.03*((p.skills&&effectiveRank(p,'predatorsInstinct'))||0)))+'%/s') : '')+
+    (p.cls==='mystic' ? cell('RESREGEN','MANA REGEN',r1(MANA_REGEN_PCT*100)+'%/s') : p.cls==='ranger' ? cell('RESREGEN','STAMINA REGEN',r1(STAMINA_REGEN_PCT*100*(1+0.03*((p.skills&&effectiveRank(p,'steadyBreathing'))||0)))+'%/s') : '')+
     cell('THORNS','THORNS',Math.round(p.thornDamage||0), !((p.thornDamage||0)>0 || (p.thornPct||0)>0), (p.thornPct||0)>0 ? '+'+r1(p.thornPct)+'% of hit' : '')+
     '<div class="resRow4">'+resCells+'</div>'+
     head('Utility')+
