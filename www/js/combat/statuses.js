@@ -111,7 +111,7 @@ const RANGED_AIM_DELAY = 0.9, RANGED_STILL_T = 0.55;   // v490: RANGED_STILL_T =
 const ENEMY_DMG_SPLIT = { fhdwarf:'cold', fhbrute:'cold', fhaxe:'cold', fhcleric:'cold', fhtemplar:'cold', raptor:'fire', firebat:'fire' };   // v484
 const ENEMY_DMG_TYPE = { shadowghoul:'lightning', zombie:'poison', leviathan:'poison', anaconda:'poison', stormsnake:'lightning', giantoad:'poison', poisonplant:'poison', sandsnake:'poison', lightningraptor:'fire', balrog:'fire', gojira:'fire', lavabeetle:'fire', firebat:'fire', magmacrawler:'fire', colossus:'fire' };
 // XP curve: gentler than before, and a kill's XP is a fixed slice of the ML's level-up cost.
-function xpForLevel(L){ return Math.floor(L<=28 ? 92*Math.pow(1.20, L-1) : 92*Math.pow(1.20, 27)*Math.pow(1.09, L-28)); }   // v433: Diablo 2 shape -- ~20%/level early, then ~9%/level from level 28 on
+function xpForLevel(L){ const base = L<=28 ? 92*Math.pow(1.20, L-1) : 92*Math.pow(1.20, 27)*Math.pow(1.09, L-28); return Math.floor(base * (L>=3 && L<=14 ? 1.1 : 1)); }   // v492: levels 3-14 need 10% more xp   // v433: Diablo 2 shape -- ~20%/level early, then ~9%/level from level 28 on
 // v219 pace: kills to level at on-level monsters = 40 + 3*level (was 14 + 0.5*level), bosses worth more,
 // and XP falls steeply once the character is more than 3 levels above the monster (x0.72 per extra level, floor 3%).
 const XP_KILLS_A = 40, XP_KILLS_B = 3, XP_BOSS_MULT = 15, XP_ELITE_MULT = 5, XP_MAGIC_MULT = 2.5;

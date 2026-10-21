@@ -1243,13 +1243,14 @@
 #hudDock .gice{ position:absolute; left:0; right:0; bottom:0; height:0%; background:rgba(170,225,255,.38); box-shadow:inset 0 2px 0 rgba(230,248,255,.7); }
 #hudDock .gres{ position:absolute; left:0; right:0; top:0; height:0%; background:rgba(40,40,48,.75); }
 #hudDock .gshine{ position:absolute; left:16%; top:9%; width:38%; height:26%; border-radius:50%; background:radial-gradient(ellipse, rgba(255,255,255,.35), rgba(255,255,255,0) 70%); pointer-events:none; }
-#hudDock .gnum{ position:absolute; left:0; right:0; bottom:22%; text-align:center; font:700 10px system-ui,sans-serif; color:#f4ead8; text-shadow:0 1px 2px #000, 0 0 3px #000; pointer-events:none; }
+#hudDock .gnum{ position:absolute; left:0; right:0; bottom:20%; text-align:center; font:italic 700 17px 'Alegreya',Georgia,serif; letter-spacing:.02em; color:#f4ead8; text-shadow:0 1px 2px #000, 0 0 3px #000; pointer-events:none; }
 #dockMid{ display:flex; flex-direction:column; gap:5px; width:250px; pointer-events:auto; padding-bottom:4px; }
 #dockMid #topBtns{ display:flex !important; gap:4px !important; justify-content:stretch !important; pointer-events:auto; margin:0 !important; }
 #dockMid #topBtns > div{ height:26px !important; font-size:11px !important; pointer-events:auto; }
-#dockXp{ position:relative; height:10px; border-radius:3px; background:rgba(0,0,0,.65); border:1px solid #000; box-shadow:0 0 0 1px rgba(255,214,120,.22); overflow:hidden; }
+#dockXp{ position:relative; height:15px; border-radius:3px; background:rgba(0,0,0,.65); border:1px solid #000; box-shadow:0 0 0 1px rgba(255,214,120,.22); overflow:hidden; }
 #dockXpFill{ position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(#d8b860,#8a6a20); }
-#dockXpTxt{ position:absolute; left:0; right:0; top:0; line-height:10px; text-align:center; font:700 8px system-ui,sans-serif; color:#f4ead8; text-shadow:0 1px 1px #000; }
+#dockXpTxt{ position:absolute; left:0; right:0; top:0; line-height:15px; text-align:center; font:700 8px system-ui,sans-serif; color:#f4ead8; text-shadow:0 1px 1px #000; }
+#dockXpTxt .dLv{ font:700 12px 'Cinzel',Georgia,serif; color:#f0cf6a; text-shadow:0 1px 2px #000; letter-spacing:.06em; }   /* v492 */
 /* portrait: the dock spans the bottom edge (globes in the corners) and the action buttons sit above it */
 @media (orientation:portrait){
   #hudDock{ left:0; right:0; transform:none; justify-content:space-between; padding:0 calc(8px + env(safe-area-inset-left,0px)); gap:6px; }
@@ -1259,11 +1260,11 @@
   #joyzone{ bottom:80px !important; }
 }
 /* skill-button row (v489): Dodge left of skill slot 1, Potion where Dodge was, Interact where Potion was -- all skill-button size */
-#actionCluster #btnDodge{ right:183px !important; bottom:3px !important; width:48px !important; height:48px !important; }
+#actionCluster #btnDodge{ right:215px !important; bottom:3px !important; width:48px !important; height:48px !important; }   /* v492: a little further from skill 1 */
 #actionCluster #btnDodge .lbl{ font-size:9px !important; }
-#actionCluster #btnPotion{ right:18px !important; bottom:104px !important; width:48px !important; height:48px !important; }
-#actionCluster .interactBtn{ right:18px !important; bottom:166px !important; width:48px !important; height:48px !important; }
-body.noPotionBtn #actionCluster .interactBtn{ bottom:104px !important; }
+#actionCluster #btnPotion{ right:18px !important; bottom:128px !important; width:48px !important; height:48px !important; }   /* v492: same 110px ring as the skill buttons */
+#actionCluster .interactBtn{ right:18px !important; bottom:190px !important; width:48px !important; height:48px !important; }
+body.noPotionBtn #actionCluster .interactBtn{ bottom:128px !important; }
 #dockMid #topBtns{ position:static !important; top:auto !important; left:auto !important; right:auto !important; bottom:auto !important; transform:none !important; width:auto !important; flex:0 0 auto !important; max-width:none !important; }
 #dockMid{ min-width:0; }
 @media (orientation:portrait){ #dockMid #topBtns > div{ font-size:10px !important; padding:0 2px !important; min-width:0 !important; } #hudDock{ padding-right:calc(8px + env(safe-area-inset-right,0px)) !important; } }
@@ -1286,3 +1287,15 @@ body.noPotionBtn #actionCluster .interactBtn{ bottom:104px !important; }
   background:radial-gradient(ellipse at 50% 40%,#1b1712,#0b0907 80%); box-shadow:inset 0 0 0 1px #3a2f20, 0 0 0 1px #000; border-radius:2px; user-select:none; }
 .dollTab.active{ color:var(--gold, #e8c44a); box-shadow:inset 0 0 0 1px var(--bronze, #a07a3a), 0 0 0 1px #000; background:radial-gradient(ellipse at 50% 40%,#2a2118,#120e0a 80%); }
 .pdSlot.knightSlot .slotLabel{ color:#8fa6c8; }
+
+/* v492: landscape -- UI bar top centre, buff row under it, region name under that; globes stay at the bottom corners */
+@media (orientation:landscape){
+  #hudDock{ left:calc(50% - 70px) !important; transform:translateX(-50%) !important; justify-content:center !important; gap:14px !important; padding:0 !important; }   /* v492: the two globes sit centred on the bottom */
+  #topWrap{ position:absolute !important; top:calc(4px + env(safe-area-inset-top,0px)) !important; left:0 !important; right:0 !important; display:flex !important; flex-direction:column !important; align-items:center !important; gap:4px; pointer-events:none; }
+  #topWrap > #dockMid{ order:1; flex:0 0 auto !important; width:auto !important; pointer-events:auto; }
+  #topWrap > #buffBar{ order:2; position:relative !important; top:auto !important; left:auto !important; padding:0 !important; justify-content:center; pointer-events:auto; }
+  #topWrap > #buffTip{ order:2; position:relative; }
+  #topWrap > #subHud{ order:3; justify-content:center !important; padding:0 !important; width:100%; }
+  #subHud #zonePlaque{ text-align:center !important; flex:0 0 auto !important; }
+  #subHud #soulsWrap{ order:0 !important; }
+}

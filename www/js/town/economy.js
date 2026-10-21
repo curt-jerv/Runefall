@@ -245,11 +245,7 @@ function partBonuses(p){
 }
 function partBleedMult(){ const p = game.player; return 1 + (((p&&p.partB&&p.partB.bleed)||0)/100); }
 let _partToastT = 0;
-function showPartToast(text, color){
-  const el = document.getElementById('partToast'); if(!el) return;
-  el.textContent = text; el.style.color = color || '#e8dcc4'; el.style.opacity = '1';
-  clearTimeout(_partToastT); _partToastT = setTimeout(()=>{ el.style.opacity = '0'; }, 3200);
-}
+function showPartToast(text, color){ showMsg(text, 3.2, color || '#e8dcc4'); }   // v492: monster parts use the same top-centre line as item pick-ups (no box)
 function partsMaybeDrop(g, en){
   const p = g.player;
   if(!p || !en) return;   // v490: parts drop from the very start (no witch needed)

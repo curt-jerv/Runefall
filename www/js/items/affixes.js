@@ -305,6 +305,9 @@ const EQUIP_AFFIXES = {
   // v489: Skill Duration % -- ailments, ground effects, buffs, summons and decoys all last longer
   const DU={word:'Persistence',key:'skillDurPct',label:'Skill Duration %'};
   ['weapon1h','weapon2h','bow','staff','ring','helm'].forEach(c=>EQUIP_AFFIXES[c].suffixes.push(P(DU)));
+  // v492: +Light Radius (Diablo 2 style): a bigger circle of light around you, on helms, rings and amulets
+  const LR={word:'Lantern',key:'lightRadiusPct',label:'Light Radius %'};
+  ['helm','ring'].forEach(c=>EQUIP_AFFIXES[c].suffixes.push(P(LR)));
 }
 EQUIP_AFFIXES.amulet = EQUIP_AFFIXES.ring;
 EQUIP_AFFIXES.armor = EQUIP_AFFIXES.helm;
@@ -365,7 +368,7 @@ const AFFIX_GROUP_OF = (()=>{
   const m = {};
   ['wpnDmg','physDmgPct','elemDmgPct','fireDmgPct','coldDmgPct','lightningDmgPct','poisonDmgPct','dmg','dmgPct','fireDmg','coldDmg','lightningDmg','poisonDmg','critChance','crit','atkSpeedPct','armorPenPct','lifeLeechPct','bleedChancePct','aoeRadiusPct','projectileSpeedPct','followerDmgPct','thornDamage','critDmgPct','statusDurPct','dmgVsElitePct','lifeOnKill','manaOnKill'].forEach(k=>m[k]='offense');
   ['armor','defenceFlat','defensePct','hp','lifeRegenPct','fireResistPct','coldResistPct','lightningResistPct','poisonResistPct','allResistPct','blockChancePct','dmgReductionPct','dexterity'].forEach(k=>m[k]='defense');
-  ['magicFindPct','goldFindPct','potionStrengthPct','skillDurPct','moveSpeedPct','globalCdrPct','slowImmune','freezeImmune','speed','mp'].forEach(k=>m[k]='utility');
+  ['magicFindPct','goldFindPct','potionStrengthPct','skillDurPct','lightRadiusPct','moveSpeedPct','globalCdrPct','slowImmune','freezeImmune','speed','mp'].forEach(k=>m[k]='utility');
   return m;
 })();
 const AFFIX_GROUP_COLOR = {skills:'#d9b8ff', offense:'#f2b48c', defense:'#9cc4ff', utility:'#9ee6b0'};

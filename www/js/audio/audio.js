@@ -110,7 +110,12 @@ const SFX = {
   levelUp(t,v,r){ N('bandpass', 180, 1500, 0.7, 1.1, 0.5*v, {att:0.55, send:0.35}, t); N('bandpass', 1400, 300, 0.8, 0.8, 0.22*v, {att:0.05, send:0.3}, t+0.55); V('sine', 55, 90, 1.2, 0.35*v, {att:0.4, send:0.2}, t); },
   banner(t,v,r){ V('sine', 98, 92, 2.4, 0.5*v, {att:0.01, send:0.3}, t); V('triangle', 392, 370, 2.2, 0.1*v, {att:0.01, send:0.5}, t); V('sine', 263, 255, 2.0, 0.08*v, {att:0.01, send:0.5}, t); N('lowpass', 500, 120, 0.7, 0.9, 0.2*v, {att:0.05, send:0.3}, t); },
   bossRoar(t,v,r){ V('sawtooth', 90, 45, 1.3, 0.3*v, {lp:700, lpEnd:150, att:0.08, send:0.3}, t); V('sawtooth', 135, 70, 1.2, 0.2*v, {lp:600, lpEnd:150, att:0.08}, t); N('lowpass', 900, 150, 0.8, 1.0, 0.35*v, {att:0.1}, t); },
-  playerDeath(t,v,r){ V('sawtooth', 220, 40, 2.4, 0.22*v, {lp:700, lpEnd:90, send:0.5}, t); V('sine', 65, 30, 2.0, 0.6*v, {att:0.02}, t); },
+  // v492: a slow funeral toll and a falling tone (no more clinking metal)
+  playerDeath(t,v,r){ V('sine', 110*r, 110*r, 3.2, 0.32*v, {att:0.01, send:0.6}, t); V('sine', 165*r, 165*r, 3.0, 0.14*v, {att:0.01, send:0.6}, t); V('sawtooth', 180*r, 38*r, 2.6, 0.16*v, {lp:500, lpEnd:70, att:0.05, send:0.5}, t); thump(t, v*0.8, 70*r, 0.6, 1.4); },
+  // v492: rising breath back into the world on respawn
+  respawn(t,v,r){ V('sine', 150*r, 480*r, 1.1, 0.16*v, {att:0.35, send:0.5}, t); V('sine', 300*r, 720*r, 1.0, 0.07*v, {att:0.4}, t); N('bandpass', 500, 1400, 1.2, 1.0, 0.1*v, {att:0.5}, t); },
+  // v492: lightning arc -- a crackling electric zap with a quick glide
+  arc(t,v,r){ V('sawtooth', 1400*r, 260*r, 0.18, 0.12*v, {lp:3000, lpEnd:600, att:0.002}, t); N('highpass', 2600, 2600, 0.8, 0.06, 0.25*v, {att:0.001}, t); N('bandpass', 900*r, 400, 2, 0.12, 0.22*v, {att:0.001}, t); for(let k=1;k<4;k++) N('highpass', 2200+k*500, 2200+k*500, 0.9, 0.025, 0.12*v, {att:0.001}, t+k*0.035); },
   transition(t,v,r){ N('lowpass', 1800, 300, 0.7, 0.7, 0.3*v, {att:0.15, send:0.3}, t); V('sine', 110, 70, 0.6, 0.3*v, {att:0.05}, t); }
 };
 // ---- (v396) gritty, low-end replacements for the old arcade blips: noise-based thumps, cracks and rings instead of pitched sine "boops" ----
@@ -155,7 +160,7 @@ const MUS_BANK = {"tavern":"audio/music/tavern.ogg","town":"audio/music/town.ogg
 Object.assign(MUS_BANK, {"d2world":"audio/music/d2world.ogg", "d2dungeon":"audio/music/d2dungeon.ogg", "d2boss":"audio/music/d2boss.ogg"});
 // v480: the towers and high halls get their own theme (Lighthouse, Forgotten and Frosthold towers, the Redridge watchtowers, Highward, the Shadow Keep halls)
 Object.assign(MUS_BANK, {"d2tower":"audio/music/d2tower.ogg"});
-const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, d2boss:0.24, d2tower:0.24 }, MUS_LEN = { d2tower:3528000/44100, tavern:1411200/44100, town:2275056/44100, d2world:3848727/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
+const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, d2boss:0.5, d2tower:0.24 }, MUS_LEN = { d2tower:3528000/44100, tavern:1411200/44100, town:2275056/44100, d2world:3848727/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
 AUD.mus = {};
 function musLoopMood(name){
   return { stepDur:1, step(){}, start(bus){
@@ -189,7 +194,7 @@ Object.assign(SND_MAP, {"swing":{"f":["r_swing","r_swing2","r_swing3"],"v":0.55}
 Object.assign(SND_BANK, {"r_metal_small1":"audio/sfx/r_metal_small1.ogg","r_metal_small2":"audio/sfx/r_metal_small2.ogg","r_metal_small3":"audio/sfx/r_metal_small3.ogg","r_metal_ringing":"audio/sfx/r_metal_ringing.ogg","k_chop":"audio/sfx/k_chop.ogg","k_knifeSlice":"audio/sfx/k_knifeSlice.ogg","k_knifeSlice2":"audio/sfx/k_knifeSlice2.ogg","r_wood_04":"audio/sfx/r_wood_04.ogg"});
 SND_MAP.arrowHit = {f:['k_chop','k_knifeSlice','k_knifeSlice2'], v:0.7};
 SND_MAP.hurt = {f:['r_metal_small1','r_metal_small2','r_metal_small3'], v:0.75};
-SND_MAP.playerDeath = {seq:[['r_metal_ringing',0,0.9],['r_wood_04',0.18,0.8]]};
+SND_MAP.hurtCloth = {f:['cloth1','cloth2','cloth3','r_cloth_heavy'], v:0.8};   // v492: mystic and ranger wear cloth/leather, not plate
 // v474: damage-over-time is a soft, low seep (a muffled hiss with a faint pulse) instead of a sharp click
 SFX.dotTick = function(t,v,r){ N('lowpass', 760*r, 320*r, 0.7, 0.24, 0.05*v, {att:0.05, brown:true}, t); V('sine', 150*r, 105*r, 0.2, 0.03*v, {att:0.03}, t); };
 const SND_TH = { dotTick:0.75, arrowHit:0.05, equip:0.1, equipWeapon:0.1, equipArmor:0.1, equipJewel:0.1, bagOpen:0.2, bookOpen:0.2, bookClose:0.2, stashOpen:0.3, fire:0.3, portal:0.5, summon:0.5, door:0.4, burp:1, enemyBite:0.09, deathSlime:0.06, deathShade:0.08, potion:0.2 };
@@ -246,9 +251,9 @@ const SKILL_SND = {
   rapidShot:'bow', splinterShot:'bow', explosiveShot:'bowHeavy', cripplingShot:'bow', stunShot:'bow', aimedShot:'bowHeavy', rainOfArrows:'bowHeavy', packTactics:'howl', beastFury:'howl', huntersMark:'mark', poisonTrap:'trap', frostTrap:'trap', explosiveTrap:'trap',
   fieldDress:'heal', survivalFieldDress:'heal', recall:'portal',
   nova:'arcane', tornado:'wind', hurricane:'wind', fireball:'fire', iceBolt:'ice', iceArmor:'ice', pyroTorrent:'fire', meteor:'fire', stormcall:'bolt', raiseDead:'summon', blizzard:'ice', immolate:'fire', flameVortex:'fire', permafrost:'ice',
-  fear:'curse', soulFire:'curse', soulSap:'arcane', lightningArc:'bolt', deathBolt:'curse', soulGate:'summon', plague:'poison'
+  fear:'curse', soulFire:'curse', soulSap:'arcane', lightningArc:'arc', deathBolt:'curse', soulGate:'summon', plague:'poison'
 };
-const SND_ELEM = { fire:'fire', ice:'ice', bolt:'bolt', arcane:'arcane', curse:'arcane', poison:'poison', explode:'fire' };
+const SND_ELEM = { arc:'bolt', fire:'fire', ice:'ice', bolt:'bolt', arcane:'arcane', curse:'arcane', poison:'poison', explode:'fire' };
 const ATK_SHARED = { explosiveShot:1, splinterShot:1, reave:1, strike:1, shieldBash:1, smite:1, vengeance:1, cripplingShot:1, stunShot:1, fireball:1, iceBolt:1, lightningArc:1, soulSap:1, deathBolt:1 };
 function audWrapTriggers(){
   try{ for(const k in ACTIVE_SKILL_REGISTRY){ const en = ACTIVE_SKILL_REGISTRY[k]; if(en._audW) continue; en._audW = true; const o = en.trigger; en.trigger = function(){ AUD.lastTrig = {id:k, t:performance.now()}; return o.apply(this, arguments); }; } }catch(e){}
@@ -302,7 +307,7 @@ function audioFrame(dt){
   AUD.tension += ((bossNear ? 1 : clamp01(tens/3)) - AUD.tension) * Math.min(1, dt*0.7);
   // --- player: hurt, level, gold, dodge, steps ---
   const pDot = (p.burnT>0||p.poisonT>0||p.bleedT>0||p.selfBurnT>0||p._burnT>0) && (st.hp - p.hp) < p.maxHp*0.03;   // v452: no grunt on every ailment tick
-  if(p.hp < st.hp - 0.5 && p.hp>0 && !pDot) sfxPlay('hurt', clamp01(0.5 + (st.hp-p.hp)/Math.max(1,p.maxHp)*3));
+  if(p.hp < st.hp - 0.5 && p.hp>0 && !pDot) sfxPlay(p.cls==='warrior' ? 'hurt' : 'hurtCloth', clamp01(0.5 + (st.hp-p.hp)/Math.max(1,p.maxHp)*3));
   if(g.over && !st.dead){ st.dead = true; sfxPlay('playerDeath', 1); } if(!g.over) st.dead = false;
   st.hp = p.hp;
   if(p.level > st.level){ sfxPlay('levelUp', 1); } st.level = p.level;

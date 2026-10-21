@@ -117,11 +117,13 @@ function updateInteractPrompt(kind){
   if(!kind && nearestDroppedItem()) kind = 'pickupItem';
   interactKind = kind;
   if(!kind){ btnInteract.style.display = 'none'; return; }
-  interactLbl.textContent = INTERACT_ICONS[kind] || '?';
-  // v489: the pick-up arrow takes the item's quality colour (grey / blue / yellow ...)
+  // v492: a fat, bold down-arrow for pick-up (a drawn shape, so it stays heavy on every phone font)
   const it = kind==='pickupItem' && nearestDroppedItem();
+  if(it) interactLbl.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M9 2.5h6v9.5h4.6L12 21.5 4.4 12H9z" fill="currentColor" stroke="#000" stroke-width="1" stroke-linejoin="round"/></svg>';
+  else interactLbl.textContent = INTERACT_ICONS[kind] || '?';
+  // v489: the pick-up arrow takes the item's quality colour (grey / blue / yellow ...)
   interactLbl.style.color = it && it.item ? (it.item.color || '') : '';
-  interactLbl.style.fontSize = it ? '30px' : ''; interactLbl.style.fontWeight = it ? '900' : '';
+  interactLbl.style.fontSize = ''; interactLbl.style.fontWeight = '';
   btnInteract.title = INTERACT_LABELS[kind] || 'Interact';
   btnInteract.style.display = 'flex';
 }

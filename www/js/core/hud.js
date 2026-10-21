@@ -180,7 +180,7 @@ function updateDockHud(p){
   tx('hpGlobeNum', Math.ceil(Math.max(0,p.hp))+'');
   tx('resGlobeNum', Math.floor(p.mp||0)+'');
   st('dockXpFill', 'width', clamp(p.xp/p.xpNext*100,0,100).toFixed(1)+'%');
-  tx('dockXpTxt', 'Lv '+(p.level||1)+' \u00b7 '+Math.floor(clamp(p.xp/p.xpNext,0,1)*100)+'%');
+  { const xt = document.getElementById('dockXpTxt'); const html = '<b class="dLv">Lv '+(p.level||1)+'</b> \u00b7 '+Math.floor(clamp(p.xp/p.xpNext,0,1)*100)+'%'; if(xt && xt.dataset.h!==html){ xt.dataset.h = html; xt.innerHTML = html; } }   // v492: the level is the big gold number
   // the skill-point flag always shows the real number of unspent points (it used to keep an old count outside town)
   if(typeof skillsBadge!=='undefined' && skillsBadge){ const n = p.skillPoints||0; const t = n>0 ? String(n) : '!'; if(skillsBadge.textContent!==t) skillsBadge.textContent = t; if(n<=0 && skillsBadge.style.display!=='none') skillsBadge.style.display = 'none'; }
 }
@@ -265,3 +265,15 @@ function castLightningArcBolt(g, p, laRank, reward){
     }
   }
 }
+
+// v492: in landscape the UI bar (menu buttons + XP) sits at the top centre, with the buff row and region name under it;
+// in portrait it goes back into the bottom dock between the two globes. Only the DOM parent changes; ids stay the same.
+function placeDockForOrientation(){
+  const mid = document.getElementById('dockMid'), tw = document.getElementById('topWrap'), dock = document.getElementById('hudDock'), hpG = document.getElementById('hpGlobe');
+  if(!mid || !tw || !dock || !hpG) return;
+  const land = window.matchMedia('(orientation:landscape)').matches;
+  if(land && mid.parentElement!==tw) tw.insertBefore(mid, tw.firstChild);
+  else if(!land && mid.parentElement!==dock) dock.insertBefore(mid, hpG.nextSibling);
+}
+placeDockForOrientation();
+window.addEventListener('resize', placeDockForOrientation);

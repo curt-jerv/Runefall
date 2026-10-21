@@ -96,6 +96,7 @@ function statInfoText(key, p){
     'PROJ SPD': 'Projectiles fly '+pc(p.projectileSpeedPct||0)+'% faster.',
     BLEED: pc(p.bleedChancePct||0)+'% chance for your hits to cause Bleed.',
     'AILMENT DUR': 'Your ailments last '+pc((p.statusDurPct||0)*100)+'% longer (gear cap 75%).',
+    'LIGHT RADIUS': 'Your circle of light is '+pc((p.lightRadiusPct||0)*100)+'% wider (gear cap 60%).',
     'SKILL DUR': 'Your skill effects last '+pc((p.skillDurPct||0)*100)+'% longer: ailments, ground effects (Blizzard, Meteor fire, Consecrate, Plague, trap clouds), Hurricane, Tornado, Flame Vortex, banners and the Mirage decoy (gear cap 50%).',
     'VS ELITES': '+'+pc((p.dmgVsElitePct||0)*100)+'% damage to elite monsters (gear cap 5%).',
     MINION: 'Followers and minions deal +'+pc((p.followerDmgPct||0)*100)+'% damage.',
@@ -179,6 +180,7 @@ function statSummaryHtml(p){
     pct('BLEED','BLEED',p.bleedChancePct||0)+
     pct('AILMENT DUR','AILMENT DUR',(p.statusDurPct||0)*100,true)+
     pct('SKILL DUR','SKILL DUR',(p.skillDurPct||0)*100,true)+
+    pct('LIGHT RADIUS','LIGHT RADIUS',(p.lightRadiusPct||0)*100,true)+
     pct('VS ELITES','VS ELITES',(p.dmgVsElitePct||0)*100,true)+
     pct('MINION','MINION DMG',(p.followerDmgPct||0)*100,true)+
     pct('LEECH','LEECH',totalLeechPct(p))+

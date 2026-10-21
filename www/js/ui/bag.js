@@ -334,7 +334,7 @@ function recalcStats(p){
   let addMagicFindPct=0, addGoldFindPct=0, addArmorPenPct=0, addThornDamage=0;
   let addDmgReductionPct=0, addBlockChancePct=0, addDefensePct=0;
   let addFireResistPct=0, addColdResistPct=0, addLightningResistPct=0, addPoisonResistPct=0, addAllResistPct=0;
-  let addSkillDur=0, addStatusDur=0, addDmgVsElite=0, addPotionStr=0, addLifeOnKill=0, addManaOnKill=0, addCritDmg=0, addFollowerDmgPct=0, addLifeRegenPct=0, addMoveSpeedPct=0, addDefenceFlat=0;
+  let addLightRad=0, addSkillDur=0, addStatusDur=0, addDmgVsElite=0, addPotionStr=0, addLifeOnKill=0, addManaOnKill=0, addCritDmg=0, addFollowerDmgPct=0, addLifeRegenPct=0, addMoveSpeedPct=0, addDefenceFlat=0;
   let addGlobalCdrPct=0, addProjectileSpeedPct=0, addAoeRadiusPct=0, addDmgPct=0;
   let wMin = 0, wMax = 0, addPhysPct=0, addElemPct=0, addFirePct=0, addColdPct=0, addLightPct=0, addPoisPct=0;   // v457
   let addSlowImmune=false, addFreezeImmune=false;
@@ -389,6 +389,7 @@ function recalcStats(p){
       else if(af.key==='followerDmgPct') addFollowerDmgPct+=af.value;
       else if(af.key==='statusDurPct') addStatusDur+=af.value;
       else if(af.key==='skillDurPct') addSkillDur+=af.value;
+      else if(af.key==='lightRadiusPct') addLightRad+=af.value;
       else if(af.key==='dmgVsElitePct') addDmgVsElite+=af.value;
       else if(af.key==='potionStrengthPct') addPotionStr+=af.value;
       else if(af.key==='lifeOnKill') addLifeOnKill+=af.value;
@@ -562,7 +563,7 @@ function recalcStats(p){
   p.goldFindPct = clamp(addGoldFindPct + pb.gold, 0, 100);
   // v83 Commanding (+Follower Damage %): hooks into followerDmg().
   p.followerDmgPct = (clamp(addFollowerDmgPct, 0, 60) + pb.minion)/100;
-  p.statusDurPct = (clamp(addStatusDur, 0, 75) + pb.ailment)/100; p.skillDurPct = clamp(addSkillDur, 0, 50)/100;   // v489
+  p.statusDurPct = (clamp(addStatusDur, 0, 75) + pb.ailment)/100; p.skillDurPct = clamp(addSkillDur, 0, 50)/100; p.lightRadiusPct = clamp(addLightRad, 0, 60)/100;   // v489 / v492
   p.dmgVsElitePct = (clamp(addDmgVsElite, 0, 5) + pb.elite)/100; p.potionStrPct = (clamp(addPotionStr, 0, 75) + pb.potion)/100;   // v490: was hidden behind the comment above
   p.lifeOnKill = addLifeOnKill; p.manaOnKill = addManaOnKill; p.lifeOnKillPct = pb.lok||0; p.manaOnKillPct = pb.mok||0;   // v465: parts give % of max
   p.critDmgPct = clamp(addCritDmg, 0, 100) + pb.critdmg;   // v490: was hidden behind the comment above

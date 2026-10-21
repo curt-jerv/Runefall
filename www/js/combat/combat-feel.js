@@ -495,7 +495,7 @@ function respawnInRegion(){
   }
   // v172: a boss you die to keeps its progress -- but never more than half its life is ever taken back for you
   for(const e of g.enemies){
-    if(e.hp>0 && !e.colossus && (e.isBoss||e.isLairBoss||e.lr||e.rev||e.lvBoss||e.mastodon||e.prot||e.balrog||e.bkBoss||e.type==='boss') && e.hp < e.maxHp*0.5) e.hp = e.maxHp*0.5;
+    if(e.hp>0 && !e.colossus && (e.isBoss||e.isLairBoss||e.lr||e.rev||e.lvBoss||e.mastodon||e.prot||e.balrog||e.bkBoss||e.type==='boss') && e.hp < e.maxHp*0.33) e.hp = e.maxHp*0.33;   // v492: back at a third of life (was half)
   }
   // v352: the Molten Colossus keeps the damage you dealt when you die to it -- it only resets its position, attacks and arena
   for(const e of g.enemies) if(e.colossus && e.hp>0){
@@ -525,6 +525,7 @@ function respawnInRegion(){
   for(const f of g.followers){ f.x = p.x; f.y = p.y; }
   document.getElementById('overlay').style.display = 'none';
   showMsg('You return to the fight', 1.4);
+  try{ sfxPlay('respawn', 1); }catch(e){}   // v492
 }
 // Voluntarily heading back to Town from a cleared level's portal keeps
 // everything, gold included.

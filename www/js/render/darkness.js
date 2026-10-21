@@ -270,7 +270,7 @@ function hudBottomPx(){
   if(t-_hudBT > 600){ _hudBT = t; const el = document.getElementById('topStrip'); if(el){ const b = el.getBoundingClientRect().bottom; if(b>0 && b<H*0.4) _hudB = b; } }
   return _hudB;
 }
-function losShadowScene(g){ return !!(g && g.started && g.player && (g.scene==='darkcrypt' || isUndergroundScene(g) || (g.scene==='lighthouse' && g.room && g.room.subzone==='keep' && (g.room.kpArea===1 || g.room.kpArea===3)))); }
+function losShadowScene(g){ return !!(g && g.started && g.player && (g.scene==='darkcrypt' || isUndergroundScene(g) || (g.scene==='lighthouse' && g.room && g.room.subzone!=='pool' && !kpOutdoor(g)))); }   // v492: every tower and hall (not the Shadow Keep's open courtyard) hides what is behind walls
 function losEnemyHidden(g, e){
   if(!losShadowScene(g) || e===g.player) return false;
   if(dist(g.player, e) < 60) return false;
@@ -334,7 +334,15 @@ function drawLosShadow(g){
   }
   ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(losCanvas, 0, 0, W, H); ctx.restore();
 }
-function drawDarkCryptOverlay(g, LR, useLights, tint){
+// v492: the character's own circle of light, wider with +Light Radius gear
+const VEIL_LIGHT_R = 360, VEIL_MAX_A = 0.5;
+function lightVeilScene(g){
+  if(!g || !g.started || !g.player) return false;
+  const sc = g.scene; if(sc==='town' || sc==='tavern' || sc==='darkcrypt' || sc==='lighthouse' || sc==='dungeon' || isUndergroundScene(g)) return false;
+  if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
+  return true;
+}
+function drawDarkCryptOverlay(g, LR, useLights, tint, maxA){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
   const cam = g.camera;
   // The camera always centers the player at this exact fixed screen point
@@ -346,7 +354,9 @@ function drawDarkCryptOverlay(g, LR, useLights, tint){
   mctx.clearRect(0, 0, W, H);
   mctx.globalCompositeOperation = 'source-over';
   mctx.fillStyle = tint || '#000';
+  mctx.globalAlpha = (maxA==null ? 1 : maxA);   // v492: the soft outdoor veil is only partly dark
   mctx.fillRect(0, 0, W, H);
+  mctx.globalAlpha = 1;
   mctx.globalCompositeOperation = 'destination-out';
   let grd = mctx.createRadialGradient(px, py, 0, px, py, LR);
   grd.addColorStop(0, 'rgba(0,0,0,1)');

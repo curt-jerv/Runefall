@@ -328,6 +328,7 @@ const PCT_AFFIX_ROLL = {
   followerDmgPct:[[5,10],[10,16],[16,24]],
   statusDurPct:[[8,14],[14,22],[22,32]],
   skillDurPct:[[6,10],[10,16],[16,24]],   // v489
+  lightRadiusPct:[[10,18],[16,28],[24,40]],   // v492
   dmgVsElitePct:[[1,2],[2,3],[3,5]],
   potionStrengthPct:[[10,15],[15,25],[25,40]],
   lifeOnKill:[[2,4],[4,7],[7,11]],
