@@ -25,7 +25,7 @@ const QUEST_HAMMER = {
 // on the beacon" from the brief.
 const QUEST_LIGHT_THE_WAY = {
   id:'light_the_way', name:'Light the Way',
-  desc:"Bandits hold Lighthouse Tower and its beacon is dark -- no ship can dock without it. The tower stands on the west edge of Sunlit Plains (through River Valley). Climb to the rooftop and light the beacon.",
+  desc:"Bandits hold Lighthouse Tower and its beacon is dark -- no ship can dock without it. The tower stands on the west edge of Withered Crossroads (through River Valley). Climb to the rooftop and light the beacon.",
   descReturn:"The beacon is lit. Return to the Barkeeper in Mistfall.",
   total:1,
 };
@@ -276,7 +276,7 @@ function talkToQuestGiver(){
     } else if(!getQuest(p, QUEST_BRIDGE.id) && !p.bridgeCleared){
       pendingQuestGiver = 'oldmanBridge';
       questGiverNameEl.textContent = 'Old Man';
-      questGiverTextEl.textContent = '"Bandits have seized the old bridge in the River Valley, south of the Dark Forest. It is the only road to the Sunlit Plains. Drive them out of their camp and the way will be safe again. Will you clear it?"';
+      questGiverTextEl.textContent = '"Bandits have seized the old bridge in the River Valley, south of the Dark Forest. It is the only road to the Withered Crossroads. Drive them out of their camp and the way will be safe again. Will you clear it?"';
       openQuestGiverDialogue();
     } else {
       const wq = getQuest(p, QUEST_WRAITH.id);

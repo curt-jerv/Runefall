@@ -502,7 +502,7 @@ function drawDemon(e){
   else if(kind==='wolf'){ s=e.r/16*0.85; lightColor='#b8b4a8'; bodyColor='#6e6a60'; darkColor='#302e28'; hornColor='#1c1a16'; eyeColor='#ffd23a'; hoverAmp=0; legLen=15; torsoW=13; torsoH=15; headR=6.5; }
   else if(kind==='bear'){ s=e.r/16*1.0; lightColor='#a07a48'; bodyColor='#5a3f24'; darkColor='#2a1c10'; hornColor='#160e08'; eyeColor='#ff6a3a'; hoverAmp=0; legLen=18; torsoW=25; torsoH=29; headR=10; }
   else if(kind==='frozenzombie'){ s=e.r/16*0.95; lightColor='#cdeaf2'; bodyColor='#7fb8c9'; darkColor='#33505a'; hornColor='#1c2e34'; eyeColor='#baf1ff'; hoverAmp=0; legLen=15; torsoW=17; torsoH=19; headR=7.5; }
-  // Bandits/Bandit Archers (Sunlit Plains, v69): a humanoid raider look,
+  // Bandits/Bandit Archers (Withered Crossroads, v69): a humanoid raider look,
   // deliberately given a warm leather/tan palette with plain human-skin
   // heads and dark hooded "horns" -- clearly distinct in color/style from
   // every demon (red/purple), the icy Frozen Zombie, and the furred
@@ -1017,7 +1017,7 @@ function drawCatIso(e){
   ctx.restore();
 }
 
-// Wild Boar (Sunlit Plains, v69): same profile-and-flip quadruped approach
+// Wild Boar (Withered Crossroads, v69): same profile-and-flip quadruped approach
 // as the wolf above, given a stockier rounder body, short stubby legs, a
 // curled tail, and a pair of small tusks instead of the wolf's lean frame
 // and glowing eye -- a distinct silhouette at a glance despite reusing the

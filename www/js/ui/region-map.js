@@ -10,10 +10,10 @@ function zoneDisplayName(){
   if(g.scene==='town') return 'Mistfall Square';
   if(g.scene==='forest') return 'Dark Forest';
   // Patch (Sept 2026): 'sunlitplains' had no case here -- it fell through to
-  // the "Depths -- Floor N" default below, which is wrong (Sunlit Plains
+  // the "Depths -- Floor N" default below, which is wrong (Withered Crossroads
   // isn't a dungeon floor and has no g.depth of its own). Added while
   // wiring up its Region Map schematic below.
-  if(g.scene==='sunlitplains') return 'Sunlit Plains';
+  if(g.scene==='sunlitplains') return 'Withered Crossroads';
   if(g.scene==='rivervalley') return 'River Valley';
   if(g.scene==='minotaurcave') return 'Minotaur Cave';
   if(g.scene==='lakesideruins') return 'Lakeside Ruins';
@@ -53,13 +53,13 @@ const ZONE_LANDMARKS = {
   bearcave: [['Forest Entrance (back)','F'], ['Bear Den','!']],
   minotaurcave: [['River Valley Entrance (back)','R'], ['Minotaur\'s Lair','!']],
   lighthouse: [['Mountain Pass Entrance (back)','M'], ['Tower Ascent','^']],
-  lakesideruins: [['Sunlit Plains (west)','S'], ['Ancient Ruins (island)','R'], ['Black Marsh (east)','B']],
+  lakesideruins: [['Withered Crossroads (west)','S'], ['Ancient Ruins (island)','R'], ['Black Marsh (east)','B']],
   blackmarsh: [['Lakeside Ruins (west gate)','L'], ["Witch\'s House & Cauldron",'H'], ['Waypoint','W'], ['Forgotten Tower (far east)','T'], ['Tower Bridge (over the great river)','='], ['Marsh Pool (north edge, east)','P'], ['Barren Highlands (north-west)','B']],
 };
 // Patch (Sept 2026): shared plotting helper, factored out of the old
 // Town-only branch below so the same "plot fixed landmark coords + the
 // player's own dot on a WxH box" logic can also drive the new Dark Forest
-// and Sunlit Plains schematics -- those two zones (unlike the procedural
+// and Withered Crossroads schematics -- those two zones (unlike the procedural
 // dungeon floors/lairs still on the generic ZONE_LANDMARKS list above) have
 // a fixed, known footprint (FOREST_W/H, SUN_W/H) and fixed gate objects
 // (g.forest.*Gate, g.sun.*Gate), so a real "you are here + exits" schematic
@@ -393,10 +393,10 @@ function renderRegionMap0(){
       return {w:r.w,h:r.h,pts:[...r.gates.map(gt=>({pos:gt, label:(IC[gt.id]||[gt.label])[0], icon:(IC[gt.id]||['','?'])[1]})), ...(r.waypoint?[{pos:r.waypoint,label:'Waypoint',icon:'W'}]:[]), ...(r.camp?[{pos:r.camp,label:'Wayfarer\u2019s Camp',icon:'C'}]:[]), ...r.towers.map(tw=>({pos:tw.door,label:'Watchtower '+tw.id,icon:'T'}))]}; },
     highlands: ()=>{ const r=g.hl; if(!r) return null; return {w:r.w,h:r.h,pts:[{pos:hlGate(r,'marsh'),label:'Black Marsh',icon:'B'},{pos:hlGate(r,'pass'),label:'Mountain Pass',icon:'M'},{pos:r.waypoint,label:'Waypoint',icon:'W'},...r.camps.map(c=>({pos:c,label:'Troll Camp',icon:'!'}))]}; },
     redcrater: ()=>{ const r=g.crater; return r && {w:r.w,h:r.h,pts:[{pos:r.gates[0],label:'Redridge Canyon',icon:'R'},...(game.player.obsidianTaken?[]:[{pos:r.runeSpot,label:'Obsidian Obelisk',icon:'O'}]),{pos:r.bossSpot,label:game.player.gojiraSlain?'Rex, the Crater King':'Gojira',icon:'!'}]}; },
-    lakesideruins: ()=>{ const l=g.lake; return l && {w:l.w,h:l.h,pts:[{pos:l.sunlitGate,label:'Sunlit Plains',icon:'S'},{pos:l.waypoint.off?null:l.waypoint,label:'Waypoint',icon:'W'},{pos:l.ruinsSpot,label:'Ancient Ruins',icon:'R'},{pos:l.marshGate,label:'Black Marsh',icon:'B'}]}; },
+    lakesideruins: ()=>{ const l=g.lake; return l && {w:l.w,h:l.h,pts:[{pos:l.sunlitGate,label:'Withered Crossroads',icon:'S'},{pos:l.waypoint.off?null:l.waypoint,label:'Waypoint',icon:'W'},{pos:l.ruinsSpot,label:'Ancient Ruins',icon:'R'},{pos:l.marshGate,label:'Black Marsh',icon:'B'}]}; },
     blackmarsh: ()=>{ const b=g.bm; if(!b) return null; const pts=[{pos:b.westGate,label:'Lakeside Ruins',icon:'L'},{pos:b.highGate,label:'Barren Highlands',icon:'B'},{pos:b.house,label:'Witch\u2019s House',icon:'H'},{pos:b.waypoint,label:'Waypoint',icon:'W'},{pos:b.eastGate,label:'Forgotten Tower',icon:'T'},{pos:b.poolGate,label:'Marsh Pool',icon:'P'}]; for(const bx of BM_BRIDGES) pts.push({pos:{x:bx,y:bmTrailPt(bx).y},label:'',icon:'='}); pts.push({pos:{x:BM_MID_BRIDGE_X,y:bmMidY(BM_MID_BRIDGE_X)},label:'Tower Bridge',icon:'='}); return {w:b.w,h:b.h,pts}; },   // v490: the great river and its one bridge
-    rivervalley: ()=>{ const r=g.rv; if(!r) return null; const pts=[{pos:r.northGate,label:'Dark Forest',icon:'F'},{pos:r.waypoint,label:'Waypoint',icon:'W'},{pos:r.bridgeC,label:'Old Bridge',icon:'='},{pos:r.southGate,label:'Sunlit Plains',icon:'S'},{pos:r.caveGate,label:'Minotaur Cave',icon:'M'},{pos:r.waterfall,label:'Waterfall',icon:'~'}]; if(!game.player.bridgeCleared) pts.push({pos:{x:RV_BX+300,y:r.bridgeC.y-220},label:'Bandit Camp',icon:'!'}); return {w:r.w,h:r.h,pts}; },
-    cursedcemetery: ()=>{ const c=g.cem; return c && {w:c.w,h:c.h,pts:[{pos:c.sunlitGate,label:'Sunlit Plains',icon:'S'},{pos:c.tomb,label:'Dark Crypt',icon:'D'}]}; },
+    rivervalley: ()=>{ const r=g.rv; if(!r) return null; const pts=[{pos:r.northGate,label:'Dark Forest',icon:'F'},{pos:r.waypoint,label:'Waypoint',icon:'W'},{pos:r.bridgeC,label:'Old Bridge',icon:'='},{pos:r.southGate,label:'Withered Crossroads',icon:'S'},{pos:r.caveGate,label:'Minotaur Cave',icon:'M'},{pos:r.waterfall,label:'Waterfall',icon:'~'}]; if(!game.player.bridgeCleared) pts.push({pos:{x:RV_BX+300,y:r.bridgeC.y-220},label:'Bandit Camp',icon:'!'}); return {w:r.w,h:r.h,pts}; },
+    cursedcemetery: ()=>{ const c=g.cem; return c && {w:c.w,h:c.h,pts:[{pos:c.sunlitGate,label:'Withered Crossroads',icon:'S'},{pos:c.tomb,label:'Dark Crypt',icon:'D'}]}; },
   };
   const sch = SCH[g.scene] && SCH[g.scene]();
   if(sch){ plotRegionMapPoints(box, sch.pts.filter(q=>q.pos), sch.w, sch.h, p); return; }
@@ -419,7 +419,7 @@ function renderRegionMap0(){
     // Dark Forest schematic (Sept 2026 patch): plotted from the zone's own
     // real gate objects (see makeForest()) exactly like Town's landmarks
     // are -- Town Gate (west edge, back to Town), Mountain Pass gate (east
-    // edge), Sunlit Plains gate (south edge, relocated there in v87), and
+    // edge), Withered Crossroads gate (south edge, relocated there in v87), and
     // the Spider Lair/Bear Cave dungeon gates in the interior.
     const f = g.forest;
     const pts = [
@@ -431,7 +431,7 @@ function renderRegionMap0(){
     if(f.hunters) for(const h of f.hunters){ if(!h.found) pts.push({pos:h, label:'Missing Hunter', icon:'H'}); }
     plotRegionMapPoints(box, pts, f.w, f.h, p);
   } else if(g.scene==='sunlitplains' && g.sun){
-    // Sunlit Plains schematic (Sept 2026 patch): plotted from the zone's
+    // Withered Crossroads schematic (Sept 2026 patch): plotted from the zone's
     // own crossroad gate objects (see makeSunlitPlains()) -- north entrance
     // back to the Dark Forest, plus its 3 outer-ring exits (Lighthouse
     // Tower west, Lakeside Ruins east, Cursed Cemetery south) and its

@@ -80,10 +80,10 @@ function drawDwarfWallIso(pos, clock){
   ctx.restore();
 }
 // v449: redrawn north-up -- the mountains (Icy Summit, Frosthold, Redridge, Cliffside, Shadow Keep) to the north,
-// the lowlands (River Valley, Sunlit Plains, Cursed Cemetery, Lakeside, Black Marsh) to the south, matching each zone's gates.
+// the lowlands (River Valley, Withered Crossroads, Cursed Cemetery, Lakeside, Black Marsh) to the south, matching each zone's gates.
 const WM_NODES = {
   town:{x:9,y:52,t:'Mistfall',l:'',up:1}, forest:{x:26,y:50,t:'Dark Forest',l:'1'},
-  river:{x:30,y:66,t:'River Valley',l:'6',f:'reachedRiverValley',dir:'l'}, sunlit:{x:44,y:78,t:'Sunlit Plains',l:'8',f:'reachedSunlitPlains',up:1},
+  river:{x:30,y:66,t:'River Valley',l:'6',f:'reachedRiverValley',dir:'l'}, sunlit:{x:44,y:78,t:'Withered Crossroads',l:'8',f:'reachedSunlitPlains',up:1},
   lighthouse:{x:25,y:85,t:'Lighthouse Tower',l:'9-15',f:'reachedLighthouseTower'}, cemetery:{x:48,y:96,t:'Cursed Cemetery',l:'17',f:'reachedCursedCemetery',dir:'r'},
   lakeside:{x:66,y:78,t:'Lakeside Ruins',l:'21',f:'reachedLakesideRuins'}, marsh:{x:90,y:80,t:'Black Marsh',l:'28',f:'reachedBlackMarsh'}, highlands:{x:62,y:54,t:'Barren Highlands',l:'32',f:'reachedHighlands'},
   pass:{x:36,y:34,t:'Mountain Pass',l:'33',f:'reachedMountainPass',dir:'l'}, summit:{x:36,y:15,t:'Icy Summit',l:'35',f:'reachedIcySummit',dir:'l'}, shrine:{x:54,y:10,t:'Mountain Top Shrine',l:'37',dir:'r'},

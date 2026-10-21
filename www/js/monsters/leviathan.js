@@ -263,7 +263,7 @@ function enterLakesideRuins(opts){
   }
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null;
   showMsg('Lakeside Ruins', 1.4);
-  // Same pack-anchor/pool-density approach as Sunlit Plains' own
+  // Same pack-anchor/pool-density approach as Withered Crossroads' own
   // population (see LAKE_PACK_ANCHOR_TARGET/LAKE_PACK_COUNT above).
   const anchors = shuffle(breatheAnchors(g.lake.packAnchors, {gap:380}));
   const count = Math.min(LAKE_PACK_COUNT, anchors.length);

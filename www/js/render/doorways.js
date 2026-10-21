@@ -466,12 +466,12 @@ function drawBearTotemIso(pos, clock){
   ctx.beginPath(); ctx.arc(0, skullY-6, 30*pulse, 0, 7); ctx.fill();
   ctx.restore();
 }
-// Sunlit Plains gate (the Forest's south-edge exit, v87): a tall carved
+// Withered Crossroads gate (the Forest's south-edge exit, v87): a tall carved
 // stone signpost topped with a radiant golden sun disc + rays -- the
 // brightest/warmest of the three totems, thematically fitting an exit into
 // open sunlit grassland, and the most visually distinct against the dark
 // forest canopy from a distance.
-// v229: the Sunlit Plains exit -- a mossy ruined stone archway where the forest canopy breaks open onto golden light
+// v229: the Withered Crossroads exit -- a mossy ruined stone archway where the forest canopy breaks open onto golden light
 // (replaces the old pole-and-beacon totem).
 function drawSunArchIso(pos, clock){
   const iso = toIso(pos.x, pos.y), t = clock||0;
@@ -586,10 +586,10 @@ function drawSunTotemIso(pos, clock){
   ctx.beginPath(); ctx.arc(0, diskY, 10, 0, 7); ctx.stroke();
   ctx.restore();
 }
-// Lighthouse Tower entrance in Sunlit Plains (v70): a small stone doorway
+// Lighthouse Tower entrance in Withered Crossroads (v70): a small stone doorway
 // with a warm, pulsing lantern above it -- a low-key foreshadowing of the
 // much bigger beacon waiting at the top of the tower (drawLighthouseBeaconIso).
-// Big striped lighthouse rising behind the Sunlit Plains west gate; the door at its base is the exit.
+// Big striped lighthouse rising behind the Withered Crossroads west gate; the door at its base is the exit.
 function drawLighthouseTowerIso(pos, clock){
   const iso = toIso(pos.x, pos.y);
   const t = clock||0;
@@ -655,9 +655,9 @@ function drawLighthouseDoorIso(pos, clock){
   ctx.restore();
 }
 // Lakeside Ruins gate (v71): a crumbling stone archway, used both at
-// Sunlit Plains' east gate and Lakeside Ruins' own west entrance -- same
+// Withered Crossroads' east gate and Lakeside Ruins' own west entrance -- same
 // "one shared gate art reused at both ends of the connection" convention
-// drawLighthouseDoorIso already follows for the Sunlit Plains/Lighthouse
+// drawLighthouseDoorIso already follows for the Withered Crossroads/Lighthouse
 // Tower connection.
 const _gate2xSeen = new WeakSet();
 function drawRuinsGateIso(pos, clock){   // v419: every zone gate is drawn twice as big
@@ -666,7 +666,7 @@ function drawRuinsGateIso(pos, clock){   // v419: every zone gate is drawn twice
   ctx.save(); ctx.translate(q.x, q.y); ctx.scale(2,2); ctx.translate(-q.x, -q.y);
   try{ drawRuinsGateIso0(pos, clock); } finally { ctx.restore(); }
 }
-// v456: the grand ruined temple gateway between Sunlit Plains and Lakeside Ruins
+// v456: the grand ruined temple gateway between Withered Crossroads and Lakeside Ruins
 function drawLakesideGateIso(pos, clock){
   const iso = toIso(pos.x, pos.y), t = clock||0, S = 1.7;
   ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(S,S);

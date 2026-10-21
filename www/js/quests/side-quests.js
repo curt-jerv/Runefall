@@ -4,8 +4,8 @@
 // ---- v275: Defiler's Tomb, graverobbers, scholar ----
 const QUEST_GRAVEROBBERS = {
   id:'graverobbers_friend', name:"The Missing Graverobber",
-  desc:"Three graverobbers camped beside the Cursed Cemetery road in Sunlit Plains lost a companion in a hidden chamber beyond the Dark Crypt's great hall. Find him.",
-  descDone:"The Defiler is dead. Return to the graverobbers beside the Cursed Cemetery road in Sunlit Plains.",
+  desc:"Three graverobbers camped beside the Cursed Cemetery road in Withered Crossroads lost a companion in a hidden chamber beyond the Dark Crypt's great hall. Find him.",
+  descDone:"The Defiler is dead. Return to the graverobbers beside the Cursed Cemetery road in Withered Crossroads.",
   total:1,
 };
 function makeTemplarInscriptionItem(){
@@ -61,7 +61,7 @@ function inspectSarcophagus(){
   } else showNpcText('The Sarcophagus', 'Empty. The Templar seal is broken outward -- something escaped.', 'Close');
 }
 function graverobbersMark(p){ const q = getQuest(p, QUEST_GRAVEROBBERS.id); return !q ? !p.defilerSlain : (q.status==='active' && !!p.defilerSlain); }
-// v299: the graverobbers now camp in Sunlit Plains, just beside the road to the Cursed Cemetery gate (south exit)
+// v299: the graverobbers now camp in Withered Crossroads, just beside the road to the Cursed Cemetery gate (south exit)
 function makeGraverobbers(sun){
   const sg = sun.southGate;
   return [ {x:sg.x+100, y:sg.y-128, id:0, robe:'#4a3a2a', hood:'#2a2018', tool:'shovel'},

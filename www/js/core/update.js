@@ -2865,7 +2865,7 @@ function updateStep(dt){
         e.spitT = 0.4; e.atkCd = e.atkCdMax; e.atkAnimT = 0.4;
       }
     } else if(e.type==='boar'){
-      // Wild Boars (Sunlit Plains): a fast hit-and-run charger -- see
+      // Wild Boars (Withered Crossroads): a fast hit-and-run charger -- see
       // BOAR_CHARGE_* above. Unlike the bear/frozen zombie charges, a
       // landed hit also knocks the target straight back away from the
       // boar (BOAR_KNOCKBACK_DIST) -- see the knockback param threaded
@@ -3521,7 +3521,7 @@ function updateStep(dt){
     }
   } else if(g.scene==='rivervalley' && g.rv){
     // River Valley (v233): open zone like the Forest -- north gate to the Dark Forest, south gate to
-    // Sunlit Plains, a waypoint north of the bridge, and the Minotaur Cave in the north-east corner.
+    // Withered Crossroads, a waypoint north of the bridge, and the Minotaur Cave in the north-east corner.
     updatePortalChoice(false);
     const rv = g.rv;
     const nearN = dist(p, rv.northGate) < rv.northGate.r + p.r + 22;
@@ -3530,7 +3530,7 @@ function updateStep(dt){
     const nearW = dist(p, rv.waypoint) < rv.waypoint.r + p.r + 24;
     updateInteractPrompt(nearN ? 'toForestFromRiver' : nearS ? 'toSunlitPlainsFromRiver' : nearC ? 'toMinotaurCave' : nearW ? 'waypointRiver' : null);
   } else if(g.scene==='sunlitplains'){
-    // Sunlit Plains: same open-zone shape as the Forest/Mountain Pass --
+    // Withered Crossroads: same open-zone shape as the Forest/Mountain Pass --
     // no portal/chest, one edge gate back to the Forest, plus its own
     // permanent waypoint. v70: the west reserved exit spot is now a real
     // gate into Lighthouse Tower (see makeSunlitPlains' westGate). v71:
@@ -3597,14 +3597,14 @@ function updateStep(dt){
     // on, it's just a lit landmark again, no further prompt.
     if(t.rooftop && t.beacon && !p.lighthouseBeaconOn && dist(p, t.beacon) < t.beacon.r + p.r + 24) lhKind = 'beacon';
     // The rooftop's own one-time clear portal (spawned below once floor 5
-    // is cleared) back to Sunlit Plains, at the tower's entrance point --
+    // is cleared) back to Withered Crossroads, at the tower's entrance point --
     // reuses the exact same enterSunlitPlains('lighthouse') landing spot
     // floor 1's own entrance gate already uses.
     if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) lhKind = (t.ft || t.clearPortal.toTown) ? (t.clearPortal.toTown ? 'toTownFromTower' : 'toMarshFromTower') : 'lighthouseClearPortal';
     if(t.ft && t.witch && dist(p, t.witch) < t.witch.r + p.r + 34) lhKind = 'talkWitchTower';
     updateInteractPrompt(lhKind);
     // v94: once floor 5 (the rooftop) is fully cleared of bandits, spawn a
-    // one-time portal near the beacon back to Sunlit Plains -- the
+    // one-time portal near the beacon back to Withered Crossroads -- the
     // rooftop's own waypoint used to serve this role; now it's gone (see
     // makeLighthouseFloor's comment) so this is the sole way back down
     // once the fight is over, short of dying. Also flips
@@ -3645,8 +3645,8 @@ function updateStep(dt){
       bagPulse();
     }
   } else if(g.scene==='lakesideruins'){
-    // Lakeside Ruins (v71): same open-zone shape as Sunlit Plains -- no
-    // portal, one edge gate back to Sunlit Plains, its own waypoint, plus
+    // Lakeside Ruins (v71): same open-zone shape as Withered Crossroads -- no
+    // portal, one edge gate back to Withered Crossroads, its own waypoint, plus
     // a one-off reward chest at the island's Stonehenge (a judgment-call
     // payoff for making the trip across the bridge, using the exact same
     // 70%-item/30%-gold logic the Lighthouse Tower rooftop chest above
@@ -3692,7 +3692,7 @@ function updateStep(dt){
   } else if(g.scene==='cursedcemetery'){
     // Cursed Cemetery (v72): same open-zone shape as every other
     // overworld zone -- no genRoom() portal/chest, one edge gate back to
-    // Sunlit Plains, its own waypoint, plus the sealed tomb landmark this
+    // Withered Crossroads, its own waypoint, plus the sealed tomb landmark this
     // zone is built around.
     updatePortalChoice(false);
     const nearSunlitGate = dist(p, g.cem.sunlitGate) < g.cem.sunlitGate.r + p.r + 22;

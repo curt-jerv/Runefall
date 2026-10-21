@@ -1,4 +1,4 @@
-// Region darkening: the south of Sunlit Plains fades to dusk toward the Cursed Cemetery,
+// Region darkening: the south of Withered Crossroads fades to dusk toward the Cursed Cemetery,
 // the east of Lakeside Ruins fades to swamp murk toward the Black Marsh, and the marsh
 // itself stays gloomy (darker toward the Forgotten Tower).
 // ---- v470 mood pass: colour grading, ground grime, soft outlines, light falloff and film grain ----
@@ -11,7 +11,7 @@ const MOOD_PROFILES = {
   town:          {desat:0.22, mul:'rgb(232,220,208)', vig:0.40, grime:0.30},
   tavern:        {desat:0.18, mul:'rgb(240,222,200)', vig:0.38, grime:0.22},
   forest:        {desat:0.30, mul:'rgb(208,214,200)', vig:0.48, grime:0.34},
-  sunlitplains:  {desat:0.08, mul:'rgb(242,230,206)', vig:0.38, grime:0.28, crush:0.02},   // v507: the evening grade was draining the colour; keep it warm and green
+  sunlitplains:  {desat:0.2, mul:'rgb(226,220,200)', vig:0.42, grime:0.32, crush:0.04},   // v507: the evening grade was draining the colour; keep it warm and green
   rivervalley:   {desat:0.40, mul:'rgb(206,204,182)', vig:0.44, grime:0.40, crush:0.08},
   lakesideruins: {desat:0.36, mul:'rgb(204,206,196)', vig:0.44, grime:0.36},
   blackmarsh:    {desat:0.30, mul:'rgb(196,206,184)', vig:0.50, grime:0.34},
@@ -189,7 +189,7 @@ function drawRegionDarkening(g){
   else if(g.scene==='blackmarsh'){ a = 0.44 + 0.14*clamp(p.x/BM_W,0,1); col='4,22,12'; }
   else if(g.scene==='highlands'){ a = 0.2; col='26,34,48'; }
   else if(g.scene==='lighthouse' && g.room && g.room.subzone==='pool'){ a = 0.52; col='4,22,12'; }
-  else if(g.scene==='forest'){   // v229: a little lighter, and brighter again toward the Sunlit Plains exit (south)
+  else if(g.scene==='forest'){   // v229: a little lighter, and brighter again toward the Withered Crossroads exit (south)
     const fh = (g.forest && g.forest.h) || 3800;
     a = 0.32 * (1 - 0.8*sm((p.y - fh*0.5)/(fh*0.46))); col='2,8,14';
   }
@@ -204,11 +204,10 @@ function drawRegionDarkening(g){
   ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
   ctx.restore();
   if(g.scene==='forest'){ drawAmbientMist(g, 0.10*Math.max(0.25, a/0.32), '150,190,190'); }   // v199: fireflies removed
-  else if(g.scene==='sunlitplains') drawSunsetGlow(g);
   else if(g.scene==='highlands') drawHighlandsAtmos(g);
   else if(g.scene==='town'){ drawAmbientMist(g, 0.17, '190,200,228'); drawTownGlows(g); }
 }
-// v456: Sunlit Plains at sundown -- warm colour grade, a low amber sun off to the west (the lighthouse side) with long rays
+// v456: Withered Crossroads at sundown -- warm colour grade, a low amber sun off to the west (the lighthouse side) with long rays
 function drawSunsetGrade(g){
   ctx.save(); ctx.globalCompositeOperation = 'multiply';
   const gr = ctx.createLinearGradient(0,0,W,H);
@@ -271,9 +270,10 @@ function drawTownGlows(g){
     const io = toIso(wx,wy), sx = io.x-cam.x, sy = io.y-cam.y-(lift||20);
     if(sx<-r || sx>W+r || sy<-r || sy>H+r) return;
     const fl = 0.85+0.15*Math.sin(t*7+wx*0.1)*Math.sin(t*3.1+wy*0.1);
-    const gr = ctx.createRadialGradient(sx,sy,4,sx,sy,r*fl);
+    ctx.save(); ctx.translate(sx,sy); ctx.scale(1,0.55);   // v511: glows lie flat on the ground like the rest of the iso view
+    const gr = ctx.createRadialGradient(0,0,4,0,0,r*fl);
     gr.addColorStop(0,'rgba('+c+','+(a*fl)+')'); gr.addColorStop(1,'rgba('+c+',0)');
-    ctx.fillStyle = gr; ctx.fillRect(sx-r,sy-r,r*2,r*2);
+    ctx.fillStyle = gr; ctx.fillRect(-r,-r,r*2,r*2); ctx.restore();
   };
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   if(T.bonfire) glow(T.bonfire.x, T.bonfire.y, 260, '255,150,60', 0.55, 20);

@@ -1,14 +1,14 @@
 // ---------------- Cursed Cemetery (v72) ----------------
-// Fifth of the 6-batch "new area" sequence, reached from Sunlit Plains'
+// Fifth of the 6-batch "new area" sequence, reached from Withered Crossroads'
 // own reserved south exit (SUNLIT_SOUTH_EXIT_SPOT/g.sun.southGate) -- the
 // player arrives at this zone's own NORTH edge, continuing straight south
-// along the Dark Forest -> Sunlit Plains -> Cursed Cemetery line.
+// along the Dark Forest -> Withered Crossroads -> Cursed Cemetery line.
 //
 // Size: shrunk to HALF ITS PREVIOUS SIZE (Sept 2026 patch) -- read as half
 // each linear dimension (CEM_W/CEM_H both halved, so the zone's total
 // area is a quarter of what it was), per an explicit request to make this
 // zone smaller. The previous footprint (3800 x 2700, itself "half the
-// area of Sunlit Plains" per the original v72 batch's own judgment call)
+// area of Withered Crossroads" per the original v72 batch's own judgment call)
 // is now halved again to 1900 x 1350, keeping the exact same aspect
 // ratio. Every fixed landmark below (entrance, tomb, waypoint, road) is
 // expressed relative to CEM_W/CEM_H/CEM_CX so it repositions itself
@@ -23,7 +23,7 @@
 // overcrowding a zone with 4x less room.
 //
 // Structurally this is the same open, standing-population zone shape as
-// the Forest/Mountain Pass/Sunlit Plains/Lakeside Ruins (no genRoom()
+// the Forest/Mountain Pass/Withered Crossroads/Lakeside Ruins (no genRoom()
 // floors) -- a single straight road/path runs from the north entrance
 // down to the sealed tomb entrance at the zone's south end, with graves
 // and dead trees scattered off the path rather than a crossroad (there's
@@ -31,7 +31,7 @@
 // leads to, so a crossroad shape isn't needed).
 const CEM_W = 1900, CEM_H = 1350;
 const CEM_CX = CEM_W/2;
-const CEM_ROAD_HALFW = 46; // same visual road width as Sunlit Plains' crossroad
+const CEM_ROAD_HALFW = 46; // same visual road width as Withered Crossroads' crossroad
 const CEMETERY_ENTRANCE_SPOT = {x:CEM_CX, y:16};
 // The sealed tomb entrance -- a fixed landmark near the zone's south end,
 // present from the very first visit (see the brief: "VISUALLY PRESENT...
@@ -41,9 +41,9 @@ const CEMETERY_ENTRANCE_SPOT = {x:CEM_CX, y:16};
 // -> 110) along with the zone's own halved dimensions, above.
 const CEM_TOMB_SPOT = {x:CEM_CX, y:CEM_H-110};
 function cemOnRoad(x,y){ return Math.abs(x-CEM_CX) < CEM_ROAD_HALFW; }
-// A quarter of Sunlit Plains' own anchor target/pack count, matching this
+// A quarter of Withered Crossroads' own anchor target/pack count, matching this
 // zone's quartered-area footprint (half x half) -- deliberately NOT the
-// same density as Sunlit Plains (which would badly overcrowd a zone this
+// same density as Withered Crossroads (which would badly overcrowd a zone this
 // much smaller); this keeps the same "spread out, not clumped" spacing
 // rule (see the (now-halved) minimum anchor-to-anchor spacing below,
 // proportionally scaled from every other zone's pack-anchor placement)
@@ -85,7 +85,7 @@ function makeCursedCemetery(){
   // (see drawGraveIso), scattered at a graveyard-appropriate density: many
   // more graves than trees, since "filled with old graves and tombstones"
   // is the zone's defining visual per the brief, with the dead trees as a
-  // sparser atmospheric accent (roughly Sunlit Plains' own rock-scatter
+  // sparser atmospheric accent (roughly Withered Crossroads' own rock-scatter
   // density, scaled to this zone's smaller footprint). Margins halved and
   // counts cut to a quarter, matching the zone's halved dimensions/
   // quartered area, so density-per-area stays the same as before the resize.

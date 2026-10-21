@@ -350,7 +350,7 @@ function drawLosMask(g, pts, defer){
 // v492/v493: the character's own circle of light in every zone but town (the Dark Crypt and the caves keep their own, stronger dark).
 // Outside the circle the world is VEIL_MAX_A dark (towers and halls darker still); inside it a light VEIL_CORE_DIM haze stays.
 // +Light Radius gear widens every circle of light except the Dark Crypt's.
-const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.88, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.5, UNDERGROUND_LIGHT_SCALE = 0.72;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
+const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.88, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.12, UNDERGROUND_LIGHT_SCALE = 0.85;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
 const VEIL_THEME_R = 290, VEIL_THEME_A = 0.8, VEIL_THEME_DIM = 0.2;   // v506
 function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
@@ -366,6 +366,7 @@ function drawLightVeil(g){
   const wet = th==='kraken' || th==='leviathan';   // the water floors are lit brighter still
   drawDarkCryptOverlay(g, (wet ? 315 : th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R*(sun ? 0.9 : 1))*lightRadiusMult(g.player), false, null, wet ? 0.72 : th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : sun ? 0.93 : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
 }
+const LIGHT_X = 1.15, LIGHT_Y = 0.575;   // v511: light shape = isometric ellipse (wider than tall, 2:1)
 const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
 function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
@@ -383,28 +384,31 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   mctx.fillRect(0, 0, W, H);
   mctx.globalAlpha = 1;
   mctx.globalCompositeOperation = 'destination-out';
-  let grd = mctx.createRadialGradient(px, py, 0, px, py, LR);
+  const grdStops = [];
   const cl = 1 - (coreDim||0);   // v493: coreDim keeps a faint haze even at the centre of the light
-  grd.addColorStop(0, 'rgba(0,0,0,'+cl+')');
-  grd.addColorStop(0.62, 'rgba(0,0,0,'+(0.83*cl)+')');   // (v245) ~10% darker falloff
-  grd.addColorStop(1, 'rgba(0,0,0,0)');
-  mctx.fillStyle = grd;
-  // (v245) the upper half of the light is squashed so it ends right under the top HUD bar instead of being hidden behind it
-  const sy0 = clamp((py - hudBottomPx()) / LR, 0.35, 1);
-  mctx.save(); mctx.beginPath(); mctx.rect(0, py, W, H); mctx.clip(); mctx.beginPath(); mctx.arc(px, py, LR, 0, Math.PI*2); mctx.fill(); mctx.restore();
-  mctx.save(); mctx.beginPath(); mctx.rect(0, 0, W, py); mctx.clip(); mctx.translate(0, py); mctx.scale(1, sy0); mctx.translate(0, -py);
-  mctx.beginPath(); mctx.arc(px, py, LR, 0, Math.PI*2); mctx.fill(); mctx.restore();
+  grdStops.push([0, 'rgba(0,0,0,'+cl+')']);
+  grdStops.push([0.62, 'rgba(0,0,0,'+(0.83*cl)+')']);   // (v245) ~10% darker falloff
+  grdStops.push([1, 'rgba(0,0,0,0)']);
+  // v511: every light is a flattened ellipse (3/4 isometric view, same 2:1 look as the ground tiles); the upper half still stops under the HUD
+  const sy0 = clamp((py - hudBottomPx()) / LR, 0.3, 1);
+  for(const up of [false, true]){
+    mctx.save(); mctx.beginPath(); mctx.rect(0, up ? 0 : py, W, up ? py : H); mctx.clip();
+    mctx.translate(px, py); mctx.scale(LIGHT_X, up ? Math.min(LIGHT_Y, sy0) : LIGHT_Y);
+    const lg = mctx.createRadialGradient(0, 0, 0, 0, 0, LR);
+    for(const [o,c] of grdStops) lg.addColorStop(o, c);
+    mctx.fillStyle = lg; mctx.beginPath(); mctx.arc(0, 0, LR, 0, Math.PI*2); mctx.fill(); mctx.restore();
+  }
   if(useLights && g.crypt && g.crypt.lights){
     for(const lt of g.crypt.lights){
       const iso = toIso(lt.x, lt.y);
       const sx = iso.x - cam.x, sy = iso.y - cam.y;
       if(sx < -80 || sx > W+80 || sy < -80 || sy > H+80) continue;
-      const tg = mctx.createRadialGradient(sx, sy, 0, sx, sy, DARKCRYPT_TORCH_LIGHT_R);
+      mctx.save(); mctx.translate(sx, sy); mctx.scale(LIGHT_X, LIGHT_Y*1.1); const tg = mctx.createRadialGradient(0, 0, 0, 0, 0, DARKCRYPT_TORCH_LIGHT_R);
       tg.addColorStop(0, 'rgba(0,0,0,1)');
       tg.addColorStop(0.6, 'rgba(0,0,0,0.77)');
       tg.addColorStop(1, 'rgba(0,0,0,0)');
       mctx.fillStyle = tg;
-      mctx.beginPath(); mctx.arc(sx, sy, DARKCRYPT_TORCH_LIGHT_R, 0, Math.PI*2); mctx.fill();
+      mctx.beginPath(); mctx.arc(0, 0, DARKCRYPT_TORCH_LIGHT_R, 0, Math.PI*2); mctx.fill(); mctx.restore();
     }
   }
   if(g.projectiles){   // v499: a Frozen Orb lights up the dark around itself
@@ -412,9 +416,9 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
       if(!pr.isFrozenOrb) continue;
       const iso = toIso(pr.x, pr.y), sx = iso.x - cam.x, sy = iso.y - cam.y - 18;
       if(sx < -200 || sx > W+200 || sy < -200 || sy > H+200) continue;
-      const og = mctx.createRadialGradient(sx, sy, 0, sx, sy, 190);
+      mctx.save(); mctx.translate(sx, sy); mctx.scale(LIGHT_X, LIGHT_Y*1.1); const og = mctx.createRadialGradient(0, 0, 0, 0, 0, 190);
       og.addColorStop(0, 'rgba(0,0,0,0.95)'); og.addColorStop(0.55, 'rgba(0,0,0,0.6)'); og.addColorStop(1, 'rgba(0,0,0,0)');
-      mctx.fillStyle = og; mctx.beginPath(); mctx.arc(sx, sy, 190, 0, Math.PI*2); mctx.fill();
+      mctx.fillStyle = og; mctx.beginPath(); mctx.arc(0, 0, 190, 0, Math.PI*2); mctx.fill(); mctx.restore();
     }
   }
   if(losPending){   // v501: fold the line-of-sight shadow into this mask (same half resolution)
@@ -425,7 +429,7 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   { const gk = glow==null ? 1 : glow;
     if(gk>0.02){
       const GR = LR*PLAYER_GLOW_FRAC;
-      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(1, 0.86);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(LIGHT_X, LIGHT_Y);
       const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
       gg.addColorStop(0,'rgba(255,206,116,'+(0.3*gk).toFixed(3)+')'); gg.addColorStop(0.5,'rgba(255,176,76,'+(0.16*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
       ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
@@ -442,9 +446,9 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   if(tint){   // v456 Heart of the Mountain: a flickering fiery rim around the light
     const ck = (g.clock||0), fl = 0.75 + 0.15*Math.sin(ck*7) + 0.1*Math.sin(ck*13.3);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    const rg = ctx.createRadialGradient(px, py, LR*0.55, px, py, LR*1.15);
+    ctx.translate(px, py); ctx.scale(LIGHT_X, LIGHT_Y); const rg = ctx.createRadialGradient(0, 0, LR*0.55, 0, 0, LR*1.15);
     rg.addColorStop(0, 'rgba(255,90,20,0)'); rg.addColorStop(0.55, 'rgba(255,80,20,'+(0.16*fl)+')'); rg.addColorStop(1, 'rgba(120,20,0,0)');
-    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = rg; ctx.fillRect(-W/LIGHT_X, -H/LIGHT_Y, 2*W/LIGHT_X, 2*H/LIGHT_Y);
     ctx.restore();
   }
 

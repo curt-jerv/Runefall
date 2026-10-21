@@ -183,7 +183,7 @@ function drawMountainPassFloor(room, cam){
     }
   }
 }
-// Sunlit Plains (v69): a light, open grassland checkerboard, deliberately
+// Withered Crossroads (v69): a light, open grassland checkerboard, deliberately
 // brighter/sparser-reading than the Forest's dark mossy green -- reuses the
 // exact same tile-grid rendering approach as drawForestFloor/
 // drawMountainPassFloor for visual consistency, just with its own "+"-
@@ -206,7 +206,7 @@ function drawSunlitPlainsFloor(room, cam){
       const blight = clamp((wy-(room.h-900))/900,0,1) * clamp(1-(Math.abs(wx-SUN_CX)-500)/900,0,1);
       const bl = blight*blight*(3-2*blight);
       if(onPath) ctx.fillStyle = mixRGB(checker ? [168,147,94] : [156,136,86], checker ? [74,68,80] : [67,62,74], bl);
-      else ctx.fillStyle = mixRGB(hs < 0.1 ? [90,116,52] : (checker ? [106,138,64] : [115,148,70]), checker ? [42,45,62] : [48,52,74], bl);
+      else ctx.fillStyle = mixRGB(hs < 0.1 ? [58,70,40] : (checker ? [68,84,46] : [74,90,50]), checker ? [42,45,62] : [48,52,74], bl);
       drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
     }
   }
@@ -438,7 +438,7 @@ function drawRockIso(rk){
   ctx.beginPath(); ctx.moveTo(-9,-15); ctx.lineTo(5,-18); ctx.lineTo(1,-10); ctx.lineTo(-6,-9); ctx.closePath(); ctx.fill();
   ctx.restore();
 }
-// Sunlit Plains' own boulder scatter (v69) -- same purely-cosmetic role and
+// Withered Crossroads' own boulder scatter (v69) -- same purely-cosmetic role and
 // low-poly silhouette as drawRockIso above, just without the Mountain
 // Pass's snow cap (this zone is sunny grassland, not a snowline) and in a
 // warmer tan-gray palette to fit the open plains look.
@@ -456,7 +456,7 @@ function drawPlainsRockIso(rk){
   ctx.beginPath(); ctx.moveTo(-8,-13); ctx.lineTo(5,-16); ctx.lineTo(0,-8); ctx.lineTo(-6,-7); ctx.closePath(); ctx.fill();
   ctx.restore();
 }
-// Sunlit Plains' sparse grass-tuft scatter (v69) -- a handful of simple
+// Withered Crossroads' sparse grass-tuft scatter (v69) -- a handful of simple
 // blade shapes, the zone's other decoration alongside its boulders; kept
 // deliberately cheap (a few strokes, no gradient) since a much larger
 // number of these are scattered than the Forest's trees.

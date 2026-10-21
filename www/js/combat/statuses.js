@@ -123,7 +123,7 @@ function xpLevelMult(playerLevel, ml){ const diff = (playerLevel||1) - (ml||1); 
   if(diff<=3) return 1; return Math.max(0.03, Math.pow(0.72, diff-3));   // v289: harsh past a 3-level grace (x0.72 per level over: 72%, 52%, 37%, 27%, 19% ... floor 3%)
 }
 // ---- v88 (reframed v90): direct character-level monster scaling --------
-// Several overworld/lair zones (Dark Forest, Sunlit Plains, Mountain Pass,
+// Several overworld/lair zones (Dark Forest, Withered Crossroads, Mountain Pass,
 // Lakeside Ruins, Cursed Cemetery, Spider Lair, Bear Cave, Dark Crypt) used
 // to assign g.depth a FIXED constant on entry, decoupled from the
 // character's level -- meaning monster difficulty in those zones never
@@ -226,7 +226,7 @@ const TREANT_SPEED_MULT = 1.40, TREANT_DMG_MULT = 0.70;
 // own constants (higher speed multiplier, since its base chase speed is
 // so low the dash needs to close distance fast to read as a real threat).
 const ZOMBIE_CHARGE_CD = 3, ZOMBIE_CHARGE_DUR = 0.375, ZOMBIE_CHARGE_SPEED_MULT = 5.5, ZOMBIE_CHARGE_DMG_MULT = 0.9, ZOMBIE_CHARGE_WIND = 0.3, ZOMBIE_CHARGE_RANGE = 240;
-// Wild Boars (Sunlit Plains, v69): a fast "hit and run" charger, same
+// Wild Boars (Withered Crossroads, v69): a fast "hit and run" charger, same
 // telegraph-free dash-then-recover shape as the bear/frozen zombie charges
 // above, but deliberately given a much LONGER trigger range than either
 // (760 vs. the bear's 520 and the zombie's 240) per the brief's explicit

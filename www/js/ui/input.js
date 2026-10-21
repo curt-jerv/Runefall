@@ -170,7 +170,7 @@ bindBtn(document.getElementById('btnRapidShot'), ()=>wantRapidShot=true);
 // Dodge is exempt from combatActionsBlocked() above -- every other active
 // skill (and the basic Strike attack) is disabled in Town, but Dodge is
 // the one skill that keeps working everywhere, Town included: normal dash
-// physics in Dark Forest/Sunlit Plains/Mountain Pass/dungeon floors via
+// physics in Dark Forest/Withered Crossroads/Mountain Pass/dungeon floors via
 // the main combat update() (with the v91 sub-stepped anti-tunneling dash
 // collision), and via updateTown()'s own mirrored dodge block while in
 // Town. No "I cannot do that here" gate belongs on this button.

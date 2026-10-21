@@ -35,7 +35,7 @@ function newGame(saved, cls){
     shrineBlessed:false,
     shrineStage:0, scholarEast:false, fhCmdSlain:false, fhCmdLooted:false, constructSlain:false, heartstoneDone:false, witchPotionStarted:false, frostholdUnlocked:false, snowWallOpen:false, heartstoneTaken:false, defilerSlain:false, inscriptionTaken:false, scholarMet:false, scholarMeet:false, scholarLeft:false, ruinsEvent:0, scholarRead:false, fhDungeonKey:false, fhDungeonOpen:false, fhDungeonDone:false, redridgeWallOpen:false, npcMarks:{},
     // Set the first time enterSunlitPlains() runs -- same role as
-    // reachedMountainPass above, but for the Sunlit Plains Teleport option
+    // reachedMountainPass above, but for the Withered Crossroads Teleport option
     // (see openTeleportMenu). Kept as a separate flag rather than reusing
     // reachedMountainPass since the two zones are reached independently
     // (different branches off the Dark Forest).
@@ -664,7 +664,7 @@ function spawnEnemy(g, type, pos){
          atkCd:0,atkCdMax:1.1,color:'#9fd3e0',state:'chase',hitT:0,armor:4,
          zChargeCd:rand(0.5,ZOMBIE_CHARGE_CD), zChargeState:'idle', zChargeT:0, zChargeDir:0, zChargeHit:false};
   } else if(type==='bandit'){
-    // Sunlit Plains (v69): a humanoid melee raider -- Sunlit Plains sits
+    // Withered Crossroads (v69): a humanoid melee raider -- Withered Crossroads sits
     // one step past the Dark Forest in the overworld progression (it's
     // reached BY WAY OF the Forest, via the new north exit), so a bandit is
     // tuned as a modest step up over the Forest's wolf/grunt baseline
@@ -677,13 +677,13 @@ function spawnEnemy(g, type, pos){
     e = {type,x,y,r:15,hp:30+depth*4.4,maxHp:30+depth*4.4,speed:rand(95,115),dmg:9+depth*1.8,
          atkCd:0,atkCdMax:0.9,color:'#8a6a3a',state:'chase',hitT:0,armor:4};
   } else if(type==='banditarcher'){
-    // Sunlit Plains (v69): the ranged counterpart to the Bandit above,
+    // Withered Crossroads (v69): the ranged counterpart to the Bandit above,
     // reusing the game's existing kite-and-shoot ranged-enemy pattern
     // (the same e.type==='archer'||'spider' branch in update() drives its
     // AI and arrow-projectile firing -- see that branch). Clearly lower hp
     // than a melee Bandit (matching how the Forest's own archer sits below
     // its grunt) and a slightly longer preferred standoff range than the
-    // dungeon Archer's 190, fitting Sunlit Plains' much more open terrain.
+    // dungeon Archer's 190, fitting Withered Crossroads' much more open terrain.
     e = {type,x,y,r:13,hp:18+depth*3.2,maxHp:18+depth*3.2,speed:rand(75,90),dmg:7+depth*1.6,
          atkCd:rand(0,1),atkCdMax:1.6,color:'#b8925a',state:'kite',hitT:0,preferRange:140};
   } else if(type==='banditbrute'){
@@ -774,7 +774,7 @@ function spawnEnemy(g, type, pos){
   } else if(type==='vampire'){
     // Dark Crypt (v73) -- the fixed 5-strong pack guarding the chest at the
     // dungeon's far end. Notably FASTER than any other enemy in the game
-    // (well above even Sunlit Plains' Wild Boar's rand(150,175) charge-
+    // (well above even Withered Crossroads' Wild Boar's rand(150,175) charge-
     // archetype base speed) and built around aggressive melee pressure
     // rather than a special attack -- no special branch in update() (same
     // generic chase/attack path as Skeleton/Bandit/Zombie above) drives it,
@@ -1027,8 +1027,8 @@ function spawnEnemy(g, type, pos){
     e = {type,x,y,r:60,hp:(110+depth*12)*8,maxHp:(110+depth*12)*8,speed:112,dmg:(16+depth*2.6)*0.55*1.25,
          atkCd:0,atkCdMax:1.1,color:'#3a64b8',state:'chase',hitT:0,armor:10,tState:'idle',tT:0,tCd:99,tPt:null,hop:0};
   } else if(type==='boar'){
-    // Sunlit Plains (v69): a fast "hit and run" archetype -- low-medium hp,
-    // clearly the fastest base move speed of any Sunlit Plains (or Forest)
+    // Withered Crossroads (v69): a fast "hit and run" archetype -- low-medium hp,
+    // clearly the fastest base move speed of any Withered Crossroads (or Forest)
     // enemy, built entirely around its long-range charge (see BOAR_CHARGE_*
     // above and the e.type==='boar' branch in update()) rather than a
     // strong standing melee attack; its regular (non-charge) hit is
