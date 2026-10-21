@@ -1299,3 +1299,9 @@ body.noPotionBtn #actionCluster .interactBtn{ bottom:128px !important; }
   #subHud #zonePlaque{ text-align:center !important; flex:0 0 auto !important; }
   #subHud #soulsWrap{ order:0 !important; }
 }
+
+/* v492: Skill Damages group under Offense */
+.sdHead{ display:flex; justify-content:space-between; align-items:center; margin:6px 0 2px; padding:5px 8px; cursor:pointer; user-select:none; border-radius:3px; background:rgba(255,255,255,.04); color:var(--gold, #e8c44a); font-family:var(--f-display, 'Cinzel', serif); font-size:11px; letter-spacing:.08em; text-transform:uppercase; box-shadow:inset 0 0 0 1px #3a2f20; }
+.sdHead .sdArrow{ font-size:15px; color:var(--ember, #e8803c); }
+.sdBody{ padding-left:6px; }
+.statCell.sdRow{ grid-column:1 / -1; }
