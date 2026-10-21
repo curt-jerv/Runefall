@@ -1298,21 +1298,21 @@
 #topWrap #buffBar{ justify-content:center; padding:4px 12px 0 !important; }
 #achToast{ top:calc(8px + env(safe-area-inset-top,0px)) !important; }
 
-/* Action buttons (v497): Strike 84px in the corner; the three skills hug it (6px gaps); Dodge, Potion and Interact sit one small
-   gap (6px) beyond the skills: Dodge past skill 1 on the bottom row, Potion above skill 3, Interact outside skill 2 on the diagonal. */
+/* Action buttons (v497): Strike 84px in the corner; the three skills sit 12px off it; Dodge, Potion and Interact sit one 12px
+   gap beyond the skills: Dodge past skill 1 on the bottom row, Potion above skill 3, Interact outside skill 2 on the diagonal. */
 #actionCluster::before{ content:''; position:absolute; right:-133px; bottom:-133px; width:340px; height:340px; border-radius:50%; pointer-events:none;
   background:radial-gradient(circle, rgba(0,0,0,.3) 0, rgba(0,0,0,.16) 45%, rgba(0,0,0,0) 70%); }
 #actionCluster #btnAttack{ right:0 !important; bottom:0 !important; width:84px !important; height:84px !important; }
 #actionCluster #btnAttack .slotIcon{ inset:14px; }
 #actionCluster .actbtn.skillSlotBtn{ width:48px !important; height:48px !important; }
-#actionCluster #btnSlot1{ right:90px !important; bottom:18px !important; }
-#actionCluster #btnSlot2{ right:69px !important; bottom:69px !important; }
-#actionCluster #btnSlot3{ right:18px !important; bottom:90px !important; }
-#actionCluster #btnDodge{ right:144px !important; bottom:20px !important; width:44px !important; height:44px !important; }
+#actionCluster #btnSlot1{ right:96px !important; bottom:18px !important; }
+#actionCluster #btnSlot2{ right:73px !important; bottom:73px !important; }
+#actionCluster #btnSlot3{ right:18px !important; bottom:96px !important; }
+#actionCluster #btnDodge{ right:156px !important; bottom:20px !important; width:44px !important; height:44px !important; }
 #actionCluster #btnDodge .lbl{ font-size:8px !important; }
-#actionCluster #btnPotion{ right:20px !important; bottom:144px !important; width:44px !important; height:44px !important; }
-#actionCluster .interactBtn{ right:108px !important; bottom:108px !important; width:44px !important; height:44px !important; }
-body.noPotionBtn #actionCluster .interactBtn{ right:108px !important; bottom:108px !important; }
+#actionCluster #btnPotion{ right:20px !important; bottom:156px !important; width:44px !important; height:44px !important; }
+#actionCluster .interactBtn{ right:116px !important; bottom:116px !important; width:44px !important; height:44px !important; }
+body.noPotionBtn #actionCluster .interactBtn{ right:116px !important; bottom:116px !important; }
 
 /* Portrait: the globes and menu bar sit along the top; region name, buffs and messages line up underneath */
 @media (orientation:portrait){

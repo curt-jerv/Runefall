@@ -1073,6 +1073,7 @@ function drawSoulGate(gt){
 }
 function pushNecroDrawables(g, drawables){
   if(g.soulGate){ const gt = g.soulGate; drawables.push({depth:gt.x+gt.y, draw:()=>drawSoulGate(gt)}); }
+  for(const e of g.enemies) if(e.cPortal){ const ce = e; drawables.push({depth:ce.cPortal.x+ce.cPortal.y-1, draw:()=>drawCultPortal(ce)}); }   // v499
   if(g.gateArchers) for(const a of g.gateArchers) drawables.push({depth:a.x+a.y, draw:()=>drawGateArcher(a)});
 }
 // v301: Squires get their own foot-soldier look: kettle helm, padded gambeson with a stance-coloured sash, round shield and a short sword

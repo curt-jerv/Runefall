@@ -166,6 +166,7 @@ function tidySkillText(node, rank, t, isNext){
       if(nxt && nxt!==cur){ t = t.slice(0, m1.index+m1[0].length) + ' <span style="opacity:.7">(next rank x'+nxt+')</span>' + t.slice(m1.index+m1[0].length); }
     }
   }
+  if((id==='packTactics'||id==='recall'||id==='beastFury') && !/Stamina/.test(t)) t += ' &middot; Costs '+resCost((game&&game.player)||{cls:'ranger'}, id)+' Stamina';   // v499
   return t;
 }
 // v458: every damaging skill's tooltip leads with its weapon-damage % and damage type(s)

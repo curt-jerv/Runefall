@@ -1088,7 +1088,9 @@ function updateStep(dt){
           }
           g.particles.push({type:'ring', x:tt.x, y:tt.y, t:0.45, max:0.45, r:tt.r, color:'#ff8a3a'});
           g.particles.push({type:'burst', x:tt.x, y:tt.y, t:0.35, max:0.35, color:'#ffb060'});
-          shakeScreen(g, 3, 0.15);
+          // v499: same little explosion circles as Explosive Shot, spread over the trap's radius
+          for(let k=0;k<10;k++){ const an = k/10*6.283+Math.random()*0.4, rr = tt.r*(0.25+Math.random()*0.6); g.particles.push({type:'burst', x:tt.x+Math.cos(an)*rr, y:tt.y+Math.sin(an)*rr, t:0.3, max:0.3, color:k%2?'#ff7a2a':'#ffd070'}); }
+          shakeScreen(g, 3, 0.15); try{ sfxPlay('fire', 0.8); }catch(err){}
         } else {
           // Frost Trap: a single instant AoE pulse -- freeze (e.frozenT,
           // the same generic full-immobilize field Blizzard uses) every

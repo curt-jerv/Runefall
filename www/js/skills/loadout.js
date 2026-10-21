@@ -245,6 +245,7 @@ const RESOURCE_SKILLS = {
   shieldThrow:{cost:25, minCd:1.0}, bulwark:{cost:30}, mirrorSteel:{cost:25, step:-10/9}, seismicSlam:{cost:25}, seismicAnchor:{cost:25, step:-10/9}, whirlwind:{cost:15, minCd:1.0}, unbreakable:{cost:0, minCd:8},
   // v489 Ranger: flat Stamina costs that grow with rank (basic shots -- Strike, Rapid Shot, Splinter Shot, Multi Shot -- are free and refill Stamina)
   cripplingShot:{cost:20, step:1}, stunShot:{cost:26, step:1.2}, explosiveShot:{cost:30, step:1.5}, aimedShot:{cost:40, step:2}, rainOfArrows:{cost:50, step:2.5}, huntersMark:{cost:20, step:0.5}, explosiveTrap:{cost:35, step:1}, poisonTrap:{cost:20, step:0.8}, frostTrap:{cost:20, step:0.8},
+  packTactics:{cost:20}, recall:{cost:20}, beastFury:{cost:20},   // v499: Ambush, Recall and Beast Fury cost 20 Stamina each
 };
 const ATKCD_SKILLS = {lightningArc:1, soulSap:1, fireball:1, iceBolt:1, deathBolt:1};   // these ride the basic-attack cooldown
 const RAGE_DECAY_BASE = 3, RAGE_DECAY_MAX = 24, RAGE_DECAY_GRACE = 3, RAGE_DECAY_ACCEL = 3.6;   // v295: Rage fades 3x as fast

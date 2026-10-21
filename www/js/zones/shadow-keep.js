@@ -781,6 +781,7 @@ function updateCultist(g, e, dt, target, d, isFollowerTarget, chillMult, room){
     const tx = e.x+Math.cos(ang)*mv*80, ty = e.y+Math.sin(ang)*mv*80, a2 = steerAngleTo(e, tx, ty, room.obstacles);
     e.x += Math.cos(a2)*e.speed*chillMult*dt; e.y += Math.sin(a2)*e.speed*chillMult*dt; e.moving = true;
   } else { const sa = ang + Math.PI/2*(e.strafe||(e.strafe=Math.random()<0.5?-1:1)); e.x += Math.cos(sa)*e.speed*0.4*chillMult*dt; e.y += Math.sin(sa)*e.speed*0.4*chillMult*dt; e.moving = true; }
+  if(inShadowKeep(g)) cultPortalTick(g, e, target, d, dt);   // v499
   e.cCd = (e.cCd===undefined ? rand(0.6,2) : e.cCd) - dt;
   if(e.cCd<=0 && d<480 && enemyLOS(g,e,target)){
     e.cCd = rand(2.0,3.0); e.atkAnimT = 0.3; e.cN = (e.cN||0)+1;

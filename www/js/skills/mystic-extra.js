@@ -144,7 +144,7 @@ function playerRunTime(g){
   }
   return p._runT||0;
 }
-// v481: wolves circle -- when a packmate is already in melee with you, an incoming wolf pulls up at a short distance,
+// v481: wolves circle -- an incoming wolf (v499: even the first one) pulls up at a short distance,
 // pauses, then slinks sideways for about a second before it darts in too. Once per approach.
 const WOLF_CIRCLE_R = 120;
 const PACK_CIRCLE = {wolf:'wolf', goblin:'goblin', raptor:'raptor', bandit:'bandit', banditbrute:'bandit', fhdwarf:'dwarf', fhbrute:'dwarf', warg:'warg', hellhound:'hound', ram:'ram'};   // v482 (v490: + wargs, hell hounds, rams)
@@ -166,8 +166,8 @@ function wolfCircle(g, e, target, d, dt, chillMult, room){
   let biting = false;
   const grp = PACK_CIRCLE[e.type];
   for(const w of g.enemies){ if(w===e || PACK_CIRCLE[w.type]!==grp || !(w.hp>0)) continue; if(dist(w,target) <= w.r+target.r+14){ biting = true; break; } }
-  if(!biting) return false;
-  e._wcDone = true; e._wcMax = e._wcT = rand(0.95, 1.3); e._wcDir = Math.random()<0.5 ? -1 : 1;
+  // v499: the first wolf circles too; later ones a little longer
+  e._wcDone = true; e._wcMax = e._wcT = biting ? rand(1.2, 1.55) : rand(0.95, 1.3); e._wcDir = Math.random()<0.5 ? -1 : 1;
   e.moving = false; return true;
 }
 // v484: Barren Highlands giants -- about one engagement in four, a giant stops and bellows a war cry first
