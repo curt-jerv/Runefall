@@ -20,7 +20,7 @@
 // targeting already spreads non-'boss' spawns across exactly this array,
 // with no changes needed there); exitRoom is the vampire chamber holding
 // the fixed 5-Vampire pack and the permanent Ruins Map chest.
-const DARKCRYPT_W = 3600, DARKCRYPT_H = 4200;  // v321: roughly half the old length (3 chambers instead of 6; was 3600x5700)
+const DARKCRYPT_W = 6600, DARKCRYPT_H = 7600;  // v503: about 2.7x the old area (was 3600x4200), so the monsters spread out
 // Identical coarse-grid carve genRoom() uses for the Mine's own floors --
 // duplicated here (not extracted into a shared helper) to avoid touching
 // genRoom()'s own tested code path at all.
@@ -82,50 +82,57 @@ function darkCryptLights(sequence, mainRooms, exitRoom, entranceRoom){
   return lights;
 }
 function makeDarkCrypt(){
-  const w = DARKCRYPT_W, h = DARKCRYPT_H, CORR_W = 140;
-  // v467: a fresh crypt every visit -- the entrance, the chambers, the side vaults, the hall and the tomb all move
+  // v503: a much larger, freshly rolled crypt every visit. Chambers sit on a jittered 4 x 5 grid (a few cells stay empty), are
+  // joined by a random minimum spanning tree of tunnels plus a few loops, so the dead ends and side vaults are real. The way in
+  // is at the bottom, the way on is always the same: the hall of wardens, its north door, the Defiler's Tomb.
+  const w = DARKCRYPT_W, h = DARKCRYPT_H, CORR_W = 150;
   const ri = (a,b)=>Math.round(rand(a,b));
   const exitRoom     = {x:ri(300, w-1250), y:700, w:900, h:560};   // the hall before the tomb, guarded by crypt wardens
   let tombRoom = null;
   for(let t=0; t<40 && !tombRoom; t++){ const tr = {x:ri(80, w-980), y:50, w:900, h:600}; if(!rectsOverlap(tr, exitRoom, 40)) tombRoom = tr; }
   if(!tombRoom) tombRoom = {x:exitRoom.x < w/2 ? w-980 : 80, y:50, w:900, h:600};   // sealed: reached only through the hall's north door
-  const entranceRoom = {x:ri(300, w-620), y:3820, w:320, h:300};
-  const N = ri(4,5), mainRooms = [];
-  let left = Math.random()<0.5;
-  for(let i=0;i<N;i++){
-    const rw = ri(480,620), rh = ri(400,480), y = Math.round(3120 - i*(3120-1560)/(N-1) - rh/2 + rand(-60,60));
-    const x = left ? ri(150, 1350) : ri(1900, w-rw-150);
-    mainRooms.push({x, y:clamp(y, 1500, 3300), w:rw, h:rh});
-    left = Math.random()<0.75 ? !left : left;
+  const entranceRoom = {x:ri(400, w-720), y:h-420, w:320, h:300};
+  const COLS = 4, ROWS = 5, gx0 = 220, gx1 = w-220, gy0 = 1550, gy1 = h-1050, cw = (gx1-gx0)/COLS, chh = (gy1-gy0)/ROWS;
+  const forceTop = ri(0,COLS-1), forceBot = ri(0,COLS-1), rooms = [];
+  for(let cy=0; cy<ROWS; cy++) for(let cx=0; cx<COLS; cx++){
+    if(!((cy===0 && cx===forceTop) || (cy===ROWS-1 && cx===forceBot)) && Math.random()<0.18) continue;
+    const rw = ri(520,880), rh = ri(420,640);
+    rooms.push({x:Math.round(gx0+cx*cw+rand(40, cw-rw-40)), y:Math.round(gy0+cy*chh+rand(30, chh-rh-30)), w:rw, h:rh, cx, cy});
   }
-  const sequence = [entranceRoom, ...mainRooms, exitRoom];
-  const floorRects = [entranceRoom, ...mainRooms, exitRoom];
-  for(let i=0;i<sequence.length-1;i++){
-    const a = rectCenter(sequence[i]), b = rectCenter(sequence[i+1]);
-    floorRects.push(...tunnelRects(a.x, a.y, b.x, b.y, CORR_W));
-  }
-  // side vaults: dead-end chambers off the main path, worth a detour
-  const sideRooms = [];
-  for(let k=0;k<ri(2,3);k++){
-    const host = mainRooms[ri(0, N-1)], hc = rectCenter(host);
-    for(let t=0;t<30;t++){
-      const sw = ri(360,460), sh = ri(320,400), sx = hc.x < w/2 ? ri(w/2+200, w-sw-120) : ri(120, w/2-sw-200), sy = clamp(Math.round(hc.y - sh/2 + rand(-200,200)), 1450, 3500);
-      const r = {x:sx, y:sy, w:sw, h:sh};
-      if([...floorRects, tombRoom].some(o=>rectsOverlap(r, o, 90))) continue;
-      sideRooms.push(r); floorRects.push(r);
-      const c = rectCenter(r); floorRects.push(...tunnelRects(hc.x, hc.y, c.x, c.y, CORR_W*0.85));
-      break;
-    }
-  }
+  const cen = rooms.map(rectCenter);
+  const edges = [], key = (a,b)=> a<b ? a+','+b : b+','+a, have = new Set();
+  const link = (a,b)=>{ if(have.has(key(a,b))) return false; have.add(key(a,b)); edges.push([a,b]); return true; };
+  // random spanning tree: shortest links first, each distance fuzzed so no two crypts come out alike
+  const pairs = [];
+  for(let a=0;a<rooms.length;a++) for(let b=a+1;b<rooms.length;b++){ const d = dist(cen[a],cen[b]); if(d<3200) pairs.push({a,b,d,k:d*rand(0.8,1.25)}); }
+  pairs.sort((x,y)=>x.k-y.k);
+  const par = rooms.map((_,i)=>i), find = i=> par[i]===i ? i : (par[i]=find(par[i]));
+  for(const pr of pairs){ const ra = find(pr.a), rb = find(pr.b); if(ra!==rb){ par[ra] = rb; link(pr.a, pr.b); } }
+  for(let a=1;a<rooms.length;a++) if(find(a)!==find(0)){ let bd = 1e9, bb = 0; for(let b=0;b<rooms.length;b++) if(find(b)===find(0)){ const d = dist(cen[a],cen[b]); if(d<bd){ bd = d; bb = b; } } par[find(a)] = find(0); link(a, bb); }
+  for(const pr of pairs){ if(edges.length >= rooms.length-1 + 4) break; if(pr.d<2100 && Math.random()<0.12) link(pr.a, pr.b); }   // a few loops
+  const nearestIn = (pt, list)=>{ let bi = list[0], bd = 1e9; for(const i of list){ const d = dist(pt, cen[i]); if(d<bd){ bd = d; bi = i; } } return bi; };
+  const botRooms = rooms.map((r,i)=>r.cy===ROWS-1 ? i : -1).filter(i=>i>=0), topRooms = rooms.map((r,i)=>r.cy===0 ? i : -1).filter(i=>i>=0);
+  const inRoom = nearestIn(rectCenter(entranceRoom), botRooms), outRoom = nearestIn(rectCenter(exitRoom), topRooms);
+  // the shortest chain of chambers from the entrance to the hall is the "main path"
+  const adj = rooms.map(()=>[]); for(const [a,b] of edges){ adj[a].push(b); adj[b].push(a); }
+  const prev = new Array(rooms.length).fill(-2); prev[inRoom] = -1; const qu = [inRoom];
+  for(let qi=0; qi<qu.length; qi++) for(const n of adj[qu[qi]]) if(prev[n]===-2){ prev[n] = qu[qi]; qu.push(n); }
+  const pathIdx = []; for(let c=outRoom; c>=0; c=prev[c]) pathIdx.unshift(c);
+  const mainRooms = pathIdx.map(i=>rooms[i]), sideRooms = rooms.filter((r,i)=>pathIdx.indexOf(i)<0);
+  const floorRects = [entranceRoom, ...rooms, exitRoom], tunnels = [];
+  const addTunnel = (a,b,wd)=>{ const sw = Math.random()<0.5, r = sw ? tunnelRects(b.x,b.y,a.x,a.y,wd) : tunnelRects(a.x,a.y,b.x,b.y,wd); floorRects.push(...r); tunnels.push({a,b,rects:r}); };
+  for(const [a,b] of edges) addTunnel(cen[a], cen[b], CORR_W);
+  addTunnel(rectCenter(entranceRoom), cen[inRoom], CORR_W);
+  addTunnel(cen[outRoom], rectCenter(exitRoom), CORR_W);
   floorRects.push(tombRoom);
   const obstacles = darkCryptCarveObstacles(floorRects, w, h);
   // Entry/exit gate back to Cursed Cemetery -- same "the entry point IS the
   // way back out" convention every other zone-transition gate follows. The
   // player lands just north of it (see enterDarkCrypt), inside entranceRoom.
-  const cemeteryGate = {x:entranceRoom.x+entranceRoom.w/2, y:4040, r:34};
+  const cemeteryGate = {x:entranceRoom.x+entranceRoom.w/2, y:entranceRoom.y+220, r:34};
   // A dedicated permanent waypoint near the entrance -- same shared
   // mechanism/art/Teleport-menu entry every other zone's waypoint uses.
-  const waypoint = {x:entranceRoom.x+60, y:3880, r:22};
+  const waypoint = {x:entranceRoom.x+60, y:entranceRoom.y+60, r:22};
   // The permanent chest at the far end, guarded by the vampire pack -- see
   // enterDarkCrypt/update()'s g.scene==='darkcrypt' branch for its one-shot
   // p.darkCryptChestLooted handling (a PLAYER-level flag, unlike every
@@ -140,10 +147,10 @@ function makeDarkCrypt(){
   const hallDoor = {x:exitRoom.x+exitRoom.w/2, y:exitRoom.y+24, r:34};
   const tombDoor = {x:tombRoom.x+tombRoom.w/2, y:tombRoom.y+tombRoom.h-24, r:34};
   const lights = []; // (v120) no candle/torch lights: the player's own light is the only illumination
-  return { w, h, obstacles, floorRects, rooms:mainRooms.concat(sideRooms), mainPath:mainRooms, entranceRoom, exitRoom, tombRoom, hallDoor, tombDoor, bossSpawned:false, bossDone:false,
+  return { w, h, obstacles, floorRects, rooms:rooms, mainPath:mainRooms, tunnels, entranceRoom, exitRoom, tombRoom, hallDoor, tombDoor, bossSpawned:false, bossDone:false,
     cemeteryGate, waypoint, chestSpot, lights, tomb, chestShown:false, wraithDone:false, chestDelay:0,
     // v240: invisible respawn -- ONLY while the Wraith Lord fight is live, 'respawn in region' puts you in the chamber before the boss room
-    cpRoom:mainRooms[mainRooms.length-1], respawnPoint:{x:mainRooms[mainRooms.length-1].x+mainRooms[mainRooms.length-1].w/2, y:mainRooms[mainRooms.length-1].y+mainRooms[mainRooms.length-1].h/2} };
+    cpRoom:rooms[outRoom], respawnPoint:{x:cen[outRoom].x, y:cen[outRoom].y} };
 }
 // General population -- Skeleton/Zombie/Spider spread across room1/room2/
 // room3 via spawnEnemy's existing room.rooms targeting (any non-'boss' type
@@ -155,44 +162,38 @@ function makeDarkCrypt(){
 // (Cursed Cemetery excepted, which is a one-time-clear checkpoint zone) --
 // only the chest itself (p.darkCryptChestLooted) is a permanent one-shot.
 function spawnDarkCryptPopulation(g){
-  for(let i=0;i<18;i++) spawnEnemy(g, 'skeleton');   // v321: half as many (half as many chambers)
-  for(let i=0;i<14;i++) spawnEnemy(g, 'zombie');
-  for(let i=0;i<14;i++) spawnEnemy(g, 'spider');
-  // v239: spider packs lurking in the hallways between the chambers (4 packs of 3) -- extra XP for anyone behind
-  { const tun = g.crypt.floorRects.filter(r=>(r.w<=150 || r.h<=150) && r.y+r.h/2 < 3500 && r.w>=110 && r.h>=110);
-    const picked = [];
-    for(const r of tun.sort(()=>Math.random()-0.5)){
-      const c = {x:r.x+r.w/2, y:r.y+r.h/2};
-      if(picked.every(q=>Math.hypot(q.x-c.x, q.y-c.y) > 450)) picked.push(c);
-      if(picked.length>=4) break;
+  // v503: the bigger crypt is stocked in loose packs -- every chamber holds one or two packs, the tunnels have pickets of skeletons,
+  // and the vaults off the main path are a little fuller. Packs keep their distance from each other and from the entrance.
+  const C = g.crypt, e0 = rectCenter(C.entranceRoom), centers = [];
+  const okSpot = (x,y,gap)=> Math.hypot(x-e0.x, y-e0.y) > 520 && !posBlockedByObstacles(x, y, 20, C.obstacles) && centers.every(c=>Math.hypot(c.x-x, c.y-y) > gap);
+  const pack = (x, y, type, n, spread)=>{ centers.push({x,y}); for(let k=0;k<n;k++){ const px = x+rand(-spread,spread), py = y+rand(-spread,spread); if(!posBlockedByObstacles(px, py, 18, C.obstacles)) spawnEnemy(g, type, {x:px, y:py}); } };
+  const kinds = ['skeleton','skeleton','zombie','spider'];
+  for(const r of C.rooms){
+    const side = !(C.mainPath && C.mainPath.indexOf(r) >= 0), npk = (side || Math.random()<0.7) ? 2 : 1;
+    for(let k=0;k<npk;k++){
+      const type = kinds[Math.floor(Math.random()*kinds.length)];
+      for(let t=0;t<12;t++){
+        const x = rand(r.x+110, r.x+r.w-110), y = rand(r.y+110, r.y+r.h-110);
+        if(okSpot(x, y, 230)){ pack(x, y, type, type==='skeleton' ? 5 : type==='zombie' ? 4 : 3, 70); break; }
+      }
     }
-    for(const c of picked) for(let k=0;k<3;k++) spawnEnemy(g, 'spider', {x:c.x+rand(-45,45), y:c.y+rand(-45,45)});
   }
-  // v313: 25 skeletons strung along every tunnel between chambers, plus a pack of 8 in each chamber (except the vampire room)
-  { const C = g.crypt, seq = [C.entranceRoom, ...(C.mainPath||C.rooms), C.exitRoom], rects = [C.entranceRoom, ...C.rooms, C.exitRoom];
-    const inRoom = (x,y)=> rects.some(r=> x>r.x-90 && x<r.x+r.w+90 && y>r.y-90 && y<r.y+r.h+90), e0 = rectCenter(C.entranceRoom);
-    for(let i=0;i<seq.length-1;i++){
-      const a = rectCenter(seq[i]), bc = rectCenter(seq[i+1]);
-      const L1 = Math.abs(bc.x-a.x), L2 = Math.abs(bc.y-a.y), L = L1+L2, sx = Math.sign(bc.x-a.x)||1, sy = Math.sign(bc.y-a.y)||1;
-      const cand = [];
-      for(let d=0; d<=L; d+=10){
-        const x = d<=L1 ? a.x+sx*d : bc.x, y = d<=L1 ? a.y : a.y+sy*(d-L1);
-        if(!inRoom(x,y) && Math.hypot(x-e0.x, y-e0.y) > 450) cand.push({x,y,h:d<=L1});   // v490: the first stretch of tunnel past the entrance stays clear
-      }
-      const NT = Math.round(70/(seq.length-1));   // v467: tunnel skeletons spread over however many chambers the crypt rolled (v490: 70 in all, was 100)
-      for(let k=0;k<NT && cand.length;k++){
-        const c = cand[Math.max(0, Math.min(cand.length-1, Math.floor((k+0.5)/NT*cand.length + rand(-0.4,0.4))))];
-        spawnEnemy(g, 'skeleton', {x:c.x+(c.h?rand(-10,10):rand(-38,38)), y:c.y+(c.h?rand(-38,38):rand(-10,10))});
+  // pickets along the tunnels: a pair of skeletons about every 600px of corridor
+  for(const tn of (C.tunnels||[])){
+    for(const r of tn.rects){
+      const horiz = r.w >= r.h, L = horiz ? r.w : r.h, n = Math.floor(L/600);
+      for(let k=0;k<n;k++){
+        const t = (k+0.5+rand(-0.25,0.25))/n, x = horiz ? r.x+r.w*t : r.x+r.w/2, y = horiz ? r.y+r.h/2 : r.y+r.h*t;
+        if(C.rooms.concat([C.entranceRoom, C.exitRoom]).some(q=> x>q.x-60 && x<q.x+q.w+60 && y>q.y-60 && y<q.y+q.h+60)) continue;
+        if(okSpot(x, y, 330)) pack(x, y, Math.random()<0.25 ? 'spider' : 'skeleton', 2, 40);
       }
     }
-    for(let ri=0; ri<C.rooms.length; ri++){
-      const r = C.rooms[ri], nk = (C.mainPath && C.mainPath.indexOf(r)<0) ? 5 : 8;
-      for(let k=0;k<nk;k++) spawnEnemy(g, 'skeleton', {x:rand(r.x+60, r.x+r.w-60), y:rand(r.y+60, r.y+r.h-60)});
-    } }
-  // v224: one big brute (skeletal brute skin) in the first corridor so the dungeon map can be found early
-  { const C = g.crypt, a0 = rectCenter(C.entranceRoom), a1 = rectCenter((C.mainPath||C.rooms)[0]);
-    const b = spawnEnemy(g, 'skeletonbrute', {x:(a0.x+a1.x)/2, y:a0.y});
-    b.r = Math.round(b.r*1.35); b.maxHp = Math.round(b.maxHp*2.2); b.hp = b.maxHp; b.dmg *= 1.1; }
+  }
+  // one big brute in the first corridor so the dungeon map can be found early
+  { const a1 = rectCenter(C.rooms[C.rooms.indexOf(C.mainPath[0])]);
+    const bx = (e0.x+a1.x)/2, by = (e0.y+a1.y)/2;
+    const b = spawnEnemy(g, 'skeletonbrute', {x:bx, y:by});
+    if(b){ b.r = Math.round(b.r*1.35); b.maxHp = Math.round(b.maxHp*2.2); b.hp = b.maxHp; b.dmg *= 1.1; } }
   // v490: the entrance / waypoint room is a safe room -- anything that rolled a spot in it goes
   { const er = g.crypt.entranceRoom, m = 140;
     g.enemies = g.enemies.filter(e=>!(e.x>er.x-m && e.x<er.x+er.w+m && e.y>er.y-m && e.y<er.y+er.h+m)); }
