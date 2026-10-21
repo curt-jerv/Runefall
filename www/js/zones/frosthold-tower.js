@@ -958,6 +958,7 @@ function spawnSpiderLairWave(g){
   boss.hp = Math.round(boss.hp*SPIDER_BOSS_HP_MULT); boss.maxHp = boss.hp;
   boss.dmg = boss.dmg*SPIDER_BOSS_DMG_MULT;
   boss.isLairBoss = true;
+  boss.speed *= 1.5; boss.chaser = true;   // v509: the lair's spider guardian is 50% faster and goes after you (she no longer holds her ground)
   // v480: no lone spiders -- the rest of the lair comes in packs of three (densifyDungeon)
   showMsg('The Spider Lair boss stirs...', 1.8);
   g.spiderLairHunter = null;

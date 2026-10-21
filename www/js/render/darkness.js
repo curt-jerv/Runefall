@@ -355,7 +355,7 @@ const VEIL_THEME_R = 290, VEIL_THEME_A = 0.8, VEIL_THEME_DIM = 0.2;   // v506
 function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
-  const sc = g.scene; if(sc==='town' || sc==='tavern' || sc==='darkcrypt' || isUndergroundScene(g)) return false;
+  const sc = g.scene; if(sc==='tavern' || sc==='darkcrypt' || isUndergroundScene(g)) return false;   // (v509: town is darkened like every other outdoor zone)
   if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
   return true;
 }
@@ -365,6 +365,7 @@ function drawLightVeil(g){
   const wet = th==='kraken' || th==='leviathan';   // the water floors are lit brighter still
   drawDarkCryptOverlay(g, (wet ? 315 : th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R)*lightRadiusMult(g.player), false, null, wet ? 0.72 : th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
 }
+const PLAYER_GLOW_FRAC = 0.704;   // the warm glow reaches this share of the light radius (v509: +10%)
 function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
   const cam = g.camera;
@@ -382,9 +383,10 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   mctx.globalAlpha = 1;
   mctx.globalCompositeOperation = 'destination-out';
   let grd = mctx.createRadialGradient(px, py, 0, px, py, LR);
-  const cl = 1 - (coreDim||0);   // v493: coreDim keeps a faint haze even at the centre of the light
-  grd.addColorStop(0, 'rgba(0,0,0,'+cl+')');
-  grd.addColorStop(0.62, 'rgba(0,0,0,'+(0.83*cl)+')');   // (v245) ~10% darker falloff
+  // v509: no darkness at all inside the warm glow of your own light (PLAYER_GLOW_FRAC of the radius); it fades out to the dark beyond
+  grd.addColorStop(0, 'rgba(0,0,0,1)');
+  grd.addColorStop(PLAYER_GLOW_FRAC, 'rgba(0,0,0,1)');
+  grd.addColorStop(PLAYER_GLOW_FRAC+(1-PLAYER_GLOW_FRAC)*0.5, 'rgba(0,0,0,0.5)');
   grd.addColorStop(1, 'rgba(0,0,0,0)');
   mctx.fillStyle = grd;
   // (v245) the upper half of the light is squashed so it ends right under the top HUD bar instead of being hidden behind it
@@ -422,10 +424,10 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   // v507: the character's own light -- a warm yellow glow on the ground, monsters and walls near you; it grows with the light radius
   { const gk = glow==null ? 1 : glow;
     if(gk>0.02){
-      const GR = LR*0.64;   // (v508: 25% smaller)
+      const GR = LR*PLAYER_GLOW_FRAC;
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(1, 0.86);
       const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
-      gg.addColorStop(0,'rgba(255,204,112,'+(0.2*gk).toFixed(3)+')'); gg.addColorStop(0.45,'rgba(255,172,72,'+(0.09*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
+      gg.addColorStop(0,'rgba(255,206,116,'+(0.36*gk).toFixed(3)+')'); gg.addColorStop(0.5,'rgba(255,176,76,'+(0.2*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
       ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
     } }
   // Composite the finished mask onto the main canvas with plain

@@ -2478,7 +2478,7 @@ function updateStep(dt){
         const ang=Math.atan2(e.y-target.y,e.x-target.x);
         e.x += Math.cos(ang)*e.speed*0.55*chillMult*dt; e.y += Math.sin(ang)*e.speed*0.55*chillMult*dt;
         e.moving = true;
-      } else if(d > e.preferRange+20 && !(e.type==='spider' && !e.giant && !e.brood && e.homeX!=null && dist(e,{x:e.homeX,y:e.homeY}) > 80)){   // v486: spiders hold their ground near where they spawned
+      } else if(d > e.preferRange+20 && !(e.type==='spider' && !e.giant && !e.brood && !e.chaser && e.homeX!=null && dist(e,{x:e.homeX,y:e.homeY}) > 80)){   // v486: spiders hold their ground near where they spawned
         const ang = steerAngleTo(e, target.x, target.y, room.obstacles);
         e.x += Math.cos(ang)*e.speed*chillMult*dt; e.y += Math.sin(ang)*e.speed*chillMult*dt;
         e.moving = true;
