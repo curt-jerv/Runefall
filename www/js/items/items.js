@@ -45,7 +45,7 @@ const DEF_PER_DEX = 1.5;               // each Dexterity point adds Defense
 function enemyAttackRating(ml){ return DEF_AR_BASE + DEF_AR_PER_ML*Math.max(1, ml||1); }
 const IRON_STILL_PER_S = 0.10, IRON_STILL_MAX = 5;
 function ironStillMult(p){ return (p && p.cls==='warrior' && p.skills && (p.skills.ironSkin||0)>0 && p.stillT>0) ? 1 + IRON_STILL_PER_S*Math.floor(Math.min(IRON_STILL_MAX, p.stillT)) : 1; }
-function effectiveDefense(p){ return ironStillMult(p)*((p.defense||0) + soulShieldDefense(p))*(p.bulwarkT>0 ? BULWARK_ARMOR : 1)*(immovableActive(p) ? 1+immovableArmor(effectiveRank(p,'immovable')||1) : 1)*(p.juggT>0 ? 1+juggDef(p.juggRank||1) : 1); }
+function effectiveDefense(p){ return ironStillMult(p)*((p.defense||0) + soulShieldDefense(p))*(p.bulwarkT>0 ? BULWARK_ARMOR : 1)*(p.juggT>0 ? 1+juggDef(p.juggRank||1) : 1); }
 function playerHitChance(p, ml){ const ar = enemyAttackRating(ml), d = effectiveDefense(p); return clamp(ar/(ar+d), DEF_HIT_MIN, DEF_HIT_MAX); }
 const RARITY_ARMOR_MULT = {common:1.0, magic:1.2, rare:1.5}, RARITY_RESIST_MULT = {common:1.0, magic:1.0, rare:1.25};
 const MAGIC_SINGLE_MOD_CHANCE = 0.25;
@@ -328,6 +328,7 @@ const PCT_AFFIX_ROLL = {
   followerDmgPct:[[5,10],[10,16],[16,24]],
   statusDurPct:[[8,14],[14,22],[22,32]],
   skillDurPct:[[6,10],[10,16],[16,24]],   // v489
+  lightRadiusPct:[[10,18],[16,28],[24,40]],   // v492
   dmgVsElitePct:[[1,2],[2,3],[3,5]],
   potionStrengthPct:[[10,15],[15,25],[25,40]],
   lifeOnKill:[[2,4],[4,7],[7,11]],

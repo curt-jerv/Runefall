@@ -73,7 +73,6 @@ const SKILL_WD = {
   fury:         {t:'physical', c:'weapon', r:[68,98],   per:'per strike (3 strikes)'},
   assault:      {t:'physical', c:'weapon', r:[78,112],  per:'per 20 Rage spent (Rage Burst)'},
   shieldBash:   {t:'physical', c:'weapon', r:[105,147], per:'per hit'},
-  reckoning:    {t:'physical', c:'weapon', r:[120,180], per:'shield sweep (up to x3 with stored blocked force)'},
   seismicSlam:  {t:'physical', c:'weapon', r:[140,220], per:'per enemy around you'},
   guardian:     {t:'physical', c:'weapon', r:[230,440], per:'per trample hit', x:{n:'final burst', t:'physical', r:[145,145]}},
   cleave:       {t:'physical', c:'weapon', r:[310,540], per:'per swing'},

@@ -111,6 +111,15 @@ const MOODS = {
         if(n%9===3) mBell(bus, t, 48, 0.12, 7); if(n%9===6 && Math.random()<0.5) mBell(bus, t, 55, 0.05, 6);
         if(Math.random()<0.1) mBell(bus, t, pick([72,75,77,79]), 0.03, 4); } };
   },
+  // v492: the Shadow Keep halls -- low dissonant drone, tolling bells, a slow tritone pad that never quite resolves
+  keep(){
+    const chords = [[38,44,50],[37,43,49],[35,41,47],[36,42,47]];
+    return { stepDur:1.6,
+      start(bus){ return [mDrone(bus, 26, 0.12, 180), mDrone(bus, 38, 0.05, 90), mLoopNoise(bus, AUD.brown, 'lowpass', 160, 0.7, 0.45, 0.06, 40)]; },
+      step(n,t,bus){ if(n%8===0){ const ch = chords[Math.floor(n/8)%4]; mPad(bus, t, ch.concat([ch[0]+12]), 14, 0.07, 300, 0.9); }
+        if(n%8===4) mBell(bus, t, 35, 0.16, 9); if(n%8===6 && Math.random()<0.6) mBell(bus, t, 41, 0.07, 8);
+        if(Math.random()<0.08) mBell(bus, t, pick([62,63,66]), 0.025, 5); } };
+  },
   // icy peaks: cold wind, glassy shimmer
   snow(){
     const sc = [69,72,74,76,79,81];
@@ -191,6 +200,7 @@ function audMoodFor(g){
     // v468: the generated themes -- wilds, deep places, and a boss theme while a boss bar is up
     if(SCENE_MOOD_V468[g.scene]) name = SCENE_MOOD_V468[g.scene];
     if(g.scene==='lighthouse' && towerMusicHere(g)) name = 'd2tower';
+    if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='keep' && (g.tower.kpArea||1)<7) name = 'keep';   // v492: the Shadow Keep's own dark theme
     if(!g.over && window.__bossBarBottom > 0 && g.scene!=='town' && g.scene!=='tavern') name = 'd2boss'; }
   if(name!==AUD.moodName) audSetMood(name);
   return name;
@@ -200,7 +210,10 @@ function audSetMood(name){
   const oldBus = AUD.moodBus, oldStop = AUD.moodStop;
   if(oldBus){ oldBus.gain.cancelScheduledValues(now); oldBus.gain.setValueAtTime(oldBus.gain.value, now); oldBus.gain.linearRampToValueAtTime(0.0001, now+4.5); setTimeout(()=>{ try{ (oldStop||[]).forEach(f=>f()); oldBus.disconnect(); }catch(e){} }, 5200); }
   const bus = MB(); const mood = (AUD.mus && AUD.mus[name]) ? musLoopMood(name) : MOODS[name]();
-  bus.gain.setValueAtTime(0.0001, now); bus.gain.setTargetAtTime(1, now+(oldBus?1.5:0.5), 3.6);   // v472: slow fade-in (about 11s to full)
+  // v492: boss music comes in fast and loud; everything else keeps the slow v472 fade-in
+  const boss = name==='d2boss', peak = boss ? 1.7 : 1;
+  bus.gain.setValueAtTime(0.0001, now);
+  if(boss) bus.gain.setTargetAtTime(peak, now+0.05, 0.35); else bus.gain.setTargetAtTime(1, now+(oldBus?1.5:0.5), 3.6);   // v472: slow fade-in (about 11s to full)
   AUD.moodName = name; AUD.mood = mood; AUD.moodBus = bus; AUD.n = 0; AUD.nextT = now+0.15;
   try{ AUD.moodStop = mood.start ? mood.start(bus) : []; }catch(e){ AUD.moodStop = []; }
 }

@@ -47,9 +47,9 @@ const ACTIVE_SKILL_REGISTRY = {
   consecrate:    { oldBtnId:null, trigger(){ wantConsecrate=true; }, getCd(p){ return {cur:p.consecrateCd||0, max:p.consecrateCdMax||CONS_CD}; } },
   judgment:      { oldBtnId:null, trigger(){ wantJudgment=true; },   getCd(p){ return {cur:p.judgmentCd||0, max:p.judgmentCdMax||JUDG_CD}; } },
   bulwark:       { oldBtnId:null, trigger(){ wantBulwark=true; },    getCd(p){ return {cur:p.bulwarkCd||0, max:p.bulwarkCdMax||BULWARK_CD}; } },
-  reckoning:     { oldBtnId:null, trigger(){ wantReckoning=true; },  getCd(p){ return {cur:p.reckonCd||0, max:p.reckonCdMax||RECKON_CD}; } },
   seismicSlam:   { oldBtnId:null, trigger(){ wantSeismic=true; },    getCd(p){ return {cur:p.seismicCd||0, max:p.seismicCdMax||SEISMIC_CD}; } },
-  immovable:     { oldBtnId:null, trigger(){ wantImmovable=true; },  getCd(p){ return {cur:p.immovableCd||0, max:p.immovableCdMax||IMMOVABLE_CD}; } },
+  mirrorSteel:   { oldBtnId:null, trigger(){ wantMirror=true; },     getCd(p){ return {cur:p.mirrorCd||0, max:p.mirrorCdMax||MIRROR_CD_MAX}; } },
+  seismicAnchor: { oldBtnId:null, trigger(){ wantAnchor=true; },     getCd(p){ return {cur:p.anchorCd||0, max:p.anchorCdMax||ANCHOR_CD_MAX}; } },
   bloodrage:     { oldBtnId:null, trigger(){ wantBloodrage=true; },  getCd(p){ return {cur:p.bloodrageCd||0, max:p.bloodrageCdMax||BLOODRAGE_CD}; } },
   assault:       { oldBtnId:'btnAssault',      trigger(){ wantAssault=true; },       getCd(p){ return {cur:p.assaultCd, max:p.assaultCdMax}; } },
   commander:     { oldBtnId:'btnStance',       trigger(){ wantStance=true; },        getCd(p){ return {cur:p.stanceCd||0, max:0.5}; } },
@@ -241,7 +241,7 @@ const RESOURCE_SKILLS = {
   // Everything else costs a lot more, against a much smaller pool.
   plague:{cost:75}, soulGate:{cost:40}, immolate:{cost:35}, flameVortex:{cost:45}, permafrost:{cost:21, step:-1.8},
   nova:{cost:26}, tornado:{cost:35}, hurricane:{cost:70}, iceArmor:{cost:0}, pyroTorrent:{cost:20}, blizzard:{cost:80}, meteor:{cost:95}, stormcall:{cost:32}, raiseDead:{cost:12}, fear:{cost:25},  /* pyroTorrent cost is PER SECOND while channelling */
-  shieldThrow:{cost:25, minCd:1.0}, bulwark:{cost:30}, reckoning:{cost:15}, seismicSlam:{cost:25}, whirlwind:{cost:15, minCd:1.0}, unbreakable:{cost:0, minCd:8},
+  shieldThrow:{cost:25, minCd:1.0}, bulwark:{cost:30}, mirrorSteel:{cost:25, step:-10/9}, seismicSlam:{cost:25}, seismicAnchor:{cost:25, step:-10/9}, whirlwind:{cost:15, minCd:1.0}, unbreakable:{cost:0, minCd:8},
   // v489 Ranger: flat Stamina costs that grow with rank (basic shots -- Strike, Rapid Shot, Splinter Shot, Multi Shot -- are free and refill Stamina)
   cripplingShot:{cost:20, step:1}, stunShot:{cost:26, step:1.2}, explosiveShot:{cost:30, step:1.5}, aimedShot:{cost:40, step:2}, rainOfArrows:{cost:50, step:2.5}, huntersMark:{cost:20, step:0.5}, explosiveTrap:{cost:35, step:1}, poisonTrap:{cost:20, step:0.8}, frostTrap:{cost:20, step:0.8},
 };
@@ -306,6 +306,8 @@ function gateResourceWants(p){
   if(wantShieldBash && !resourceAffordable(p,'shieldBash')){ wantShieldBash=false; noResourceMsg(p); }
   if(wantThrow && !resourceAffordable(p,'shieldThrow')){ wantThrow=false; noResourceMsg(p); }
   if(wantWhirlwind && !resourceAffordable(p,'whirlwind')){ wantWhirlwind=false; noResourceMsg(p); }
+  if(wantMirror && !(p.mirrorT>0) && !(p.mirrorCd>0) && !resourceAffordable(p,'mirrorSteel')){ wantMirror=false; noResourceMsg(p); }   // v492
+  if(wantAnchor && !(p.anchorPendT>0) && !(p.anchorCd>0) && !resourceAffordable(p,'seismicAnchor')){ wantAnchor=false; noResourceMsg(p); }
   if(wantBulwark && !(p.bulwarkT>0) && !(p.bulwarkCd>0) && !resourceAffordable(p,'bulwark')){ wantBulwark=false; noResourceMsg(p); }   // v337: Bulwark costs Rage (tapping again to release is free)
   if(wantLeap && !resourceAffordable(p,'leap')){ wantLeap=false; noResourceMsg(p); }
   if(wantUnbreak && !resourceAffordable(p,'unbreakable')){ wantUnbreak=false; noResourceMsg(p); }

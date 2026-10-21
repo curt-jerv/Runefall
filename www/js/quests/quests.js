@@ -255,10 +255,11 @@ function makeHunterRewardRing(p){ return makeResistRewardRing(p, 'lightningResis
 function grantQuestRewardItem(p){
   const item = makeHunterRewardRing(p);
   const equipped = tryAutoEquip(p, item);
-  if(!equipped) forceAddToBag(p, item);
+  if(!equipped && !giveRewardIfRoom(p, [item])) return false;   // v493: asks again until there is room
   bagPulse();
   showMsg('"You\'ve done so much for us -- please, take this ring." Received: '+item.name, 2.8);
   saveGame();
+  return true;
 }
 function leviathanSlain(p){
   if(p.leviathanSlain || p.partLeviathan) return true;
@@ -271,8 +272,7 @@ function talkToQuestGiver(){
   { const bq0 = getQuest(p, QUEST_BRIDGE.id); if(bq0 && bq0.status==='complete' && !bq0.rewarded){ grantBridgeReward(p, bq0); return; } }   // v486: turn in the bridge any time
   if(q && q.status==='complete'){
     if(!q.rewarded){
-      q.rewarded = true;
-      grantQuestRewardItem(p);
+      if(grantQuestRewardItem(p)) q.rewarded = true;
     } else if(!getQuest(p, QUEST_BRIDGE.id) && !p.bridgeCleared){
       pendingQuestGiver = 'oldmanBridge';
       questGiverNameEl.textContent = 'Old Man';
@@ -318,10 +318,10 @@ function talkToBarkeeper(){
   checkLightTheWayQuest();
   const q = getQuest(p, QUEST_LIGHT_THE_WAY.id);
   if(q && q.status==='active' && q.stage==='return'){
-    q.status = 'complete'; q.progress = q.total;
     const rk = p.cls==='warrior' ? 'beer' : 'coffee';   // v490: no mana potions; the Mystic gets coffee
-    forceAddToBag(p, makePotionItem(rk));
-    const li = classRewardItem(p, Math.max(p.level||1, 15), 'reward'); forceAddToBag(p, li); p.gold += 200;   // v483: class gear instead of a Health Potion
+    const li = classRewardItem(p, Math.max(p.level||1, 15), 'reward');   // v483: class gear instead of a Health Potion
+    if(!giveRewardIfRoom(p, [makePotionItem(rk), li])) return;   // v493: the quest stays open until there is room
+    q.status = 'complete'; q.progress = q.total; p.gold += 200;
     showMsg('Quest complete: '+QUEST_LIGHT_THE_WAY.name+' \u2014 '+li.name+', a free '+POTION_DEFS[rk].name+' and 200 gold!', 3.6);
     updateQuestBadge(); bagPulse(); saveGame();
   } else if(q && q.status==='complete'){

@@ -96,6 +96,7 @@ function statInfoText(key, p){
     'PROJ SPD': 'Projectiles fly '+pc(p.projectileSpeedPct||0)+'% faster.',
     BLEED: pc(p.bleedChancePct||0)+'% chance for your hits to cause Bleed.',
     'AILMENT DUR': 'Your ailments last '+pc((p.statusDurPct||0)*100)+'% longer (gear cap 75%).',
+    'LIGHT RADIUS': 'Your circle of light is '+pc((p.lightRadiusPct||0)*100)+'% wider (gear cap 60%).',
     'SKILL DUR': 'Your skill effects last '+pc((p.skillDurPct||0)*100)+'% longer: ailments, ground effects (Blizzard, Meteor fire, Consecrate, Plague, trap clouds), Hurricane, Tornado, Flame Vortex, banners and the Mirage decoy (gear cap 50%).',
     'VS ELITES': '+'+pc((p.dmgVsElitePct||0)*100)+'% damage to elite monsters (gear cap 5%).',
     MINION: 'Followers and minions deal +'+pc((p.followerDmgPct||0)*100)+'% damage.',
@@ -120,13 +121,15 @@ function statInfoText(key, p){
     PLAYTIME: 'Time played on this character: '+fmtPlayTime(p.playTime||0, true)+'.',
     KILLS: 'Enemies this character has slain.'
   };
+  if(key && key.indexOf('SLOT_')===0){ const sid = (p.skillSlots||{})[key.slice(5)]; return sid ? 'Damage from the skill on this button, before enemy armor and resistances. Shown as the typical hit or total for the current rank.' : 'Nothing is assigned to this button yet.'; }
   if(key==='MAINSKILL'){ const m = mainSkillInfo(p); return m.id==='strike' ? 'Your Strike button swings your weapon for '+m.val+' damage per hit, before enemy armor and resistances. Assign a skill to it from the skill tree.' : 'Your Strike button casts '+m.name+(m.rank>0 ? ' (rank '+m.rank+')' : '')+': '+m.val+(m.unit ? ' ('+m.unit+')' : '')+', before enemy armor and resistances. Change it from the skill tree with Assign to Button.'; }
   return T[key] || '';
 }
 function fmtPlayTime(sec, long){ sec = Math.floor(sec||0); const h = Math.floor(sec/3600), m = Math.floor(sec%3600/60); return long ? (h+' hour'+(h===1?'':'s')+' '+m+' minute'+(m===1?'':'s')) : (h+'h '+String(m).padStart(2,'0')+'m'); }
 // v470: what the Strike (main) button currently fires, and roughly how hard it hits
-function mainSkillInfo(p){
-  const id = (p.skillSlots && p.skillSlots.main) || 'strike';
+function mainSkillInfo(p){ return skillInfoFor(p, (p.skillSlots && p.skillSlots.main) || 'strike'); }
+// v492: the same damage line for any button (Strike, or a skill assigned to slot 1-3)
+function skillInfoFor(p, id){
   let name = 'Strike', rank = 0;
   if(id!=='strike'){
     name = VIRTUAL_SKILL_NAMES[id] || id;
@@ -138,6 +141,17 @@ function mainSkillInfo(p){
   else if(SKILL_WD[id]){ const d = SKILL_WD[id], pc = swdPct(d.r, rank), avg = wpnDmg(p, true)*pc/100; val = '≈'+Math.round(avg); unit = Math.round(pc)+'% weapon damage'+(d.per ? ' '+d.per : ''); }
   else { const ad = skillAvgDamage(id, rank, p); if(ad){ val = '≈'+ad.v; unit = ad.unit; } else { val = '—'; unit = ''; } }
   return {id, name, rank, val, unit};
+}
+let skillDmgOpen = true;   // v492: the Skill Damages group under Offense (tap its heading to fold it)
+function skillDmgRow(p, key, label, id){
+  if(!id){ return '<div class="statCell zero sdRow" data-stat="'+key+'"><span class="msLabel">'+label+'</span><span class="msName">empty slot</span></div>'; }
+  const m = skillInfoFor(p, id);
+  return '<div class="statCell sdRow" data-stat="'+key+'"><span class="msLabel">'+label+'</span><span class="msName">'+m.name+(m.rank>0 ? ' <i>rank '+m.rank+'</i>' : '')+'</span><b>'+m.val+'</b>'+(m.unit ? '<small class="resRaw">'+m.unit+'</small>' : '')+'</div>';
+}
+function skillDmgGroup(p){
+  const sl = p.skillSlots || {};
+  return '<div class="sdHead" data-sdtoggle="1">Skill Damages <span class="sdArrow">'+(skillDmgOpen ? '\u25BE' : '\u25B8')+'</span></div>'+
+    (skillDmgOpen ? '<div class="sdBody">'+skillDmgRow(p,'MAINSKILL','Strike', sl.main||'strike')+skillDmgRow(p,'SLOT_slot1','Skill 1', sl.slot1)+skillDmgRow(p,'SLOT_slot2','Skill 2', sl.slot2)+skillDmgRow(p,'SLOT_slot3','Skill 3', sl.slot3)+'</div>' : '');
 }
 function statSummaryHtml(p){
   const cell = (key, label, val, isZero, sub, cls)=>'<div class="statCell'+(isZero?' zero':'')+(cls?' '+cls:'')+'" data-stat="'+key+'">'+label+'<b>'+val+'</b>'+(sub?'<small class="resRaw">'+sub+'</small>':'')+'</div>';
@@ -160,7 +174,7 @@ function statSummaryHtml(p){
     cell('KILLS','ENEMIES KILLED',(p.killCount||0).toLocaleString())+
     (p.breachReached ? cell('BREACH','BREACH',(p.breachBest||0)) : '')+
     head('Offense')+
-    (()=>{ const m = mainSkillInfo(p); return '<div class="statCell mainSkillCell" data-stat="MAINSKILL"><span class="msLabel">Strike button</span><span class="msName">'+m.name+(m.rank>0 ? ' <i>rank '+m.rank+'</i>' : '')+'</span><b>'+m.val+'</b>'+(m.unit ? '<small class="resRaw">'+m.unit+'</small>' : '')+'</div>'; })()+
+    skillDmgGroup(p)+
     cell('DMG','WEAPON DMG',Math.round(p.wpnMin||0)+'–'+Math.round(p.wpnMax||0), false, Math.round(p.wpnFlat||0)>0 ? '+'+Math.round(p.wpnFlat)+' phys' : '')+
     pct('ATK SPD','ATK SPD',p.atkSpeedTotalPct||0,true)+
     pct('CRIT','CRIT',p.critChance||0)+
@@ -179,6 +193,7 @@ function statSummaryHtml(p){
     pct('BLEED','BLEED',p.bleedChancePct||0)+
     pct('AILMENT DUR','AILMENT DUR',(p.statusDurPct||0)*100,true)+
     pct('SKILL DUR','SKILL DUR',(p.skillDurPct||0)*100,true)+
+    pct('LIGHT RADIUS','LIGHT RADIUS',(p.lightRadiusPct||0)*100,true)+
     pct('VS ELITES','VS ELITES',(p.dmgVsElitePct||0)*100,true)+
     pct('MINION','MINION DMG',(p.followerDmgPct||0)*100,true)+
     pct('LEECH','LEECH',totalLeechPct(p))+
@@ -258,6 +273,7 @@ function toggleStatTip(cellEl){
 }
 document.getElementById('statTip').addEventListener('click', hideStatTip);
 document.getElementById('invStats').addEventListener('click', ev=>{
+  if(ev.target.closest && ev.target.closest('[data-sdtoggle]')){ skillDmgOpen = !skillDmgOpen; renderInventory(); return; }   // v492: fold / unfold Skill Damages
   const c = ev.target.closest && ev.target.closest('.statCell'); if(c) toggleStatTip(c);
 });
 

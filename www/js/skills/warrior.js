@@ -7,7 +7,7 @@
 //    Consecrate, Judgment. Most of a Templar's damage comes from followers.
 // ============================================================================
 const TEMPLAR_IDS_V2 = ['squire','smite','vengeance','banner','bannerWar','bannerAegis','consecrate','judgment','sacredWeapon','auraOfRetribution'];
-const DEFENDER_IDS_V2 = ['ironSkin','unbreakable','shieldBash','riposte','shieldThrow','reckoning','seismicSlam','immovable','bulwark','guardian'];
+const DEFENDER_IDS_V2 = ['ironSkin','unbreakable','shieldBash','riposte','shieldThrow','mirrorSteel','seismicSlam','seismicAnchor','bulwark','guardian'];
 const BERSERKER_IDS_V2 = ['reave','leap','weaponsSpecialist','bloodlust','bloodHarvest','battlecry','bloodrage','rampage','whirlwind','cleave','fury','assault'];
 const OLD_WARRIOR_REFUND_IDS = ['ironSkin','unbreakable','shieldBash','riposte','shieldThrow','guardian','squire','offensiveStance','commander','templarDefensiveStance','battlecry','rally'];
 const ISO_SQ2 = Math.SQRT2;
@@ -75,33 +75,18 @@ function unbreakableSave(g, p){
   g.particles.push({type:'burst', x:p.x, y:p.y, t:0.6, max:0.6, color:'#f4d27a'});
   return true;
 }
-// ---- v459 Defender: Reckoning, Seismic Slam, Immovable ----
-const RECKON_CD = 6, RECKON_R = 165, RECKON_ARC = 1.15, RECKON_STORE_CAP = 1.0;   // store cap: up to your max life of blocked damage (x3 damage)
+// ---- v492 Defender: Mirror of Steel, Seismic Slam, Seismic Anchor (Reckoning and Immovable removed) ----
 const SEISMIC_CD = 8, SEISMIC_R = 150;
-const IMMOVABLE_CD = 15, IMMOVABLE_ARMOR = 0.75, IMMOVABLE_HEAL = 0.25;   // v470: rooted for a duration, then all Rage is spent
-function reckonStoreMult(p){ return 1 + 2*clamp((p.reckonStore||0)/Math.max(1,p.maxHp*RECKON_STORE_CAP), 0, 1); }
+const MIRROR_DUR_MIN = 2.5, MIRROR_DUR_MAX = 4, MIRROR_CD_MIN = 8, MIRROR_CD_MAX = 12, MIRROR_HEAL = 0.5;   // ranks 1 -> 10
+const ANCHOR_CD_MIN = 6, ANCHOR_CD_MAX = 10, ANCHOR_DELAY = 1, ANCHOR_R = 150, ANCHOR_SLOW = 0.7, ANCHOR_SLOW_DUR = 3, ANCHOR_SLOW_CAP = 0.9;   // ANCHOR_R = 6 metres
 function seismicStunDur(r){ return 1.0 + 0.06*(Math.max(1,r)-1); }
-function immovableArmor(r){ return IMMOVABLE_ARMOR; }
-function immovableDur(r){ return 4 + (Math.min(10,Math.max(1,r))-1)/3 + 0.1*Math.max(0,r-10); }   // 4s at Rank 1, 7s at Rank 10
-function immovableActive(p){ return !!(p && p.immovableOn); }
-function castReckoning(g, p, rank){
-  if(!hasShieldEquipped(p)){ showMsg('Reckoning needs a shield', 0.9); return; }
-  const mult = reckonStoreMult(p), R = RECKON_R*aoeRadiusMult(p), ang = Math.atan2(p.facing.y, p.facing.x);
-  const dmg = wpnDmg(p) * swd('reckoning', rank) * mult * assaultDealtMult(p) * weaponDmgMult(p);
-  for(const e of g.enemies){
-    if(!(e.hp>0) || dist(p,e) > R+e.r) continue;
-    let da = Math.abs(Math.atan2(e.y-p.y, e.x-p.x) - ang); if(da > Math.PI) da = 2*Math.PI - da;
-    if(da > RECKON_ARC) continue;
-    e.hp -= applyEnemyArmor(p, e, dmg); e.hitT = 0.15; checkExecute(g, e);
-    if(!isHeavyEnemy(e)){ const a = Math.atan2(e.y-p.y, e.x-p.x); e.x += Math.cos(a)*(40+30*(mult-1)); e.y += Math.sin(a)*(40+30*(mult-1)); }
-  }
-  p.reckonStore = 0;
-  p.reckonCdMax = applyCdr(p, RECKON_CD); p.reckonCd = p.reckonCdMax;
-  p.bashAnimT = 0.3; p.bashAnimMax = 0.3; p.atkAnimT = 0.3;
-  g.particles.push({type:'ring', x:p.x+Math.cos(ang)*R*0.45, y:p.y+Math.sin(ang)*R*0.45, t:0.4, max:0.4, r:R*0.7, color: mult>2 ? '#ffd27a' : '#c8d0dc'});
-  shakeScreen(g, 3+3*(mult-1), 0.2);
-  showMsg(mult>1.05 ? 'Reckoning! x'+mult.toFixed(1) : 'Reckoning!', 0.8);
-}
+function defRankSpread(r){ return (Math.min(10,Math.max(1,r||1)) - 1)/9; }   // 0 at rank 1, 1 at rank 10
+function mirrorDur(r){ return MIRROR_DUR_MIN + (MIRROR_DUR_MAX-MIRROR_DUR_MIN)*defRankSpread(r); }
+function mirrorCd(r){ return MIRROR_CD_MAX + (MIRROR_CD_MIN-MIRROR_CD_MAX)*defRankSpread(r); }
+function anchorCd(r){ return ANCHOR_CD_MAX + (ANCHOR_CD_MIN-ANCHOR_CD_MAX)*defRankSpread(r); }
+function mirrorActive(p){ return !!(p && p.mirrorT>0); }
+// enemies slowed by Seismic Anchor: the slow is at its peak and fades to nothing over ANCHOR_SLOW_DUR
+function anchorSlowMult(e){ return e.anchorT>0 ? 1 - e.anchorSlow*clamp(e.anchorT/ANCHOR_SLOW_DUR, 0, 1) : 1; }
 function castSeismicSlam(g, p, rank){
   if(!hasShieldEquipped(p)){ showMsg('Seismic Slam needs a shield', 0.9); return; }
   const R = SEISMIC_R*aoeRadiusMult(p), dmg = wpnDmg(p) * swd('seismicSlam', rank) * assaultDealtMult(p) * weaponDmgMult(p);
@@ -117,6 +102,32 @@ function castSeismicSlam(g, p, rank){
   for(let k=0;k<10;k++){ const a = k/10*6.283; g.particles.push({type:'burst', x:p.x+Math.cos(a)*R*0.7, y:p.y+Math.sin(a)*R*0.7, t:0.4, max:0.4, color:'#a88a5a'}); }
   shakeScreen(g, 7, 0.3);
   showMsg('Seismic Slam!', 0.8);
+}
+// Seismic Anchor: a short delay, then the ground tears open where you stand
+function castSeismicAnchor(g, p, rank){
+  p.anchorPendT = ANCHOR_DELAY; p.anchorX = p.x; p.anchorY = p.y;
+  p.bashAnimT = 0.3; p.bashAnimMax = 0.3;
+  g.particles.push({type:'ring', x:p.x, y:p.y, t:ANCHOR_DELAY, max:ANCHOR_DELAY, r:ANCHOR_R*aoeRadiusMult(p)*0.4, color:'#c9a06a'});
+  showMsg('Seismic Anchor...', 0.8);
+}
+function seismicAnchorResolve(g, p){
+  const R = ANCHOR_R*aoeRadiusMult(p), rank = effectiveRank(p,'seismicAnchor')||1;
+  for(const e of g.enemies){
+    if(!(e.hp>0) || dist({x:p.anchorX,y:p.anchorY}, e) > R+e.r) continue;
+    e.windT = 0;   // casting is broken
+    if(!(e.isBoss || e.isLairBoss || isHeavyEnemy(e))){   // dragged in to the epicentre
+      const a = Math.atan2(e.y-p.anchorY, e.x-p.anchorX), to = p.r + e.r + 4;
+      e.x = p.anchorX + Math.cos(a)*to; e.y = p.anchorY + Math.sin(a)*to;
+    }
+    const cur = e.anchorT>0 ? e.anchorSlow*clamp(e.anchorT/ANCHOR_SLOW_DUR,0,1) : 0;   // stacking: adds on what is left
+    e.anchorSlow = Math.min(ANCHOR_SLOW_CAP, cur + ANCHOR_SLOW); e.anchorT = ANCHOR_SLOW_DUR;
+    e.hitT = Math.max(e.hitT||0, 0.1);
+  }
+  p.anchorCdMax = applyCdr(p, anchorCd(rank)); p.anchorCd = p.anchorCdMax;
+  shakeScreen(g, 6, 0.3);
+  g.particles.push({type:'ring', x:p.anchorX, y:p.anchorY, t:0.5, max:0.5, r:R, color:'#c9a06a', exact:true});
+  for(let k=0;k<10;k++){ const a = k/10*6.283; g.particles.push({type:'burst', x:p.anchorX+Math.cos(a)*R*0.7, y:p.anchorY+Math.sin(a)*R*0.7, t:0.4, max:0.4, color:'#a88a5a'}); }
+  showMsg('Seismic Anchor!', 0.8);
 }
 const BULWARK_DUR = 6, BULWARK_DUR_STEP = 0.5, BULWARK_CD = 18, BULWARK_SLOW = 0.5, BULWARK_ARMOR = 1.75, BULWARK_R = 172.5, BULWARK_REL = 0.8;
 function bulwarkRelease(g, p){
@@ -432,15 +443,11 @@ function warriorV266Tick(g, p, dt){
   if(p.consecrateCd>0) p.consecrateCd -= dt;
   if(p.judgmentCd>0) p.judgmentCd -= dt;
   if(p.bulwarkCd>0) p.bulwarkCd -= dt;
-  if(p.reckonCd>0) p.reckonCd -= dt;
   if(p.seismicCd>0) p.seismicCd -= dt;
-  if(p.immovableCd>0) p.immovableCd -= dt;
-  if(p.immovableOn){   // v470 Immovable: rooted in place, armour up and life knitting back, then every drop of Rage is spent
-    p.immovableT -= dt;
-    p.movementStopT = Math.max(p.movementStopT||0, 0.06); wantDodge = false;
-    if(p.hp>0) p.hp = Math.min(p.maxHp, p.hp + p.maxHp*IMMOVABLE_HEAL*dt/Math.max(0.5, p.immovableDur||4));
-    if(p.immovableT<=0 || p.hp<=0){ p.immovableOn = false; p.mp = 0; showMsg('Immovable ends: Rage spent', 0.9); if(game) game.particles.push({type:'ring', x:p.x, y:p.y, t:0.4, max:0.4, r:60, color:'#8a8f98'}); }
-  }
+  if(p.mirrorCd>0) p.mirrorCd -= dt;
+  if(p.mirrorT>0) p.mirrorT -= dt;   // v492 Mirror of Steel: reflecting while it lasts
+  if(p.anchorCd>0) p.anchorCd -= dt;
+  if(p.anchorPendT>0){ p.anchorPendT -= dt; if(p.anchorPendT<=0){ p.anchorPendT = 0; seismicAnchorResolve(g, p); } }
   if(p.bloodrageCd>0) p.bloodrageCd -= dt;
   if(p.unbreakSaveCd>0) p.unbreakSaveCd -= dt;
   if(p.rampageT>0){ p.rampageT -= dt; if(p.rampageT<=0){ p.rampageT = 0; p.rampageStacks = 0; } }

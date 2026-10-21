@@ -264,7 +264,7 @@ bindBtn(document.getElementById('btnWhirlwind'), ()=>wantWhirlwind=true);
 let wantLeap=false, wantUnbreak=false;
 let wantReave=false;
 let wantSmite=false, wantVengeance=false, wantBanner=false, wantConsecrate=false, wantJudgment=false, wantBulwark=false, wantBloodrage=false;
-let wantReckoning=false, wantSeismic=false, wantImmovable=false;
+let wantSeismic=false, wantMirror=false, wantAnchor=false;   // v492 Defender: Mirror of Steel, Seismic Slam, Seismic Anchor
 bindBtn(document.getElementById('btnBattlecry'), ()=>wantBattlecry=true);
 bindBtn(document.getElementById('btnAssault'), ()=>wantAssault=true);
 bindBtn(document.getElementById('btnStance'), ()=>wantStance=true);

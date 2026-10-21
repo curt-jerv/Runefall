@@ -49,16 +49,16 @@ function drawFearMark(e){
   ctx.restore();
 }
 // Soul Shield: small white lights circling the player, one for every 5 souls held (up to 10)
+// v492: one small white orb per 10 souls, circling the feet (cheap: plain discs, no per-frame gradients)
 function drawSoulShieldOrbs(p, clock){
-  const n = Math.min(10, Math.ceil(Math.min(SOUL_CAP, p.souls||0)/5)); if(n<=0) return;
-  const iso = toIso(p.x, p.y), cy = iso.y - 26, rx = 24, ry = 11;
-  ctx.save();
+  const n = Math.min(5, Math.floor(Math.min(SOUL_CAP, p.souls||0)/10)); if(n<=0) return;
+  const iso = toIso(p.x, p.y), rx = 17, ry = 7;
+  ctx.save(); ctx.fillStyle = '#ffffff';
   for(let k=0;k<n;k++){
-    const a = clock*1.8 + k/n*6.283, x = iso.x + Math.cos(a)*rx, y = cy + Math.sin(a)*ry + Math.sin(clock*3+k)*2;
-    const front = Math.sin(a) > 0, r = front ? 2.6 : 1.9;
-    const gl = ctx.createRadialGradient(x, y, 0, x, y, r*3.2); gl.addColorStop(0, front ? 'rgba(255,255,255,0.9)' : 'rgba(230,225,255,0.55)'); gl.addColorStop(1, 'rgba(220,210,255,0)');
-    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, r*3.2, 0, 7); ctx.fill();
-    ctx.fillStyle = front ? '#ffffff' : '#dcd6f2'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+    const a = clock*1.1 + k/n*6.283, x = iso.x + Math.cos(a)*rx, y = iso.y - 3 + Math.sin(a)*ry;
+    const front = Math.sin(a) > 0;
+    ctx.globalAlpha = front ? 0.9 : 0.45;
+    ctx.beginPath(); ctx.arc(x, y, front ? 2.2 : 1.6, 0, 6.283); ctx.fill();
   }
   ctx.restore();
 }

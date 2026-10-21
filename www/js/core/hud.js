@@ -180,7 +180,7 @@ function updateDockHud(p){
   tx('hpGlobeNum', Math.ceil(Math.max(0,p.hp))+'');
   tx('resGlobeNum', Math.floor(p.mp||0)+'');
   st('dockXpFill', 'width', clamp(p.xp/p.xpNext*100,0,100).toFixed(1)+'%');
-  tx('dockXpTxt', 'Lv '+(p.level||1)+' \u00b7 '+Math.floor(clamp(p.xp/p.xpNext,0,1)*100)+'%');
+  { const xt = document.getElementById('dockXpTxt'); const html = '<b class="dLv">Lv '+(p.level||1)+'</b> \u00b7 '+Math.floor(clamp(p.xp/p.xpNext,0,1)*100)+'%'; if(xt && xt.dataset.h!==html){ xt.dataset.h = html; xt.innerHTML = html; } }   // v492: the level is the big gold number
   // the skill-point flag always shows the real number of unspent points (it used to keep an old count outside town)
   if(typeof skillsBadge!=='undefined' && skillsBadge){ const n = p.skillPoints||0; const t = n>0 ? String(n) : '!'; if(skillsBadge.textContent!==t) skillsBadge.textContent = t; if(n<=0 && skillsBadge.style.display!=='none') skillsBadge.style.display = 'none'; }
 }

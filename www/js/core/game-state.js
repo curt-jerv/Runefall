@@ -299,6 +299,15 @@ function newGame(saved, cls){
         setTimeout(()=>{ try{ showMsg((c0==='mystic' ? 'The Necromancer' : 'The Hunter')+' tree was rearranged -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 2800);
       }
     }
+    if(!saved.skillsV492 && (saved.cls||cls)==='warrior'){   // v492: Reckoning and Immovable removed (Mirror of Steel and Seismic Anchor take their places)
+      const ids492 = ['reckoning','immovable'];
+      let rf9 = 0; for(const k of ids492){ rf9 += player.skills[k]||0; player.skills[k] = 0; }
+      if(rf9>0){
+        player.skillPoints = (player.skillPoints||0) + rf9;
+        for(const sk of Object.keys(player.skillSlots)) if(ids492.indexOf(player.skillSlots[sk])>=0) player.skillSlots[sk] = null;
+        setTimeout(()=>{ try{ showMsg('Warrior Defender was reworked -- '+rf9+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3000);
+      }
+    }
     if(!saved.skillsV481 && (saved.cls||cls)==='mystic'){   // v481: Windrunner / Tornado / Storm moved
       const ids = DJINN_NODE_IDS; let rf = 0;
       for(const k of ids){ rf += player.skills[k]||0; player.skills[k] = 0; }
@@ -313,7 +322,7 @@ function newGame(saved, cls){
     player.reachedIcySummit = !!saved.reachedIcySummit;
     player.reachedRedridge = !!saved.reachedRedridge; player.reachedFrostholdWp = !!saved.reachedFrostholdWp; player.reachedCrater = !!saved.reachedCrater; player.gojiraSlain = !!saved.gojiraSlain; player.obsidianTaken = !!saved.obsidianTaken; player.dragonboltGiven = !!saved.dragonboltGiven; player.hunterRuneRewarded = !!saved.hunterRuneRewarded; player.runeforgeUnlocked = !!saved.runeforgeUnlocked;
     player.partLeviathan = !!saved.partLeviathan; player.partMastodon = !!saved.partMastodon; player.recipeBoss = saved.recipeBoss||{}; player.playTime = saved.playTime||0; player.killCount = saved.killCount||0; player.partThunder = !!saved.partThunder; player.partKraken = !!saved.partKraken; player.witchRescued = !!saved.witchRescued;
-    player.witchBrewed = !!saved.witchBrewed; player.partsHarvest = !!saved.partsHarvest; player.recipeBookTaken = !!saved.recipeBookTaken; player.recipeBookRead = !!saved.recipeBookRead; player.knightEquip = saved.knightEquip||null; player.parts = saved.parts||{}; player.recipes = saved.recipes||{}; player.witchStock = saved.witchStock||null; player.fhtRuneTaken = !!saved.fhtRuneTaken; player.purpleDrunk = !!saved.purpleDrunk;
+    player.witchBrewed = !!saved.witchBrewed; player.partsHarvest = !!saved.partsHarvest; player.witchRareGiven = saved.witchRareGiven==null ? !!saved.partsHarvest : !!saved.witchRareGiven;   /* v493: older saves already got the gift */ player.recipeBookTaken = !!saved.recipeBookTaken; player.recipeBookRead = !!saved.recipeBookRead; player.knightEquip = saved.knightEquip||null; player.parts = saved.parts||{}; player.recipes = saved.recipes||{}; player.witchStock = saved.witchStock||null; player.fhtRuneTaken = !!saved.fhtRuneTaken; player.purpleDrunk = !!saved.purpleDrunk;
     player.shrineBlessed = !!saved.shrineBlessed; player.forestHunterPos = saved.forestHunterPos||null; player.leviathanSlain = !!saved.leviathanSlain; player.krakenSlain = !!saved.krakenSlain; player.wmSeen = saved.wmSeen||{};
     player.shrineStage = saved.shrineStage||0; player.scholarEast = !!saved.scholarEast; player.fhCmdSlain = !!saved.fhCmdSlain; player.fhCmdLooted = !!saved.fhCmdLooted; player.constructSlain = !!saved.constructSlain; player.heartstoneDone = !!saved.heartstoneDone; player.witchPotionStarted = !!saved.witchPotionStarted;
     player.frostholdUnlocked = !!saved.frostholdUnlocked; player.snowWallOpen = !!saved.snowWallOpen; player.heartstoneTaken = !!saved.heartstoneTaken; player.defilerSlain = !!saved.defilerSlain; player.inscriptionTaken = !!saved.inscriptionTaken; player.scholarMet = !!saved.scholarMet; player.scholarMeet = !!saved.scholarMeet; player.scholarLeft = !!saved.scholarLeft; player.ruinsEvent = saved.ruinsEvent||0; player.scholarRead = !!saved.scholarRead; player.fhDungeonKey = !!saved.fhDungeonKey; player.fhDungeonOpen = !!saved.fhDungeonOpen; player.fhDungeonDone = !!saved.fhDungeonDone; player.redridgeWallOpen = !!saved.redridgeWallOpen; player.npcMarks = saved.npcMarks||{};

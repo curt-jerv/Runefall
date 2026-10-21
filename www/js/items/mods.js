@@ -96,7 +96,7 @@ function rollExtraAffixesRaw(category, itemTier, ilvl, material, innateKey, coun
     if(a.minIlvl && ilvl<a.minIlvl) return false;
     return true;
   });
-  const weightOf = a=> a.key==='skillDurPct' ? 0.5 : a.key==='statusDurPct' ? (category==='staff' ? 2.5 : 0.5) : a.key==='dmgVsElitePct' ? 0.25 : a.key==='critDmgPct' ? 0.7 : (a.key==='lifeOnKill'||a.key==='manaOnKill'||a.key==='potionStrengthPct') ? 0.6 : (a.skillTree||a.skillGroup||a.allSkills) ? AFFIX_WEIGHT.skill : (AFFIX_WEIGHT[a.key]!=null ? AFFIX_WEIGHT[a.key] : 1);
+  const weightOf = a=> a.key==='lightRadiusPct' ? 0.5 : a.key==='skillDurPct' ? 0.5 : a.key==='statusDurPct' ? (category==='staff' ? 2.5 : 0.5) : a.key==='dmgVsElitePct' ? 0.25 : a.key==='critDmgPct' ? 0.7 : (a.key==='lifeOnKill'||a.key==='manaOnKill'||a.key==='potionStrengthPct') ? 0.6 : (a.skillTree||a.skillGroup||a.allSkills) ? AFFIX_WEIGHT.skill : (AFFIX_WEIGHT[a.key]!=null ? AFFIX_WEIGHT[a.key] : 1);
   while(chosen.length<count){
     const cands = pool.filter(a=>{
       if(usedKeys.has(affixUniqueKey(a))) return false;

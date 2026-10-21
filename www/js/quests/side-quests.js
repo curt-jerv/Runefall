@@ -80,8 +80,9 @@ function talkGraverobbers(){
     });
   } else if(q.status==='active' && p.defilerSlain){
     showNpcText('Graverobbers', '"You found him... and it was not him anymore. Gods. Take this -- it is all we have left from a hundred bad nights."', 'Take reward', ()=>{
+      const item = classRewardItem(p, Math.max(p.level, 18), 'reward');
+      if(!giveRewardIfRoom(p, [item])) return;   // v492
       q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'You ended the Defiler. The graverobbers are grateful.';
-      const item = classRewardItem(p, Math.max(p.level, 18), 'reward'); forceAddToBag(p, item);
       p.gold += 150; gainXp(game, Math.round(xpForKill(18, true)*1.5));
       showMsg('Quest complete: '+QUEST_GRAVEROBBERS.name+' — '+item.name+' + 150 gold', 3.2);
       bagPulse(); updateQuestBadge(); saveGame();
@@ -104,8 +105,10 @@ function talkWayfarer(){
     });
   } else if(rrBeaconCount(p)>=3 && getQuest(p,'rr_towers') && getQuest(p,'rr_towers').rewarded===false){
     showNpcText('The Last Wayfarer', '"The bridge is whole. Take this -- you have earned it."', 'Accept', ()=>{
-      const q = getQuest(p,'rr_towers'); q.rewarded = true;
-      const it = classRewardItem(p, Math.max(p.level, game.depth||RR_DEPTH), 'reward'); forceAddToBag(p, it); tryAutoEquip(p, it);
+      const q = getQuest(p,'rr_towers');
+      const it = classRewardItem(p, Math.max(p.level, game.depth||RR_DEPTH), 'reward');
+      if(!giveRewardIfRoom(p, [it])) return;   // v492: keeps asking until there is room
+      q.rewarded = true; tryAutoEquip(p, it);
       p.gold += 500; gainXp(game, 400 + (game.depth||RR_DEPTH)*20);
       npcMark(p, 'wayfarer', false);
       showMsg('Reward: '+it.name+' + 500 gold', 3.0); bagPulse(); updateQuestBadge(); saveGame();
@@ -152,8 +155,8 @@ function talkScholar(){
     const rs = findRunestone(p);
     if(rs && !p.scholarRead){
       showNpcText('Scholar', '"It seems there is a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
-        p.scholarRead = true;
-        { const si = classRewardItem(p, Math.max(p.level||1, 23), 'reward'); forceAddToBag(p, si); p.gold += 300; } bagPulse();
+        { const si = classRewardItem(p, Math.max(p.level||1, 23), 'reward'); if(!giveRewardIfRoom(p, [si])) return; p.gold += 300; }   // v492: asks again until there is room
+        p.scholarRead = true; bagPulse();
         const q = getQuest(p, 'scholar_ruins'); if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'You found the first runestone below the lake.'; }
         if(!getQuest(p, 'shrine_stone')) p.quests.push({id:'shrine_stone', name:'The Mountain Judges', desc:'\u2018From stone to stone, the Mountain will judge its bearer.\u2019 Find the ancient altar atop the mountain summit: through the Black Marsh and the Barren Highlands to the Mountain Pass, then up.', status:'active', progress:0, total:1});
         npcMark(p, 'scholar', false);
