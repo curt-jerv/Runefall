@@ -199,11 +199,11 @@ function enterHighward(floor, opts){
   if(st && floor===HW_FLOORS && !st.enemies.some(e=>e.hwGuardian && e.hp>0)){ delete g.hwStore[floor]; spawnHighward(g); }   // v489: the Warden's floor refills after a kill
   else if(st){ g.enemies = st.enemies.filter(e=>e.hp>0); t.greeted = st.greeted; if(st.chests) t.chests.forEach((c,i)=>{ c.opened = !!st.chests[i]; }); }
   else spawnHighward(g);
-  if(floor===1 && !p.hwMapFound && !g.enemies.some(e=>e.hwMapCarrier && e.hp>0)){
+  if(floor<HW_FLOORS && !p.hwMapFound && !g.enemies.some(e=>e.hwMapCarrier && e.hp>0)){   // v503: every floor keeps a bearer until the map is found
     // v425b: make sure the map bearer exists (also repairs floors restored from an older layout)
-    const fr = t.hwFirstRoom, fx = fr ? fr.x+fr.w/2 : t.entrance.x, fy = fr ? fr.y+fr.h/2 : t.entrance.y;
+    const fr = floor===1 ? t.hwFirstRoom : null, fx = fr ? fr.x+fr.w/2 : t.entrance.x, fy = fr ? fr.y+fr.h/2 : t.entrance.y;
     let best = null, bd = 1e9;
-    for(const e of g.enemies){ if(e.hp<=0 || e.hwSentry) continue; const d = Math.hypot(e.x-fx, e.y-fy) - (e.hw==='warden'?400:0); if(d<bd){ bd = d; best = e; } }
+    for(const e of g.enemies){ if(e.hp<=0 || e.hwSentry) continue; const d = floor===1 ? Math.hypot(e.x-fx, e.y-fy) - (e.hw==='warden'?400:0) : Math.hypot(e.x-fx, e.y-fy); if(d<bd){ bd = d; best = e; } }
     if(best){ best.hwMapCarrier = true; best.mapCarrier = true; best.mapHolder = true; best.xpMul = Math.max(best.xpMul||1, 3); }
   }
   t.hasGuardian = g.enemies.some(e=>e.hwGuardian && e.hp>0);

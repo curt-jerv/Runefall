@@ -629,6 +629,8 @@ function spawnKeep(g){
   if(room.exitDoor) av.push({x:room.exitDoor.x,y:room.exitDoor.y,r:220});
   if(room.waypoint) av.push({x:room.waypoint.x,y:room.waypoint.y,r:300});
   if(room.holdStairs) av.push({x:room.holdStairs.x,y:room.holdStairs.y,r:200});
+  // v503: the floor's Map Bearer is the marked brute nearest the way in
+  { let bz = null, bd = 1e9; for(const z of room.zones){ if(!z.mapBrute) continue; const d = Math.hypot((z.rect[0]+z.rect[1])/2-room.entrance.x, (z.rect[2]+z.rect[3])/2-room.entrance.y); if(d<bd){ bd = d; bz = z; } } room._mbZone = bz; }
   for(const z of room.zones){
     let first = true;
     for(const types of z.packs){
@@ -642,7 +644,7 @@ function spawnKeep(g){
         else if(t==='giantspider'){ e = spawnEnemy(g, 'spider', pos); if(e) makeGiantSpider(e); }
         else e = spawnEnemy(g, t, pos);
         if(e && t==='cultist') raiseCultGuard(g, e, 4, false);
-        if(e && z.mapBrute && t==='skeletonbrute' && !types._mb && !room._mbPlaced){ types._mb = true; room._mbPlaced = true; e.mapBrute = true; e.mapCarrier = true; e.mapHolder = true; e.hp = Math.round(e.hp*2); e.maxHp = Math.round(e.maxHp*2); }
+        if(e && z.mapBrute && z===room._mbZone && t==='skeletonbrute' && !types._mb && !room._mbPlaced){ types._mb = true; room._mbPlaced = true; e.mapBrute = true; e.mapCarrier = true; e.mapHolder = true; e.hp = Math.round(e.hp*2); e.maxHp = Math.round(e.maxHp*2); }
         if(e && room.kpArea===9) brScaleEnemy(e, room.bf);
         if(e && z.elite && first){ first = false; makeElite(e, pickMods(2)); }
         else if(e && z.gate){ makeElite(e, pickMods(1)); }
@@ -650,6 +652,9 @@ function spawnKeep(g){
       }
     }
   }
+  if(room.kpArea<=3 && room._mbZone && !room._mbPlaced){   // v503: the marked brute's spot was blocked -- the nearest skeleton brute carries the map instead
+    let be = null, bd = 1e9; for(const e of g.enemies){ if(e.type!=='skeletonbrute' || e.hp<=0) continue; const d = Math.hypot(e.x-room.entrance.x, e.y-room.entrance.y); if(d<bd){ bd = d; be = e; } }
+    if(be){ room._mbPlaced = true; be.mapBrute = true; be.mapCarrier = true; be.mapHolder = true; be.hp = Math.round(be.hp*2); be.maxHp = Math.round(be.maxHp*2); } }
   // v434: on the Demon Hold floor the Wraith Lord appears only once you stand in the red pentagram (see updateKeep)
   if(room.kpArea===9 && room.bossKind && room.bossPos) spawnBreachBoss(g, room.bossKind, room.bossPos);
 }
