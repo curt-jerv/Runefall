@@ -209,6 +209,7 @@ const GUARDIAN_PULL_R = 360, GUARDIAN_TAKEN = 0.4, GUARDIAN_DUR_V2 = 4;
 
 // ---------- Templar ----------
 const TEMPLAR_PLAYER_DMG = 0.5;        // v470: with Commander, your own hits are lighter...
+// v496: the Templar's own hits are no longer reduced while commanding followers (TEMPLAR_PLAYER_DMG / commanderBargain are unused)
 function commanderBargain(p){ return !!(p && p.cls==='warrior' && p.skills && (p.skills.squire||0)>0); }
 const TEMPLAR_FOLLOWER_BASE = 1.7;     // ...because their followers hit much harder
 const COMMANDER_DMG_PER_RANK = 0.15;

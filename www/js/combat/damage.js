@@ -192,7 +192,7 @@ function applyEnemyArmor(p, e, dmg, extraPen, el){
   if(e.fearVulnT>0) dmg *= 1 + (e.fearVulnPct||0)/100;
   if(e.markT>0) dmg *= huntMarkMult(p, e);
   if(e.warCryT>0) dmg *= 1 + (e.warCryPct||WARCRY_VULN);
-  if(p.cls==='warrior'){ dmg *= WARRIOR_DMG_MULT; if(commanderBargain(p)) dmg *= TEMPLAR_PLAYER_DMG; if(p._inWar) dmg *= 1 + bannerWarDmg(p); dmg *= 1 + rampageBonus(p); }
+  if(p.cls==='warrior'){ dmg *= WARRIOR_DMG_MULT; if(p._inWar) dmg *= 1 + bannerWarDmg(p); dmg *= 1 + rampageBonus(p); }
   if(p.cls==='warrior' && !(p.rageGainCd>0)){ p.rageGainCd = RAGE_HIT_INTERVAL; gainResource(p, RAGE_ON_HIT); }
   const armor = el ? 0 : (e.armor||0);
   let final = dmg;
