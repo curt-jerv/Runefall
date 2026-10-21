@@ -1290,7 +1290,7 @@
 /* Landscape: life globe, menu bar + XP, resource globe in one row along the bottom, centred on the screen
    (pulled left only when a narrow screen would push it into the action buttons). Region name and buffs sit top centre. */
 #hudDock{ top:auto !important; right:auto !important; bottom:calc(6px + env(safe-area-inset-bottom,0px)) !important;
-  left:min(50%, calc(100% - 455px - env(safe-area-inset-right,0px))) !important; transform:translateX(-50%) !important;
+  left:min(50%, calc(100% - 412px - env(safe-area-inset-right,0px))) !important; transform:translateX(-50%) !important;
   justify-content:center !important; align-items:flex-end !important; gap:8px !important; padding:0 !important; }
 #subHud{ justify-content:center !important; padding-top:calc(5px + env(safe-area-inset-top,0px)) !important; gap:12px !important; }
 #subHud #zonePlaque{ flex:0 1 auto !important; text-align:center !important; order:1; }
@@ -1298,22 +1298,21 @@
 #topWrap #buffBar{ justify-content:center; padding:4px 12px 0 !important; }
 #achToast{ top:calc(8px + env(safe-area-inset-top,0px)) !important; }
 
-/* Action buttons: Strike in the corner, the three skills on an inner ring around it (radius 92px),
-   Dodge / Interact / Potion on an outer ring (radius 168px) at the same three angles -- every gap is even. */
-#actionCluster::before{ content:''; position:absolute; right:-188px; bottom:-188px; width:460px; height:460px; border-radius:50%; pointer-events:none;
-  background:radial-gradient(circle, rgba(0,0,0,.34) 0, rgba(0,0,0,.2) 42%, rgba(0,0,0,0) 68%); }
-#actionCluster::after{ content:''; position:absolute; right:-50px; bottom:-50px; width:182px; height:182px; border-radius:50%; pointer-events:none;
-  box-shadow:0 0 0 1px rgba(190,150,80,.2); }
-#actionCluster #btnAttack{ right:0 !important; bottom:0 !important; width:84px !important; height:84px !important; }
-#actionCluster .actbtn.skillSlotBtn{ width:52px !important; height:52px !important; }
-#actionCluster #btnSlot1{ right:108px !important; bottom:16px !important; }
-#actionCluster #btnSlot2{ right:81px !important; bottom:81px !important; }
-#actionCluster #btnSlot3{ right:16px !important; bottom:108px !important; }
-#actionCluster #btnDodge{ right:187px !important; bottom:19px !important; width:46px !important; height:46px !important; }
-#actionCluster #btnDodge .lbl{ font-size:8.5px !important; }
-#actionCluster .interactBtn{ right:138px !important; bottom:138px !important; width:46px !important; height:46px !important; }
-body.noPotionBtn #actionCluster .interactBtn{ right:138px !important; bottom:138px !important; }
-#actionCluster #btnPotion{ right:19px !important; bottom:187px !important; width:46px !important; height:46px !important; }
+/* Action buttons (v493b, compact): a smaller Strike in the corner, the three skills hugging it (74px ring),
+   Dodge at the end of the bottom row, Potion above the top skill and Interact above that, both on the right edge. */
+#actionCluster::before{ content:''; position:absolute; right:-133px; bottom:-133px; width:340px; height:340px; border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(0,0,0,.3) 0, rgba(0,0,0,.16) 45%, rgba(0,0,0,0) 70%); }
+#actionCluster #btnAttack{ right:0 !important; bottom:0 !important; width:74px !important; height:74px !important; }
+#actionCluster #btnAttack .slotIcon{ inset:12px; }
+#actionCluster .actbtn.skillSlotBtn{ width:48px !important; height:48px !important; }
+#actionCluster #btnSlot1{ right:87px !important; bottom:13px !important; }
+#actionCluster #btnSlot2{ right:65px !important; bottom:65px !important; }
+#actionCluster #btnSlot3{ right:13px !important; bottom:87px !important; }
+#actionCluster #btnDodge{ right:143px !important; bottom:15px !important; width:44px !important; height:44px !important; }
+#actionCluster #btnDodge .lbl{ font-size:8px !important; }
+#actionCluster #btnPotion{ right:15px !important; bottom:143px !important; width:44px !important; height:44px !important; }
+#actionCluster .interactBtn{ right:15px !important; bottom:197px !important; width:44px !important; height:44px !important; }
+body.noPotionBtn #actionCluster .interactBtn{ right:15px !important; bottom:143px !important; }
 
 /* Portrait: the globes and menu bar sit along the top; region name, buffs and messages line up underneath */
 @media (orientation:portrait){
