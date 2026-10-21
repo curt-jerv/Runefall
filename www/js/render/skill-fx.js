@@ -268,6 +268,19 @@ function drawProjectilesIso(list){
       ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.95;   // white centre
       ctx.beginPath(); ctx.moveTo(L*0.62, 0); ctx.lineTo(L*0.1, -Wd*0.38); ctx.lineTo(-L*0.3, 0); ctx.lineTo(L*0.1, Wd*0.38); ctx.closePath(); ctx.fill();
       ctx.restore();
+    } else if(pr.isFrozenOrb){
+      // v499 Frozen Orb: a glowing sphere of ice with crystal shards orbiting it
+      const ck = game.clock||0;
+      ctx.save(); ctx.translate(iso.x, iso.y-18);
+      ctx.globalCompositeOperation = 'lighter';
+      const og = ctx.createRadialGradient(0,0,2,0,0,36); og.addColorStop(0,'rgba(210,244,255,0.8)'); og.addColorStop(0.45,'rgba(110,190,255,0.4)'); og.addColorStop(1,'rgba(60,140,255,0)');
+      ctx.fillStyle = og; ctx.beginPath(); ctx.arc(0,0,36,0,7); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      const cg = ctx.createRadialGradient(-4,-5,1,0,0,15); cg.addColorStop(0,'#ffffff'); cg.addColorStop(0.5,'#a8dcff'); cg.addColorStop(1,'#3b86d8');
+      ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(0,0,14,0,7); ctx.fill(); ctx.strokeStyle = 'rgba(230,248,255,0.9)'; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.fillStyle = '#e8f8ff';
+      for(let k=0;k<5;k++){ const a = ck*3.2 + k*1.2566, sx = Math.cos(a)*22, sy = Math.sin(a)*11; ctx.beginPath(); ctx.moveTo(sx,sy-4); ctx.lineTo(sx+2.5,sy); ctx.lineTo(sx,sy+4); ctx.lineTo(sx-2.5,sy); ctx.closePath(); ctx.fill(); }
+      ctx.restore();
     } else if(pr.isIceBolt){
       // v236: crystalline ice lance -- faceted shard, frosty streak, orbiting crystal fragments and twinkling snow
       const ck = game.clock||0, ph = pr.x*0.011+pr.y*0.015+ck*9;

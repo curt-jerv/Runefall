@@ -81,7 +81,7 @@ const ACTIVE_SKILL_REGISTRY = {
   // (see that node's comment + VIRTUAL_SKILL_NAMES) -- they still plug into
   // this exact same registry shape as any real tree-node active skill.
   fireball:      { oldBtnId:null,              trigger(){ wantFireball=true; },      getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
-  iceBolt:       { oldBtnId:null,              trigger(){ wantIceBolt=true; },       getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
+  iceBolt:       { oldBtnId:null,              trigger(){ wantIceBolt=true; },       getCd(p){ return (typeof uq==='function' && uq(p,'uq_elementalist')) ? {cur:Math.max(p.atkCd||0, p.frozenOrbCd||0), max:Math.max(p.atkCdMax||0, p.frozenOrbCdMax||FROZEN_ORB_CD)} : {cur:p.atkCd, max:p.atkCdMax}; } },   // v499: Frozen Orb has its own cooldown
   iceArmor:      { oldBtnId:null,              trigger(){ wantIceArmor=true; },      getCd(p){ return {cur:p.iceArmorCd, max:p.iceArmorCdMax}; } },
   pyroTorrent:   { oldBtnId:null,              trigger(){ wantPyroTorrent=true; },   getCd(p){ return {cur:p.pyroTorrentCd, max:p.pyroTorrentCdMax}; } },
   blizzard:      { oldBtnId:null,              trigger(){ wantBlizzard=true; },      getCd(p){ return {cur:p.blizzardCd, max:p.blizzardCdMax}; } },

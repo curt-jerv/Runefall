@@ -139,6 +139,41 @@ const FIREBALL_ATKCD_MULT = 0.7, FIREBALL_BALL_MULT = 0.7, FIREBALL_VOLLEY_GAP =
 const ICE_BOLT_ATKCD_MULT = 1.686, ICE_BOLT_DMG_MULT = 4.05;   // v442: 1.15s base cast (was 1.23s), damage ~89% of Fireball's DPS
 const PERMAFROST_ICEBOLT_SPEED = 1.25;   // v442: Ice Bolt casts 25% faster while you stand in your Permafrost
 const ICE_BOLT_R = 11, ICE_BOLT_SPEED_MULT = 0.8;
+// v499 Frozen Orb (Crystalline Prism turns Ice Bolt into it): a slow orb that sprays small ice bolts in a rotating spiral as it travels
+// and bursts into a ring of bolts and a cold blast at the end of its range. Damage is expressed in "Ice Bolt hits".
+const FROZEN_ORB_SPEED = 150, FROZEN_ORB_RANGE = 540, FROZEN_ORB_CD = 2.4, FROZEN_ORB_BOLT_GAP = 0.09, FROZEN_ORB_SPIRAL = 0.66, FROZEN_ORB_BOLT_SPEED = 300, FROZEN_ORB_BOLT_LIFE = 0.8;
+const FROZEN_ORB_BOLT_DMG = 0.3, FROZEN_ORB_TOUCH_DMG = 0.2, FROZEN_ORB_TOUCH_GAP = 0.3, FROZEN_ORB_BLAST_R = 130, FROZEN_ORB_BLAST_DMG = 1.0, FROZEN_ORB_NOVA_BOLTS = 14;
+function frozenOrbBolt(g, x, y, ang, dmg){
+  g.projectiles.push({x, y, vx:Math.cos(ang)*FROZEN_ORB_BOLT_SPEED, vy:Math.sin(ang)*FROZEN_ORB_BOLT_SPEED, r:5, dmg, from:'player', life:FROZEN_ORB_BOLT_LIFE, color:'#bfe9ff', isArrow:true, isIceBolt:true, isOrbBolt:true});
+}
+function castFrozenOrb(g, p, ang, dmg){
+  g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*FROZEN_ORB_SPEED, vy:Math.sin(ang)*FROZEN_ORB_SPEED, r:16, dmg:0, from:'player', life:FROZEN_ORB_RANGE/FROZEN_ORB_SPEED,
+    color:'#9adfff', isFrozenOrb:true, orbDmg:dmg, orbT:0, orbTouchT:0, orbA:Math.random()*6.283});
+  p.frozenOrbCd = applyCdr(p, FROZEN_ORB_CD); p.frozenOrbCdMax = p.frozenOrbCd;
+}
+function frozenOrbTick(g, p, pr, dt){
+  pr.orbT += dt; pr.orbTouchT -= dt;
+  while(pr.orbT >= FROZEN_ORB_BOLT_GAP){ pr.orbT -= FROZEN_ORB_BOLT_GAP; pr.orbA += FROZEN_ORB_SPIRAL; frozenOrbBolt(g, pr.x, pr.y, pr.orbA, pr.orbDmg*FROZEN_ORB_BOLT_DMG); }
+  if(pr.orbTouchT <= 0){   // the orb itself chills and nips everything it drifts through
+    pr.orbTouchT = FROZEN_ORB_TOUCH_GAP;
+    for(const e of g.enemies){
+      if(!(e.hp>0) || dist(pr,e) >= pr.r+e.r+14) continue;
+      e.hp -= applyEnemyArmor(p, e, pr.orbDmg*FROZEN_ORB_TOUCH_DMG, 0, 'cold'); e.hitT = 0.15; e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR); checkExecute(g, e);
+    }
+  }
+}
+function frozenOrbExplode(g, p, pr){
+  const R = FROZEN_ORB_BLAST_R*aoeRadiusMult(p);
+  for(const e of g.enemies){
+    if(!(e.hp>0) || dist(pr,e) >= R+e.r) continue;
+    e.hp -= applyEnemyArmor(p, e, pr.orbDmg*FROZEN_ORB_BLAST_DMG, 0, 'cold'); e.hitT = 0.15; e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR); checkExecute(g, e);
+  }
+  for(let k=0;k<FROZEN_ORB_NOVA_BOLTS;k++) frozenOrbBolt(g, pr.x, pr.y, pr.orbA + k/FROZEN_ORB_NOVA_BOLTS*6.283, pr.orbDmg*FROZEN_ORB_BOLT_DMG);
+  g.particles.push({type:'ring', x:pr.x, y:pr.y, t:0.5, max:0.5, r:R, color:'#9adfff', exact:true});
+  g.particles.push({type:'iceImpact', x:pr.x, y:pr.y, t:0.6, max:0.6, seed:Math.random()});
+  g.particles.push({type:'burst', x:pr.x, y:pr.y, t:0.4, max:0.4, color:'#dff6ff'});
+  try{ shakeScreen(g, 3, 0.2); }catch(e){}
+}
 function fireballCount(rank){ return (rank||1)>=5 ? 3 : (rank||1)>=3 ? 2 : 1; }   // v297: 2nd ball at rank 3, 3rd at rank 5
 // v297: a Fireball only sometimes ignites its target: 25% + 7.5% per skill rank, much less likely on elites/brutes/heavies and bosses (big life pools)
 function fireballBurnChance(p, e){

@@ -88,9 +88,9 @@ const PART_DEFS = {
   bearclaw:  {name:'Bear Claw',    icon:'\u{1F43B}', color:'#b08a5a', stat:'dmg',   label:'Damage',            from:'Bears'},
   wolfpelt:  {name:'Wolf Pelt',    icon:'\u{1F43A}', color:'#9aa4b4', stat:'def',   label:'Defense',           from:'Wolves and Wargs'},
   spiderleg: {name:'Spider Leg',   icon:'\u{1F577}', color:'#7a5aa8', stat:'speed', label:'Move Speed',        from:'Spiders'},
-  boartusk:  {name:'Boar Tusk',    icon:'\u{1F417}', color:'#d8c8a0', stat:'pen',   label:'Armor Penetration', from:'Boars and Rams'},
+  boartusk:  {name:'Beast Horn',   /* v499: was Boar Tusk (rams drop it too) */ icon:'\u{1F402}', color:'#d8c8a0', stat:'pen',   label:'Armor Penetration', from:'Boars and Rams'},
   snakeskin: {name:'Snake Skin',   icon:'\u{1F40D}', color:'#6aa84a', stat:'eva',   label:'Evasion',           from:'Snakes'},
-  alligatortooth:{name:'Alligator Tooth', icon:'\u{1F40A}', color:'#88b04a', stat:'bleed', label:'Bleed Damage', from:'Alligators and Giant Toads'},
+  alligatortooth:{name:'Alligator Tooth', icon:'\u{1F40A}', color:'#88b04a', stat:'bleed', label:'Bleed Damage', from:'Alligators'},
   raptorclaw:{name:'Redridge Raptor Claw', icon:'\u{1F996}', color:'#e0602a', stat:'mf', label:'Magic Find', from:'Redridge Raptors'},
   tortugashell:{name:'Tortuga Shell', icon:'\u{1F422}', color:'#5a9a6a', stat:'coldres', label:'Cold Resist', from:'Tortugas and Frozen Zombies'},
   harpytalon:{name:'Harpy Queen Talon', icon:'\u{1FAB6}', color:'#c8b8f0', stat:'bleedch', label:'Chance to Bleed', from:'The Brood Mother (Harpy\'s Nest) \u2014 10% drop', sig:true},
@@ -113,6 +113,11 @@ const PART_DEFS = {
   juggstone:{name:'Juggernaut Stone', icon:'\u{1FAA8}', color:'#a8a890', stone:true, quest:true, mods:{hp:10,regen:0.5,dmgred:5}, desc:'+10% Max HP, +0.5% Life Regen, +5% Damage Reduction.'},
   reptilestone:{name:'Reptile Stone', icon:'\u{1F98E}', color:'#6aa84a', stone:true, quest:true, mods:{bleed:25,coldres:15}, sp:'thorns', desc:'+25% Bleed Damage, +15% Cold Resist. Reflects damage back at enemies that hit you (Thorns).'},
   windstone:{name:'Wind Stone', icon:'\u{1F32A}', color:'#bfe8ff', stone:true, quest:true, mods:{speed:10,eva:5}, sp:'windroll', desc:'+10% Move Speed, +5% Evasion. Dodge-rolling grants +20% damage for 3 seconds.'},
+  // v499: four modest everyday stones from early and mid-game parts (for levelling)
+  veteranstone:{name:"Veteran's Stone", icon:'\u{1F396}', color:'#d8c870', stone:true, quest:true, mods:{xp:8,gold:10}, desc:'+8% Experience gained, +10% Gold Find.'},
+  wayfarerstone:{name:"Wayfarer's Stone", icon:'\u{1F45F}', color:'#8ac4d8', stone:true, quest:true, mods:{speed:6,eva:4}, desc:'+6% Move Speed, +4% Evasion.'},
+  ironhidestone:{name:'Ironhide Stone', icon:'\u{1F9F1}', color:'#a08060', stone:true, quest:true, mods:{hp:8,def:8}, desc:'+8% Max HP, +8% Defense.'},
+  scavengerstone:{name:"Scavenger's Stone", icon:'\u{1F9B4}', color:'#c8b890', stone:true, quest:true, mods:{lok:0.5,mok:0.5}, desc:'Each kill restores 0.5% of your max Life and 0.5% of your max Mana / Rage / Stamina.'},
   banditdirk:{name:"Bandit's Dirk", icon:'\u{1F5E1}', color:'#c8a070', stat:'critdmg', label:'Crit Damage', scale:2, from:'Bandits'},
   bonedust:{name:'Bone Dust', icon:'\u{1F9B4}', color:'#e8e0c8', stat:'mok', label:'of max Mana / Rage / Stamina on Kill', scale:0.2, from:'Skeletons'},
   cultcharm:{name:"Cultist's Charm", icon:'\u{1F4FF}', color:'#c04050', stat:'ailment', label:'Ailment Duration', scale:2, from:'Cultists and Shadow Cultists'},
@@ -135,16 +140,16 @@ const PART_DEFS = {
   wraithessence:{name:'Wraith Essence', icon:'\u{1F47B}', color:'#a8a0e8', stat:'coldpct', label:'Cold Damage', from:'Wraiths, Shadow Ghouls and the Risen Dead', sig:true, scale:2},
   // ---- The nine unique stones (amber, permanent once socketed, forged only from Perfect parts) ----
   uqdefender:{name:'Undying Bastion', icon:'\u{1F6E1}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{hp:10,dmgred:5}, sp:'uq_defender', desc:'+10% Max HP, +5% Damage Reduction. Last Stand: once every 90s a killing blow instead leaves you at 40% life, invulnerable for 3 seconds.'},
-  uqberserker:{name:'Heart of Wrath', icon:'\u{1FA78}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{dmg:10,leech:5}, sp:'uq_berserker', desc:'+10% Damage, +5% Life Leech. Fury Unbound: while below 40% life you deal +50% damage.'},
+  uqberserker:{name:'Heart of Wrath', icon:'\u{1FA78}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{dmg:30,leech:5}, sp:'uq_berserker', desc:'+30% Damage, +5% Life Leech. Fury Unbound: while below 40% life you deal +50% damage.'},
   uqtemplar:{name:'Seal of Knighthood', icon:'⚜', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{hp:8,block:5}, sp:'uq_templar', desc:'+8% Max HP, +5% Block Chance. Knighthood: your Squires can wear a helm, armor, sword and shield. Manage them in the Knights tab of your inventory; every knight shares the same gear.'},
   uqsurvivalist:{name:'Snare of Echoes', icon:'\u{1FAA4}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{eva:8,cdr:8}, sp:'uq_survivalist', desc:'+8% Evasion, +8% Cooldown Reduction. Twin Snares: every trap you throw is echoed by a second trap of the same kind beside it.'},
-  uqmarksman:{name:'Phantom Quiver', icon:'\u{1F3F9}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{crit:8,atkspd:6}, sp:'uq_marksman', desc:'+8% Crit Chance, +6% Attack Speed. Ghost Volley: Multi Shot looses 2 additional arrows.'},
+  uqmarksman:{name:'Phantom Quiver', icon:'\u{1F3F9}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{crit:8,atkspd:6}, sp:'uq_marksman', desc:'+8% Crit Chance, +6% Attack Speed. Ghost Volley: every projectile you fire has a 50% chance to pierce through enemies.'},
   uqhunter:{name:'Totem of the Great Bear', icon:'\u{1F43B}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{hp:8,dmg:6}, sp:'uq_hunter', desc:'+8% Max HP, +6% Damage. Pack Alpha: summons 1 additional Bear companion (requires Summon Bear).'},
-  uqdjinn:{name:'Eye of the Tempest', icon:'\u{1F300}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{atkspd:6,lightres:25}, sp:'uq_djinn', desc:'+6% Attack Speed, +25% Lightning Resist. Stormcaller: Lightning Arc chains to 3 additional enemies.'},
-  uqelementalist:{name:'Twinflame Prism', icon:'\u{1F52E}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{aoe:10,fireres:15,coldres:15}, sp:'uq_elementalist', desc:'+10% Area Size, +15% Fire and Cold Resist. Twinflame: Fireball launches 1 additional ball and Ice Bolt fires 2 extra bolts in a fan.'},
+  uqdjinn:{name:'Eye of the Tempest', icon:'\u{1F300}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{lightpct:30,lightres:25}, sp:'uq_djinn', desc:'+30% Lightning Damage, +25% Lightning Resist. Stormcaller: Lightning Arc chains to 3 additional enemies.'},
+  uqelementalist:{name:'Crystalline Prism', icon:'\u{1F52E}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{coldpct:30,coldres:15}, sp:'uq_elementalist', desc:'+30% Cold Damage, +15% Cold Resist. Turns Ice Bolt into Frozen Orb.'},
   uqcrater:{name:"Crown of the Crater King", icon:'\u{1F451}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{dmg:8,hp:6}, sp:'uq_crater', desc:'+8% Damage, +6% Max HP. Crater Stomp: every 8s your next attack stamps a T-Rex foot, crushing enemies in a wide circle for 150% weapon damage. Apex Hunger: each kill grants a stack (max 5, lasts 6s) of +4% attack speed and +3% damage.'},
   // v490: Pyre Heart -- Immolate also wreathes you in a Flame Vortex
-  uqpyre:{name:'Pyre Heart', icon:'\u{1F525}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{firepct:10,fireres:15}, sp:'uq_pyre', desc:'+10% Fire Damage, +15% Fire Resist. Pyre Heart: while Immolate burns, a Flame Vortex swirls around you (uses your Flame Vortex rank, or rank 5 if you have none).'},
+  uqpyre:{name:'Pyre Heart', icon:'\u{1F525}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{firepct:30,fireres:15}, sp:'uq_pyre', desc:'+30% Fire Damage, +15% Fire Resist. Pyre Heart: while Immolate burns, a Flame Vortex swirls around you.'},
   uqnecromancer:{name:"Lich's Phylactery", icon:'\u{1F480}', color:'#f2a31b', stone:true, unique:true, quest:true, mods:{cdr:8,hp:6}, sp:'uq_necromancer', desc:'+8% Cooldown Reduction, +6% Max HP. Legion: Raise Dead raises 2 additional skeleton minions.'},
 };
 const PART_KEYS = Object.keys(PART_DEFS);
@@ -155,7 +160,7 @@ const PART_DROPS = {
   hellhound:['demonheart'], imp:['demoneye'], cinderfiend:['demoneye'], brimstonebrute:['demonhorn'], demonboss:PART_DEMON, balrog:['demonheart','demonhorn'],
   bear:['bearclaw'], wolf:['wolfpelt'], warg:['wolfpelt'], spider:['spiderleg'], boar:['boartusk'], ram:['boartusk'],
   anaconda:['snakeskin'], poisonsnake:['snakeskin'], stormsnake:['snakeskin'], sandsnake:['snakeskin'],
-  alligator:['alligatortooth'], giantoad:['alligatortooth'], raptor:['raptorclaw'], tortuga:['tortugashell'], frozenzombie:['tortugashell'],
+  alligator:['alligatortooth'], raptor:['raptorclaw'], tortuga:['tortugashell'], frozenzombie:['tortugashell'],
   lavabeetle:['lavacarapace'], magmacrawler:['lavacarapace'], zombie:['rottenflesh'], poisonwalker:['rottenflesh'], poisonplant:['rottenflesh'],
   cavetroll:['trollhide'], mtroll:['trollhide'], trollelder:['trollhide'], goblin:['goblinear'], goblinarcher:['goblinear'],
   bandit:['banditdirk'], banditarcher:['banditdirk'], banditbrute:['banditdirk'],
@@ -167,7 +172,7 @@ const PART_DROPS = {
 // ---------- Cauldron recipes (v361): three parts in, one Stone out; order and tier do not matter ----------
 const STONE_RECIPES = [
   {id:'demonic',   stone:'demonicstone',  parts:['demonheart','demoneye','demonhorn'],        hint:'Three gifts torn from the Pit\'s own spawn.'},
-  {id:'predator',  stone:'predatorstone', parts:['bearclaw','wolfpelt','boartusk'],            hint:'The claw, the pelt and the tusk of the hunt.'},
+  {id:'predator',  stone:'predatorstone', parts:['bearclaw','wolfpelt','boartusk'],            hint:'The claw, the pelt and the horn of the hunt.'},
   {id:'venom',     stone:'venomstone',    parts:['snakeskin','spiderleg','rottenflesh'],       hint:'Slither, creep and rot.'},
   {id:'storm',     stone:'stormstone',    parts:['stormclaw','harpyfeather','spiderleg'],      hint:'Feather, fang and thunder on the wing.'},
   {id:'infernal',  stone:'infernalstone', parts:['lavacarapace','firewing','demonhorn'],       hint:'Shell and wing of the fire-things, bound by a damned horn.'},
@@ -175,9 +180,14 @@ const STONE_RECIPES = [
   {id:'jugg',      stone:'juggstone',     parts:['trollhide','buffalohide','armordonplate'],   hint:'Hide, hide and plate: whatever refuses to fall.'},
   {id:'reptile',   stone:'reptilestone',  parts:['alligatortooth','scalehide','tortugashell'], hint:'Tooth and scale of those who lurk.'},
   {id:'wind',      stone:'windstone',     parts:['harpyfeather','raptorclaw','wolfpelt'],      hint:'Swift on the wing, swift on the claw, swift on the paw.'},
+  // v499: everyday recipes for the early and middle game (every ingredient drops before the Redridge zones)
+  {id:'veteran',   stone:'veteranstone',   parts:['banditdirk','goblinear','bonedust'],  hint:'A bandit\'s blade, a goblin\'s trophy and the bones of the fallen: the spoils of every skirmish.'},
+  {id:'wayfarer',  stone:'wayfarerstone',  parts:['wolfpelt','spiderleg','banditdirk'],  hint:'Light feet: a hound\'s pelt, a spider\'s leg and a thief\'s knife.'},
+  {id:'ironhide',  stone:'ironhidestone',  parts:['bearclaw','trollhide','bonedust'],    hint:'The bear\'s claw, the troll\'s hide and the bone of what they killed: tougher than the road.'},
+  {id:'scavenger', stone:'scavengerstone', parts:['rottenflesh','bonedust','goblinear'], hint:'Rot, bone and a goblin\'s greed: take what the dead leave behind.'},
   // v383: unique amber stones. Every part must be PERFECT (tier 3).
   {id:'uq_defender',    stone:'uqdefender',    perfect:true, parts:['golemcore','armordonplate','trollhide'],       hint:'Stone heart, iron plate and troll hide: the wall that will not fall.'},
-  {id:'uq_berserker',   stone:'uqberserker',   perfect:true, parts:['hellhoundfang','demonheart','boartusk'],       hint:'The fang of a hellhound, a demon\'s heart and a tusk that never tires of charging.'},
+  {id:'uq_berserker',   stone:'uqberserker',   perfect:true, parts:['hellhoundfang','demonheart','boartusk'],       hint:'The fang of a hellhound, a demon\'s heart and a horn that never tires of charging.'},
   {id:'uq_templar',     stone:'uqtemplar',     perfect:true, parts:['knightsigil','harpyfeather','wolfpelt'],       hint:'A knight\'s sigil, a feather of grace and the pelt of a loyal hound.'},
   {id:'uq_survivalist', stone:'uqsurvivalist', perfect:true, parts:['coilspring','spiderleg','snakeskin'],          hint:'A clockwork spring, a spider\'s cunning and a serpent\'s patience.'},
   {id:'uq_marksman',    stone:'uqmarksman',    perfect:true, parts:['vultureeye','demoneye','stormclaw'],           hint:'Eyes that never miss, and a claw that strikes like lightning.'},
@@ -234,7 +244,7 @@ function addPart(p,k,t,n){ if(!p.parts) p.parts = {}; const id = partId(k,t||1);
 function takePart(p,k,t,n){ n = n||1; const id = partId(k,t); if(!p.parts || (p.parts[id]||0)<n) return false; p.parts[id]-=n; if(p.parts[id]<=0) delete p.parts[id]; return true; }
 function partBonuses(p){
   const b = {leech:0,crit:0,hp:0,dmg:0,def:0,speed:0,pen:0,eva:0,bleed:0,bleedch:0,sp:{},atkspd:0,aoe:0,mf:0,dmgred:0,block:0,cdr:0,coldres:0,fireres:0,poisres:0,regen:0,gold:0,lightres:0,
-    critdmg:0,physpct:0,firepct:0,coldpct:0,lightpct:0,poisonpct:0,elempct:0,mok:0,lok:0,ailment:0,elite:0,allres:0,thorns:0,minion:0,proj:0,potion:0,maxres:0,mana:0};
+    xp:0,critdmg:0,physpct:0,firepct:0,coldpct:0,lightpct:0,poisonpct:0,elempct:0,mok:0,lok:0,ailment:0,elite:0,allres:0,thorns:0,minion:0,proj:0,potion:0,maxres:0,mana:0};
   let uniqueUsed = false;   // v383: only ONE unique stone is active at a time
   const stoneSeen = {};   // v490: each stone type counts once across all worn gear
   for(const it of Object.values(p.equipment||{})){

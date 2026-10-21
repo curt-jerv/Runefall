@@ -389,6 +389,16 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
       mctx.beginPath(); mctx.arc(sx, sy, DARKCRYPT_TORCH_LIGHT_R, 0, Math.PI*2); mctx.fill();
     }
   }
+  if(g.projectiles){   // v499: a Frozen Orb lights up the dark around itself
+    for(const pr of g.projectiles){
+      if(!pr.isFrozenOrb) continue;
+      const iso = toIso(pr.x, pr.y), sx = iso.x - cam.x, sy = iso.y - cam.y - 18;
+      if(sx < -200 || sx > W+200 || sy < -200 || sy > H+200) continue;
+      const og = mctx.createRadialGradient(sx, sy, 0, sx, sy, 190);
+      og.addColorStop(0, 'rgba(0,0,0,0.95)'); og.addColorStop(0.55, 'rgba(0,0,0,0.6)'); og.addColorStop(1, 'rgba(0,0,0,0)');
+      mctx.fillStyle = og; mctx.beginPath(); mctx.arc(sx, sy, 190, 0, Math.PI*2); mctx.fill();
+    }
+  }
   // Composite the finished mask onto the main canvas with plain
   // source-over -- transparent (hole) pixels leave the scene beneath
   // completely untouched, opaque black pixels paint over it, exactly the

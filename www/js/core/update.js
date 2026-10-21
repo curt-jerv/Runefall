@@ -1644,7 +1644,7 @@ function updateStep(dt){
       p.atkAnimT = 0.2;
       p.atkCd = p.atkCdMax*FIREBALL_ATKCD_MULT;
       const pol = polarityCast(p, 'fire');
-      const n = fireballCount(fbRank) + (uq(p,'uq_elementalist') ? 1 : 0);
+      const n = fireballCount(fbRank);
       const bdmg = elementalPolarityDmg(p, FIREBALL_BASE_DMG, 0, 'fireball') * pol;
       p.fbQueue = p.fbQueue || [];
       for(let k=0;k<n;k++) p.fbQueue.push({t:k*FIREBALL_VOLLEY_GAP, ang, off:(k%2===0?-1:1)*FIREBALL_SIDE_OFFSET, dmg:bdmg});
@@ -1662,10 +1662,12 @@ function updateStep(dt){
     }
   }
   if(p.iceBoltCd>0) p.iceBoltCd -= dt;
+  if(p.frozenOrbCd>0) p.frozenOrbCd -= dt;
   if(wantIceBolt){
     wantIceBolt=false;
     const ibRank = effectiveRank(p,'iceBolt')||0;
-    if(ibRank>0 && p.atkCd<=0){
+    const orbMode = uq(p,'uq_elementalist');   // v499 Crystalline Prism: Ice Bolt becomes Frozen Orb
+    if(ibRank>0 && p.atkCd<=0 && !(orbMode && p.frozenOrbCd>0)){
       const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
@@ -1674,12 +1676,12 @@ function updateStep(dt){
       p.atkCd = p.atkCdMax*ICE_BOLT_ATKCD_MULT / (p.permaZone && dist(p,p.permaZone) < p.permaZone.r ? PERMAFROST_ICEBOLT_SPEED : 1);
       const pol = polarityCast(p, 'cold');
       const dmg = elementalPolarityDmg(p, ICE_BOLT_BASE_DMG, 0, 'iceBolt') * pol;
-      g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT, vy:Math.sin(ang)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT,
-        r:ICE_BOLT_R, dmg, from:'player', life:1.8, color:'#7ad0ff', isArrow:true, isIceBolt:true, manaReward:'iceBolt'});
-      if(uq(p,'uq_elementalist')) for(const da of [-0.24,0.24]){ const a2 = ang+da;   // v383 Twinflame Prism
-        g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(a2)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT, vy:Math.sin(a2)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT,
-          r:ICE_BOLT_R, dmg, from:'player', life:1.8, color:'#7ad0ff', isArrow:true, isIceBolt:true, manaReward:'iceBolt'}); }
-      showMsg('Ice Bolt!', 0.6);
+      if(orbMode){ castFrozenOrb(g, p, ang, dmg); showMsg('Frozen Orb!', 0.7); }
+      else {
+        g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT, vy:Math.sin(ang)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT,
+          r:ICE_BOLT_R, dmg, from:'player', life:1.8, color:'#7ad0ff', isArrow:true, isIceBolt:true, manaReward:'iceBolt'});
+        showMsg('Ice Bolt!', 0.6);
+      }
     }
   }
 
@@ -3165,8 +3167,10 @@ function updateStep(dt){
       if(o.isWater || o.isProp) continue;
       if(circleRectCollide(pr.x,pr.y,pr.r,o.x,o.y,o.w,o.h)){ dead=true; break; }
     }
+    if(dead && pr.isFrozenOrb && !pr.burst){ pr.burst = true; frozenOrbExplode(g, p, pr); }
     if(!dead){
-      if(pr.isSoulOrb){
+      if(pr.isFrozenOrb){ frozenOrbTick(g, p, pr, dt); }
+      else if(pr.isSoulOrb){
         // Soul Sap's soul-orb visual (v99 fix): purely cosmetic -- flies
         // from the just-killed enemy back to the player, deals no damage
         // and never collides with enemies/the player's hurtbox, so it
@@ -3231,7 +3235,7 @@ function updateStep(dt){
             e.hp-=applyEnemyArmor(p, e, pr.isArrow ? pr.dmg*longshotMult(p,e) : pr.dmg, rsExtraPen, projElement(pr)); e.hitT=0.15;
             if(pr.isExplosiveShot){ explosiveShotBlast(g, p, pr, e.x, e.y); }   // v455
             if(pr.isSplinter){ if(Math.random() < splinterBleedChance(p)){ e.bleedDps = Math.max(e.bleedDps||0, pr.dmg*BLEED_DPS_PCT*partBleedMult()); e.bleedT = Math.max(e.bleedT||0, BLEED_DUR); } if(!pr.isSplit) splinterBurst(g, p, pr, e); }   // v454 Splinter Shot
-            if(pr.pierceLeft>0){ pr.pierceLeft--; (pr.pierceHit||(pr.pierceHit=[])).push(e); if(!pr.pierceNoFall) pr.dmg*=AIMED_SHOT_FALLOFF; } else dead=true;
+            if(pr.pierceLeft>0){ pr.pierceLeft--; (pr.pierceHit||(pr.pierceHit=[])).push(e); if(!pr.pierceNoFall) pr.dmg*=AIMED_SHOT_FALLOFF; } else if(quiverPierce(p, pr)){ (pr.pierceHit||(pr.pierceHit=[])).push(e); } else dead=true;   // v499 Phantom Quiver
             lastHitCrit = false;
             if(pr.isRapidShot && pr.rsBurst && pr.rsBurst.target===e) pr.rsBurst.hitsOnTarget = (pr.rsBurst.hitsOnTarget||0)+1;
             g.particles.push({type:'burst', x:e.x, y:e.y, t:0.22, max:0.22, color:pr.crit?'#ffe27a':(pr.isArcaneBolt?'#c89bff':pr.isPoisonKnife?'#7dd45a':pr.spell==='fire'?'#ff7a3d':pr.spell==='ice'?'#7ad0ff':pr.spell==='lightning'?'#e6e35a':pr.isLightningArc?'#e6e35a':pr.isFireball?'#ff7a3d':pr.isIceBolt?'#7ad0ff':pr.isSoulSap?'#a06ad0':'#e8c44a')});
@@ -3300,6 +3304,7 @@ function updateStep(dt){
                   r:5, dmg:0, from:'player', life:1.2, color:'#ffffff', isSoulOrb:true});
               }
             }
+            else if(pr.isOrbBolt){ e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR); }   // v499: Frozen Orb bolts only chill
             else if(pr.isFireball || pr.isIceBolt){
               g.particles.push({type:pr.isFireball?'fireImpact':'iceImpact', x:e.x, y:e.y, t:0.42, max:0.42, seed:Math.random()});
               if(pr.manaReward && p.cls==='mystic') gainResource(p, p.maxMp*(MANA_ON_HIT_PCT[pr.manaReward]||0));
