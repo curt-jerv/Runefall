@@ -350,7 +350,7 @@ function drawLosMask(g, pts, defer){
 // v492/v493: the character's own circle of light in every zone but town (the Dark Crypt and the caves keep their own, stronger dark).
 // Outside the circle the world is VEIL_MAX_A dark (towers and halls darker still); inside it a light VEIL_CORE_DIM haze stays.
 // +Light Radius gear widens every circle of light except the Dark Crypt's.
-const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.8, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.42, UNDERGROUND_LIGHT_SCALE = 0.8;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
+const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.88, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.5, UNDERGROUND_LIGHT_SCALE = 0.72;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
 const VEIL_THEME_R = 290, VEIL_THEME_A = 0.8, VEIL_THEME_DIM = 0.2;   // v506
 function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
@@ -362,10 +362,11 @@ function lightVeilScene(g){
 function drawLightVeil(g){
   const indoor = g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g);
   const th = indoor && g.room && g.room.theme;   // v506: the Breach's themed boss floors are lit a good deal brighter than the Keep's halls
+  const sun = g.scene==='sunlitplains';   // v510: the sunny plains are naturally bright, so they get a firmer veil
   const wet = th==='kraken' || th==='leviathan';   // the water floors are lit brighter still
-  drawDarkCryptOverlay(g, (wet ? 315 : th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R)*lightRadiusMult(g.player), false, null, wet ? 0.72 : th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
+  drawDarkCryptOverlay(g, (wet ? 315 : th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R*(sun ? 0.9 : 1))*lightRadiusMult(g.player), false, null, wet ? 0.72 : th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : sun ? 0.93 : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
 }
-const PLAYER_GLOW_FRAC = 0.704;   // the warm glow reaches this share of the light radius (v509: +10%)
+const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
 function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
   const cam = g.camera;
@@ -383,10 +384,9 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   mctx.globalAlpha = 1;
   mctx.globalCompositeOperation = 'destination-out';
   let grd = mctx.createRadialGradient(px, py, 0, px, py, LR);
-  // v509: no darkness at all inside the warm glow of your own light (PLAYER_GLOW_FRAC of the radius); it fades out to the dark beyond
-  grd.addColorStop(0, 'rgba(0,0,0,1)');
-  grd.addColorStop(PLAYER_GLOW_FRAC, 'rgba(0,0,0,1)');
-  grd.addColorStop(PLAYER_GLOW_FRAC+(1-PLAYER_GLOW_FRAC)*0.5, 'rgba(0,0,0,0.5)');
+  const cl = 1 - (coreDim||0);   // v493: coreDim keeps a faint haze even at the centre of the light
+  grd.addColorStop(0, 'rgba(0,0,0,'+cl+')');
+  grd.addColorStop(0.62, 'rgba(0,0,0,'+(0.83*cl)+')');   // (v245) ~10% darker falloff
   grd.addColorStop(1, 'rgba(0,0,0,0)');
   mctx.fillStyle = grd;
   // (v245) the upper half of the light is squashed so it ends right under the top HUD bar instead of being hidden behind it
@@ -427,7 +427,7 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
       const GR = LR*PLAYER_GLOW_FRAC;
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(1, 0.86);
       const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
-      gg.addColorStop(0,'rgba(255,206,116,'+(0.36*gk).toFixed(3)+')'); gg.addColorStop(0.5,'rgba(255,176,76,'+(0.2*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
+      gg.addColorStop(0,'rgba(255,206,116,'+(0.3*gk).toFixed(3)+')'); gg.addColorStop(0.5,'rgba(255,176,76,'+(0.16*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
       ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
     } }
   // Composite the finished mask onto the main canvas with plain
