@@ -366,6 +366,38 @@ function drawLightVeil(g){
   const wet = th==='kraken' || th==='leviathan';   // the water floors are lit brighter still
   drawDarkCryptOverlay(g, (wet ? 315 : th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R*(sun ? 0.9 : 1))*lightRadiusMult(g.player), false, null, wet ? 0.72 : th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : sun ? 0.93 : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
 }
+// v512: lights cast by skills (screen coords): fire = orange, lightning = blue-white. Capped so a crowded fight stays cheap.
+function skillLights(g, cam){
+  const out = [], p = g.player, W2 = W+260, H2 = H+260;
+  const add = (wx, wy, r, c, a, lift)=>{
+    if(out.length >= 14 || a <= 0.02) return;
+    const io = toIso(wx, wy), x = io.x - cam.x, y = io.y - cam.y - (lift==null ? 10 : lift);
+    if(x < -260 || x > W2 || y < -260 || y > H2) return;
+    out.push({x, y, r, c, a});
+  };
+  const FIRE = '255,140,50', BOLT = '160,215,255';
+  if(g.projectiles) for(const pr of g.projectiles){
+    if(pr.isFireball) add(pr.x, pr.y, 150, FIRE, 0.95, 18);
+    else if(pr.isLightningArc) add(pr.x, pr.y, 150, BOLT, 0.95, 18);
+  }
+  if(p && p.pyroTorrentT>0 && p.pyroTorrentAng!=null){
+    const R = (typeof PYRO_TORRENT_RANGE==='number' ? PYRO_TORRENT_RANGE : 200);
+    for(const f of [0.25, 0.55, 0.85]) add(p.x+Math.cos(p.pyroTorrentAng)*R*f, p.pyroTorrentAng!=null ? p.y+Math.sin(p.pyroTorrentAng)*R*f : p.y, 150, FIRE, 0.9, 12);
+  }
+  if(g.particles) for(const pt of g.particles){
+    const k = pt.max ? Math.max(0, Math.min(1, pt.t/pt.max)) : 1;
+    switch(pt.type){
+      case 'novaRing': add(pt.x, pt.y, Math.max(120, (pt.r||100)*1.25), BOLT, 0.5+0.5*k, 6); break;
+      case 'skybolt': add(pt.x, pt.y, 210, BOLT, k, 8); break;
+      case 'stormMark': add(pt.x, pt.y, 100, BOLT, 0.35+0.4*(pt.prog||0), 4); break;
+      case 'bolt': add((pt.x+pt.x2)/2, (pt.y+pt.y2)/2, 130, BOLT, k, 14); add(pt.x2, pt.y2, 110, BOLT, k, 14); break;
+      case 'meteorFall': add(pt.x, pt.y, 130+170*(pt.prog||0), FIRE, 0.4+0.6*(pt.prog||0), 4); break;
+      case 'burnzone': add(pt.x, pt.y, (pt.r||90)*1.3, FIRE, 0.75*(1-0.5*(pt.prog||0)), 6); break;
+      case 'fireImpact': add(pt.x, pt.y, 150, FIRE, k, 14); break;
+    }
+  }
+  return out;
+}
 const LIGHT_X = 1.15, LIGHT_Y = 0.575;   // v511: light shape = isometric ellipse (wider than tall, 2:1)
 const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
 function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
@@ -421,6 +453,13 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
       mctx.fillStyle = og; mctx.beginPath(); mctx.arc(0, 0, 190, 0, Math.PI*2); mctx.fill(); mctx.restore();
     }
   }
+  const skl = skillLights(g, cam);   // v512: fire and lightning skills light up the dark around them
+  for(const L of skl){
+    mctx.save(); mctx.translate(L.x, L.y); mctx.scale(LIGHT_X, LIGHT_Y*1.1);
+    const sg = mctx.createRadialGradient(0, 0, 0, 0, 0, L.r);
+    sg.addColorStop(0, 'rgba(0,0,0,'+Math.min(1,L.a)+')'); sg.addColorStop(0.55, 'rgba(0,0,0,'+(0.6*L.a)+')'); sg.addColorStop(1, 'rgba(0,0,0,0)');
+    mctx.fillStyle = sg; mctx.beginPath(); mctx.arc(0, 0, L.r, 0, Math.PI*2); mctx.fill(); mctx.restore();
+  }
   if(losPending){   // v501: fold the line-of-sight shadow into this mask (same half resolution)
     if(!tint){ losPending = false; mctx.save(); mctx.setTransform(1,0,0,1,0,0); mctx.globalCompositeOperation = 'source-over'; mctx.drawImage(losCanvas, 0, 0); mctx.restore(); }
     else flushLosPending();
@@ -443,6 +482,16 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   ctx.globalCompositeOperation = 'source-over';
   ctx.drawImage(darkCryptMaskCanvas, 0, 0, W, H);
   ctx.restore();
+  if(skl.length){   // coloured light of the skills on the ground and monsters
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for(const L of skl){
+      ctx.save(); ctx.translate(L.x, L.y); ctx.scale(LIGHT_X, LIGHT_Y*1.1);
+      const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, L.r*0.8);
+      gg.addColorStop(0, 'rgba('+L.c+','+(0.2*L.a).toFixed(3)+')'); gg.addColorStop(1, 'rgba('+L.c+',0)');
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, 0, L.r*0.8, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    }
+    ctx.restore();
+  }
   if(tint){   // v456 Heart of the Mountain: a flickering fiery rim around the light
     const ck = (g.clock||0), fl = 0.75 + 0.15*Math.sin(ck*7) + 0.1*Math.sin(ck*13.3);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
