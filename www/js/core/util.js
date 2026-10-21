@@ -220,7 +220,19 @@ function enemyLOS(g,e,tgt){
   const slot = tgt===g.player ? '_losP' : '_losO';
   let c = e[slot];
   const t = g.clock||0;
-  if(!c || c.tg!==tgt || t-c.t>0.15){ c = e[slot] = {tg:tgt, t:t+Math.random()*0.05, v:hasLOS(g,e,tgt)}; }
+  if(c && c.tg===tgt && t-c.t <= c.iv) return c.v;
+  // v501: far-away enemies re-check their sight line less often
+  const dd = Math.abs(e.x-tgt.x) + Math.abs(e.y-tgt.y), iv = dd > 1000 ? 0.6 : dd > 600 ? 0.3 : 0.15;
+  c = e[slot] = {tg:tgt, t:t+Math.random()*0.05, iv, v:hasLOS(g,e,tgt)};
+  return c.v;
+}
+// v501: same cache, one entry per target (followers: the closest-ally pick asks about every one of them each frame)
+function enemyLOSMulti(g,e,tgt){
+  const t = g.clock||0, m = e._losM || (e._losM = new Map());
+  let c = m.get(tgt);
+  if(c && t-c.t <= 0.2) return c.v;
+  c = {t:t+Math.random()*0.06, v:hasLOS(g,e,tgt)}; m.set(tgt, c);
+  if(m.size > 12){ for(const k of m.keys()){ if(!(k.hp>0)) m.delete(k); } }
   return c.v;
 }
 const BOSS_WAKE_R = 560; // bosses stay rooted until the player is this close with a clear line of sight
@@ -228,6 +240,8 @@ const ENGAGE_R = 340; // non-holding scenes: enemies only start acting this clos
 
 // ---------- Isometric projection ----------
 const ISO_KX = 0.85, ISO_KY = 0.425; // 2:1 iso ratio
+// v497: stand facing the screen (login, respawn, back in town) -- never turned away from the camera
+function faceScreen(p){ if(!p) return; p.facing = {x:0.6, y:0.8}; p._backView = false; p.faceSign = screenFacingSign(p.facing.x, p.facing.y); }
 function toIso(x,y){ const z = (game && (game.scene==='redcrater' || game.scene==='mountainpass' || game.scene==='redridge' || game.scene==='highlands')) ? crElevAt(x,y) : 0; return { x:(x-y)*ISO_KX, y:(x+y)*ISO_KY - z }; }
 // Is a world-space point currently within the visible screen (camera is
 // always locked to the player's iso position), plus a small buffer margin

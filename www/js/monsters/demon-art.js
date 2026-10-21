@@ -374,6 +374,16 @@ function drawWraithLordIso(e){
     // off arm
     ctx.strokeStyle = A2; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(-28,-92-bob); ctx.lineTo(-36,-62-bob+Math.sin(t*2)*2); ctx.stroke(); ctx.strokeStyle = '#05030a'; ctx.lineWidth = 1.4;
     ctx.fillStyle = A1; ctx.beginPath(); ctx.arc(-37,-58-bob,6,0,7); ctx.fill(); ctx.stroke(); ctx.fillStyle = SP; spike(-40,-60-bob,-8,-4,2.2); spike(-39,-54-bob,-7,4,2);
+    // v499: the black spiked kite shield on the off arm -- held low normally, raised in front of him (glowing) for the Shield move
+    { const up = st==='shield' || e.wlShield, sx = up ? -8 : -42, sy = (up ? -78 : -54) - bob, ss = up ? 1.25 : 0.9;
+      ctx.save(); ctx.translate(sx, sy); ctx.scale(ss, ss);
+      if(up){ ctx.shadowColor = '#ff3a2a'; ctx.shadowBlur = 14; }
+      ctx.fillStyle = flash?'#fff':A2; ctx.strokeStyle = up ? '#ff4a3a' : '#05030a'; ctx.lineWidth = up ? 2 : 1.4;
+      ctx.beginPath(); ctx.moveTo(-15,-24); ctx.lineTo(15,-24); ctx.lineTo(14,2); ctx.lineTo(0,26); ctx.lineTo(-14,2); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0; ctx.fillStyle = flash?'#fff':A3; ctx.beginPath(); ctx.moveTo(-10,-19); ctx.lineTo(10,-19); ctx.lineTo(9,0); ctx.lineTo(0,17); ctx.lineTo(-9,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = SP; spike(-15,-24,-5,-10,3); spike(0,-24,0,-12,3); spike(15,-24,5,-10,3);
+      ctx.strokeStyle = 'rgba(255,50,40,'+(0.55+0.35*pul)+')'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0,-14); ctx.lineTo(0,10); ctx.moveTo(-6,-4); ctx.lineTo(6,-4); ctx.stroke();
+      ctx.restore(); }
     // helm + crown of spikes
     ctx.fillStyle = A2; ctx.beginPath(); ctx.moveTo(-12,-124-bob); ctx.lineTo(12,-124-bob); ctx.lineTo(13,-100-bob); ctx.lineTo(-13,-100-bob); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.fillStyle = SP; for(let i=-3;i<=3;i++){ const h = (i%2===0) ? 26 : 17; spike(i*4.2,-123-bob,i*0.8,-h,2.6); }

@@ -187,7 +187,7 @@ function applyEnemyArmor(p, e, dmg, extraPen, el){
   if(e.exposedT>0) dmg *= 1.25;
   if(e.elite && p.dmgVsElitePct>0) dmg *= 1 + p.dmgVsElitePct;
   if(e.bleedT>0 && p.partB && p.partB.sp && p.partB.sp.bleedbonus) dmg *= 1.25;   // v361 Predator's Stone
-  if(p.cls==='ranger' && enemyAiling(e)){ const pir = (p.skills && effectiveRank(p,'predatorsInstinct'))||0; if(pir>0) dmg *= 1 + predInstinctPct(pir); }   // v454 Predator's Instinct
+  if(p.cls==='ranger' && enemyAiling(e)){ const pir = (p.skills && effectiveRank(p,'survivalInstinct'))||0; if(pir>0) dmg *= 1 + predInstinctPct(pir); }   // v497: Predator's Instinct (Survivalist node)
   if(e.colossus) dmg *= e.colWeak>0 ? 1.4 : (e.cPhase===3 ? 1.0 : e.cPhase===2 ? 0.55 : 0.8);   // v263: shell soaks damage unless a weak point is exposed
   if(e.fearVulnT>0) dmg *= 1 + (e.fearVulnPct||0)/100;
   if(e.markT>0) dmg *= huntMarkMult(p, e);

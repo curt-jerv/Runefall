@@ -81,7 +81,7 @@ const ACTIVE_SKILL_REGISTRY = {
   // (see that node's comment + VIRTUAL_SKILL_NAMES) -- they still plug into
   // this exact same registry shape as any real tree-node active skill.
   fireball:      { oldBtnId:null,              trigger(){ wantFireball=true; },      getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
-  iceBolt:       { oldBtnId:null,              trigger(){ wantIceBolt=true; },       getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
+  iceBolt:       { oldBtnId:null,              trigger(){ wantIceBolt=true; },       getCd(p){ return (typeof uq==='function' && uq(p,'uq_elementalist')) ? {cur:Math.max(p.atkCd||0, p.frozenOrbCd||0), max:Math.max(p.atkCdMax||0, p.frozenOrbCdMax||FROZEN_ORB_CD)} : {cur:p.atkCd, max:p.atkCdMax}; } },   // v499: Frozen Orb has its own cooldown
   iceArmor:      { oldBtnId:null,              trigger(){ wantIceArmor=true; },      getCd(p){ return {cur:p.iceArmorCd, max:p.iceArmorCdMax}; } },
   pyroTorrent:   { oldBtnId:null,              trigger(){ wantPyroTorrent=true; },   getCd(p){ return {cur:p.pyroTorrentCd, max:p.pyroTorrentCdMax}; } },
   blizzard:      { oldBtnId:null,              trigger(){ wantBlizzard=true; },      getCd(p){ return {cur:p.blizzardCd, max:p.blizzardCdMax}; } },
@@ -245,6 +245,7 @@ const RESOURCE_SKILLS = {
   shieldThrow:{cost:25, minCd:1.0}, bulwark:{cost:30}, mirrorSteel:{cost:25, step:-10/9}, seismicSlam:{cost:25}, seismicAnchor:{cost:25, step:-10/9}, whirlwind:{cost:15, minCd:1.0}, unbreakable:{cost:0, minCd:8},
   // v489 Ranger: flat Stamina costs that grow with rank (basic shots -- Strike, Rapid Shot, Splinter Shot, Multi Shot -- are free and refill Stamina)
   cripplingShot:{cost:20, step:1}, stunShot:{cost:26, step:1.2}, explosiveShot:{cost:30, step:1.5}, aimedShot:{cost:40, step:2}, rainOfArrows:{cost:50, step:2.5}, huntersMark:{cost:20, step:0.5}, explosiveTrap:{cost:35, step:1}, poisonTrap:{cost:20, step:0.8}, frostTrap:{cost:20, step:0.8},
+  packTactics:{cost:20}, recall:{cost:20}, beastFury:{cost:20},   // v499: Ambush, Recall and Beast Fury cost 20 Stamina each
 };
 const ATKCD_SKILLS = {lightningArc:1, soulSap:1, fireball:1, iceBolt:1, deathBolt:1};   // these ride the basic-attack cooldown
 const RAGE_DECAY_BASE = 3, RAGE_DECAY_MAX = 24, RAGE_DECAY_GRACE = 3, RAGE_DECAY_ACCEL = 3.6;   // v295: Rage fades 3x as fast
@@ -267,7 +268,7 @@ function resCost(p,id,rankOverride){
   if(r.step){ const rk = rankOverride!=null ? rankOverride : ((p&&p.skills&&effectiveRank(p,id))||0); c += r.step*Math.max(0,rk-1); }
   if(p && p.cls==='mystic') c *= 1 + 0.02*Math.max(0,(p.level||1)-20);
   if(p && WR_SKILLS[id] && (p.windReady || p._wrCostWin>0)) c *= 0.5;   // v466 Windrunner
-  if(p && p.cls==='ranger' && p.skills){ const ts=effectiveRank(p,'predatorsInstinct')||0; if(ts>0) c *= 1 - 0.05*Math.min(10,ts); }   // v454: Steady Breath is part of Predator's Instinct
+  if(p && p.cls==='ranger' && p.skills){ const ts=effectiveRank(p,'steadyBreathing')||0; if(ts>0) c *= 1 - 0.05*Math.min(10,ts); }   // v497: Steady Breathing is its own Marksman node
   return Math.round(c);
 }
 function resourceAffordable(p,id){ const r=RESOURCE_SKILLS[id]; return !r || (p.mp||0) >= resCost(p,id); }
@@ -359,7 +360,7 @@ function tickResource(p, dt){
     }
   }
   else if(p.cls==='mystic') gainResource(p, p.maxMp*MANA_REGEN_PCT*dt*(p.tsRegenT>0 ? 1+(p.tsRegenBonus||0.3) : 1));
-  else if(p.cls==='ranger'){ if(p.deadeyeGainCd>0) p.deadeyeGainCd -= dt; gainResource(p, p.maxMp*STAMINA_REGEN_PCT*dt*(1+0.03*((p.skills&&effectiveRank(p,'predatorsInstinct'))||0))); }
+  else if(p.cls==='ranger'){ if(p.deadeyeGainCd>0) p.deadeyeGainCd -= dt; gainResource(p, p.maxMp*STAMINA_REGEN_PCT*dt*(1+0.03*((p.skills&&effectiveRank(p,'steadyBreathing'))||0))); }
 }
 // (v244) Aimed Shot: press-and-hold its slot button to raise an aim pad under the thumb
 // (same pad as Pyro Torrent), drag to aim, release to fire. A quick tap still auto-targets.

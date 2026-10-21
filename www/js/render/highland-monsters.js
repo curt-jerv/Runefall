@@ -91,7 +91,8 @@ function drawGiantIso(e){
 function drawWargIso(e){
   const iso = toIso(e.x,e.y), face = e.faceSign||1, t = e.animT||0, flash = e.hitT>0, s = e.r/18;
   const run = e.moving ? Math.sin(t*14) : 0, bob = e.moving ? Math.abs(Math.sin(t*14))*2 : Math.sin(t*2)*0.6, atk = e.windT>0 || e.atkAnimT>0;
-  const F = flash?'#fff':'#3a3634', FL = flash?'#fff':'#5a5450', FD = flash?'#ddd':'#1e1c1c';
+  const wh = e.variant==='white';   // v499: white wargs of the Mountain Pass
+  const F = flash?'#fff':wh?'#e4e6ee':'#3a3634', FL = flash?'#fff':wh?'#f8f9fc':'#5a5450', FD = flash?'#ddd':wh?'#aeb4c4':'#1e1c1c';
   drawShadow(iso.x, iso.y, 28*s, 9*s);
   ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(face*s, s); ctx.lineCap='round'; ctx.lineJoin='round';
   const by = -22 + bob;

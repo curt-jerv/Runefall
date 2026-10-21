@@ -376,6 +376,7 @@ function drawFhCommanderIso(e){
 // v419: the Cultist -- the Mystic's rig in black robes, summoning skeletons around itself
 const CULT_MAX_MINIONS = 4;
 function cultistSummon(g, e, target, d, dt){
+  if(cultPortalZone(g)){ cultPortalTick(g, e, target, d, dt); return; }   // v499
   e.sumCd -= dt;
   if(e.sumCd>0 || d>520) return;
   const mine = g.enemies.filter(m=>m.hp>0 && m.cultOwner===e).length;
@@ -383,6 +384,50 @@ function cultistSummon(g, e, target, d, dt){
   e.sumCd = 9 + Math.random()*3; e.atkAnimT = 0.5; e.castAnimT = 0.5;
   raiseCultGuard(g, e, 2, true);
   g.particles.push({type:'ring', x:e.x, y:e.y, t:0.5, max:0.5, r:70, color:'#a03040'});
+}
+// v499: in the 3rd Redridge watchtower and in Shadow Keep, cultists tear open a red portal beside themselves and imps climb out
+// (like the Necromancer's Soul Gate, in red). At most CULT_PORTAL_IMPS imps of one cultist live at a time; the portal closes after a few seconds.
+const CULT_PORTAL_IMPS = 3, CULT_PORTAL_LIFE = 5.5, CULT_PORTAL_GAP = 1.5, CULT_PORTAL_CD = 11;
+function cultPortalZone(g){ return !!(g && ((g.room && g.room.rrId===3) || inShadowKeep(g))); }
+function cultPortalTick(g, e, target, d, dt){
+  const pt = e.cPortal;
+  if(pt){
+    pt.t += dt;
+    if(pt.t > 0.5 && pt.n < 2 && pt.t >= 0.7 + pt.n*CULT_PORTAL_GAP){
+      pt.n++;
+      const mine = g.enemies.filter(m=>m.hp>0 && m.cultOwner===e).length;
+      if(mine < CULT_PORTAL_IMPS){
+        const m = spawnEnemy(g, 'imp', {x:pt.x+rand(-14,14), y:pt.y+rand(-10,10)});
+        if(m){ m.cultOwner = e; m.noReward = true; m.aggroRange = 700; m.leashRange = 99999; m.engaged = true; m.aggroed = true; g.particles.push({type:'burst', x:pt.x, y:pt.y, t:0.4, max:0.4, color:'#ff5a3a'}); }
+      }
+    }
+    if(pt.t >= CULT_PORTAL_LIFE) e.cPortal = null;
+    return;
+  }
+  e.pCd = (e.pCd===undefined ? rand(2,5) : e.pCd) - dt;
+  if(e.pCd > 0 || d > 520) return;
+  e.pCd = CULT_PORTAL_CD + Math.random()*3;
+  if(g.enemies.filter(m=>m.hp>0 && m.cultOwner===e).length >= CULT_PORTAL_IMPS) return;
+  const a = Math.random()*Math.PI*2;
+  let pos = {x:e.x+Math.cos(a)*70, y:e.y+Math.sin(a)*70};
+  if(g.room && posBlockedByObstacles(pos.x, pos.y, 20, g.room.obstacles||[])) pos = {x:e.x, y:e.y};
+  e.cPortal = {x:pos.x, y:pos.y, t:0, n:0}; e.atkAnimT = 0.5; e.castAnimT = 0.5;
+  g.particles.push({type:'ring', x:pos.x, y:pos.y, t:0.5, max:0.5, r:60, color:'#d02a2a'});
+}
+function drawCultPortal(e){
+  const pt = e.cPortal; if(!pt) return;
+  const iso = toIso(pt.x, pt.y), T = (game&&game.clock)||0, open = Math.min(1, pt.t/0.45) * Math.min(1, (CULT_PORTAL_LIFE-pt.t)/0.5);
+  if(open <= 0) return;
+  const W = 28*open, H = 58*open;
+  ctx.save(); ctx.translate(iso.x, iso.y);
+  ctx.fillStyle='rgba(200,30,30,0.28)'; ctx.beginPath(); ctx.ellipse(0, 2, 44, 19, 0, 0, 7); ctx.fill();
+  ctx.translate(0, -H*0.55);
+  const gr = ctx.createRadialGradient(0,0,2,0,0,H*0.6);
+  gr.addColorStop(0,'rgba(255,230,200,0.95)'); gr.addColorStop(0.45,'rgba(230,50,30,0.88)'); gr.addColorStop(1,'rgba(80,6,10,0.92)');
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(0,0,W,H*0.55,0,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(255,140,110,0.9)'; ctx.lineWidth=3; ctx.stroke();
+  for(let k=0;k<4;k++){ const an=T*2.2+k*1.57; ctx.strokeStyle='rgba(255,200,170,'+(0.55-k*0.1)+')'; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(0,0,W*(0.25+0.17*k),H*0.55*(0.25+0.17*k),an,0,4.2); ctx.stroke(); }
+  ctx.restore();
 }
 // v436: a cultist's skeletons are the small black-and-red brute set, scaled down to the cultist's own size
 function raiseCultGuard(g, e, n, fx){
@@ -1067,7 +1112,7 @@ function enterMountainPass(opts){
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null;
   showMsg('Mountain Pass', 1.4);
   // district mix: wolves and bears at the forest edge, bears mid-pass, the frozen dead up the stem and toward the keep
-  const GOB = {type:'goblin', countMin:4, countMax:5}, TRL = {type:'cavetroll', count:2}, WOLF = {type:'wolf', countMin:4, countMax:5}, ZOM = {type:'frozenzombie', count:5}, BEAR = {type:'bear', countMin:2, countMax:3, variant:'polar'};
+  const GOB = {type:'goblin', countMin:4, countMax:5}, TRL = {type:'cavetroll', count:2}, WOLF = {type:'warg', countMin:4, countMax:5, variant:'white'}, ZOM = {type:'frozenzombie', count:5}, BEAR = {type:'bear', countMin:2, countMax:3, variant:'polar'};
   for(const a of breatheAnchors(g.mtn.packAnchors, {gap:460, cell:1400})){
     const r = Math.random();
     const t = a.y > MTN_BAR_Y1 ? (r<0.55 ? GOB : r<0.8 ? TRL : WOLF)

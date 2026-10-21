@@ -965,7 +965,7 @@ function updateStep(dt){
         p.atkAnimT = 0.22;
         showMsg('Precise Shot!', 0.6);
         const psRank = effectiveRank(p,'preciseShot')||0;
-        const tsRank = effectiveRank(p,'predatorsInstinct')||0;
+        const tsRank = effectiveRank(p,'steadyBreathing')||0;
         p.preciseShotCdMax = applyCdr(p, preciseShotCooldown(psRank, p.atkCdMax, tsRank));
         p.preciseShotCd = p.preciseShotCdMax;
       }
@@ -1088,7 +1088,9 @@ function updateStep(dt){
           }
           g.particles.push({type:'ring', x:tt.x, y:tt.y, t:0.45, max:0.45, r:tt.r, color:'#ff8a3a'});
           g.particles.push({type:'burst', x:tt.x, y:tt.y, t:0.35, max:0.35, color:'#ffb060'});
-          shakeScreen(g, 3, 0.15);
+          // v499: same little explosion circles as Explosive Shot, spread over the trap's radius
+          for(let k=0;k<10;k++){ const an = k/10*6.283+Math.random()*0.4, rr = tt.r*(0.25+Math.random()*0.6); g.particles.push({type:'burst', x:tt.x+Math.cos(an)*rr, y:tt.y+Math.sin(an)*rr, t:0.3, max:0.3, color:k%2?'#ff7a2a':'#ffd070'}); }
+          shakeScreen(g, 3, 0.15); try{ sfxPlay('fire', 0.8); }catch(err){}
         } else {
           // Frost Trap: a single instant AoE pulse -- freeze (e.frozenT,
           // the same generic full-immobilize field Blizzard uses) every
@@ -1644,7 +1646,7 @@ function updateStep(dt){
       p.atkAnimT = 0.2;
       p.atkCd = p.atkCdMax*FIREBALL_ATKCD_MULT;
       const pol = polarityCast(p, 'fire');
-      const n = fireballCount(fbRank) + (uq(p,'uq_elementalist') ? 1 : 0);
+      const n = fireballCount(fbRank);
       const bdmg = elementalPolarityDmg(p, FIREBALL_BASE_DMG, 0, 'fireball') * pol;
       p.fbQueue = p.fbQueue || [];
       for(let k=0;k<n;k++) p.fbQueue.push({t:k*FIREBALL_VOLLEY_GAP, ang, off:(k%2===0?-1:1)*FIREBALL_SIDE_OFFSET, dmg:bdmg});
@@ -1662,10 +1664,12 @@ function updateStep(dt){
     }
   }
   if(p.iceBoltCd>0) p.iceBoltCd -= dt;
+  if(p.frozenOrbCd>0) p.frozenOrbCd -= dt;
   if(wantIceBolt){
     wantIceBolt=false;
     const ibRank = effectiveRank(p,'iceBolt')||0;
-    if(ibRank>0 && p.atkCd<=0){
+    const orbMode = uq(p,'uq_elementalist');   // v499 Crystalline Prism: Ice Bolt becomes Frozen Orb
+    if(ibRank>0 && p.atkCd<=0 && !(orbMode && p.frozenOrbCd>0)){
       const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
@@ -1674,12 +1678,12 @@ function updateStep(dt){
       p.atkCd = p.atkCdMax*ICE_BOLT_ATKCD_MULT / (p.permaZone && dist(p,p.permaZone) < p.permaZone.r ? PERMAFROST_ICEBOLT_SPEED : 1);
       const pol = polarityCast(p, 'cold');
       const dmg = elementalPolarityDmg(p, ICE_BOLT_BASE_DMG, 0, 'iceBolt') * pol;
-      g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT, vy:Math.sin(ang)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT,
-        r:ICE_BOLT_R, dmg, from:'player', life:1.8, color:'#7ad0ff', isArrow:true, isIceBolt:true, manaReward:'iceBolt'});
-      if(uq(p,'uq_elementalist')) for(const da of [-0.24,0.24]){ const a2 = ang+da;   // v383 Twinflame Prism
-        g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(a2)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT, vy:Math.sin(a2)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT,
-          r:ICE_BOLT_R, dmg, from:'player', life:1.8, color:'#7ad0ff', isArrow:true, isIceBolt:true, manaReward:'iceBolt'}); }
-      showMsg('Ice Bolt!', 0.6);
+      if(orbMode){ castFrozenOrb(g, p, ang, dmg); showMsg('Frozen Orb!', 0.7); }
+      else {
+        g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT, vy:Math.sin(ang)*ELEMENTAL_BOLT_SPEED*ICE_BOLT_SPEED_MULT,
+          r:ICE_BOLT_R, dmg, from:'player', life:1.8, color:'#7ad0ff', isArrow:true, isIceBolt:true, manaReward:'iceBolt'});
+        showMsg('Ice Bolt!', 0.6);
+      }
     }
   }
 
@@ -1742,7 +1746,7 @@ function updateStep(dt){
     wantSoulSap=false;
     const ssRank = effectiveRank(p,'soulSap')||0;   // v460: Staff of Souls
     const ssTarget = ssRank>0 ? nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0)) : null;
-    const ssTargets = []; if(ssTarget){ ssTargets.push(ssTarget); for(let k=1;k<3;k++){ const t2 = nearestEnemy(g, ssTarget, SOUL_SAP_SPLASH_R, ssTargets); if(!t2) break; ssTargets.push(t2); } }   // v413: drains the 3 nearest
+    const ssTargets = []; if(ssTarget){ ssTargets.push(ssTarget); for(let k=1;k<soulSapTargets(ssRank);k++){ const t2 = nearestEnemy(g, ssTarget, SOUL_SAP_SPLASH_R, ssTargets); if(!t2 || !enemyOnScreen(g,t2)) break; ssTargets.push(t2); } }   // v497: rank 1 hits one enemy, rank 3 two, rank 5 three -- all on screen
     // (v106) Soul Sap is a targeted, instant drain: it needs an enemy in range
     // (no target = no cast, cooldown untouched). No outbound projectile -- a
     // white soul orb simply flies from the enemy back to the player.
@@ -3084,10 +3088,10 @@ function updateStep(dt){
       try{ bossRecipeDrop(g, g.enemies[i]); }catch(err){}   // v464
       { const rk = bossRekillFlag(g.enemies[i]); if(rk && p[rk]) bossRekillRare(g, g.enemies[i]); }
       if(g.enemies[i].bkBoss && g.tower) g.tower.bkDeath = {x:g.enemies[i].x, y:g.enemies[i].y};   // v490: the Bandit King's chest and portal appear where he fell   // v489: re-killed bosses drop a rare instead of their quest item
-      if(g.enemies[i].mastodon) huntBossKilled('hunt_mastodon');
-      if(g.enemies[i].minotaur) huntBossKilled('hunt_minotaur');
+      if(g.enemies[i].mastodon && !g.enemies[i].brBoss) huntBossKilled('hunt_mastodon');
+      if(g.enemies[i].minotaur && !g.enemies[i].brBoss) huntBossKilled('hunt_minotaur');
       if(g.enemies[i].defiler) defilerSlain(g, g.enemies[i]);
-      if(g.enemies[i].kraken) huntBossKilled('hunt_kraken'); else if(g.enemies[i].lvBoss) huntBossKilled('hunt_leviathan');
+      if(!g.enemies[i].brBoss){ if(g.enemies[i].kraken) huntBossKilled('hunt_kraken'); else if(g.enemies[i].lvBoss) huntBossKilled('hunt_leviathan'); }
       if(g.enemies[i].lr){ bossMsg('The Flame Raptor is slain','Its fire dies in the den', 3.4); }
       if(g.enemies[i].gj && !g.enemies[i].brBoss) gojiraSlain(g.enemies[i]);
       if(g.enemies[i].harpyQueen) harpyQueenSlain(g, g.enemies[i]);
@@ -3109,7 +3113,7 @@ function updateStep(dt){
       if(g.enemies[i].ftMapCarrier && !p.ftMapFound){ p.ftMapFound = true; showMsg('Forgotten Tower map found \u2014 every floor is now charted', 3.4, '#e8c44a'); saveGame(); }   // v490
       if(g.enemies[i].hwMapCarrier && !p.hwMapFound){ p.hwMapFound = true; showMsg('Highward map found — every floor is now charted', 3.4, '#e8c44a'); saveGame(); }
       if(g.enemies[i].mapBrute && room.subzone==='keep'){ p.keepMaps = p.keepMaps || {}; if(!p.keepMaps[room.kpArea]){ p.keepMaps[room.kpArea] = true; showMsg('Floor map found \u2014 this floor is now charted', 3.4, '#e8c44a'); saveGame(); } }
-      if(room.floorRects && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; showMsg('Dungeon map found', 2.8, '#e8c44a'); }
+      if((room.floorRects || room.maze) && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; showMsg('Dungeon map found', 2.8, '#e8c44a'); }
       { const dp = (g.enemies[i].swimmer && room.nearestDry) ? room.nearestDry(g.enemies[i].x, g.enemies[i].y) : g.enemies[i];
         dropLoot(g, dp.x, dp.y, g.enemies[i].type, g.enemies[i].isLairBoss, g.enemies[i]);
         partsMaybeDrop(g, g.enemies[i]);
@@ -3165,8 +3169,10 @@ function updateStep(dt){
       if(o.isWater || o.isProp) continue;
       if(circleRectCollide(pr.x,pr.y,pr.r,o.x,o.y,o.w,o.h)){ dead=true; break; }
     }
+    if(dead && pr.isFrozenOrb && !pr.burst){ pr.burst = true; frozenOrbExplode(g, p, pr); }
     if(!dead){
-      if(pr.isSoulOrb){
+      if(pr.isFrozenOrb){ frozenOrbTick(g, p, pr, dt); }
+      else if(pr.isSoulOrb){
         // Soul Sap's soul-orb visual (v99 fix): purely cosmetic -- flies
         // from the just-killed enemy back to the player, deals no damage
         // and never collides with enemies/the player's hurtbox, so it
@@ -3231,7 +3237,7 @@ function updateStep(dt){
             e.hp-=applyEnemyArmor(p, e, pr.isArrow ? pr.dmg*longshotMult(p,e) : pr.dmg, rsExtraPen, projElement(pr)); e.hitT=0.15;
             if(pr.isExplosiveShot){ explosiveShotBlast(g, p, pr, e.x, e.y); }   // v455
             if(pr.isSplinter){ if(Math.random() < splinterBleedChance(p)){ e.bleedDps = Math.max(e.bleedDps||0, pr.dmg*BLEED_DPS_PCT*partBleedMult()); e.bleedT = Math.max(e.bleedT||0, BLEED_DUR); } if(!pr.isSplit) splinterBurst(g, p, pr, e); }   // v454 Splinter Shot
-            if(pr.pierceLeft>0){ pr.pierceLeft--; (pr.pierceHit||(pr.pierceHit=[])).push(e); if(!pr.pierceNoFall) pr.dmg*=AIMED_SHOT_FALLOFF; } else dead=true;
+            if(pr.pierceLeft>0){ pr.pierceLeft--; (pr.pierceHit||(pr.pierceHit=[])).push(e); if(!pr.pierceNoFall) pr.dmg*=AIMED_SHOT_FALLOFF; } else if(quiverPierce(p, pr)){ (pr.pierceHit||(pr.pierceHit=[])).push(e); } else dead=true;   // v499 Phantom Quiver
             lastHitCrit = false;
             if(pr.isRapidShot && pr.rsBurst && pr.rsBurst.target===e) pr.rsBurst.hitsOnTarget = (pr.rsBurst.hitsOnTarget||0)+1;
             g.particles.push({type:'burst', x:e.x, y:e.y, t:0.22, max:0.22, color:pr.crit?'#ffe27a':(pr.isArcaneBolt?'#c89bff':pr.isPoisonKnife?'#7dd45a':pr.spell==='fire'?'#ff7a3d':pr.spell==='ice'?'#7ad0ff':pr.spell==='lightning'?'#e6e35a':pr.isLightningArc?'#e6e35a':pr.isFireball?'#ff7a3d':pr.isIceBolt?'#7ad0ff':pr.isSoulSap?'#a06ad0':'#e8c44a')});
@@ -3300,6 +3306,7 @@ function updateStep(dt){
                   r:5, dmg:0, from:'player', life:1.2, color:'#ffffff', isSoulOrb:true});
               }
             }
+            else if(pr.isOrbBolt){ e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR); }   // v499: Frozen Orb bolts only chill
             else if(pr.isFireball || pr.isIceBolt){
               g.particles.push({type:pr.isFireball?'fireImpact':'iceImpact', x:e.x, y:e.y, t:0.42, max:0.42, seed:Math.random()});
               if(pr.manaReward && p.cls==='mystic') gainResource(p, p.maxMp*(MANA_ON_HIT_PCT[pr.manaReward]||0));

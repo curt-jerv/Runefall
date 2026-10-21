@@ -132,7 +132,7 @@ function saveGame(){
     const data = {
       id: p.saveId, v:2, xpCurve3:true,
       level:p.level, xp:p.xp, xpNext:p.xpNext, gold:p.gold, souls:p.souls||0,
-      skillPoints:p.skillPoints, skills:p.skills, rangerV227:true, warriorV266:true, rangerV267:true, mysticV268:true, mysticV269:true, mysticV270:true, skillsV454:true, skillsV455:true, skillsV459:true, skillsV492:true, skillsV495:true, skillsV460:true, skillsV466:true, skillsV475:true, skillsV476:true, skillsV477:true, skillsV480:true, skillsV481:true, skillsV489:true,
+      skillPoints:p.skillPoints, skills:p.skills, rangerV227:true, warriorV266:true, rangerV267:true, mysticV268:true, mysticV269:true, mysticV270:true, skillsV454:true, skillsV455:true, skillsV459:true, skillsV492:true, skillsV495:true, skillsV497:true, skillsV460:true, skillsV466:true, skillsV475:true, skillsV476:true, skillsV477:true, skillsV480:true, skillsV481:true, skillsV489:true,
       skillSlots:p.skillSlots||{main:'strike', slot1:null, slot2:null, slot3:null},
       equipment:p.equipment, inventory:p.inventory,
       quests:p.quests||[],

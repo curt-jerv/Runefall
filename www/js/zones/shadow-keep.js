@@ -129,7 +129,7 @@ function kpEnrich(a, zones, rnd){
   return zones;
 }
 function kpHellGen(rnd, w, h, cy, o){
-  const TS = 46, cols = Math.ceil(w/TS)+1, rows = Math.ceil(h/TS)+1, M = new Uint8Array(cols*rows);
+  const TS = 46, cols = Math.ceil(w/TS)+1, rows = Math.ceil(h/TS)+1, M = new Uint8Array(cols*rows), AR = o.boss ? 1 : Math.max(1, w*h/6.4e6);   // v506: bigger lava floors get proportionally more chambers, islands and room to wander
   const seedN = rnd()*500;
   const hsh = (a,b)=>{ const n = Math.sin(a*127.1+b*311.7+seedN)*43758.5453; return n-Math.floor(n); };
   const vn = (x,y)=>{ const xi = Math.floor(x), yi = Math.floor(y), xf = x-xi, yf = y-yi, sx = xf*xf*(3-2*xf), sy = yf*yf*(3-2*yf); return (hsh(xi,yi)*(1-sx)+hsh(xi+1,yi)*sx)*(1-sy)+(hsh(xi,yi+1)*(1-sx)+hsh(xi+1,yi+1)*sx)*sy; };
@@ -142,7 +142,7 @@ function kpHellGen(rnd, w, h, cy, o){
     }
   };
   // the main road: a long S-curve from the entrance to the exit
-  const pts = [], n = 9+Math.floor(rnd()*3), amp = Math.min(h/2-330, 400), ph = rnd()*6.28;
+  const pts = [], n = 9+Math.floor(rnd()*3), amp = Math.min(h/2-330, 400*Math.sqrt(AR)), ph = rnd()*6.28;
   for(let i=0;i<=n;i++){ pts.push({x:130+(w-260)*i/n, y:clamp(cy+Math.sin(i*0.95+ph)*amp*(0.45+0.55*rnd()), 330, h-330)}); }
   pts[0].y = cy; pts[n].y = cy;
   if(o.boss){ let bi = 0, bd = 1e9; for(let i=0;i<=n;i++){ const d = Math.abs(pts[i].x-o.cx); if(d<bd){ bd = d; bi = i; } } pts[bi].y = cy; }
@@ -158,7 +158,7 @@ function kpHellGen(rnd, w, h, cy, o){
     }
   }
   // chambers and side lobes
-  const nCh = 5+Math.floor(rnd()*3)+(o.tier>>1);
+  const nCh = Math.round((5+Math.floor(rnd()*3)+(o.tier>>1))*AR);
   for(let k=0;k<nCh;k++){
     const q = path[Math.floor(rnd()*path.length)]; if(q.x<420 || q.x>w-420) continue;
     const side = rnd()<0.5 ? -1 : 1, off = 190+rnd()*260, rad = 150+rnd()*130, px = q.x + (-q.ty)*side*off, py = clamp(q.y + q.tx*side*off, 260, h-260);
@@ -167,12 +167,13 @@ function kpHellGen(rnd, w, h, cy, o){
   }
   carve(w*0.34, clamp(path[Math.floor(path.length*0.34)].y + (rnd()<0.5?-1:1)*160, 330, h-330), 250+rnd()*70, 0.5);
   carve(w*0.7, clamp(path[Math.floor(path.length*0.7)].y + (rnd()<0.5?-1:1)*160, 330, h-330), 250+rnd()*70, 0.5);
+  if(AR>1.4) for(const fx of [0.17,0.52,0.86]) carve(w*fx, clamp(path[Math.floor(path.length*fx)].y + (rnd()<0.5?-1:1)*(160+rnd()*160), 330, h-330), 230+rnd()*80, 0.5);
   carve(150, cy, 175, 0.2); carve(w-150, cy, 175, 0.2); carve(w-330, cy-190, 160, 0.3);
   if(o.boss) carve(o.cx, cy, 640, 0.25);
   // crust islands out in the lava (decor only) -- value 2
   const near = (ix,iy,r)=>{ for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){ const nx = ix+dx, ny = iy+dy; if(nx>=0&&ny>=0&&nx<cols&&ny<rows&&M[ny*cols+nx]===1) return true; } return false; };
-  const nIsl = 34+Math.floor(rnd()*14);
-  for(let k=0;k<nIsl*6 && k<400;k++){
+  const nIsl = Math.round((34+Math.floor(rnd()*14))*AR);
+  for(let k=0;k<nIsl*6 && k<400*AR;k++){
     const ix = 2+Math.floor(rnd()*(cols-4)), iy = 2+Math.floor(rnd()*(rows-4));
     if(M[iy*cols+ix]!==0 || near(ix,iy,2) || !near(ix,iy,7)) continue;
     const rr = rnd()<0.3 ? 2 : 1;
@@ -205,7 +206,7 @@ function kpHellGen(rnd, w, h, cy, o){
   // bone barricades dividing the terrain (each with a wide gap) + a few free-standing bone walls
   const posts = [], centers = [], onGround = (x,y)=>{ const ix = Math.round(x/TS), iy = Math.round(y/TS); return ix>0&&iy>0&&ix<cols-1&&iy<rows-1&&(M[iy*cols+ix]===1 || near(ix,iy,1)); };
   if(!o.noBars){
-    const nB = 4+Math.floor(rnd()*3);
+    const nB = Math.round((4+Math.floor(rnd()*3))*Math.sqrt(AR));
     const cand = path.filter(q=>q.x>560 && q.x<w-560 && (!o.boss || Math.hypot(q.x-o.cx,q.y-cy)>780));
     for(let k=0;k<nB*4 && centers.length<nB && cand.length;k++){
       const q = cand[Math.floor(rnd()*cand.length)];
@@ -319,7 +320,8 @@ function drawHellPortal(pos, clock, big){
 function makeKeep(a, kopts){
   const rnd = subSeeded(9300+a*71+((kopts&&kopts.bf)||0)*131+((kopts&&kopts.seed)||0));
   let w = KP_W[a-1], h = KP_H[a-1];
-  if(a===9 && !brBossKind((kopts&&kopts.bf)||0)){ w = 2800 + 100*Math.floor(rnd()*9); h = 1800 + 100*Math.floor(rnd()*5); }   // v398: generated floors vary in size
+  if(a===9 && !brBossKind((kopts&&kopts.bf)||0)){ w = 4400 + 100*Math.floor(rnd()*9); h = 2600 + 100*Math.floor(rnd()*6); }   // v398: generated floors vary in size (v506: about the size of the Keep's entrance hall)
+  else if(a===9 && BR_THEME_KINDS[brBossKind((kopts&&kopts.bf)||0)]){ w = 4900 + 100*Math.floor(rnd()*3); h = 3000 + 100*Math.floor(rnd()*2); }   // v505: themed boss floors are about the size of the Keep's entrance hall
   const cy = Math.round(h/2), T = 46, ob = [], props = [], lore = [];
   const wH = (x0,x1,y,gaps)=>{ let xs = x0; for(const [g0,g1] of (gaps||[]).slice().sort((p,q)=>p[0]-q[0])){ if(g0>xs) ob.push({x:xs, y:y-T/2, w:g0-xs, h:T, mazeWall:true}); xs = g1; } if(x1>xs) ob.push({x:xs, y:y-T/2, w:x1-xs, h:T, mazeWall:true}); };
   const wV = (x,y0,y1,gaps)=>{ let ys = y0; for(const [g0,g1] of (gaps||[]).slice().sort((p,q)=>p[0]-q[0])){ if(g0>ys) ob.push({x:x-T/2, y:ys, w:T, h:g0-ys, mazeWall:true}); ys = g1; } if(y1>ys) ob.push({x:x-T/2, y:ys, w:T, h:y1-ys, mazeWall:true}); };
@@ -327,7 +329,7 @@ function makeKeep(a, kopts){
   const prop = (kind,x,y,extra)=>{ const o = Object.assign({kind,x,y}, extra||{}); props.push(o); return o; };
   const L = (id,kind,x,y)=>{ const o = prop(kind,x,y,{id}); lore.push({x,y,r:36,id}); return o; };
   const entrance = {x:70, y:cy, r:36};
-  let beacons = null, exitDoor = null, exitPending = null, altars = null, pentagram = null, waypoint = null, holdStairs = null, zones = [], ring = null, breach = null, bossPos = null, palSet = null, bossKindOut = null, hellOut = null;
+  let beacons = null, exitDoor = null, exitPending = null, altars = null, pentagram = null, waypoint = null, holdStairs = null, zones = [], ring = null, breach = null, bossPos = null, palSet = null, bossKindOut = null, hellOut = null, themedOut = null;
   const floors = [];
   const blk = (kind,x,y,bw,bh)=>{ const o = {x:Math.round(x), y:Math.round(y), w:bw, h:bh, isProp:true}; ob.push(o); prop(kind,o.x,o.y,{w:bw,h:bh}); };
   const kpBuildWalls = (bsp)=>{
@@ -577,10 +579,15 @@ function makeKeep(a, kopts){
     const bf = (kopts&&kopts.bf)||1, tier = Math.min(4,Math.ceil(bf/5)), bossKind = brBossKind(bf);
     palSet = BR_PALS[(Math.ceil(bf/5)-1)%4]; exitDoor = null;
     const CX = 1650;
+    if(bossKind && BR_THEME_KINDS[bossKind]){   // v505: themed boss floor
+      const T = brThemedFloor(rnd, bf, bossKind, w, h);
+      ob.length = 0; for(const r of T.ob) ob.push(r);
+      zones = T.zones; bossPos = T.bossPos; exitPending = T.exitPending; palSet = T.pal; bossKindOut = bossKind; themedOut = T;
+    } else {
     // v427: the floor of hell -- lava all round, an organic walkable road of scorched stone, crust islands, bone barricades, no walls
     let hell = null;
-    for(let tr=0; tr<4; tr++){
-      hell = kpHellGen(rnd, w, h, cy, {boss:!!bossKind, cx:CX, tier, noBars:tr>=3, bf});
+    for(let tr=0; tr<24; tr++){   // (v506: the bigger floors need more tries to roll a road that joins the entrance to the exit)
+      hell = kpHellGen(rnd, w, h, cy, {boss:!!bossKind, cx:CX, tier, noBars:tr>=4, bf});
       ob.length = 0; for(const r of hell.rects) ob.push(r); for(const q of hell.posts) ob.push({x:q.x-28, y:q.y-28, w:56, h:56, bone:true});
       if(brGridOk(ob, w, h, {x:170,y:cy}, {x:w-170,y:cy}).ok) break;
     }
@@ -589,7 +596,7 @@ function makeKeep(a, kopts){
       prop('sigil',CX,cy,{r:360}); prop('breach',CX+230,cy,{r:130,big:true}); bossPos = {x:CX-60, y:cy};
     }
     for(const d of hell.deco) prop(d.kind, d.x, d.y, {s:1});
-    const deep = Math.max(0, bf-20), nPacks = bossKind ? 10 : Math.min(32, 16+Math.floor(bf/2));
+    const deep = Math.max(0, bf-20), nPacks = bossKind ? 10 : Math.min(60, Math.round(Math.min(32, 16+Math.floor(bf/2))*w*h/6.4e6));
     const anchors = hell.anchors.slice();
     for(let i=0;i<nPacks && anchors.length;i++){
       const an = anchors.splice(Math.floor(rnd()*anchors.length), 1)[0];
@@ -607,19 +614,21 @@ function makeKeep(a, kopts){
       zones.push({rect:[exitPending.x-400, exitPending.x-170, cy-160, cy+160], packs:[gp], elite:true, gate:true});
     }
     bossKindOut = bossKind || null;
+    }
   }
   }
   if(a<=7) kpEnrich(a, zones, rnd);
   const room = { w, h, obstacles:ob, subzone:'keep', kpArea:a, hell:hellOut, altars, pentagram, exitPending, kpFloors:floors, ring, breach, bossPos, bossKind:bossKindOut, bf:(kopts&&kopts.bf)||0, entrance, entranceSide:'left', entranceSpot:{x:entrance.x+100, y:entrance.y},
     exitDoor, waypoint, holdStairs, beacons, props, lore, zones, rocks:[], name:KP_NAMES[a-1], boltX:0.5, noOre:true,
     wallPal:(palSet||{}).wp||['#4a4658','#1e1c28','#2e2b3a'], pal:(palSet||{}).fl||['#34323c','#2a2830','#3c3a46','#2e2c36'] };
+  if(themedOut){ room.floorRects = themedOut.floorRects; room.theme = bossKindOut; room.themeArena = themedOut.arena; room.themePool = themedOut.pool; room.heartGeo = themedOut.heartGeo; room.mapFound = true; room.reachFrom = {x:170, y:cy}; }
   if(castleGrid) room.reachGrid = castleGrid;
   subFinish(room);
   room.waypoint = waypoint; room.stairsDown = null;
   if(a===9) room.name = 'The Breach — Floor '+room.bf;
   if(a===9){
     if(room.bossKind==='fhcmd') room.turretSpots = [{x:1650-520,y:cy-330},{x:1650-520,y:cy+330},{x:1650+420,y:cy-380},{x:1650+420,y:cy+380}];
-    room.reachGrid = brGridOk(ob, w, h, {x:170,y:cy}, {x:w-170,y:cy}).grid;
+    room.reachGrid = themedOut ? null : brGridOk(ob, w, h, {x:170,y:cy}, {x:w-170,y:cy}).grid;   // (themed floors are joined by construction)
   }
   return room;
 }
@@ -629,26 +638,38 @@ function spawnKeep(g){
   if(room.exitDoor) av.push({x:room.exitDoor.x,y:room.exitDoor.y,r:220});
   if(room.waypoint) av.push({x:room.waypoint.x,y:room.waypoint.y,r:300});
   if(room.holdStairs) av.push({x:room.holdStairs.x,y:room.holdStairs.y,r:200});
+  // v503: the floor's Map Bearer is the marked brute nearest the way in
+  { let bz = null, bd = 1e9; for(const z of room.zones){ if(!z.mapBrute) continue; const d = Math.hypot((z.rect[0]+z.rect[1])/2-room.entrance.x, (z.rect[2]+z.rect[3])/2-room.entrance.y); if(d<bd){ bd = d; bz = z; } } room._mbZone = bz; }
   for(const z of room.zones){
     let first = true;
     for(const types of z.packs){
       let c = subFreeSpot(room, z.rect[0], z.rect[1], z.rect[2], z.rect[3], av); if(!c) continue;
       if(room.reachGrid){ for(let k=0;k<40 && c && !brReach(room.reachGrid,c.x,c.y);k++) c = subFreeSpot(room, z.rect[0], z.rect[1], z.rect[2], z.rect[3], av); if(!c || !brReach(room.reachGrid,c.x,c.y)) continue; }
-      for(const t of types){
+      for(const t0 of types){
+        const vsp = String(t0).split(':'), t = vsp[0], vr = vsp[1] || null;   // v505: 'bear:polar' = a bear of the polar variety
         let pos = subFreeSpot(room, c.x-90, c.x+90, c.y-90, c.y+90, null, 20) || c;
         if(room.reachGrid && !brReach(room.reachGrid,pos.x,pos.y)) pos = c;
         let e;
         if(t==='keepbat'){ e = spawnEnemy(g, 'firebat', pos); if(e){ e.reg = true; e.color = '#4a3c56'; } }
         else if(t==='giantspider'){ e = spawnEnemy(g, 'spider', pos); if(e) makeGiantSpider(e); }
+        else if(t==='squid'){ e = spawnSquid(g, pos); }
         else e = spawnEnemy(g, t, pos);
         if(e && t==='cultist') raiseCultGuard(g, e, 4, false);
-        if(e && z.mapBrute && t==='skeletonbrute' && !types._mb && !room._mbPlaced){ types._mb = true; room._mbPlaced = true; e.mapBrute = true; e.mapCarrier = true; e.mapHolder = true; e.hp = Math.round(e.hp*2); e.maxHp = Math.round(e.maxHp*2); }
+        if(e && z.mapBrute && z===room._mbZone && t==='skeletonbrute' && !types._mb && !room._mbPlaced){ types._mb = true; room._mbPlaced = true; e.mapBrute = true; e.mapCarrier = true; e.mapHolder = true; e.hp = Math.round(e.hp*2); e.maxHp = Math.round(e.maxHp*2); }
+        if(e && vr) e.variant = vr;
         if(e && room.kpArea===9) brScaleEnemy(e, room.bf);
         if(e && z.elite && first){ first = false; makeElite(e, pickMods(2)); }
         else if(e && z.gate){ makeElite(e, pickMods(1)); }
         if(e && z.gate){ e.gatePack = true; room.gateN = (room.gateN||0)+1; }
       }
     }
+  }
+  if(room.kpArea<=3 && room._mbZone && !room._mbPlaced){   // v503: the marked brute's spot was blocked -- the nearest skeleton brute carries the map instead
+    let be = null, bd = 1e9; for(const e of g.enemies){ if(e.type!=='skeletonbrute' || e.hp<=0) continue; const d = Math.hypot(e.x-room.entrance.x, e.y-room.entrance.y); if(d<bd){ bd = d; be = e; } }
+    if(be){ room._mbPlaced = true; be.mapBrute = true; be.mapCarrier = true; be.mapHolder = true; be.hp = Math.round(be.hp*2); be.maxHp = Math.round(be.maxHp*2); } }
+  if(room.theme==='kraken' && room.themePool){   // electric eels in the great pool
+    const P = room.themePool;
+    for(let i=0;i<3;i++){ const an = i*2.1+0.4, pt = {x:P.cx+Math.cos(an)*P.rx*0.6, y:P.cy+Math.sin(an)*P.ry*0.6}; const e = spawnEel(g, pt); if(e){ e.brEel = true; brScaleEnemy(e, room.bf); } }
   }
   // v434: on the Demon Hold floor the Wraith Lord appears only once you stand in the red pentagram (see updateKeep)
   if(room.kpArea===9 && room.bossKind && room.bossPos) spawnBreachBoss(g, room.bossKind, room.bossPos);
@@ -781,6 +802,7 @@ function updateCultist(g, e, dt, target, d, isFollowerTarget, chillMult, room){
     const tx = e.x+Math.cos(ang)*mv*80, ty = e.y+Math.sin(ang)*mv*80, a2 = steerAngleTo(e, tx, ty, room.obstacles);
     e.x += Math.cos(a2)*e.speed*chillMult*dt; e.y += Math.sin(a2)*e.speed*chillMult*dt; e.moving = true;
   } else { const sa = ang + Math.PI/2*(e.strafe||(e.strafe=Math.random()<0.5?-1:1)); e.x += Math.cos(sa)*e.speed*0.4*chillMult*dt; e.y += Math.sin(sa)*e.speed*0.4*chillMult*dt; e.moving = true; }
+  if(inShadowKeep(g)) cultPortalTick(g, e, target, d, dt);   // v499
   e.cCd = (e.cCd===undefined ? rand(0.6,2) : e.cCd) - dt;
   if(e.cCd<=0 && d<480 && enemyLOS(g,e,target)){
     e.cCd = rand(2.0,3.0); e.atkAnimT = 0.3; e.cN = (e.cN||0)+1;
@@ -955,22 +977,36 @@ function drawKeepMonsterIso(e){
 const LEVEL_CAP = 80;
 const BR_BOSS = {5:'houndlord', 10:'cinderqueen', 15:'warden', 20:'tyrant'};
 const BR_BOSS_NAME = {houndlord:'Gorefang, Hound-Lord of the Breach', cinderqueen:'Vexara, the Cinder Matriarch', warden:'The Brimstone Warden', tyrant:'The Ember Tyrant',
-  fhcmd:'The Frosthold Commander, Returned', wraithlord:'The Wraith Lord, Bound to the Breach', trex:'Rex, the Crater King', gojira:'Gojira, Wrath of the Crater'};
+  fhcmd:'The Frosthold Commander, Returned', wraithlord:'The Wraith Lord, Bound to the Breach', trex:'Rex, the Crater King', gojira:'Gojira, Wrath of the Crater',
+  minotaur:'The Minotaur, Returned', revenant:'The Templar Revenant, Returned', mastodon:'The Woolly Mastodon, Returned', leviathan:'The Marsh Leviathan, Returned', colossus:'The Molten Colossus, Returned', kraken:'The Kraken, Returned'};
 // v398: endless Breach. Floors 5/10/15/20 keep the four demon lords; from floor 25 a boss from the campaign (or a returning demon lord) guards every fifth floor.
 const BR_BOSS_POOL = ['houndlord','cinderqueen','warden','tyrant','fhcmd','wraithlord','trex','gojira'];
 function brHash(n){ let x = Math.imul(n|0, 2654435761)>>>0; x ^= x>>>13; x = Math.imul(x, 1274126177)>>>0; return (x ^ (x>>>16))>>>0; }
 const _brBossMemo = {};
 function brBossKind(bf){
-  if(!bf || bf%5) return null;
-  if(BR_BOSS[bf]) return BR_BOSS[bf];
-  if(_brBossMemo[bf]) return _brBossMemo[bf];
-  let i = brHash(bf) % BR_BOSS_POOL.length; const prev = brBossKind(bf-5);
-  if(BR_BOSS_POOL[i]===prev) i = (i+1) % BR_BOSS_POOL.length;
-  return (_brBossMemo[bf] = BR_BOSS_POOL[i]);
+  if(!bf || bf%5) return null;   // only every fifth floor has a boss; the others open when their elite pack falls
+  if(bf<=20) return BR_BOSS[bf];
+  return brFloorTheme(bf);       // v505/v506: floors 25, 30, 35... are the themed boss floors
+}
+// v505: after the Ember Tyrant the Breach never ends. Every fifth floor from 25 is one of six themed boss floors, in shuffled cycles
+// (no two the same in a row); fixed by the floor number, so a floor is always the same for every character.
+const BR_THEME_LIST = ['minotaur','revenant','mastodon','leviathan','colossus','kraken'];
+const BR_THEME_KINDS = {minotaur:1, revenant:1, mastodon:1, leviathan:1, colossus:1, kraken:1};
+const _brSched = [];
+function brFloorTheme(bf){
+  if(bf<=20 || bf%5) return null;
+  const i = bf/5-5;
+  while(_brSched.length<=i){
+    const cyc = (_brSched._c = (_brSched._c||0)+1), bag = BR_THEME_LIST.slice();
+    for(let k=bag.length-1;k>0;k--){ const j = brHash(cyc*131+k*17) % (k+1); const t = bag[k]; bag[k] = bag[j]; bag[j] = t; }
+    if(_brSched.length && bag[0]===_brSched[_brSched.length-1]) bag.push(bag.shift());
+    for(const t of bag) _brSched.push(t);
+  }
+  return _brSched[i];
 }
 // beyond floor 20 every floor multiplies monster life and damage (monster level itself stays capped at 80)
 function brScaleEnemy(e, bf){ if(!e || bf<=20) return e; const n = bf-20; e.hp = e.maxHp = Math.round(e.maxHp*Math.pow(1.07,n)); e.dmg *= Math.pow(1.045,n); return e; }
-function brCheckpoint(p){ return Math.floor((p.breachBest||0)/5)*5 + 1; }   // the floor after the last fifth-floor boss you slew
+function brCheckpoint(p){ let f = p.breachBest||0; while(f>0 && !brBossKind(f)) f--; return f+1; }   // the floor after the last boss you slew (floors 5, 10, 15, 20, then every themed boss floor)
 // coarse-grid flood fill: can the player walk from a to b, and which cells are reachable at all (used to keep every spawn reachable)
 function brGridOk(ob, w, h, a, b){
   const C = 60, cols = Math.ceil(w/C), rows = Math.ceil(h/C), blk = new Uint8Array(cols*rows), seen = new Uint8Array(cols*rows);
@@ -987,6 +1023,83 @@ const BR_PALS = [HOLD_PAL, {wp:['#5a3a30','#201210','#38241e'], fl:['#2e1e1a','#
 function breachDepth(f){ return clamp(68+Math.ceil(f*0.75), 69, 83); }
 const BR_PACKS = [['imp','imp','imp'],['hellhound','hellhound','hellhound'],['imp','imp','hellhound','hellhound'],['cinderfiend','imp','imp'],['cinderfiend','cinderfiend','hellhound'],['brimstonebrute','imp','imp'],['brimstonebrute','cinderfiend'],['hellhound','hellhound','hellhound','hellhound','imp'],['brimstonebrute','brimstonebrute']];
 const BR_TIER_PACKS = [[0,1,2],[1,2,3,4],[3,4,5,6,7],[4,5,6,7,8]];
+// ---- v505: themed Breach boss floors (22+): a rooms-and-tunnels lair of the theme, ending in the boss's arena ----
+const BR_THEME_PAL = {
+  minotaur:{wp:['#6a6254','#2a2418','#4a4234'], fl:['#2a2620','#221e18','#322c24','#2a251e']},
+  revenant:{wp:['#4a5468','#1c2230','#303a4c'], fl:['#22283a','#1a2030','#2a3248','#202638']},
+  mastodon:{wp:['#5a7084','#26384a','#40586c'], fl:['#3c4c58','#323f4a','#465664','#3a4a56']},
+  leviathan:{wp:['#3a4a2e','#141c10','#2a3a22'], fl:['#2a3a24','#20301c','#344630','#2c3c26']},
+  colossus:{wp:['#4a2216','#1a0a05','#321610'], fl:['#241410','#1c100c','#2e1c14','#22140e']},
+  kraken:{wp:['#2a4a5a','#0e1c26','#1e3644'], fl:['#1e3440','#162a34','#264450','#1c303c']}
+};
+const BR_THEME_PACKS = {
+  minotaur:[['skeleton','skeleton','skeletonarcher'],['skeletonbrute','skeleton','skeleton'],['skeletonbrute','skeletonbrute'],['skeleton','skeleton','skeleton','skeletonarcher']],
+  revenant:[['skeleton','skeletonarcher','skeleton','skeletonbrute'],['spider','spider','spider'],['skeletonbrute','skeletonarcher','skeleton'],['skeleton','skeleton','spider']],
+  mastodon:[['frozenzombie','frozenzombie','frozenzombie'],['bear:polar','bear:polar'],['warg:white','warg:white','warg:white'],['frozenzombie','frozenzombie','warg:white']],
+  leviathan:[['giantoad','giantoad'],['zombie','zombie','zombie'],['poisonplant','poisonplant','zombie'],['giantoad','zombie','zombie']],
+  colossus:[['lavabeetle','lavabeetle','lavabeetle'],['firebat','firebat','firebat'],['magmagolem','lavabeetle'],['magmacrawler','magmacrawler','magmacrawler']],
+  kraken:[['stormsnake','stormsnake','stormsnake'],['stormsnake','stormsnake'],['squid','squid','squid'],['stormsnake','squid','squid']]
+};
+function brThemedFloor(rnd, bf, kind, w, h){
+  const cy = Math.round(h/2), CORR = 150, ri = (a,b)=>Math.round(a+rnd()*(b-a));
+  const colossus = kind==='colossus', pool = kind==='leviathan' || kind==='kraken';
+  const aw = colossus ? 1950 : 1500, ah = colossus ? 1104 : 1300;
+  const arena = {x:w-aw-120, y:cy-Math.round(ah/2), w:aw, h:ah}, startRect = {x:20, y:cy-220, w:620, h:440};
+  const COLS = 3, ROWS = 3, gx0 = startRect.x+startRect.w+170, gx1 = arena.x-170, gy0 = 170, gy1 = h-170, cw = (gx1-gx0)/COLS, chh = (gy1-gy0)/ROWS;
+  const rooms = [], forceL = ri(0,ROWS-1), forceR = ri(0,ROWS-1);
+  for(let cyi=0; cyi<ROWS; cyi++) for(let cxi=0; cxi<COLS; cxi++){
+    if(!((cxi===0 && cyi===forceL) || (cxi===COLS-1 && cyi===forceR)) && rnd()<0.2) continue;
+    const rw = ri(400, Math.min(680, cw-90)), rh = ri(360, Math.min(600, chh-70));
+    rooms.push({x:Math.round(gx0+cxi*cw+40+rnd()*(cw-rw-80)), y:Math.round(gy0+cyi*chh+30+rnd()*(chh-rh-60)), w:rw, h:rh, cxi, cyi});
+  }
+  const cen = rooms.map(rectCenter), edges = [], have = new Set(), key = (a,b)=> a<b ? a+','+b : b+','+a;
+  const link = (a,b)=>{ if(have.has(key(a,b))) return false; have.add(key(a,b)); edges.push([a,b]); return true; };
+  const pairs = [];
+  for(let a=0;a<rooms.length;a++) for(let b=a+1;b<rooms.length;b++){ const d = dist(cen[a],cen[b]); pairs.push({a,b,d,k:d*(0.8+rnd()*0.45)}); }
+  pairs.sort((x,y)=>x.k-y.k);
+  const par = rooms.map((_,i)=>i), find = i=> par[i]===i ? i : (par[i]=find(par[i]));
+  for(const pr of pairs){ const ra = find(pr.a), rb = find(pr.b); if(ra!==rb){ par[ra] = rb; link(pr.a, pr.b); } }
+  for(const pr of pairs){ if(edges.length >= rooms.length+1) break; if(pr.d<1700 && rnd()<0.14) link(pr.a, pr.b); }
+  const nearest = (pt, idx)=>{ let bi = idx[0], bd = 1e9; for(const i of idx){ const d = dist(pt, cen[i]); if(d<bd){ bd = d; bi = i; } } return bi; };
+  const left = rooms.map((r,i)=>r.cxi===0 ? i : -1).filter(i=>i>=0), right = rooms.map((r,i)=>r.cxi===COLS-1 ? i : -1).filter(i=>i>=0);
+  const inRoom = nearest(rectCenter(startRect), left), outRoom = nearest(rectCenter(arena), right);
+  const floorRects = [startRect, ...rooms, arena];
+  const tun = (a,b)=>{ floorRects.push(...(rnd()<0.5 ? tunnelRects(b.x,b.y,a.x,a.y,CORR) : tunnelRects(a.x,a.y,b.x,b.y,CORR))); };
+  for(const [a,b] of edges) tun(cen[a], cen[b]);
+  tun(rectCenter(startRect), cen[inRoom]);
+  { const door = {x:arena.x-100, y:cy}; tun(cen[outRoom], door); floorRects.push(...tunnelRects(door.x, door.y, arena.x+arena.w/2, cy, CORR)); }   // into the arena along its middle line
+  const ob = darkCryptCarveObstacles(floorRects, w, h);
+  const ac = rectCenter(arena), out = {w, h, ob, floorRects, rooms, arena, startRect, zones:[], pool:null, heartGeo:null, pal:BR_THEME_PAL[kind]};
+  if(colossus){   // the bowl is round: the corners of its rectangle are walled off
+    const RX = aw/2, RY = ah/2;
+    out.heartGeo = {AX0:arena.x, AX1:arena.x+aw, AY0:arena.y, AY1:arena.y+ah, CX:ac.x, CY:ac.y, RX, RY};
+    for(let dy=-RY; dy<RY; dy+=40){
+      const m = Math.min(Math.abs(dy), Math.abs(dy+40)), hw = RX*Math.sqrt(Math.max(0, 1-(m/RY)*(m/RY))), y = ac.y+dy;
+      const lw = (ac.x-hw)-arena.x, rw2 = (arena.x+aw)-(ac.x+hw);
+      if(lw>=30) ob.push({x:arena.x, y, w:Math.round(lw), h:40, mazeWall:true});
+      if(rw2>=30) ob.push({x:Math.round(ac.x+hw), y, w:Math.round(rw2), h:40, mazeWall:true});
+    }
+    out.bossPos = {x:ac.x+240, y:ac.y};
+  } else if(pool){   // a great pool in the arena (blocked water; the boss swims in it)
+    const cx = arena.x+Math.round(aw*0.45), RX = 350, RY = 290;   // (a boss only stirs within one screen of you, so the pool is small)
+    out.pool = {cx, cy:ac.y, rx:RX, ry:RY};
+    for(let dy=-RY; dy<RY; dy+=40){ const m = Math.min(Math.abs(dy), Math.abs(dy+40)), hw = RX*Math.sqrt(Math.max(0, 1-(m/RY)*(m/RY))); ob.push({x:Math.round(cx-hw), y:Math.round(ac.y+dy), w:Math.round(hw*2), h:42, isWater:true}); }
+    out.bossPos = {x:cx, y:ac.y};
+  } else out.bossPos = {x:arena.x+Math.round(aw*0.45), y:ac.y};
+  out.exitPending = {x:arena.x+aw-130, y:ac.y, r:54};
+  // packs: one or two in every chamber, a few more in the biggest
+  const packs = BR_THEME_PACKS[kind];
+  let n = 0;
+  for(const r of rooms){
+    const np = 1 + (rnd()<0.6 ? 1 : 0);
+    for(let k=0;k<np;k++){
+      const pk = packs[Math.floor(rnd()*packs.length)].slice();
+      for(let q=0;q<Math.floor(Math.max(0,bf-20)/8) && pk.length<8;q++) pk.push(pk[pk.length-1]);   // deeper floors: bigger packs
+      out.zones.push({rect:[r.x+90, r.x+r.w-90, r.y+90, r.y+r.h-90], packs:[pk], elite:(n++%4===3)});
+    }
+  }
+  return out;
+}
 function ensureBreachQuest(p){
   if(p.breachContained && !getQuest(p,'br_purge')) addQuestOnce(p, 'br_purge', 'Purge the Breach', 'The breach is contained, not closed. Descend and cut down the demons before they escape.', 20);
 }
@@ -1044,6 +1157,7 @@ function spawnBreachBossRaw(g, kind, pos){
     e.dmg *= 2.0 + Math.max(0, lv-44)*0.11; e.pctFloor = 0.16;
     return e;
   }
+  if(BR_THEME_KINDS[kind]) return spawnThemedBreachBoss(g, kind, pos);
   if(kind==='tyrant'){
     e = spawnEnemy(g, 'balrog', pos); initBalrog(e); e.isLairBoss = true; e.bossName = BR_BOSS_NAME.tyrant; e.baseR = e.r;
     e.hp = e.maxHp = Math.round(e.maxHp*2.6); e.dmg *= 1.1;
@@ -1055,6 +1169,41 @@ function spawnBreachBossRaw(g, kind, pos){
   e.r = e.baseR = K.r; e.hp = e.maxHp = Math.round(e.maxHp*K.hp); e.speed = K.spd; e.armor = K.arm; e.baseSpeed = K.spd;
   e.aggroRange = 99999; e.leashRange = 99999; e.wanderRadius = 0;
   e.dbState = 'dormant'; e.dbT = 0; e.dbCd = 2; e.dbIdx = 0; e.dbPh = 0; e.dbEnr = false; e.wlZones = [];
+  return e;
+}
+// v505: the themed bosses of floors 22+ -- each is the campaign boss, re-armed for the Breach (brScaleEnemy then deepens it floor by floor)
+function spawnThemedBreachBoss(g, kind, pos){
+  const room = g.room, A = room.themeArena || {x:pos.x-300, y:pos.y-300, w:600, h:600};
+  const guard = (type, n)=>{ for(let i=0;i<n;i++){ const m = spawnEnemy(g, type, {x:clamp(pos.x+rand(-260,260), A.x+80, A.x+A.w-80), y:clamp(pos.y+rand(-260,260), A.y+80, A.y+A.h-80)}); if(m){ brScaleEnemy(m, room.bf); m.aggroRange = 900; } } };
+  let e = null;
+  if(kind==='minotaur'){
+    e = spawnEnemy(g, 'bear', pos);
+    e.minotaur = true; e.isLairBoss = true; e.bossName = BR_BOSS_NAME.minotaur; e.r = Math.round(e.r*1.5); e.baseR = e.r;
+    e.hp = e.maxHp = Math.round(e.maxHp*4.2); e.dmg *= 1.5; e.armor = Math.min(e.armor||0, 6); e.speed *= 1.05;
+    guard('skeletonbrute', 3);
+  } else if(kind==='revenant'){
+    e = spawnEnemy(g, 'skeletonbrute', pos); initRevenant(e);
+    guard('skeletonbrute', 2);
+  } else if(kind==='mastodon'){
+    e = spawnEnemy(g, 'bear', pos);
+    e.r = Math.round(e.r*MASTODON_R_MULT); e.hp = e.maxHp = Math.round(e.hp*MASTODON_HP_MULT); e.dmg = e.dmg*MASTODON_DMG_MULT*0.8; e.armor = (e.armor||0) + 6;
+    e.isLairBoss = true; e.bossName = BR_BOSS_NAME.mastodon; e.mastodon = true; e.dmgType = 'normal'; e.dmgSplit = 'cold'; e.dmg *= 1.1;
+    e.aggroRange = 520; e.leashRange = 1400; e.wanderRadius = 20;
+    guard('frozenzombie', 4);
+  } else if(kind==='leviathan' || kind==='kraken'){
+    const P = room.themePool || {cx:pos.x, cy:pos.y, rx:480, ry:380};
+    const cfg = {free:true, bounds:[P.cx-P.rx+90, P.cx+P.rx-90], y0:P.cy-P.ry+80, y1:P.cy+P.ry-80, cx:P.cx, cy:P.cy};
+    if(kind==='kraken'){ e = spawnLeviathanBoss(g, {x:P.cx, y:P.cy-1}, cfg); e.bossName = BR_BOSS_NAME.kraken; }
+    else {
+      e = spawnEnemy(g, 'leviathan', {x:P.cx, y:P.cy-1}); e.cfg = cfg;
+      e.pool = true; e.lvBoss = true; e.isLairBoss = true; e.bossName = BR_BOSS_NAME.leviathan;
+      e.r = Math.round(LV_R*0.7); e.hp = Math.round(e.hp/3*LV_HP_MULT); e.maxHp = e.hp; e.dmg = e.dmg*LV_DMG_MULT; e.atkCdMax = 1.6; e.armor = 6;
+      e.lvState = 'idle'; e.lvT = 0; e.lvCd = 2.0; e.lvIdx = 0; e.lvSide = -1; e.lvWest = true; e.lvSpeed = 230; e.exposedT = 0; e.lvPt = null; e.lvSpoke = false;
+    }
+  } else if(kind==='colossus'){
+    e = spawnEnemy(g, 'colossus', pos);
+    e.isLairBoss = true; e.bossName = BR_BOSS_NAME.colossus; initColossus(e);
+  }
   return e;
 }
 function demonBossSlain(g, e){

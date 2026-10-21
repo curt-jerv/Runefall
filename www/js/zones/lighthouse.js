@@ -126,7 +126,7 @@ function spawnForgottenTowerFloor(g, floor){
 // v490: a Map Bearer (ringed in gold) holds the first floor; slaying it charts every Forgotten Tower floor (p.ftMapFound)
 function ftEnsureMapBearer(g){
   const room = g.room, p = g.player;
-  if(!room || room.floor!==1 || p.ftMapFound || g.enemies.some(e=>e.ftMapCarrier && e.hp>0)) return;
+  if(!room || p.ftMapFound || g.enemies.some(e=>e.ftMapCarrier && e.hp>0)) return;
   const ent = room.entrance;
   const cand = g.enemies.filter(e=>e.hp>0 && !e.ftGuard && (e.type==='goblin' || e.type==='cavetroll')).map(e=>({e, d:Math.hypot(e.x-ent.x, e.y-ent.y)})).filter(c=>c.d>=450).sort((a,b)=>Math.abs(a.d-800)-Math.abs(b.d-800));
   const e = cand.length ? cand[0].e : null; if(!e) return;
@@ -262,6 +262,10 @@ function spawnLighthouseFloor(g, floor){
       for(let k=0;k<nA;k++){ const q = spot(r); if(q) spawnEnemy(g, 'banditarcher', q); }
       if(r.steps>0 && dist({x:r.cx,y:r.cy}, room.stairs) < 500){ const q = spot(r); if(q) spawnEnemy(g, 'banditbrute', q); }
     }
+    // v505: every maze floor has a Map Bearer (ringed in gold) in the next room or so; slaying it charts the floor
+    { const ent = room.entrance, cand = g.enemies.filter(e=>e.hp>0 && e.type!=='banditbrute').map(e=>({e, d:dist(e,ent)})).filter(c=>c.d>=300).sort((x,y)=>Math.abs(x.d-650)-Math.abs(y.d-650));
+      const b = cand.length ? cand[0].e : null;
+      if(b){ b.mapCarrier = true; b.mapHolder = true; b.hp = Math.round(b.hp*2); b.maxHp = Math.round(b.maxHp*2); b.r = Math.round(b.r*1.12); b.xpMul = Math.max(b.xpMul||1, 2.5); } }
     g.enemies._dense = true;   // exactly these packs
   } else if(!room.rooftop){
     const banditCount = 2 + Math.floor(floor/2); // floors 1-4: 2,2,3,3

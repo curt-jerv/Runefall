@@ -1,6 +1,6 @@
 // ---- Highward (v287): the floating Templar fortress. Five floors, an inverted pyramid (each floor wider than the last). ----
 const HW_DEPTH = 46;   // v489: Highward floors are Lv 46-50 (were 50-54)
-const HW_FLOORS = 5, HW_W = [5600,6400,7200,8000,2400], HW_H = [2600,3000,3400,3800,2500];   // v490: floor 5 is just the entrance room and the Warden's sanctum   // v421: rooms-and-halls fortress, ~4x the old floor area
+const HW_FLOORS = 5, HW_W = [5450,6100,6850,7600,2400], HW_H = [2600,2850,3250,3600,2500];   // v490: floor 5 is just the entrance room and the Warden's sanctum   // v421: rooms-and-halls fortress, ~4x the old floor area
 const HW_UP_FRAC = [0.5,0.82,0.18,0.82,null], HW_DOWN_FRAC = [null,0.5,0.82,0.18,0.82];
 const HW_WARNING = 'When shadows wake beneath the Hold, three bearers bind what none may hold.';
 function makeHighwardRunestoneItem(){
@@ -180,6 +180,7 @@ function spawnHighward(g){
   for(const e of made) e.xpMul = e.hwSentry ? 2 : mul;
 }
 function enterHighward(floor, opts){
+  floor = floor || 1;
   opts = opts || {};
   const g = game, p = g.player;
   hwStoreSave(g);
@@ -198,11 +199,11 @@ function enterHighward(floor, opts){
   if(st && floor===HW_FLOORS && !st.enemies.some(e=>e.hwGuardian && e.hp>0)){ delete g.hwStore[floor]; spawnHighward(g); }   // v489: the Warden's floor refills after a kill
   else if(st){ g.enemies = st.enemies.filter(e=>e.hp>0); t.greeted = st.greeted; if(st.chests) t.chests.forEach((c,i)=>{ c.opened = !!st.chests[i]; }); }
   else spawnHighward(g);
-  if(floor===1 && !p.hwMapFound && !g.enemies.some(e=>e.hwMapCarrier && e.hp>0)){
+  if(floor<HW_FLOORS && !p.hwMapFound && !g.enemies.some(e=>e.hwMapCarrier && e.hp>0)){   // v503: every floor keeps a bearer until the map is found
     // v425b: make sure the map bearer exists (also repairs floors restored from an older layout)
-    const fr = t.hwFirstRoom, fx = fr ? fr.x+fr.w/2 : t.entrance.x, fy = fr ? fr.y+fr.h/2 : t.entrance.y;
+    const fr = floor===1 ? t.hwFirstRoom : null, fx = fr ? fr.x+fr.w/2 : t.entrance.x, fy = fr ? fr.y+fr.h/2 : t.entrance.y;
     let best = null, bd = 1e9;
-    for(const e of g.enemies){ if(e.hp<=0 || e.hwSentry) continue; const d = Math.hypot(e.x-fx, e.y-fy) - (e.hw==='warden'?400:0); if(d<bd){ bd = d; best = e; } }
+    for(const e of g.enemies){ if(e.hp<=0 || e.hwSentry) continue; const d = floor===1 ? Math.hypot(e.x-fx, e.y-fy) - (e.hw==='warden'?400:0) : Math.hypot(e.x-fx, e.y-fy); if(d<bd){ bd = d; best = e; } }
     if(best){ best.hwMapCarrier = true; best.mapCarrier = true; best.mapHolder = true; best.xpMul = Math.max(best.xpMul||1, 3); }
   }
   t.hasGuardian = g.enemies.some(e=>e.hwGuardian && e.hp>0);

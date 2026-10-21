@@ -193,7 +193,13 @@ function splinterBurst(g, p, pr, e){
 // pattern Shield Bash's Rank-5 knockdown already established.
 const MULTI_SHOT_SPREAD = 0.4; // total fan spread, radians
 const MULTI_SHOT_ATKSPD_PER_RANK = 0.04;
-function multiShotCount(rank){ return (rank>=5 ? 5 : 3) + (uq(game&&game.player,'uq_marksman') ? 2 : 0); }
+function multiShotCount(rank){ return rank>=5 ? 5 : 3; }   // v499: Phantom Quiver no longer adds arrows (it makes projectiles pierce)
+// v499 Phantom Quiver: every player projectile rolls ONCE for a 50% chance to pass through the enemies it hits (shots that detonate or bounce keep their own rules)
+function quiverPierce(p, pr){
+  if(!uq(p,'uq_marksman') || pr.isExplosiveShot || pr.isSplinter || pr.isDeathBolt || pr.isLightningArc || pr.isFrozenOrb) return false;
+  if(pr._pq===undefined) pr._pq = Math.random() < 0.5;
+  return pr._pq;
+}
 // Arrow Eye: +5% Crit Chance at Rank1 up to +25% at Rank5, bow-only -- the
 // game's crit roll (p.critChance, see recalcStats/isCrit) is otherwise a
 // single generic stat with no weapon-type split, so this is the first
@@ -926,7 +932,7 @@ function pickEnemyTarget(g, e){
   if(g.followers) for(const f of g.followers){ if(f.kind!=='cat' && f.hp>0) cands.push(f); }
   if(!cands.length) return null;
   let closest = null, cd = Infinity;
-  for(const c of cands){ const d = dist(e,c) + ((c===p ? enemyLOS(g,e,c) : hasLOS(g,e,c)) ? 0 : 500); if(d < cd){ cd = d; closest = c; } }
+  for(const c of cands){ const d = dist(e,c) + ((c===p ? enemyLOS(g,e,c) : enemyLOSMulti(g,e,c)) ? 0 : 500); if(d < cd){ cd = d; closest = c; } }
   // stick with the current target unless the new closest is clearly closer (no ping-ponging between two allies)
   if(e._tgt && e._tgt!==closest && cands.includes(e._tgt) && dist(e,e._tgt) < cd + 70) closest = e._tgt;
   const base = th.get(closest)||0, need = Math.max(25, (e.maxHp||100)*THREAT_STEAL_FRAC);

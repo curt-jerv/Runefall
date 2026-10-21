@@ -90,7 +90,7 @@ function dungeonStoreGet(g, key, floor){ return g.dStore && g.dStore[key] && g.d
 const DUNGEON_DENSITY_TARGET = 20;
 const DENSIFY_SCENES = {lighthouse:1, spiderlair:1, bearcave:1, minotaurcave:1, darkcrypt:1, raptorlair:1};
 // v474: the Bear Cave holds fewer bears, in looser packs of 3-5 that keep well apart from each other
-const DENSIFY_TUNE = {bearcave:{density:7, spread:95, gap:560}, spiderlair:{density:20, spread:60, gap:300, pack:3}};   // v480: spiders in many packs of exactly 3
+const DENSIFY_TUNE = {bearcave:{density:7, spread:95, gap:560}, spiderlair:{density:20, spread:60, gap:300, pack:3}, darkcrypt:{density:27, spread:75, gap:330, pack:4}};   // v503: the big crypt tops up in loose packs of 4   // v480: spiders in many packs of exactly 3
 function densifyDungeon(g){
   const room = g.room;
   if(!room || !DENSIFY_SCENES[g.scene] || g.enemies._dense || room.bossFloor) return;

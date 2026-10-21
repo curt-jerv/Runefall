@@ -330,7 +330,21 @@ function shatterIceArmor(g, p){
 }
 
 // (v147) Drop any channelled/ground skill effects (Pyro Torrent beam, Blizzard/Plague zones, aim stick).
+// v502: dying (or leaving a zone) cancels every skill that is still running or about to go off -- Bulwark's release, Seismic Anchor's
+// delayed pull, banners, buffs, queued shots and any button press that was waiting for the next frame
+function clearWantFlags(){
+  wantAimedShot=wantAnchor=wantAssault=wantAttack=wantBanner=wantBattlecry=wantBeastFury=wantBlizzard=wantBloodrage=wantBulwark=wantConsecrate=wantCripplingShot=wantDeathBolt=wantDodge=wantExplosiveShot=wantExplosiveTrap=wantFear=wantFieldDress=wantFireball=wantFlameVortex=wantFrostTrap=wantGuardian=wantHuntersMark=wantHurricane=wantIceArmor=wantIceBolt=wantImmolate=wantJudgment=wantLeap=wantLightningArc=wantMeteor=wantMirror=wantMultiShot=wantNova=wantPackTactics=wantPermafrost=wantPlague=wantPoisonKnives=wantPoisonTrap=wantPyroTorrent=wantRainOfArrows=wantRaiseDead=wantRally=wantRapidShot=wantReave=wantRecall=wantSeismic=wantShadowStep=wantShieldBash=wantSmite=wantSoulFire=wantSoulGate=wantStance=wantStorm=wantStormcall=wantStunShot=wantSurvivalFieldDress=wantThrow=wantTornado=wantTrap=wantUnbreak=wantVanish=wantVengeance=wantWhirlwind=false;
+}
+const SKILL_TIMER_KEYS = ['anchorPendT','assaultT','battlecryT','beastFuryT','bloodrageT','bulwarkT','bulwarkStore','cleaveT','furyHandT','guardianT','hungerT','hurricaneT','immolateT','juggBlockT','juggRingT','juggT','juggWindT','leapT','mirrorT','oppT','pyroTorrentT','rallyT','rampageT','recallShieldT','recall','recallT','riposteT','skyShotT','skyT','tsLandT','tsRegenT','unbreakT','vanishT','vanishEvaT','whirlwindT','fieldDressT','windT','windReady','_wrCostWin','recallShield','fieldDressFx'];
+function clearWarriorRangerState(g, p){
+  for(const k of SKILL_TIMER_KEYS) if(p[k]) p[k] = (typeof p[k]==='boolean') ? false : 0;
+  p.furyQ = []; p.rainOfArrowsPending = null; p.anchorX = p.anchorY = undefined; p.blocking = false; p.shieldBashing = false;
+  if(g){ g.shieldThrow = null; g.banner = null; g.consecrate = null; g.judgments = []; }
+  if(g && g.followers) for(const f of g.followers){ f.leap = null; f.leapZ = 0; f.recallDash = 0; f.shieldHp = 0; f.shieldT = 0; }
+  if(g && g.enemies) for(const e of g.enemies){ e.tauntBy = null; e.tauntUntil = 0; }
+}
 function clearSkillEffects(g, p){
+  clearWantFlags(); if(p) clearWarriorRangerState(g, p);
   if(p){ p.pyroTorrentT = 0; p.meteorFx = []; p.stormcalls = []; p.blizzardZone = null; p.vortex = null; p.permaZone = null; p.fbQueue = []; p.plagueZone = null; g.soulGate = null; g.gateArchers = []; p.hurricaneT = 0; p.survPoisonClouds = []; p.survPoisonCloud = null; p.fieldDressing2 = false; p.vanishEvaT = 0; p.aimShotHold = false; p.trapGcd = 0; }
   if(g){ g.thrownTraps = []; g.traps = []; g.mirage = null; }
   if(g && g.particles) g.particles = g.particles.filter(pt=>pt.type!=='beam' && pt.type!=='zone' && pt.type!=='iceshard' && pt.type!=='frostzone' && pt.type!=='vortex');
@@ -357,6 +371,7 @@ function endGame(g){
 function goToTown(opts){
   opts = opts || {};
   const g = game, p = g.player;
+  faceScreen(p);   // v497
   g.over = false; clearSkillEffects(g, p);
   joyEnd(); mouseDown=false;
   g.scene = 'town';
@@ -481,6 +496,7 @@ function dungeonRespawn(g, p){
 }
 function respawnInRegion(){
   const g = game, p = g.player;
+  faceScreen(p);   // v497: no more respawning with your back to the camera
   g._bossBarReset = true;   // v474: back from the dead, boss bars hide again until the fight resumes
   g.over = false;
   joyEnd(); mouseDown = false;

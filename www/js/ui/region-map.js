@@ -196,6 +196,11 @@ function renderKeepMap(g, p, box){
 function renderLhMazeMap(g, p, box){
   const R = g.tower;
   box.classList.remove('genericMode');
+  if(!R.mapFound){   // v505: charted by this floor's Map Bearer
+    box.classList.add('genericMode');
+    box.innerHTML = '<div style="padding:28px 12px;text-align:center;color:var(--bone-dim);font-family:Alegreya,Georgia,serif;line-height:1.6;">No map of this floor yet.<br>Slay the Map Bearer (ringed in gold) to find it.</div>';
+    return;
+  }
   const cv = document.createElement('canvas'); const S = 640, fit = mapFit(box), side = Math.min(fit.W, fit.H);
   cv.width = S; cv.height = S; cv.style.cssText = 'width:'+side+'px;height:'+side+'px;display:block;margin:0 auto';
   box.appendChild(cv);
