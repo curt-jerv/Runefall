@@ -358,7 +358,7 @@ function drawSubFloor(room, cam){
     if(room.woodBridge) drawWoodWalkway(room.woodBridge);
     return;
   }
-  if(!pool) drawFloor(room, cam);
+  if(!pool) cachedFloor(room, cam, c=>drawFloor(room, c), null);   // v501: the ground is pre-painted into chunks like the Sunken Depths
   if(room.kpFloors) drawKpFloors(room, cam);
   if(room.subzone==='highward') drawHwFloorInlay(room, cam);
   for(let wx=-TS; wx<=room.w+TS; wx+=TS){

@@ -932,7 +932,7 @@ function pickEnemyTarget(g, e){
   if(g.followers) for(const f of g.followers){ if(f.kind!=='cat' && f.hp>0) cands.push(f); }
   if(!cands.length) return null;
   let closest = null, cd = Infinity;
-  for(const c of cands){ const d = dist(e,c) + ((c===p ? enemyLOS(g,e,c) : hasLOS(g,e,c)) ? 0 : 500); if(d < cd){ cd = d; closest = c; } }
+  for(const c of cands){ const d = dist(e,c) + ((c===p ? enemyLOS(g,e,c) : enemyLOSMulti(g,e,c)) ? 0 : 500); if(d < cd){ cd = d; closest = c; } }
   // stick with the current target unless the new closest is clearly closer (no ping-ponging between two allies)
   if(e._tgt && e._tgt!==closest && cands.includes(e._tgt) && dist(e,e._tgt) < cd + 70) closest = e._tgt;
   const base = th.get(closest)||0, need = Math.max(25, (e.maxHp||100)*THREAT_STEAL_FRAC);

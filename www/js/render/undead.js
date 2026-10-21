@@ -111,7 +111,7 @@ function drawZombieEnemy(e){
   ctx.restore();
   drawHpBar(iso, (legLen+torsoH+headR*2)*s+8, e.r, e.hp, e.maxHp);
 }
-function drawSkeletonEnemy(e){
+function drawSkeletonEnemyRaw(e){
   const iso = toIso(e.x,e.y), kind = e.type, face = e.faceSign||1, t = e.animT||0;
   const moving = e.moving, atk = e.atkAnimT||0, flash = e.hitT>0;
   const isArcher = kind==='skeletonarcher', isBrute = kind==='skeletonbrute';
@@ -287,7 +287,42 @@ function drawSkeletonEnemy(e){
     ctx.closePath(); ctx.fill(); ctx.stroke();
   }
   ctx.restore();
-  drawHpBar(iso, (legLen+torsoH+headR*2)*s+8, e.r, e.hp, e.maxHp);
+  e._hpTop = (legLen+torsoH+headR*2)*s+8;
+  drawHpBar(iso, e._hpTop, e.r, e.hp, e.maxHp);
+}
+// v501: skeletons (and the Necromancer's skeletons and Soul Gate archers) are pre-drawn into small sprites, one per walk/attack
+// frame (12 walk, 8 idle and 5 attack steps), then stamped each frame -- ~50 canvas calls per skeleton become one drawImage.
+// A hit flash draws the full vector version. Sprites are rebuilt per resolution; the cache keeps the newest SKEL_CACHE_MAX.
+const SKEL_CACHE = new Map(), SKEL_CACHE_MAX = 110, SKEL_CW = 128, SKEL_OX = 64, SKEL_OY = 100;
+function drawSkeletonEnemy(e){
+  const sc = ctx.getTransform();
+  if(e.hitT>0 || window.__noSpriteCache || sc.b || sc.c || Math.abs(sc.a-sc.d)>1e-6) return drawSkeletonEnemyRaw(e);
+  const kind = e.type, moving = !!e.moving, atk = e.atkAnimT||0, t = e.animT||0, TWO = Math.PI*2;
+  const cyc = kind==='skeletonbrute' ? 7 : 10, rate = moving ? cyc : 2.2, N = moving ? 12 : 8;
+  const idx = Math.floor((((t*rate)%TWO)+TWO)%TWO/TWO*N);
+  const ab = atk>0 ? 1+Math.round(clamp(atk/0.25,0,1)*4) : 0;
+  const KS = kind==='skeletonbrute' && !!(game && game.room && game.room.subzone==='keep');
+  const key = kind+'|'+(KS?1:0)+'|'+(e.mini?1:0)+'|'+(moving?1:0)+idx+'|'+ab+'|'+Math.round(e.r*2)+'|'+Math.round(sc.a*50);
+  let en = SKEL_CACHE.get(key);
+  if(en){ SKEL_CACHE.delete(key); SKEL_CACHE.set(key, en); }
+  else {
+    const px = Math.round(SKEL_CW*sc.a);
+    const c = document.createElement('canvas'); c.width = px; c.height = px;
+    const cc = c.getContext('2d');
+    const fake = {type:kind, x:0, y:0, r:e.r, faceSign:1, animT:(idx+0.5)/N*TWO/rate, moving, atkAnimT:ab ? Math.max(0.001,(ab-1)/4*0.25) : 0, hitT:0, mini:e.mini, hp:1, maxHp:1};
+    const i0 = toIso(0,0);
+    cc.setTransform(sc.a,0,0,sc.a,(SKEL_OX-i0.x)*sc.a,(SKEL_OY-i0.y)*sc.a);
+    const sCtx = ctx, sSup = _suppressHpBar;
+    ctx = cc; _suppressHpBar = true;
+    try{ drawSkeletonEnemyRaw(fake); } finally { ctx = sCtx; _suppressHpBar = sSup; }
+    en = {c, eye:fake._eye, eyeDY:fake._eye.y - i0.y, hpTop:fake._hpTop};
+    SKEL_CACHE.set(key, en);
+    if(SKEL_CACHE.size > SKEL_CACHE_MAX) SKEL_CACHE.delete(SKEL_CACHE.keys().next().value);
+  }
+  const iso = toIso(e.x, e.y);
+  ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(e.faceSign||1, 1); ctx.drawImage(en.c, -SKEL_OX, -SKEL_OY, SKEL_CW, SKEL_CW); ctx.restore();
+  e._eye = {x:iso.x, y:iso.y+en.eyeDY, dx:en.eye.dx, r:en.eye.r, c:en.eye.c};
+  drawHpBar(iso, en.hpTop, e.r, e.hp, e.maxHp);
 }
 // v353: goblins -- bigger, fatter stocky little guys with real legs, boots, a pot belly and a crude blade / shortbow
 function drawGoblinEnemy(e){

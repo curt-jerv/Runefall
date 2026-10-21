@@ -276,7 +276,7 @@ function losEnemyHidden(g, e){
   if(dist(g.player, e) < 60) return false;
   return !enemyLOS(g, e, g.player);
 }
-let losCanvas = null, losCtx = null;
+let losCanvas = null, losCtx = null; const losCache = {room:null, pts:null, x:0, y:0};
 const LOS_RANGE = 640;
 function losMaskRay(m, px, py, dx, dy, maxT){
   const C = m.CELL; let ix = Math.floor(px/C), iy = Math.floor(py/C);
@@ -290,8 +290,11 @@ function losMaskRay(m, px, py, dx, dy, maxT){
   }
   return maxT;
 }
-function drawLosShadow(g){
+function drawLosShadow(g, defer){
   const p = g.player, room = g.room, obs = room && room.obstacles; if(!p || !obs) return;
+  // v501: the sight polygon is only rebuilt once you have moved ~4px (or entered another room); frames between reuse it
+  const lc = losCache;
+  if(lc.room===room && lc.n===obs.length && lc.pts && Math.abs(lc.x-p.x)<4 && Math.abs(lc.y-p.y)<4){ drawLosMask(g, lc.pts, defer); return; }
   // v490: in organic caves the wall cells are walked on the floor-mask grid (a DDA march) instead of slab-testing every
   // nearby cell against every ray -- the Sunken Depths had ~300 cells x ~3600 rays per frame. Shared cell corners are deduped.
   const M = (room.organic && room.floorMask) ? room.floorMask : null;
@@ -322,17 +325,27 @@ function drawLosShadow(g){
     }
     pts.push([p.x+dx*(tm+3), p.y+dy*(tm+3)]);
   }
-  if(!losCanvas || losCanvas.width!==W || losCanvas.height!==H){ losCanvas = document.createElement('canvas'); losCanvas.width = W; losCanvas.height = H; losCtx = losCanvas.getContext('2d'); }
+  losCache.room = room; losCache.n = obs.length; losCache.pts = pts; losCache.x = p.x; losCache.y = p.y;
+  drawLosMask(g, pts, defer);
+}
+// the dark mask is painted at half resolution (it is soft anyway) and stretched over the screen
+// defer: only paint the mask; the light veil folds it into its own mask (one full-screen composite instead of two)
+let losPending = false;
+function flushLosPending(){ if(!losPending) return; losPending = false; ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(losCanvas, 0, 0, W, H); ctx.restore(); }
+function drawLosMask(g, pts, defer){
+  const LS = 0.5, lw = Math.ceil(W*LS), lh = Math.ceil(H*LS);
+  if(!losCanvas || losCanvas.width!==lw || losCanvas.height!==lh){ losCanvas = document.createElement('canvas'); losCanvas.width = lw; losCanvas.height = lh; losCtx = losCanvas.getContext('2d'); }
   const m = losCtx, cam = g.camera;
-  m.globalCompositeOperation = 'source-over'; m.clearRect(0,0,W,H);
-  m.fillStyle = 'rgba(0,0,0,0.82)'; m.fillRect(0,0,W,H);
+  m.setTransform(1,0,0,1,0,0); m.globalCompositeOperation = 'source-over'; m.clearRect(0,0,lw,lh);
+  m.fillStyle = 'rgba(0,0,0,0.82)'; m.fillRect(0,0,lw,lh);
   m.globalCompositeOperation = 'destination-out'; m.fillStyle = '#000';
   for(const lift of [0, 30]){   // second pass lifts the lit area so wall faces next to you stay readable
     m.beginPath();
-    for(let i=0;i<pts.length;i++){ const io = toIso(pts[i][0], pts[i][1]); const x = io.x-cam.x, y = io.y-cam.y-lift; if(i===0) m.moveTo(x,y); else m.lineTo(x,y); }
+    for(let i=0;i<pts.length;i++){ const io = toIso(pts[i][0], pts[i][1]); const x = (io.x-cam.x)*LS, y = (io.y-cam.y-lift)*LS; if(i===0) m.moveTo(x,y); else m.lineTo(x,y); }
     m.closePath(); m.fill();
   }
-  ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(losCanvas, 0, 0, W, H); ctx.restore();
+  losPending = true;
+  if(!defer) flushLosPending();
 }
 // v492/v493: the character's own circle of light in every zone but town (the Dark Crypt and the caves keep their own, stronger dark).
 // Outside the circle the world is VEIL_MAX_A dark (towers and halls darker still); inside it a light VEIL_CORE_DIM haze stays.
@@ -398,6 +411,10 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
       og.addColorStop(0, 'rgba(0,0,0,0.95)'); og.addColorStop(0.55, 'rgba(0,0,0,0.6)'); og.addColorStop(1, 'rgba(0,0,0,0)');
       mctx.fillStyle = og; mctx.beginPath(); mctx.arc(sx, sy, 190, 0, Math.PI*2); mctx.fill();
     }
+  }
+  if(losPending){   // v501: fold the line-of-sight shadow into this mask (same half resolution)
+    if(!tint){ losPending = false; mctx.save(); mctx.setTransform(1,0,0,1,0,0); mctx.globalCompositeOperation = 'source-over'; mctx.drawImage(losCanvas, 0, 0); mctx.restore(); }
+    else flushLosPending();
   }
   // Composite the finished mask onto the main canvas with plain
   // source-over -- transparent (hole) pixels leave the scene beneath

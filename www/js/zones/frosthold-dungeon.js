@@ -926,7 +926,6 @@ function gainXp(g, amt){
   const p = g.player;
   if(!isFinite(p.xp)) p.xp = 0;   // v441: repair XP broken by the v433 xpLevelMult bug
   if(!isFinite(amt)) amt = 0;
-  if(amt>0 && p.partB && p.partB.xp) amt *= 1 + p.partB.xp/100;   // v499: Veteran's Stone
   p.xp += amt;
   let leveled = false;
   while(p.level < LEVEL_CAP && p.xp >= p.xpNext){

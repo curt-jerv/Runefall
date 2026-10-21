@@ -220,7 +220,19 @@ function enemyLOS(g,e,tgt){
   const slot = tgt===g.player ? '_losP' : '_losO';
   let c = e[slot];
   const t = g.clock||0;
-  if(!c || c.tg!==tgt || t-c.t>0.15){ c = e[slot] = {tg:tgt, t:t+Math.random()*0.05, v:hasLOS(g,e,tgt)}; }
+  if(c && c.tg===tgt && t-c.t <= c.iv) return c.v;
+  // v501: far-away enemies re-check their sight line less often
+  const dd = Math.abs(e.x-tgt.x) + Math.abs(e.y-tgt.y), iv = dd > 1000 ? 0.6 : dd > 600 ? 0.3 : 0.15;
+  c = e[slot] = {tg:tgt, t:t+Math.random()*0.05, iv, v:hasLOS(g,e,tgt)};
+  return c.v;
+}
+// v501: same cache, one entry per target (followers: the closest-ally pick asks about every one of them each frame)
+function enemyLOSMulti(g,e,tgt){
+  const t = g.clock||0, m = e._losM || (e._losM = new Map());
+  let c = m.get(tgt);
+  if(c && t-c.t <= 0.2) return c.v;
+  c = {t:t+Math.random()*0.06, v:hasLOS(g,e,tgt)}; m.set(tgt, c);
+  if(m.size > 12){ for(const k of m.keys()){ if(!(k.hp>0)) m.delete(k); } }
   return c.v;
 }
 const BOSS_WAKE_R = 560; // bosses stay rooted until the player is this close with a clear line of sight
