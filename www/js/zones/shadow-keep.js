@@ -129,7 +129,7 @@ function kpEnrich(a, zones, rnd){
   return zones;
 }
 function kpHellGen(rnd, w, h, cy, o){
-  const TS = 46, cols = Math.ceil(w/TS)+1, rows = Math.ceil(h/TS)+1, M = new Uint8Array(cols*rows);
+  const TS = 46, cols = Math.ceil(w/TS)+1, rows = Math.ceil(h/TS)+1, M = new Uint8Array(cols*rows), AR = o.boss ? 1 : Math.max(1, w*h/6.4e6);   // v506: bigger lava floors get proportionally more chambers, islands and room to wander
   const seedN = rnd()*500;
   const hsh = (a,b)=>{ const n = Math.sin(a*127.1+b*311.7+seedN)*43758.5453; return n-Math.floor(n); };
   const vn = (x,y)=>{ const xi = Math.floor(x), yi = Math.floor(y), xf = x-xi, yf = y-yi, sx = xf*xf*(3-2*xf), sy = yf*yf*(3-2*yf); return (hsh(xi,yi)*(1-sx)+hsh(xi+1,yi)*sx)*(1-sy)+(hsh(xi,yi+1)*(1-sx)+hsh(xi+1,yi+1)*sx)*sy; };
@@ -142,7 +142,7 @@ function kpHellGen(rnd, w, h, cy, o){
     }
   };
   // the main road: a long S-curve from the entrance to the exit
-  const pts = [], n = 9+Math.floor(rnd()*3), amp = Math.min(h/2-330, 400), ph = rnd()*6.28;
+  const pts = [], n = 9+Math.floor(rnd()*3), amp = Math.min(h/2-330, 400*Math.sqrt(AR)), ph = rnd()*6.28;
   for(let i=0;i<=n;i++){ pts.push({x:130+(w-260)*i/n, y:clamp(cy+Math.sin(i*0.95+ph)*amp*(0.45+0.55*rnd()), 330, h-330)}); }
   pts[0].y = cy; pts[n].y = cy;
   if(o.boss){ let bi = 0, bd = 1e9; for(let i=0;i<=n;i++){ const d = Math.abs(pts[i].x-o.cx); if(d<bd){ bd = d; bi = i; } } pts[bi].y = cy; }
@@ -158,7 +158,7 @@ function kpHellGen(rnd, w, h, cy, o){
     }
   }
   // chambers and side lobes
-  const nCh = 5+Math.floor(rnd()*3)+(o.tier>>1);
+  const nCh = Math.round((5+Math.floor(rnd()*3)+(o.tier>>1))*AR);
   for(let k=0;k<nCh;k++){
     const q = path[Math.floor(rnd()*path.length)]; if(q.x<420 || q.x>w-420) continue;
     const side = rnd()<0.5 ? -1 : 1, off = 190+rnd()*260, rad = 150+rnd()*130, px = q.x + (-q.ty)*side*off, py = clamp(q.y + q.tx*side*off, 260, h-260);
@@ -167,12 +167,13 @@ function kpHellGen(rnd, w, h, cy, o){
   }
   carve(w*0.34, clamp(path[Math.floor(path.length*0.34)].y + (rnd()<0.5?-1:1)*160, 330, h-330), 250+rnd()*70, 0.5);
   carve(w*0.7, clamp(path[Math.floor(path.length*0.7)].y + (rnd()<0.5?-1:1)*160, 330, h-330), 250+rnd()*70, 0.5);
+  if(AR>1.4) for(const fx of [0.17,0.52,0.86]) carve(w*fx, clamp(path[Math.floor(path.length*fx)].y + (rnd()<0.5?-1:1)*(160+rnd()*160), 330, h-330), 230+rnd()*80, 0.5);
   carve(150, cy, 175, 0.2); carve(w-150, cy, 175, 0.2); carve(w-330, cy-190, 160, 0.3);
   if(o.boss) carve(o.cx, cy, 640, 0.25);
   // crust islands out in the lava (decor only) -- value 2
   const near = (ix,iy,r)=>{ for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){ const nx = ix+dx, ny = iy+dy; if(nx>=0&&ny>=0&&nx<cols&&ny<rows&&M[ny*cols+nx]===1) return true; } return false; };
-  const nIsl = 34+Math.floor(rnd()*14);
-  for(let k=0;k<nIsl*6 && k<400;k++){
+  const nIsl = Math.round((34+Math.floor(rnd()*14))*AR);
+  for(let k=0;k<nIsl*6 && k<400*AR;k++){
     const ix = 2+Math.floor(rnd()*(cols-4)), iy = 2+Math.floor(rnd()*(rows-4));
     if(M[iy*cols+ix]!==0 || near(ix,iy,2) || !near(ix,iy,7)) continue;
     const rr = rnd()<0.3 ? 2 : 1;
@@ -205,7 +206,7 @@ function kpHellGen(rnd, w, h, cy, o){
   // bone barricades dividing the terrain (each with a wide gap) + a few free-standing bone walls
   const posts = [], centers = [], onGround = (x,y)=>{ const ix = Math.round(x/TS), iy = Math.round(y/TS); return ix>0&&iy>0&&ix<cols-1&&iy<rows-1&&(M[iy*cols+ix]===1 || near(ix,iy,1)); };
   if(!o.noBars){
-    const nB = 4+Math.floor(rnd()*3);
+    const nB = Math.round((4+Math.floor(rnd()*3))*Math.sqrt(AR));
     const cand = path.filter(q=>q.x>560 && q.x<w-560 && (!o.boss || Math.hypot(q.x-o.cx,q.y-cy)>780));
     for(let k=0;k<nB*4 && centers.length<nB && cand.length;k++){
       const q = cand[Math.floor(rnd()*cand.length)];
@@ -319,7 +320,7 @@ function drawHellPortal(pos, clock, big){
 function makeKeep(a, kopts){
   const rnd = subSeeded(9300+a*71+((kopts&&kopts.bf)||0)*131+((kopts&&kopts.seed)||0));
   let w = KP_W[a-1], h = KP_H[a-1];
-  if(a===9 && !brBossKind((kopts&&kopts.bf)||0)){ w = 2800 + 100*Math.floor(rnd()*9); h = 1800 + 100*Math.floor(rnd()*5); }   // v398: generated floors vary in size
+  if(a===9 && !brBossKind((kopts&&kopts.bf)||0)){ w = 4400 + 100*Math.floor(rnd()*9); h = 2600 + 100*Math.floor(rnd()*6); }   // v398: generated floors vary in size (v506: about the size of the Keep's entrance hall)
   else if(a===9 && BR_THEME_KINDS[brBossKind((kopts&&kopts.bf)||0)]){ w = 4900 + 100*Math.floor(rnd()*3); h = 3000 + 100*Math.floor(rnd()*2); }   // v505: themed boss floors are about the size of the Keep's entrance hall
   const cy = Math.round(h/2), T = 46, ob = [], props = [], lore = [];
   const wH = (x0,x1,y,gaps)=>{ let xs = x0; for(const [g0,g1] of (gaps||[]).slice().sort((p,q)=>p[0]-q[0])){ if(g0>xs) ob.push({x:xs, y:y-T/2, w:g0-xs, h:T, mazeWall:true}); xs = g1; } if(x1>xs) ob.push({x:xs, y:y-T/2, w:x1-xs, h:T, mazeWall:true}); };
@@ -585,8 +586,8 @@ function makeKeep(a, kopts){
     } else {
     // v427: the floor of hell -- lava all round, an organic walkable road of scorched stone, crust islands, bone barricades, no walls
     let hell = null;
-    for(let tr=0; tr<4; tr++){
-      hell = kpHellGen(rnd, w, h, cy, {boss:!!bossKind, cx:CX, tier, noBars:tr>=3, bf});
+    for(let tr=0; tr<24; tr++){   // (v506: the bigger floors need more tries to roll a road that joins the entrance to the exit)
+      hell = kpHellGen(rnd, w, h, cy, {boss:!!bossKind, cx:CX, tier, noBars:tr>=4, bf});
       ob.length = 0; for(const r of hell.rects) ob.push(r); for(const q of hell.posts) ob.push({x:q.x-28, y:q.y-28, w:56, h:56, bone:true});
       if(brGridOk(ob, w, h, {x:170,y:cy}, {x:w-170,y:cy}).ok) break;
     }
@@ -595,7 +596,7 @@ function makeKeep(a, kopts){
       prop('sigil',CX,cy,{r:360}); prop('breach',CX+230,cy,{r:130,big:true}); bossPos = {x:CX-60, y:cy};
     }
     for(const d of hell.deco) prop(d.kind, d.x, d.y, {s:1});
-    const deep = Math.max(0, bf-20), nPacks = bossKind ? 10 : Math.min(32, 16+Math.floor(bf/2));
+    const deep = Math.max(0, bf-20), nPacks = bossKind ? 10 : Math.min(60, Math.round(Math.min(32, 16+Math.floor(bf/2))*w*h/6.4e6));
     const anchors = hell.anchors.slice();
     for(let i=0;i<nPacks && anchors.length;i++){
       const an = anchors.splice(Math.floor(rnd()*anchors.length), 1)[0];
@@ -983,24 +984,23 @@ const BR_BOSS_POOL = ['houndlord','cinderqueen','warden','tyrant','fhcmd','wrait
 function brHash(n){ let x = Math.imul(n|0, 2654435761)>>>0; x ^= x>>>13; x = Math.imul(x, 1274126177)>>>0; return (x ^ (x>>>16))>>>0; }
 const _brBossMemo = {};
 function brBossKind(bf){
-  if(!bf) return null;
-  if(bf<=20) return (bf%5) ? null : BR_BOSS[bf];
-  const t = brFloorTheme(bf); return t==='lava' ? null : t;   // v505: floors 21+ are themed boss floors mixed with ordinary lava floors
+  if(!bf || bf%5) return null;   // only every fifth floor has a boss; the others open when their elite pack falls
+  if(bf<=20) return BR_BOSS[bf];
+  return brFloorTheme(bf);       // v505/v506: floors 25, 30, 35... are the themed boss floors
 }
-// v505: after the Ember Tyrant the Breach never ends. Each cycle shuffles the six themed boss floors (no two the same in a row) and slips
-// 0-2 ordinary lava floors in front of each. Fixed by the floor number, so a floor is always the same kind for every character.
+// v505: after the Ember Tyrant the Breach never ends. Every fifth floor from 25 is one of six themed boss floors, in shuffled cycles
+// (no two the same in a row); fixed by the floor number, so a floor is always the same for every character.
 const BR_THEME_LIST = ['minotaur','revenant','mastodon','leviathan','colossus','kraken'];
 const BR_THEME_KINDS = {minotaur:1, revenant:1, mastodon:1, leviathan:1, colossus:1, kraken:1};
 const _brSched = [];
 function brFloorTheme(bf){
-  if(bf<=20) return null;
-  const i = bf-21;
+  if(bf<=20 || bf%5) return null;
+  const i = bf/5-5;
   while(_brSched.length<=i){
     const cyc = (_brSched._c = (_brSched._c||0)+1), bag = BR_THEME_LIST.slice();
     for(let k=bag.length-1;k>0;k--){ const j = brHash(cyc*131+k*17) % (k+1); const t = bag[k]; bag[k] = bag[j]; bag[j] = t; }
-    const last = [..._brSched].reverse().find(x=>x!=='lava');
-    if(last && bag[0]===last) bag.push(bag.shift());
-    for(let k=0;k<bag.length;k++){ const lava = brHash(cyc*53+k*7) % 3; for(let l=0;l<lava;l++) _brSched.push('lava'); _brSched.push(bag[k]); }
+    if(_brSched.length && bag[0]===_brSched[_brSched.length-1]) bag.push(bag.shift());
+    for(const t of bag) _brSched.push(t);
   }
   return _brSched[i];
 }
@@ -1027,9 +1027,9 @@ const BR_TIER_PACKS = [[0,1,2],[1,2,3,4],[3,4,5,6,7],[4,5,6,7,8]];
 const BR_THEME_PAL = {
   minotaur:{wp:['#6a6254','#2a2418','#4a4234'], fl:['#2a2620','#221e18','#322c24','#2a251e']},
   revenant:{wp:['#4a5468','#1c2230','#303a4c'], fl:['#22283a','#1a2030','#2a3248','#202638']},
-  mastodon:{wp:['#7e98ac','#34485a','#587488'], fl:['#8fa6b6','#7e95a6','#9db3c2','#8aa0b0']},
+  mastodon:{wp:['#5a7084','#26384a','#40586c'], fl:['#3c4c58','#323f4a','#465664','#3a4a56']},
   leviathan:{wp:['#3a4a2e','#141c10','#2a3a22'], fl:['#2a3a24','#20301c','#344630','#2c3c26']},
-  colossus:{wp:['#5a2a1a','#1e0c06','#3a1a10'], fl:['#2e1a12','#24140e','#3a2418','#2a1810']},
+  colossus:{wp:['#4a2216','#1a0a05','#321610'], fl:['#241410','#1c100c','#2e1c14','#22140e']},
   kraken:{wp:['#2a4a5a','#0e1c26','#1e3644'], fl:['#1e3440','#162a34','#264450','#1c303c']}
 };
 const BR_THEME_PACKS = {

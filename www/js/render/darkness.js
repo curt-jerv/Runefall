@@ -337,7 +337,7 @@ function drawLosMask(g, pts, defer){
   if(!losCanvas || losCanvas.width!==lw || losCanvas.height!==lh){ losCanvas = document.createElement('canvas'); losCanvas.width = lw; losCanvas.height = lh; losCtx = losCanvas.getContext('2d'); }
   const m = losCtx, cam = g.camera;
   m.setTransform(1,0,0,1,0,0); m.globalCompositeOperation = 'source-over'; m.clearRect(0,0,lw,lh);
-  m.fillStyle = 'rgba(0,0,0,0.82)'; m.fillRect(0,0,lw,lh);
+  m.fillStyle = (g.room && g.room.theme) ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.82)'; m.fillRect(0,0,lw,lh);   // (v506: themed Breach floors see a little further into the shadows)
   m.globalCompositeOperation = 'destination-out'; m.fillStyle = '#000';
   for(const lift of [0, 30]){   // second pass lifts the lit area so wall faces next to you stay readable
     m.beginPath();
@@ -351,6 +351,7 @@ function drawLosMask(g, pts, defer){
 // Outside the circle the world is VEIL_MAX_A dark (towers and halls darker still); inside it a light VEIL_CORE_DIM haze stays.
 // +Light Radius gear widens every circle of light except the Dark Crypt's.
 const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.8, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.42, UNDERGROUND_LIGHT_SCALE = 0.8;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
+const VEIL_THEME_R = 360, VEIL_THEME_A = 0.7, VEIL_THEME_DIM = 0.1;   // v506
 function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
@@ -360,7 +361,8 @@ function lightVeilScene(g){
 }
 function drawLightVeil(g){
   const indoor = g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g);
-  drawDarkCryptOverlay(g, (indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R)*lightRadiusMult(g.player), false, null, indoor ? VEIL_INDOOR_A : VEIL_MAX_A, indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
+  const th = indoor && g.room && g.room.theme;   // v506: the Breach's themed boss floors are lit a good deal brighter than the Keep's halls
+  drawDarkCryptOverlay(g, (th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R)*lightRadiusMult(g.player), false, null, th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
 }
 function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
