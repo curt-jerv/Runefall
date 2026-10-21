@@ -94,12 +94,6 @@ function talkGraverobbers(){
 function scholarInTavern(p){ return tavernIsOpen(p) && !p.scholarLeft; }
 function scholarMark(p){ return !p.scholarMet || (!!p.fhDungeonDone && !p.scholarWarnedRR) || hasInscription(p) || (!!p.scholarMeet && !p.scholarRead && !!findRunestone(p)) || ((p.shrineStage||0)>=3 && !p.scholarEast); }
 // ---- v284: the Last Wayfarer (Redridge Canyon camp) ----
-// v492: a quest reward needs room in the bag. If there is none, nothing is given, the quest stays open and the NPC asks again.
-function giveRewardIfRoom(p, items){
-  const added = [];
-  for(const it of items){ if(addToBag(p, it)) added.push(it); else { for(const a of added){ const i = p.inventory.indexOf(a); if(i>=0) p.inventory.splice(i,1); } showMsg("You don't have the space for this reward. Make room and come back.", 3.4, '#ffb070'); return false; } }
-  return true;
-}
 function talkWayfarer(){
   const p = game.player;
   if(!p.wayfarerMet){

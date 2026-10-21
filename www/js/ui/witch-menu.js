@@ -209,12 +209,17 @@ function witchPotionTalkPending(p){
 function witchCauldronInteract(){
   const p = game.player;
   if(p.witchRescued && p.partsHarvest && !p.witchRecipesGiven){ witchGiveRecipes(p); saveGame(); }   // v483: older saves get their recipes too
+  if(p.witchRescued && p.partsHarvest && !p.witchRareGiven){   // v493: her thank-you gift waits until the bag has room
+    const wr = classRewardItem(p, Math.max(1, p.level||1), 'rare');
+    if(giveRewardIfRoom(p, [wr])){ p.witchRareGiven = true; bagPulse(); showMsg('The witch gives you: '+wr.name, 3.2); saveGame(); }
+    return;
+  }
   if(p.witchRescued && witchHeartstoneTalk(p)) return;   // v344: the Heartstone is dealt with before she teaches parts harvesting
   // v283: parts harvesting is taught the first time you talk to the freed witch beside her cauldron
   if(p.witchRescued && !p.partsHarvest){
     showNpcText('The Witch', '"You freed me. Take this as thanks. Bring me the parts you cut from what you slay -- claw, pelt, tooth and horn -- and my cauldron will bind them into stones for your gear."', 'Teach me', ()=>{
       p.partsHarvest = true; witchGiveRecipes(p);   // v490: partsHarvest now means "the witch taught you" -- parts drop from the start; this opens her cauldron
-      if(!p.witchRareGiven){ p.witchRareGiven = true; const wr = classRewardItem(p, Math.max(1, p.level||1), 'rare'); forceAddToBag(p, wr); bagPulse(); showMsg('The witch\u2019s cauldron is open to you. She also gives you: '+wr.name, 4.0); }
+      if(!p.witchRareGiven){ const wr = classRewardItem(p, Math.max(1, p.level||1), 'rare'); if(giveRewardIfRoom(p, [wr])){ p.witchRareGiven = true; bagPulse(); showMsg('The witch\u2019s cauldron is open to you. She also gives you: '+wr.name, 4.0); } }   // v493: no room -> she gives it next time
       else showMsg('The witch\u2019s cauldron is open to you \u2014 transmute your parts into stones', 3.2);
       saveGame(); try{ renderInventory(); }catch(e){}
     });
@@ -381,19 +386,20 @@ document.getElementById('hunterTalkBtn').addEventListener('click', ()=>{
   } else if(!q.killed){
     showMsg('Hunt: '+def.Q.name, 2.2);   // v344: short toast instead of the old wall of text
   } else {
-    q.status = 'complete'; q.rewarded = true;
     // v456: rewards are gear for YOUR class (weapon or armor of your material); the Colossus pays a rare piece and 3 health potions
+    // v493: the whole reward is built first and only handed over when it fits; otherwise the Hunter keeps it for later
     const item = def.ring==='poison' ? makeResistRewardRing(p, 'poisonResistPct', 'Emerald Ring', 'Antivenom') : classRewardItem(p, Math.max(p.level, def.lvl), def.rareGear ? 'rare' : 'reward');
-    forceAddToBag(p, item);
-    const xt = [];
-    if(def.resNext){ const ri = classResistRewardItem(p, Math.max(p.level, def.lvl), def.resNext, 'rare'); forceAddToBag(p, ri); xt.push(ri.name+' ('+RES_LABEL[def.resNext].replace(' %','')+')'); }   // v483
-    if(def.tome){ forceAddToBag(p, makeSkillTomeItem()); xt.push('Tome of Skill'); }
-    for(const k of (def.extras||[])){ forceAddToBag(p, makePotionItem(k)); xt.push(POTION_DEFS[k].name); }
+    const give = [item], xt = [];
+    if(def.resNext){ const ri = classResistRewardItem(p, Math.max(p.level, def.lvl), def.resNext, 'rare'); give.push(ri); xt.push(ri.name+' ('+RES_LABEL[def.resNext].replace(' %','')+')'); }   // v483
+    if(def.tome){ give.push(makeSkillTomeItem()); xt.push('Tome of Skill'); }
+    for(const k of (def.extras||[])){ give.push(makePotionItem(k)); xt.push(POTION_DEFS[k].name); }
     if(def.classWeapon){   // v283: a rare weapon for the player's class, at the player's current level
       const wc = p.cls==='ranger' ? 'bow' : p.cls==='mystic' ? 'staff' : 'weapon1h';
       const wi = generateItem(Math.max(1,p.level||1), 'reward', wc, null, p);
-      forceAddToBag(p, wi); xt.push(wi.name);
+      give.push(wi); xt.push(wi.name);
     }
+    if(!giveRewardIfRoom(p, give)) return;
+    q.status = 'complete'; q.rewarded = true;
     p.gold += def.gold;
     if(def.xp) gainXp(game, Math.round(xpForKill(def.lvl, true)*def.xp));
     showMsg('Quest complete: '+item.name+(xt.length?' + '+xt.join(' + '):'')+(def.gold?' + '+def.gold+' gold':''), 4.2);

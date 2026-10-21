@@ -1256,15 +1256,7 @@
   #hudDock{ left:0; right:0; transform:none; justify-content:space-between; padding:0 calc(8px + env(safe-area-inset-left,0px)); gap:6px; }
   #hudDock .globe{ width:60px; height:60px; }
   #dockMid{ flex:1 1 auto; width:auto; }
-  #actionCluster{ bottom:calc(92px + env(safe-area-inset-bottom,0px)) !important; }
-  #joyzone{ bottom:80px !important; }
 }
-/* skill-button row (v489): Dodge left of skill slot 1, Potion where Dodge was, Interact where Potion was -- all skill-button size */
-#actionCluster #btnDodge{ right:215px !important; bottom:3px !important; width:48px !important; height:48px !important; }   /* v492: a little further from skill 1 */
-#actionCluster #btnDodge .lbl{ font-size:9px !important; }
-#actionCluster #btnPotion{ right:18px !important; bottom:128px !important; width:48px !important; height:48px !important; }   /* v492: same 110px ring as the skill buttons */
-#actionCluster .interactBtn{ right:18px !important; bottom:190px !important; width:48px !important; height:48px !important; }
-body.noPotionBtn #actionCluster .interactBtn{ bottom:128px !important; }
 #dockMid #topBtns{ position:static !important; top:auto !important; left:auto !important; right:auto !important; bottom:auto !important; transform:none !important; width:auto !important; flex:0 0 auto !important; max-width:none !important; }
 #dockMid{ min-width:0; }
 @media (orientation:portrait){ #dockMid #topBtns > div{ font-size:10px !important; padding:0 2px !important; min-width:0 !important; } #hudDock{ padding-right:calc(8px + env(safe-area-inset-right,0px)) !important; } }
@@ -1288,20 +1280,52 @@ body.noPotionBtn #actionCluster .interactBtn{ bottom:128px !important; }
 .dollTab.active{ color:var(--gold, #e8c44a); box-shadow:inset 0 0 0 1px var(--bronze, #a07a3a), 0 0 0 1px #000; background:radial-gradient(ellipse at 50% 40%,#2a2118,#120e0a 80%); }
 .pdSlot.knightSlot .slotLabel{ color:#8fa6c8; }
 
-/* v492: landscape -- UI bar top centre, buff row under it, region name under that; globes stay at the bottom corners */
-@media (orientation:landscape){
-  #hudDock{ left:calc(50% - 70px) !important; transform:translateX(-50%) !important; justify-content:center !important; gap:14px !important; padding:0 !important; }   /* v492: the two globes sit centred on the bottom */
-  #topWrap{ position:absolute !important; top:calc(4px + env(safe-area-inset-top,0px)) !important; left:0 !important; right:0 !important; display:flex !important; flex-direction:column !important; align-items:center !important; gap:4px; pointer-events:none; }
-  #topWrap > #dockMid{ order:1; flex:0 0 auto !important; width:auto !important; pointer-events:auto; }
-  #topWrap > #buffBar{ order:2; position:relative !important; top:auto !important; left:auto !important; padding:0 !important; justify-content:center; pointer-events:auto; }
-  #topWrap > #buffTip{ order:2; position:relative; }
-  #topWrap > #subHud{ order:3; justify-content:center !important; padding:0 !important; width:100%; }
-  #subHud #zonePlaque{ text-align:center !important; flex:0 0 auto !important; }
-  #subHud #soulsWrap{ order:0 !important; }
-}
-
 /* v492: Skill Damages group under Offense */
 .sdHead{ display:flex; justify-content:space-between; align-items:center; margin:6px 0 2px; padding:5px 8px; cursor:pointer; user-select:none; border-radius:3px; background:rgba(255,255,255,.04); color:var(--gold, #e8c44a); font-family:var(--f-display, 'Cinzel', serif); font-size:11px; letter-spacing:.08em; text-transform:uppercase; box-shadow:inset 0 0 0 1px #3a2f20; }
 .sdHead .sdArrow{ font-size:15px; color:var(--ember, #e8803c); }
 .sdBody{ padding-left:6px; }
 .statCell.sdRow{ grid-column:1 / -1; }
+
+/* ===================== v493: HUD overhaul ===================== */
+/* Landscape: life globe, menu bar + XP, resource globe in one row along the bottom, centred on the screen
+   (pulled left only when a narrow screen would push it into the action buttons). Region name and buffs sit top centre. */
+#hudDock{ top:auto !important; right:auto !important; bottom:calc(6px + env(safe-area-inset-bottom,0px)) !important;
+  left:min(50%, calc(100% - 455px - env(safe-area-inset-right,0px))) !important; transform:translateX(-50%) !important;
+  justify-content:center !important; align-items:flex-end !important; gap:8px !important; padding:0 !important; }
+#subHud{ justify-content:center !important; padding-top:calc(5px + env(safe-area-inset-top,0px)) !important; gap:12px !important; }
+#subHud #zonePlaque{ flex:0 1 auto !important; text-align:center !important; order:1; }
+#subHud #soulsWrap{ order:2 !important; margin-left:0 !important; }
+#topWrap #buffBar{ justify-content:center; padding:4px 12px 0 !important; }
+#achToast{ top:calc(8px + env(safe-area-inset-top,0px)) !important; }
+
+/* Action buttons: Strike in the corner, the three skills on an inner ring around it (radius 92px),
+   Dodge / Interact / Potion on an outer ring (radius 168px) at the same three angles -- every gap is even. */
+#actionCluster::before{ content:''; position:absolute; right:-188px; bottom:-188px; width:460px; height:460px; border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(0,0,0,.34) 0, rgba(0,0,0,.2) 42%, rgba(0,0,0,0) 68%); }
+#actionCluster::after{ content:''; position:absolute; right:-50px; bottom:-50px; width:182px; height:182px; border-radius:50%; pointer-events:none;
+  box-shadow:0 0 0 1px rgba(190,150,80,.2); }
+#actionCluster #btnAttack{ right:0 !important; bottom:0 !important; width:84px !important; height:84px !important; }
+#actionCluster .actbtn.skillSlotBtn{ width:52px !important; height:52px !important; }
+#actionCluster #btnSlot1{ right:108px !important; bottom:16px !important; }
+#actionCluster #btnSlot2{ right:81px !important; bottom:81px !important; }
+#actionCluster #btnSlot3{ right:16px !important; bottom:108px !important; }
+#actionCluster #btnDodge{ right:187px !important; bottom:19px !important; width:46px !important; height:46px !important; }
+#actionCluster #btnDodge .lbl{ font-size:8.5px !important; }
+#actionCluster .interactBtn{ right:138px !important; bottom:138px !important; width:46px !important; height:46px !important; }
+body.noPotionBtn #actionCluster .interactBtn{ right:138px !important; bottom:138px !important; }
+#actionCluster #btnPotion{ right:19px !important; bottom:187px !important; width:46px !important; height:46px !important; }
+
+/* Portrait: the globes and menu bar sit along the top; region name, buffs and messages line up underneath */
+@media (orientation:portrait){
+  #hudDock{ top:calc(6px + env(safe-area-inset-top,0px)) !important; bottom:auto !important; left:0 !important; right:0 !important; transform:none !important;
+    justify-content:space-between !important; align-items:flex-start !important; gap:6px !important;
+    padding:0 calc(8px + env(safe-area-inset-right,0px)) 0 calc(8px + env(safe-area-inset-left,0px)) !important; }
+  #dockMid{ padding:3px 0 0 !important; }
+  #topWrap{ top:calc(70px + env(safe-area-inset-top,0px)) !important; }
+  #subHud{ padding-top:0 !important; }
+  #bossBar{ top:calc(124px + env(safe-area-inset-top,0px)) !important; }
+  #msg{ top:calc(152px + env(safe-area-inset-top,0px)) !important; }
+  #bigMsg{ top:calc(148px + env(safe-area-inset-top,0px)) !important; }
+  #achToast{ top:calc(118px + env(safe-area-inset-top,0px)) !important; }
+  #joyzone{ bottom:0 !important; }
+}

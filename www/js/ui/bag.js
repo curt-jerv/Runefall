@@ -92,6 +92,24 @@ function forceAddToBag(p, item){
   p.inventory.push(item);
   return false;
 }
+// v493: would these items fit if the bag were tidied (biggest first, like forceAddToBag)? Changes nothing.
+function bagCanFit(p, items){
+  const all = p.inventory.concat(items.filter(it=>it && !isHealthPotion(it))).sort((a,b)=>{ const sa=itemShape(a), sb=itemShape(b); return sb[0]*sb[1]-sa[0]*sa[1]; });
+  const tmp = [];
+  for(const it of all){
+    const shape = itemShape(it), spot = findBagSpot(tmp, shape);
+    if(!spot) return false;
+    tmp.push({slotType:it.slotType, shape, gx:spot.gx, gy:spot.gy});
+  }
+  return true;
+}
+// v493: an NPC's quest reward only goes in when the whole reward fits; otherwise nothing is given and the NPC offers it again later
+function giveRewardIfRoom(p, items){
+  items = items.filter(Boolean);
+  if(!bagCanFit(p, items)){ showMsg("You don't have the space for this reward. Make room and come back.", 3.2, '#ff9a7a'); return false; }
+  for(const it of items) forceAddToBag(p, it);
+  return true;
+}
 // Repairs any overlapping items (e.g. from older saves) by re-packing the whole bag.
 function fixBagOverlaps(inv){
   let bad = false;

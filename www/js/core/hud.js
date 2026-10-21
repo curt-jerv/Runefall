@@ -265,15 +265,3 @@ function castLightningArcBolt(g, p, laRank, reward){
     }
   }
 }
-
-// v492: in landscape the UI bar (menu buttons + XP) sits at the top centre, with the buff row and region name under it;
-// in portrait it goes back into the bottom dock between the two globes. Only the DOM parent changes; ids stay the same.
-function placeDockForOrientation(){
-  const mid = document.getElementById('dockMid'), tw = document.getElementById('topWrap'), dock = document.getElementById('hudDock'), hpG = document.getElementById('hpGlobe');
-  if(!mid || !tw || !dock || !hpG) return;
-  const land = window.matchMedia('(orientation:landscape)').matches;
-  if(land && mid.parentElement!==tw) tw.insertBefore(mid, tw.firstChild);
-  else if(!land && mid.parentElement!==dock) dock.insertBefore(mid, hpG.nextSibling);
-}
-placeDockForOrientation();
-window.addEventListener('resize', placeDockForOrientation);

@@ -267,7 +267,7 @@ function drawDungeonVignette(g){
 let _hudB = 40, _hudBT = 0;
 function hudBottomPx(){
   const t = performance.now();
-  if(t-_hudBT > 600){ _hudBT = t; const el = document.getElementById('topStrip'); if(el){ const b = el.getBoundingClientRect().bottom; if(b>0 && b<H*0.4) _hudB = b; } }
+  if(t-_hudBT > 600){ _hudBT = t; const el = document.getElementById('topWrap'); if(el){ const b = el.getBoundingClientRect().bottom; if(b>0 && b<H*0.4) _hudB = b; } }   // v493: the top HUD stack (region name, buffs)
   return _hudB;
 }
 function losShadowScene(g){ return !!(g && g.started && g.player && (g.scene==='darkcrypt' || isUndergroundScene(g) || (g.scene==='lighthouse' && g.room && g.room.subzone!=='pool' && !kpOutdoor(g)))); }   // v492: every tower and hall (not the Shadow Keep's open courtyard) hides what is behind walls
@@ -334,15 +334,22 @@ function drawLosShadow(g){
   }
   ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(losCanvas, 0, 0, W, H); ctx.restore();
 }
-// v492: the character's own circle of light, wider with +Light Radius gear
-const VEIL_LIGHT_R = 360, VEIL_MAX_A = 0.5;
+// v492/v493: the character's own circle of light in every zone but town (the Dark Crypt and the caves keep their own, stronger dark).
+// Outside the circle the world is VEIL_MAX_A dark (towers and halls darker still); inside it a light VEIL_CORE_DIM haze stays.
+// +Light Radius gear widens every circle of light except the Dark Crypt's.
+const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.8, VEIL_INDOOR_R = 260, VEIL_INDOOR_A = 0.88, VEIL_CORE_DIM = 0.15;
+function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
-  const sc = g.scene; if(sc==='town' || sc==='tavern' || sc==='darkcrypt' || sc==='lighthouse' || sc==='dungeon' || isUndergroundScene(g)) return false;
+  const sc = g.scene; if(sc==='town' || sc==='tavern' || sc==='darkcrypt' || isUndergroundScene(g)) return false;
   if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
   return true;
 }
-function drawDarkCryptOverlay(g, LR, useLights, tint, maxA){
+function drawLightVeil(g){
+  const indoor = g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g);
+  drawDarkCryptOverlay(g, (indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R)*lightRadiusMult(g.player), false, null, indoor ? VEIL_INDOOR_A : VEIL_MAX_A, VEIL_CORE_DIM);
+}
+function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
   const cam = g.camera;
   // The camera always centers the player at this exact fixed screen point
@@ -359,8 +366,9 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA){
   mctx.globalAlpha = 1;
   mctx.globalCompositeOperation = 'destination-out';
   let grd = mctx.createRadialGradient(px, py, 0, px, py, LR);
-  grd.addColorStop(0, 'rgba(0,0,0,1)');
-  grd.addColorStop(0.62, 'rgba(0,0,0,0.83)');   // (v245) ~10% darker falloff
+  const cl = 1 - (coreDim||0);   // v493: coreDim keeps a faint haze even at the centre of the light
+  grd.addColorStop(0, 'rgba(0,0,0,'+cl+')');
+  grd.addColorStop(0.62, 'rgba(0,0,0,'+(0.83*cl)+')');   // (v245) ~10% darker falloff
   grd.addColorStop(1, 'rgba(0,0,0,0)');
   mctx.fillStyle = grd;
   // (v245) the upper half of the light is squashed so it ends right under the top HUD bar instead of being hidden behind it

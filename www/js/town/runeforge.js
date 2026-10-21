@@ -24,7 +24,7 @@ const HUNTER_BOLT_TEXT = '"Four beasts felled. One remains: Gojira, the dragon o
 const HUNTER_RUNE_TEXT = '"You slew Gojira! Two skill points are yours."';
 function claimGojiraChain(p, stage){
   if(stage==='bolt'){
-    forceAddToBag(p, makeDragonBoltItem());
+    if(!giveRewardIfRoom(p, [makeDragonBoltItem()])) return;   // v493
     p.dragonboltGiven = true;
     gojiraQuest(p);
     showMsg('Dragon Bolt obtained — hurl it when Gojira is below 10% life', 3.2);

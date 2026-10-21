@@ -433,7 +433,7 @@ function talkMiner(){
     showNpcText('Lost Miner', '"Here they come! Don’t let them reach us!"', 'Close');
   } else if(q===2){
     showNpcText('Lost Miner', '"You did it! Thanks. We’re gonna make a break for the exit now. Have this ring we found down here."', 'Take the ring', ()=>{
-      const it = makeMinerRing(p); forceAddToBag(p, it); bagPulse();
+      const it = makeMinerRing(p); if(!giveRewardIfRoom(p, [it])) return; bagPulse();   // v493
       p.minerQ = 3;
       const qq = getQuest(p, 'miners_lost'); if(qq){ qq.status = 'complete'; qq.rewarded = true; qq.progress = qq.total; qq.desc = 'The miners made it out. They left you a ring.'; }
       gainXp(g, 500 + (g.depth||33)*20);

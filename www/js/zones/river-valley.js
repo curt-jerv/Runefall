@@ -206,10 +206,12 @@ function completeBridgeQuest(q){
 // v239: turn-in at the Old Man: a Health Potion + XP that grows the further below the River Valley's
 // level band (top = level 7) you are, so an under-levelled character can catch up before Sunlit Plains.
 function grantBridgeReward(p, q){
+  const bi = classRewardItem(p, Math.max(p.level||1, 6), 'magic');
+  if(!giveRewardIfRoom(p, [bi])) return;   // v493: the Old Man offers it again once there is room
   q.rewarded = true;
   const gap = Math.max(0, 7 - (p.level||1)), mult = Math.min(1.6, 0.25 + 0.3*gap);
   const xp = Math.round((p.xpNext||100)*mult);
-  const bi = classRewardItem(p, Math.max(p.level||1, 6), 'magic'); forceAddToBag(p, bi); p.gold += 80; bagPulse();
+  p.gold += 80; bagPulse();
   gainXp(game, xp);
   showMsg('"You cleared the bridge! Take this for the road." '+bi.name+' + 80 gold, +'+xp+' XP', 3.6);
   updateQuestBadge(); saveGame();
