@@ -1479,13 +1479,17 @@ function updateStep(dt){
       }
     }
   }
-  if(wantReckoning){ wantReckoning=false; const rk = effectiveRank(p,'reckoning')||0; if(rk>0 && !(p.reckonCd>0) && resourceAffordable(p,'reckoning')){ castReckoning(g, p, rk); spendResource(p,'reckoning'); } }
   if(wantSeismic){ wantSeismic=false; const rk = effectiveRank(p,'seismicSlam')||0; if(rk>0 && !(p.seismicCd>0) && resourceAffordable(p,'seismicSlam')){ castSeismicSlam(g, p, rk); spendResource(p,'seismicSlam'); } }
-  if(wantImmovable){ wantImmovable=false; const rk = effectiveRank(p,'immovable')||0;
-    if(rk>0 && !(p.immovableCd>0)){
-      if(!p.immovableOn){ p.immovableOn = true; p.immovableDur = immovableDur(rk); p.immovableT = p.immovableDur; p.moving = false; showMsg('Immovable!', 0.8); g.particles.push({type:'ring', x:p.x, y:p.y, t:0.5, max:0.5, r:70, color:'#c3c8d2'}); }
-      p.immovableCdMax = IMMOVABLE_CD; p.immovableCd = IMMOVABLE_CD;
+  if(wantMirror){ wantMirror=false; const mk = effectiveRank(p,'mirrorSteel')||0;   // v492 Mirror of Steel
+    if(mk>0 && !hasShieldEquipped(p)){ showMsg('Mirror of Steel needs a shield', 0.9); }
+    else if(mk>0 && !(p.mirrorCd>0) && !(p.mirrorT>0) && resourceAffordable(p,'mirrorSteel')){
+      p.mirrorT = mirrorDur(mk); p.mirrorCdMax = applyCdr(p, mirrorCd(mk)); p.mirrorCd = p.mirrorCdMax;
+      spendResource(p,'mirrorSteel'); showMsg('Mirror of Steel!', 0.8);
+      g.particles.push({type:'ring', x:p.x, y:p.y, t:0.5, max:0.5, r:70, color:'#dfe9f5'});
     } }
+  if(wantAnchor){ wantAnchor=false; const ak = effectiveRank(p,'seismicAnchor')||0;   // v492 Seismic Anchor
+    if(ak>0 && !hasShieldEquipped(p)){ showMsg('Seismic Anchor needs a shield', 0.9); }
+    else if(ak>0 && !(p.anchorCd>0) && !(p.anchorPendT>0) && resourceAffordable(p,'seismicAnchor')){ castSeismicAnchor(g, p, ak); spendResource(p,'seismicAnchor'); } }
   // Bloodrage (Berserker): pay life for Rage and damage.
   if(wantBloodrage){
     wantBloodrage=false;
@@ -2237,7 +2241,8 @@ function updateStep(dt){
     if(e.permaT>0) e.permaT -= dt; if(e.permaArmedT>0) e.permaArmedT -= dt; if(e.permaCool>0) e.permaCool -= dt;
     if(e.coldHitT>0) e.coldHitT -= dt; if(e.freezeImmT>0) e.freezeImmT -= dt;
     if(e.elderBuffT>0){ e.elderBuffT -= dt; if(e.elderBuffT<=0){ e.elderBuffT = 0; e.dmg /= 1.25; e.speed /= 1.15; } }
-    const chillMult = (e.chillT>0 ? 0.5 : 1) * (e.permaT>0 ? 1-(e.permaSlow||0.25) : 1);   // v489: Permafrost slows 25-50%
+    if(e.anchorT>0){ e.anchorT -= dt; if(e.anchorT<=0){ e.anchorT = 0; e.anchorSlow = 0; } }   // v492 Seismic Anchor slow fades
+    const chillMult = (e.chillT>0 ? 0.5 : 1) * (e.permaT>0 ? 1-(e.permaSlow||0.25) : 1) * anchorSlowMult(e);   // v489: Permafrost slows 25-50%
     // Blizzard's Freeze (e.frozenT, v76): a brand-new, GENERIC full
     // immobilize -- merged into the same branch as Stun (both fully stop
     // movement/attacks via `continue`) so either one ticks down correctly

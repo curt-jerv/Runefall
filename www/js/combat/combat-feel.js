@@ -136,12 +136,17 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
   amt *= dmgVar();
   if(p.invuln>0 || p.dodging || p.vanishT>0) return;
   p.sinceHurt = 0;
+  if(mirrorActive(p)){   // v492 Mirror of Steel: every blow comes back at its source and half of it heals you
+    if(srcEnemy && srcEnemy.hp>0){ srcEnemy.hp -= applyEnemyArmor(p, srcEnemy, amt); srcEnemy.hitT = 0.15; checkExecute(g, srcEnemy); }
+    p.hp = Math.min(p.maxHp, p.hp + amt*MIRROR_HEAL);
+    g.particles.push({type:'burst', x:p.x, y:p.y-18, t:0.25, max:0.25, color:'#dfe9f5'});
+    return;
+  }
   // Block roll: base (shield equipped) + Riposte + Defensive Stance, all
   // folded into blockChance()'s own overall cap (see its definition).
   if((p.blocking || p.rallyT>0) && Math.random()<blockChance(p)){
     showMsg('Blocked!', 0.5);
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.25, max:0.25, color:'#cdd8e6'});
-    if(((p.skills && effectiveRank(p,'reckoning'))||0) > 0) p.reckonStore = Math.min(p.maxHp*RECKON_STORE_CAP, (p.reckonStore||0) + amt);   // v459 Reckoning stores the blocked force
     // v189 Riposte: a block feeds Rage and counter-strikes the attacker
     const fRank = (p.skills && effectiveRank(p,'riposte')) || 0;
     if(fRank>0){
@@ -186,7 +191,7 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.2, max:0.2, color:'#c9d4e0'});
     return;
   }
-  if(knockback && g.room && !immovableActive(p)){
+  if(knockback && g.room){
     p.x = clamp(p.x+knockback.x, p.r, g.room.w-p.r);
     p.y = clamp(p.y+knockback.y, p.r, g.room.h-p.r);
   }

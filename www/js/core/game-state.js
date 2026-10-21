@@ -299,6 +299,15 @@ function newGame(saved, cls){
         setTimeout(()=>{ try{ showMsg((c0==='mystic' ? 'The Necromancer' : 'The Hunter')+' tree was rearranged -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 2800);
       }
     }
+    if(!saved.skillsV492 && (saved.cls||cls)==='warrior'){   // v492: Reckoning and Immovable removed (Mirror of Steel and Seismic Anchor take their places)
+      const ids492 = ['reckoning','immovable'];
+      let rf9 = 0; for(const k of ids492){ rf9 += player.skills[k]||0; player.skills[k] = 0; }
+      if(rf9>0){
+        player.skillPoints = (player.skillPoints||0) + rf9;
+        for(const sk of Object.keys(player.skillSlots)) if(ids492.indexOf(player.skillSlots[sk])>=0) player.skillSlots[sk] = null;
+        setTimeout(()=>{ try{ showMsg('Warrior Defender was reworked -- '+rf9+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3000);
+      }
+    }
     if(!saved.skillsV481 && (saved.cls||cls)==='mystic'){   // v481: Windrunner / Tornado / Storm moved
       const ids = DJINN_NODE_IDS; let rf = 0;
       for(const k of ids){ rf += player.skills[k]||0; player.skills[k] = 0; }

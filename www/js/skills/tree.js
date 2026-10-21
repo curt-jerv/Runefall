@@ -14,11 +14,11 @@ const SKILL_TREES = {
     {id:'shieldBash',      name:'Shield Slam',      type:'active', reqLevel:1, row:0, col:4, prereq:[], desc:'Slam your shield into the foes in front of you, knocking them down and feeding your rage.'},
     {id:'riposte',         name:'Riposte',          type:'passive', reqLevel:3, row:1, col:0, prereq:['ironSkin'],   desc:'Steel your resolve, turning near-misses into solid blocks.'},
     {id:'shieldThrow',     name:'Shield Throw',     type:'active', reqLevel:5, row:1, col:4, prereq:['shieldBash'], desc:'Hurl your shield to strike a foe, then let it return to your hand.'},
-    {id:'reckoning',       name:'Reckoning',        type:'active', reqLevel:7, row:2, col:0, prereq:['riposte'], desc:'Absorb the impact of blocked attacks, then release the stored force in a heavy shield sweep. The more damage you block, the harder Reckoning hits.'},
     {id:'seismicSlam',     name:'Seismic Slam',     type:'active', reqLevel:7, row:2, col:4, prereq:['shieldThrow'], desc:'Slam the ground with your shield, damaging and stunning nearby enemies. Elites and bosses are slowed instead of stunned.'},
-    {id:'immovable',       name:'Immovable',        type:'active', reqLevel:9, row:3, col:1, prereq:['reckoning'], desc:'Plant your feet for a few seconds: you cannot move or be knocked back, your armour rises 75% and you regenerate 25% of your life. When it ends you lose all your Rage.'},
-    {id:'bulwark',         name:'Bulwark',          type:'active', reqLevel:9, row:3, col:3, prereq:['seismicSlam'], desc:'Plant your feet and soak up the blows, then release them all in one thundering shockwave.'},
-    {id:'guardian',        name:'Juggernaut',       type:'active', reqLevel:12, row:4, col:2, prereq:['immovable','bulwark'], prereqMode:'or', capstone:true, desc:'Roar, fill your Rage and charge unstoppable, flattening everything in your path until the Rage runs dry.'},
+    {id:'mirrorSteel',      name:'Mirror of Steel',  type:'active', reqLevel:7, row:2, col:0, prereq:['riposte'], desc:'Raise your shield to turn every blow back on its source: for a few seconds you reflect 100% of incoming melee and ranged damage, and heal for half of what you reflected.'},
+    {id:'bulwark',         name:'Bulwark',          type:'active', reqLevel:9, row:3, col:1, prereq:['seismicSlam'], desc:'Plant your feet and soak up the blows, then release them all in one thundering shockwave.'},
+    {id:'seismicAnchor',    name:'Seismic Anchor',   type:'active', reqLevel:9, row:3, col:3, prereq:['seismicSlam'], desc:'Plant your shield and after a short delay tear the ground open: enemies within 6 metres are dragged to the epicentre, their casting is broken and they are slowed by 70% (fading over 3s).'},
+    {id:'guardian',        name:'Juggernaut',       type:'active', reqLevel:12, row:4, col:2, prereq:['bulwark','seismicAnchor'], prereqMode:'or', capstone:true, desc:'Roar, fill your Rage and charge unstoppable, flattening everything in your path until the Rage runs dry.'},
   ]},
   // Berserker tree is laid out (v55, column-aligned in v60) to visually read
   // as a sword: a 3-node blade running straight down the spine (Weapon
