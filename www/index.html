@@ -124,7 +124,6 @@ window.onerror = function(msg, src, line, col, err){
   <div id="btnStance" class="actbtn"><span class="lbl">STANCE</span></div>
   <div id="btnRally" class="actbtn"><span class="lbl">RALLY</span><div class="cd"></div></div>
   <div id="btnTrap" class="actbtn"><span class="lbl">TRAP</span><div class="cd"></div></div>
-  <div id="btnPoisonKnives" class="actbtn"><span class="lbl">KNIVES</span><div class="cd"></div></div>
   <div id="btnShadowStep" class="actbtn"><span class="lbl">SHADOW</span><div class="cd"></div></div>
   <div id="btnVanish" class="actbtn"><span class="lbl">VANISH</span><div class="cd"></div></div>
   <div id="btnRapidShot" class="actbtn"><span class="lbl">RAPID</span><div class="cd"></div></div>
@@ -514,7 +513,7 @@ window.onerror = function(msg, src, line, col, err){
         <div class="schName">River Valley</div>
       </button>
       <button id="teleportSunlitPlains" class="skillChoice" style="justify-content:center;">
-        <div class="schName">Sunlit Plains</div>
+        <div class="schName">Withered Crossroads</div>
       </button>
       <button id="teleportLighthouse1" class="skillChoice" style="justify-content:center;">
         <div class="schName">Lighthouse Tower Level 1</div>
@@ -667,14 +666,6 @@ window.onerror = function(msg, src, line, col, err){
       <div class="schIcon">&#9681;</div>
       <div><div class="schName">Graphics</div><div class="schDesc">Atmosphere and film grain</div></div>
     </button>
-    <div class="toggleRow segRow" style="margin-bottom:8px;">
-      <div class="schIcon">&#128241;</div>
-      <div class="toggleRowBody">
-        <div class="schName">Screen Orientation</div>
-        <div class="schDesc">Auto follows how you hold your phone. Lock it to always play in landscape or portrait.</div>
-        <div class="segCtl" id="orientSeg"><button type="button" data-v="auto">Auto</button><button type="button" data-v="landscape">Landscape</button><button type="button" data-v="portrait">Portrait</button></div>
-      </div>
-    </div>
     <div id="toggleHideAch" class="toggleRow" style="margin-bottom:8px;">
       <div class="schIcon">&#127942;</div>
       <div class="toggleRowBody">
@@ -739,6 +730,14 @@ window.onerror = function(msg, src, line, col, err){
         <div class="schDesc">A faint moving grain over the picture</div>
       </div>
       <div class="toggleSwitch"><div class="toggleKnob"></div></div>
+    </div>
+    <div class="toggleRow segRow" style="margin-top:8px;">
+      <div class="schIcon">&#128241;</div>
+      <div class="toggleRowBody">
+        <div class="schName">Screen Orientation</div>
+        <div class="schDesc">Auto follows how you hold your phone. Lock it to always play in landscape or portrait.</div>
+        <div class="segCtl" id="orientSeg"><button type="button" data-v="auto">Auto</button><button type="button" data-v="landscape">Landscape</button><button type="button" data-v="portrait">Portrait</button></div>
+      </div>
     </div>
   </div>
 </div>

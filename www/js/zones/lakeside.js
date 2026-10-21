@@ -1,8 +1,8 @@
 // ---------------- Lakeside Ruins (v71) ----------------
-// Fourth of the 6-batch "new area" sequence, reached from Sunlit Plains'
+// Fourth of the 6-batch "new area" sequence, reached from Withered Crossroads'
 // own reserved east exit (SUNLIT_EAST_EXIT_SPOT/g.sun.eastGate). Same open,
-// standing-population zone shape as the Forest/Mountain Pass/Sunlit Plains
-// (no genRoom() floors), and the exact same footprint as Sunlit Plains
+// standing-population zone shape as the Forest/Mountain Pass/Withered Crossroads
+// (no genRoom() floors), and the exact same footprint as Withered Crossroads
 // (LAKE_W/LAKE_H = SUN_W/SUN_H) -- but instead of a "+"-shaped crossroad,
 // a single straight road enters from the WEST edge (mirroring "the road
 // enters from the left" -- the player arrives here coming out of Sunlit
@@ -55,7 +55,7 @@ function lakeWaterRects(){
   ];
 }
 const LAKE_PACK_ANCHOR_TARGET = SUNLIT_PACK_ANCHOR_TARGET;
-// Fewer standing packs than Sunlit Plains' 70 -- the lake itself eats a
+// Fewer standing packs than Withered Crossroads' 70 -- the lake itself eats a
 // large, uninhabitable chunk of this same-sized footprint, so the walkable
 // shoreline area is smaller even though the zone's outer bounds match.
 const LAKE_PACK_COUNT = 55;
@@ -87,7 +87,7 @@ function makeLakesideRuins(){
   function offLimits(x,y){ return lakeOnRoad(x,y) || lakeOnIsland(x,y) || inWater(x,y); }
 
   // sparse shoreline decoration -- same sparse-grass-and-rock brief as
-  // Sunlit Plains, kept off the road/bridge, the water, and the island
+  // Withered Crossroads, kept off the road/bridge, the water, and the island
   // (which gets its own dedicated stone-ring landmark instead).
   const rocks = [];
   for(let i=0;i<50;i++){

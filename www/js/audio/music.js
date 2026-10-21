@@ -54,7 +54,7 @@ function mDrone(bus, m, vol, lp, type){
 }
 const pick = a => a[Math.floor(Math.random()*a.length)];
 const MOODS = {
-  d2world(){ return MOODS.forest(); }, d2dungeon(){ return MOODS.cave(); }, d2boss(){ return MOODS.fire(); }, d2tower(){ return MOODS.crypt(); },   // v468 fallbacks until the recordings decode
+  d2world(){ return MOODS.forest(); }, d2dungeon(){ return MOODS.cave(); }, d2boss(){ return MOODS.fire(); }, wraithlord(){ return MOODS.fire(); }, d2tower(){ return MOODS.crypt(); },   // v468 fallbacks until the recordings decode
   // Mistfall: wistful acoustic plucks over a soft minor pad
   town(){
     const chords = [[57,60,64],[53,57,60],[48,55,60],[55,59,62]], arp = [0,1,2,1,2,1,0,2];
@@ -201,7 +201,8 @@ function audMoodFor(g){
     if(SCENE_MOOD_V468[g.scene]) name = SCENE_MOOD_V468[g.scene];
     if(g.scene==='lighthouse' && towerMusicHere(g)) name = 'd2tower';
     if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='keep' && (g.tower.kpArea||1)<7) name = 'keep';   // v492: the Shadow Keep's own dark theme
-    if(!g.over && window.__bossBarBottom > 0 && g.scene!=='town' && g.scene!=='tavern') name = 'd2boss'; }
+    if(!g.over && window.__bossBarBottom > 0 && g.scene!=='town' && g.scene!=='tavern') name = 'd2boss';
+    if(name==='d2boss' && g.scene==='lighthouse' && g.tower && g.tower.subzone==='keep' && g.tower.kpArea===7 && g.enemies.some(e=>e.wlord && e.hp>0)) name = 'wraithlord'; }   // v507: the Demon Hold's Wraith Lord
   if(name!==AUD.moodName) audSetMood(name);
   return name;
 }
@@ -211,7 +212,7 @@ function audSetMood(name){
   if(oldBus){ oldBus.gain.cancelScheduledValues(now); oldBus.gain.setValueAtTime(oldBus.gain.value, now); oldBus.gain.linearRampToValueAtTime(0.0001, now+4.5); setTimeout(()=>{ try{ (oldStop||[]).forEach(f=>f()); oldBus.disconnect(); }catch(e){} }, 5200); }
   const bus = MB(); const mood = (AUD.mus && AUD.mus[name]) ? musLoopMood(name) : MOODS[name]();
   // v492: boss music comes in fast and loud; everything else keeps the slow v472 fade-in
-  const boss = name==='d2boss', peak = boss ? 1.7 : 1;
+  const boss = name==='d2boss' || name==='wraithlord', peak = boss ? 1.7 : 1;
   bus.gain.setValueAtTime(0.0001, now);
   if(boss) bus.gain.setTargetAtTime(peak, now+0.05, 0.35); else bus.gain.setTargetAtTime(1, now+(oldBus?1.5:0.5), 3.6);   // v472: slow fade-in (about 11s to full)
   AUD.moodName = name; AUD.mood = mood; AUD.moodBus = bus; AUD.n = 0; AUD.nextT = now+0.15;

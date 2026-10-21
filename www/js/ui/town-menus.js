@@ -79,12 +79,12 @@ const teleportMineBtn = document.getElementById('teleportMine');
 // v69: generalized from a hardcoded two-state (town/mountainpass) toggle
 // to "show every destination except wherever you're standing" now that a
 // third waypoint exists -- each button hides itself when `from` matches
-// its own destination. Sunlit Plains is additionally gated on having
+// its own destination. Withered Crossroads is additionally gated on having
 // actually reached it at least once (reachedSunlitPlains), same rule as
 // the Mine option's checkpointDepth>1 gate -- Town's/Mountain Pass's own
 // waypoint menus are only reachable at all once the player already has
 // reachedMountainPass (see updateTown's waypointUnlocked), which does NOT
-// imply Sunlit Plains has also been found (a separate branch off the
+// imply Withered Crossroads has also been found (a separate branch off the
 // Forest), so it needs its own explicit gate here.
 // v490: a waypoint is discovered (saved and lit) when the player USES it -- pressing interact opens this menu --
 // not just by walking past it. `from` -> that waypoint's save flag (Town's has none: it's always on).

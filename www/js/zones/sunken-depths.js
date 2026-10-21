@@ -246,7 +246,8 @@ function enterMarshPool(opts){ enterSubZone('pool', opts); }
 function subBossDown(g){
   const t = g.tower, p = g.player;
   if(!t || !t.chestSpot || t.clearPortal) return;
-  t.clearPortal = t.portalSpot ? {x:t.portalSpot.x, y:t.portalSpot.y, r:24, toTown:true} : {x:t.chestSpot.x-40, y:t.chestSpot.y+140, r:24, toTown:true};
+  if(t.subzone==='sunken') t.portalPending = true;   // v507: the Kraken's portal (to the Lakeside Ruins) opens only after the chests are emptied
+  else t.clearPortal = t.portalSpot ? {x:t.portalSpot.x, y:t.portalSpot.y, r:24, toTown:true} : {x:t.chestSpot.x-40, y:t.chestSpot.y+140, r:24, toTown:true};
   const looted = t.subzone==='sunken' ? p.sunkenChestLooted : p.poolChestLooted;
   if(!looted) g.chest = {x:t.chestSpot.x, y:t.chestSpot.y, r:24, opened:false, subBoss:true};
   if(t.extraChestSpot && !p.sunkenChest2Looted) t.extraChest = {x:t.extraChestSpot.x, y:t.extraChestSpot.y, r:24, opened:false};   // v456: a second chest of lost gear
@@ -274,9 +275,9 @@ function updateSubZone(g, dt){
   if(dist(p, t.entrance) < t.entrance.r + p.r + 22) skind = t.subzone==='sunken' ? 'sunkenToTemple' : t.subzone==='temple' ? 'templeToRuins' : 'poolToMarsh';
   else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ skind = 'waypointAncientRuins'; }
   else if(t.stairsDown && dist(p, t.stairsDown) < t.stairsDown.r + p.r + 22) skind = 'toSunkenDepths';
-  else if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) skind = 'toTownFromTower';
+  else if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) skind = t.clearPortal.toLake ? 'toLakeFromSunken' : 'toTownFromTower';
   updateInteractPrompt(skind);
-  if(g.bossKilled && !t.clearPortal){ subBossDown(g); showMsg(t.subzone==='sunken' ? 'Explore the area for any lost treasures.' : 'The Leviathan sinks into the pool.', 3.0, undefined, true); }
+  if(g.bossKilled && !t.clearPortal && !t.portalPending){ subBossDown(g); showMsg(t.subzone==='sunken' ? 'Explore the area for any lost treasures.' : 'The Leviathan sinks into the pool.', 3.0, undefined, true); }
   if(t.extraChest && !t.extraChest.opened && dist(t.extraChest,p) < t.extraChest.r+p.r){
     t.extraChest.opened = true; p.sunkenChest2Looted = true;
     const it = classRewardItem(p, Math.max(p.level, g.depth), 'rare'), it2 = classRewardItem(p, Math.max(p.level, g.depth), 'reward');
@@ -286,6 +287,11 @@ function updateSubZone(g, dt){
     bagPulse(); saveGame();
   }
   if(g.chest && !g.chest.opened && g.chest.subBoss && dist(g.chest,p) < g.chest.r+p.r) openSubChest(g);
+  if(t.portalPending && !t.clearPortal && (!g.chest || g.chest.opened) && (!t.extraChest || t.extraChest.opened)){   // v507: all chests emptied -> the way back opens
+    const sp = t.portalSpot || {x:t.chestSpot.x-40, y:t.chestSpot.y+140};
+    t.clearPortal = {x:sp.x, y:sp.y, r:24, toLake:true}; t.portalPending = false;
+    showMsg('A portal opens, back to the Lakeside Ruins.', 3.0, '#9fd8ff'); g.particles.push({type:'ring', x:sp.x, y:sp.y, t:0.6, max:0.6, r:70, color:'#9fd8ff'});
+  }
   // v491: the Sunken Depths are charged with static -- two stacks of a lightning debuff while you are down here
   if(t.subzone==='sunken' && !g.over && p.hp>0){
     const rate = p.maxHp*SUNKEN_STATIC_PCT*SUNKEN_STATIC_STACKS*(1-elementResist(p,'lightning')/100);

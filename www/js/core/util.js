@@ -7,7 +7,7 @@ function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.
 // spaced points hugging all four edges of a w x h zone, inset by margin,
 // for scattering decorative "you've reached the edge" border props
 // (tombstones/rocks/trees) around an open zone's playable area -- reused
-// by Cursed Cemetery/Sunlit Plains/Lakeside Ruins below instead of each
+// by Cursed Cemetery/Withered Crossroads/Lakeside Ruins below instead of each
 // zone inventing its own perimeter-walking loop. gaps is a list of
 // {x,y,r} points (gates/exits); any candidate point within r of a gap is
 // skipped so that gate/exit stays visually and functionally clear.

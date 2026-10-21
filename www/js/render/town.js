@@ -82,7 +82,7 @@ function pushTownPreviewDrawables(g, cam, drawables){
   for(const sgn of [-1,1]){ const gp = {x:T.w-6, y:(T.roadY||TOWN_ROAD_Y)+sgn*56-(sgn<0?14:0)}; add(gp.x, gp.y+14, ()=>drawGatePillarIso(gp, clk)); }
 }
 // v456: the ground past a zone's exit takes on the next zone's colours, so you can see where you're headed
-const EDGE_PAL = { forest:['#13291b','#173320'], river:['#2a4a28','#30522c'], sunlit:['#5f7a3a','#68843f'], lake:['#363f2e','#3c4633'],
+const EDGE_PAL = { forest:['#13291b','#173320'], river:['#2a4a28','#30522c'], sunlit:['#3f4a2c','#454f30'], lake:['#363f2e','#3c4633'],
   cemetery:['#20233a','#262a42'], marsh:['#2f3d22','#29361e'], mountain:['#5d5348','#544a40'], coast:['#4c4c4a','#454543'] };
 function mixRGB(a,b,t){ return 'rgb('+Math.round(a[0]+(b[0]-a[0])*t)+','+Math.round(a[1]+(b[1]-a[1])*t)+','+Math.round(a[2]+(b[2]-a[2])*t)+')'; }
 function edgeLinks(room){

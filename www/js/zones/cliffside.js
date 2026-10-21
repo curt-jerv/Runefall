@@ -228,7 +228,7 @@ function updateCliffside(g, dt){
     if(near(R.exitGate)) k = 'nestToCliff';
     if(R.nestSpawned && !R.queenSpawned && !g.enemies.some(e=>e.nestHarpy && e.hp>0)){
       R.queenSpawned = true; spawnHarpyQueen(g);
-      bossMsg('THE BROOD MOTHER', 'The nest falls silent... then the sky tears open.', 4.2); shakeScreen(g, 7, 0.6);
+      shakeScreen(g, 7, 0.6);
     }
   } else {
     if(near(R.hwGate)) k = 'cliffToHighward';

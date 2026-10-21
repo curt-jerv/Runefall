@@ -428,7 +428,7 @@ function render(){
         const bz = {k:'brazier', x:sg.x+sd*95, y:sg.y-60, s:1.3}; drawables.push({depth:bz.x+bz.y, draw:()=>drawMtnDeco(bz)});
         const bn = {k:'banner', x:sg.x+sd*140, y:sg.y-80, s:1.2}; drawables.push({depth:bn.x+bn.y, draw:()=>drawMtnDeco(bn)});
       }
-      drawables.push({depth:rv.southGate.x+rv.southGate.y+1, draw:()=>drawEdgeLabelIso(rv.southGate, 'SUNLIT PLAINS')});
+      drawables.push({depth:rv.southGate.x+rv.southGate.y+1, draw:()=>drawEdgeLabelIso(rv.southGate, 'WITHERED CROSSROADS')});
       drawables.push({depth:rv.caveGate.x+rv.caveGate.y, draw:()=>drawMinotaurCaveIso(rv.caveGate, clkR)});
       drawables.push({depth:rv.caveGate.x+rv.caveGate.y+2, draw:()=>drawEdgeLabelIso(rv.caveGate, 'MINOTAUR CAVE')});
       drawables.push({depth:rv.waypoint.x+rv.waypoint.y-1, draw:()=>drawWaypointIso(rv.waypoint, clkR, waypointLit())});
@@ -449,7 +449,7 @@ function render(){
         if(g.sun.decor) for(const d of g.sun.decor) if(visS(d.x,d.y)) drawables.push({depth:d.x+d.y-2, draw:()=>drawDecorIso(d, g.clock||0)});
       }
       drawables.push({depth:g.sun.forestGate.x+g.sun.forestGate.y, draw:()=>drawEdgeLabelIso(g.sun.forestGate, 'RIVER VALLEY')});
-      // Sunlit Plains' own dedicated waypoint -- always lit/pulsing, same
+      // Withered Crossroads' own dedicated waypoint -- always lit/pulsing, same
       // shared art/mechanism as Town's and Mountain Pass's.
       drawables.push({depth:g.sun.waypoint.x+g.sun.waypoint.y-1, draw:()=>drawWaypointIso(g.sun.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:g.sun.waypoint.x+g.sun.waypoint.y, draw:()=>drawEdgeLabelIso(g.sun.waypoint, 'WAYPOINT')});
@@ -499,7 +499,7 @@ function render(){
         drawables.push({depth:ss.x+ss.y, draw:()=>drawSimpleNpcIso(ss, g.clock||0, {mark: !g.player.ruinsEvent})});
       }
       drawables.push({depth:g.lake.sunlitGate.x+g.lake.sunlitGate.y, draw:()=>drawLakesideGateIso(g.lake.sunlitGate, g.clock||0)});
-      drawables.push({depth:g.lake.sunlitGate.x+g.lake.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.sunlitGate, 'SUNLIT PLAINS')});
+      drawables.push({depth:g.lake.sunlitGate.x+g.lake.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.sunlitGate, 'WITHERED CROSSROADS')});
       drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y, draw:()=>drawRuinsGateIso(g.lake.marshGate, g.clock||0)});
       drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.marshGate, 'BLACK MARSH')});
       if(!g.lake.waypoint.off){
@@ -542,7 +542,7 @@ function render(){
       if(g.cem.deadTrees) for(const dt of g.cem.deadTrees) drawables.push({depth:dt.x+dt.y, draw:()=>drawDeadTreeIso(dt)});
       if(g.cem.graves) for(const gr of g.cem.graves) drawables.push({depth:gr.x+gr.y, draw:()=>drawGraveIso(gr)});
       drawables.push({depth:g.cem.sunlitGate.x+g.cem.sunlitGate.y, draw:()=>drawRuinsGateIso(g.cem.sunlitGate, g.clock||0)});
-      drawables.push({depth:g.cem.sunlitGate.x+g.cem.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.cem.sunlitGate, 'SUNLIT PLAINS')});
+      drawables.push({depth:g.cem.sunlitGate.x+g.cem.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.cem.sunlitGate, 'WITHERED CROSSROADS')});
       if(g.cem.waypoint){ drawables.push({depth:g.cem.waypoint.x+g.cem.waypoint.y-1, draw:()=>drawWaypointIso(g.cem.waypoint, g.clock||0, waypointLit())});
       drawables.push({depth:g.cem.waypoint.x+g.cem.waypoint.y, draw:()=>drawEdgeLabelIso(g.cem.waypoint, 'WAYPOINT')}); }
       // The sealed tomb -- visually present from the very first visit,
@@ -790,11 +790,11 @@ function render(){
     const t = g.tower;
     if(t){
       if(t.floor===1){
-        // Floor 1's entrance doubles as the gate back to Sunlit Plains,
+        // Floor 1's entrance doubles as the gate back to Withered Crossroads,
         // same "the arrival gate is also the exit" convention every other
         // zone-transition gate follows.
         drawables.push({depth:t.entrance.x+t.entrance.y, draw:()=>drawLighthouseDoorIso(t.entrance, g.clock||0)});
-        drawables.push({depth:t.entrance.x+t.entrance.y+1, draw:()=>drawEdgeLabelIso(t.entrance, t.ft ? 'BLACK MARSH' : 'SUNLIT PLAINS')});
+        drawables.push({depth:t.entrance.x+t.entrance.y+1, draw:()=>drawEdgeLabelIso(t.entrance, t.ft ? 'BLACK MARSH' : 'WITHERED CROSSROADS')});
       } else {
         // Floors 2-5: a purely decorative stairway-up marks where the
         // player arrived, same non-interactive fixture drawStairsUpIso
@@ -819,11 +819,11 @@ function render(){
         drawables.push({depth:t.waypoint.x+t.waypoint.y, draw:()=>drawEdgeLabelIso(t.waypoint, 'WAYPOINT')});
       }
       if(t.clearPortal){
-        // The rooftop's one-time post-clear portal back to Sunlit Plains --
+        // The rooftop's one-time post-clear portal back to Withered Crossroads --
         // reuses the same swirling blue-portal art Town's own permanent
         // waypoint uses once unlocked.
         drawables.push({depth:t.clearPortal.x+t.clearPortal.y-1, draw:()=>drawBluePortalIso(t.clearPortal, g.clock||0)});
-        drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, t.fht ? 'FROSTHOLD KEEP' : (t.ft) ? (t.clearPortal.toTown ? 'MISTFALL' : 'BLACK MARSH') : 'SUNLIT PLAINS')});
+        drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, t.fht ? 'FROSTHOLD KEEP' : (t.ft) ? (t.clearPortal.toTown ? 'MISTFALL' : 'BLACK MARSH') : 'WITHERED CROSSROADS')});
       }
     }
     if(g.chest) drawables.push({depth:g.chest.x+g.chest.y, draw:()=>drawChestIso(g.chest)});
@@ -989,7 +989,7 @@ function render(){
     ctx.restore();
   }
   if(g.scene==='darkcrypt') drawDarkCryptOverlay(g, DARKCRYPT_PLAYER_LIGHT_R, true);
-  else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*UNDERGROUND_LIGHT_SCALE*lightRadiusMult(g.player)*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : 1), false, hrt ? '#1c0503' : null, null, UNDERGROUND_CORE_DIM); }   // v493: +Light Radius
+  else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3, sunk = g.scene==='lighthouse' && g.room && g.room.subzone==='sunken'; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*UNDERGROUND_LIGHT_SCALE*lightRadiusMult(g.player)*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : sunk ? 1.05 : 1), false, hrt ? '#1c0503' : null, sunk ? 0.92 : null, sunk ? 0.28 : UNDERGROUND_CORE_DIM); }   // v507: the Sunken Depths are lit a good deal brighter   // v493: +Light Radius
   else if(wlDarkFight(g)) drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*0.9*lightRadiusMult(g.player), false);   // v434: darkness closes in during the Wraith Lord fight (10% tighter than the caves)
   else if(lightVeilScene(g)) drawLightVeil(g);   // v492/v493: the dark around every zone but town, lit by your own light
   flushLosPending();   // (v501) normally already folded into the veil above
@@ -1013,5 +1013,6 @@ function render(){
   const msgEl = document.getElementById('msg');
   if(g.msgT>0){ msgEl.style.opacity = clamp(g.msgT,0,1); msgEl.textContent = g.msgText; msgEl.style.color = g.msgColor || ''; msgEl.style.top = Math.round(hudTextAnchor(true))+'px'; msgEl.style.transform = ''; }   // v441: every message line sits at the top under the HUD (and under a banner if one is up), never over the character
   else { msgEl.style.opacity = 0; }
+  { const bmEl = document.getElementById('bigMsg'); if(bmEl && parseFloat(bmEl.style.opacity||0) > 0.05) hudTextAnchor(false); }   // v507: a banner already up slides below the boss bar when it appears
 }
 

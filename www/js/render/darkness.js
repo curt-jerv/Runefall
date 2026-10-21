@@ -337,7 +337,7 @@ function drawLosMask(g, pts, defer){
   if(!losCanvas || losCanvas.width!==lw || losCanvas.height!==lh){ losCanvas = document.createElement('canvas'); losCanvas.width = lw; losCanvas.height = lh; losCtx = losCanvas.getContext('2d'); }
   const m = losCtx, cam = g.camera;
   m.setTransform(1,0,0,1,0,0); m.globalCompositeOperation = 'source-over'; m.clearRect(0,0,lw,lh);
-  m.fillStyle = (g.room && g.room.theme) ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.82)'; m.fillRect(0,0,lw,lh);   // (v506: themed Breach floors see a little further into the shadows)
+  m.fillStyle = (g.room && (g.room.theme || g.room.subzone==='sunken')) ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.82)'; m.fillRect(0,0,lw,lh);   // (v506: themed Breach floors see a little further into the shadows)
   m.globalCompositeOperation = 'destination-out'; m.fillStyle = '#000';
   for(const lift of [0, 30]){   // second pass lifts the lit area so wall faces next to you stay readable
     m.beginPath();
@@ -350,21 +350,57 @@ function drawLosMask(g, pts, defer){
 // v492/v493: the character's own circle of light in every zone but town (the Dark Crypt and the caves keep their own, stronger dark).
 // Outside the circle the world is VEIL_MAX_A dark (towers and halls darker still); inside it a light VEIL_CORE_DIM haze stays.
 // +Light Radius gear widens every circle of light except the Dark Crypt's.
-const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.8, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.42, UNDERGROUND_LIGHT_SCALE = 0.8;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
-const VEIL_THEME_R = 360, VEIL_THEME_A = 0.7, VEIL_THEME_DIM = 0.1;   // v506
+const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.88, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.12, UNDERGROUND_LIGHT_SCALE = 0.85;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
+const VEIL_THEME_R = 290, VEIL_THEME_A = 0.8, VEIL_THEME_DIM = 0.2;   // v506
 function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
-  const sc = g.scene; if(sc==='town' || sc==='tavern' || sc==='darkcrypt' || isUndergroundScene(g)) return false;
+  const sc = g.scene; if(sc==='tavern' || sc==='darkcrypt' || isUndergroundScene(g)) return false;   // (v509: town is darkened like every other outdoor zone)
   if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
   return true;
 }
 function drawLightVeil(g){
   const indoor = g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g);
   const th = indoor && g.room && g.room.theme;   // v506: the Breach's themed boss floors are lit a good deal brighter than the Keep's halls
-  drawDarkCryptOverlay(g, (th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R)*lightRadiusMult(g.player), false, null, th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
+  const sun = g.scene==='sunlitplains';   // v510: the sunny plains are naturally bright, so they get a firmer veil
+  const wet = th==='kraken' || th==='leviathan';   // the water floors are lit brighter still
+  drawDarkCryptOverlay(g, (wet ? 315 : th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R*(sun ? 0.9 : 1))*lightRadiusMult(g.player), false, null, wet ? 0.72 : th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : sun ? 0.93 : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
 }
-function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
+// v512: lights cast by skills (screen coords): fire = orange, lightning = blue-white. Capped so a crowded fight stays cheap.
+function skillLights(g, cam){
+  const out = [], p = g.player, W2 = W+260, H2 = H+260;
+  const add = (wx, wy, r, c, a, lift)=>{
+    if(out.length >= 14 || a <= 0.02) return;
+    const io = toIso(wx, wy), x = io.x - cam.x, y = io.y - cam.y - (lift==null ? 10 : lift);
+    if(x < -260 || x > W2 || y < -260 || y > H2) return;
+    out.push({x, y, r, c, a});
+  };
+  const FIRE = '255,140,50', BOLT = '160,215,255';
+  if(g.projectiles) for(const pr of g.projectiles){
+    if(pr.isFireball) add(pr.x, pr.y, 150, FIRE, 0.95, 18);
+    else if(pr.isLightningArc) add(pr.x, pr.y, 150, BOLT, 0.95, 18);
+  }
+  if(p && p.pyroTorrentT>0 && p.pyroTorrentAng!=null){
+    const R = (typeof PYRO_TORRENT_RANGE==='number' ? PYRO_TORRENT_RANGE : 200);
+    for(const f of [0.25, 0.55, 0.85]) add(p.x+Math.cos(p.pyroTorrentAng)*R*f, p.pyroTorrentAng!=null ? p.y+Math.sin(p.pyroTorrentAng)*R*f : p.y, 150, FIRE, 0.9, 12);
+  }
+  if(g.particles) for(const pt of g.particles){
+    const k = pt.max ? Math.max(0, Math.min(1, pt.t/pt.max)) : 1;
+    switch(pt.type){
+      case 'novaRing': add(pt.x, pt.y, Math.max(120, (pt.r||100)*1.25), BOLT, 0.5+0.5*k, 6); break;
+      case 'skybolt': add(pt.x, pt.y, 210, BOLT, k, 8); break;
+      case 'stormMark': add(pt.x, pt.y, 100, BOLT, 0.35+0.4*(pt.prog||0), 4); break;
+      case 'bolt': add((pt.x+pt.x2)/2, (pt.y+pt.y2)/2, 130, BOLT, k, 14); add(pt.x2, pt.y2, 110, BOLT, k, 14); break;
+      case 'meteorFall': add(pt.x, pt.y, 130+170*(pt.prog||0), FIRE, 0.4+0.6*(pt.prog||0), 4); break;
+      case 'burnzone': add(pt.x, pt.y, (pt.r||90)*1.3, FIRE, 0.75*(1-0.5*(pt.prog||0)), 6); break;
+      case 'fireImpact': add(pt.x, pt.y, 150, FIRE, k, 14); break;
+    }
+  }
+  return out;
+}
+const LIGHT_X = 1.15, LIGHT_Y = 0.575;   // v511: light shape = isometric ellipse (wider than tall, 2:1)
+const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
+function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
   const cam = g.camera;
   // The camera always centers the player at this exact fixed screen point
@@ -380,28 +416,31 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
   mctx.fillRect(0, 0, W, H);
   mctx.globalAlpha = 1;
   mctx.globalCompositeOperation = 'destination-out';
-  let grd = mctx.createRadialGradient(px, py, 0, px, py, LR);
+  const grdStops = [];
   const cl = 1 - (coreDim||0);   // v493: coreDim keeps a faint haze even at the centre of the light
-  grd.addColorStop(0, 'rgba(0,0,0,'+cl+')');
-  grd.addColorStop(0.62, 'rgba(0,0,0,'+(0.83*cl)+')');   // (v245) ~10% darker falloff
-  grd.addColorStop(1, 'rgba(0,0,0,0)');
-  mctx.fillStyle = grd;
-  // (v245) the upper half of the light is squashed so it ends right under the top HUD bar instead of being hidden behind it
-  const sy0 = clamp((py - hudBottomPx()) / LR, 0.35, 1);
-  mctx.save(); mctx.beginPath(); mctx.rect(0, py, W, H); mctx.clip(); mctx.beginPath(); mctx.arc(px, py, LR, 0, Math.PI*2); mctx.fill(); mctx.restore();
-  mctx.save(); mctx.beginPath(); mctx.rect(0, 0, W, py); mctx.clip(); mctx.translate(0, py); mctx.scale(1, sy0); mctx.translate(0, -py);
-  mctx.beginPath(); mctx.arc(px, py, LR, 0, Math.PI*2); mctx.fill(); mctx.restore();
+  grdStops.push([0, 'rgba(0,0,0,'+cl+')']);
+  grdStops.push([0.62, 'rgba(0,0,0,'+(0.83*cl)+')']);   // (v245) ~10% darker falloff
+  grdStops.push([1, 'rgba(0,0,0,0)']);
+  // v511: every light is a flattened ellipse (3/4 isometric view, same 2:1 look as the ground tiles); the upper half still stops under the HUD
+  const sy0 = clamp((py - hudBottomPx()) / LR, 0.3, 1);
+  for(const up of [false, true]){
+    mctx.save(); mctx.beginPath(); mctx.rect(0, up ? 0 : py, W, up ? py : H); mctx.clip();
+    mctx.translate(px, py); mctx.scale(LIGHT_X, up ? Math.min(LIGHT_Y, sy0) : LIGHT_Y);
+    const lg = mctx.createRadialGradient(0, 0, 0, 0, 0, LR);
+    for(const [o,c] of grdStops) lg.addColorStop(o, c);
+    mctx.fillStyle = lg; mctx.beginPath(); mctx.arc(0, 0, LR, 0, Math.PI*2); mctx.fill(); mctx.restore();
+  }
   if(useLights && g.crypt && g.crypt.lights){
     for(const lt of g.crypt.lights){
       const iso = toIso(lt.x, lt.y);
       const sx = iso.x - cam.x, sy = iso.y - cam.y;
       if(sx < -80 || sx > W+80 || sy < -80 || sy > H+80) continue;
-      const tg = mctx.createRadialGradient(sx, sy, 0, sx, sy, DARKCRYPT_TORCH_LIGHT_R);
+      mctx.save(); mctx.translate(sx, sy); mctx.scale(LIGHT_X, LIGHT_Y*1.1); const tg = mctx.createRadialGradient(0, 0, 0, 0, 0, DARKCRYPT_TORCH_LIGHT_R);
       tg.addColorStop(0, 'rgba(0,0,0,1)');
       tg.addColorStop(0.6, 'rgba(0,0,0,0.77)');
       tg.addColorStop(1, 'rgba(0,0,0,0)');
       mctx.fillStyle = tg;
-      mctx.beginPath(); mctx.arc(sx, sy, DARKCRYPT_TORCH_LIGHT_R, 0, Math.PI*2); mctx.fill();
+      mctx.beginPath(); mctx.arc(0, 0, DARKCRYPT_TORCH_LIGHT_R, 0, Math.PI*2); mctx.fill(); mctx.restore();
     }
   }
   if(g.projectiles){   // v499: a Frozen Orb lights up the dark around itself
@@ -409,15 +448,31 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
       if(!pr.isFrozenOrb) continue;
       const iso = toIso(pr.x, pr.y), sx = iso.x - cam.x, sy = iso.y - cam.y - 18;
       if(sx < -200 || sx > W+200 || sy < -200 || sy > H+200) continue;
-      const og = mctx.createRadialGradient(sx, sy, 0, sx, sy, 190);
+      mctx.save(); mctx.translate(sx, sy); mctx.scale(LIGHT_X, LIGHT_Y*1.1); const og = mctx.createRadialGradient(0, 0, 0, 0, 0, 190);
       og.addColorStop(0, 'rgba(0,0,0,0.95)'); og.addColorStop(0.55, 'rgba(0,0,0,0.6)'); og.addColorStop(1, 'rgba(0,0,0,0)');
-      mctx.fillStyle = og; mctx.beginPath(); mctx.arc(sx, sy, 190, 0, Math.PI*2); mctx.fill();
+      mctx.fillStyle = og; mctx.beginPath(); mctx.arc(0, 0, 190, 0, Math.PI*2); mctx.fill(); mctx.restore();
     }
+  }
+  const skl = skillLights(g, cam);   // v512: fire and lightning skills light up the dark around them
+  for(const L of skl){
+    mctx.save(); mctx.translate(L.x, L.y); mctx.scale(LIGHT_X, LIGHT_Y*1.1);
+    const sg = mctx.createRadialGradient(0, 0, 0, 0, 0, L.r);
+    sg.addColorStop(0, 'rgba(0,0,0,'+Math.min(1,L.a)+')'); sg.addColorStop(0.55, 'rgba(0,0,0,'+(0.6*L.a)+')'); sg.addColorStop(1, 'rgba(0,0,0,0)');
+    mctx.fillStyle = sg; mctx.beginPath(); mctx.arc(0, 0, L.r, 0, Math.PI*2); mctx.fill(); mctx.restore();
   }
   if(losPending){   // v501: fold the line-of-sight shadow into this mask (same half resolution)
     if(!tint){ losPending = false; mctx.save(); mctx.setTransform(1,0,0,1,0,0); mctx.globalCompositeOperation = 'source-over'; mctx.drawImage(losCanvas, 0, 0); mctx.restore(); }
     else flushLosPending();
   }
+  // v507: the character's own light -- a warm yellow glow on the ground, monsters and walls near you; it grows with the light radius
+  { const gk = glow==null ? 1 : glow;
+    if(gk>0.02){
+      const GR = LR*PLAYER_GLOW_FRAC;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(LIGHT_X, LIGHT_Y);
+      const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
+      gg.addColorStop(0,'rgba(255,206,116,'+(0.3*gk).toFixed(3)+')'); gg.addColorStop(0.5,'rgba(255,176,76,'+(0.16*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
+    } }
   // Composite the finished mask onto the main canvas with plain
   // source-over -- transparent (hole) pixels leave the scene beneath
   // completely untouched, opaque black pixels paint over it, exactly the
@@ -427,12 +482,22 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
   ctx.globalCompositeOperation = 'source-over';
   ctx.drawImage(darkCryptMaskCanvas, 0, 0, W, H);
   ctx.restore();
+  if(skl.length){   // coloured light of the skills on the ground and monsters
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for(const L of skl){
+      ctx.save(); ctx.translate(L.x, L.y); ctx.scale(LIGHT_X, LIGHT_Y*1.1);
+      const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, L.r*0.8);
+      gg.addColorStop(0, 'rgba('+L.c+','+(0.2*L.a).toFixed(3)+')'); gg.addColorStop(1, 'rgba('+L.c+',0)');
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, 0, L.r*0.8, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    }
+    ctx.restore();
+  }
   if(tint){   // v456 Heart of the Mountain: a flickering fiery rim around the light
     const ck = (g.clock||0), fl = 0.75 + 0.15*Math.sin(ck*7) + 0.1*Math.sin(ck*13.3);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    const rg = ctx.createRadialGradient(px, py, LR*0.55, px, py, LR*1.15);
+    ctx.translate(px, py); ctx.scale(LIGHT_X, LIGHT_Y); const rg = ctx.createRadialGradient(0, 0, LR*0.55, 0, 0, LR*1.15);
     rg.addColorStop(0, 'rgba(255,90,20,0)'); rg.addColorStop(0.55, 'rgba(255,80,20,'+(0.16*fl)+')'); rg.addColorStop(1, 'rgba(120,20,0,0)');
-    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = rg; ctx.fillRect(-W/LIGHT_X, -H/LIGHT_Y, 2*W/LIGHT_X, 2*H/LIGHT_Y);
     ctx.restore();
   }
 

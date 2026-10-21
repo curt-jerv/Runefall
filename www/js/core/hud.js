@@ -210,7 +210,7 @@ function updateHudNums(p){
   }
   if(!boss){ window.__bossBarBottom = 0; if(bar.style.display!=='none') bar.style.display = 'none'; return; }
   bar.style.display = 'block';
-  { const ts = document.getElementById('topStrip'); if(ts){ const bt = Math.round(ts.getBoundingClientRect().bottom + 4); if(bar.dataset.t!==String(bt)){ bar.dataset.t = bt; bar.style.top = bt+'px'; } } window.__bossBarBottom = bar.getBoundingClientRect().bottom; }
+  { /* v507: under the whole top HUD (region name, souls, buffs), never over it */ const ts = document.getElementById('topWrap') || document.getElementById('topStrip'); if(ts){ const bt = Math.round(ts.getBoundingClientRect().bottom + 2); if(bar.dataset.t!==String(bt)){ bar.dataset.t = bt; bar.style.top = bt+'px'; } } window.__bossBarBottom = bar.getBoundingClientRect().bottom; }
   set('bossName', boss.bossName || (boss.type==='boss' ? 'Demon Lord' : 'Guardian'));
   { const great = !!(boss.lvBoss || boss.mastodon || boss.colossus || boss.gj), nm = document.getElementById('bossName'); if(nm.classList.contains('quiet')===great) nm.classList.toggle('quiet', !great); }   // v316: gold name only for the great beasts, like the banner
   document.getElementById('bossFill').style.width = clamp(boss.hp/boss.maxHp*100,0,100)+'%';

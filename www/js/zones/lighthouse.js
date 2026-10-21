@@ -1,7 +1,7 @@
 // ---------------- Lighthouse Tower (v70) ----------------
-// Third of the 6-batch "new area" sequence, reached from Sunlit Plains'
+// Third of the 6-batch "new area" sequence, reached from Withered Crossroads'
 // own reserved west exit (SUNLIT_WEST_EXIT_SPOT/g.sun.westGate). Unlike
-// the sprawling overworld zones (Forest/Mountain Pass/Sunlit Plains) or
+// the sprawling overworld zones (Forest/Mountain Pass/Withered Crossroads) or
 // the Mine's randomly-regenerated multi-room floors, this is a small,
 // fixed-floor dungeon: 5 small, contained rectangular floors, each with
 // PERMANENT stairs (fixed position, not regenerated on re-entry, and not
@@ -10,7 +10,7 @@
 // each flight of stairs physically emerges on the SAME side of the floor
 // above that it left from below -- so a floor's ENTRANCE side always
 // matches the PREVIOUS floor's STAIRS side:
-//   Floor 1: entrance RIGHT (arriving from Sunlit Plains), stairs LEFT.
+//   Floor 1: entrance RIGHT (arriving from Withered Crossroads), stairs LEFT.
 //   Floor 2: entrance LEFT (matches floor 1's stairs), stairs RIGHT.
 //   Floor 3: entrance RIGHT (matches floor 2's stairs), stairs LEFT.
 //   Floor 4: entrance LEFT (matches floor 3's stairs), stairs RIGHT.
@@ -179,12 +179,12 @@ function makeLighthouseFloor(floor){
   if(floor===1){
     // A waypoint just inside floor 1, near the entrance -- nudged off to
     // the side and back from the entrance's own centerline, same "nudge
-    // clear of the geometry" placement rule Sunlit Plains' own waypoint uses.
+    // clear of the geometry" placement rule Withered Crossroads' own waypoint uses.
     waypoint = null;   // v489: the floor-1 waypoint is removed
   }
   // v94 (quest feature): the rooftop's own second waypoint is REMOVED --
   // floor 5 no longer has a waypoint at all. In its place, clearing the
-  // floor now spawns a one-time portal back to Sunlit Plains (see the
+  // floor now spawns a one-time portal back to Withered Crossroads (see the
   // g.scene==='lighthouse' branch in update()), and the beacon itself
   // starts off, lit only once the player interacts with it (see
   // turnOnBeacon/drawLighthouseBeaconIso's new `on` param).
@@ -244,7 +244,7 @@ function makeLighthouseMazeFloor(floor){
   return { w, h, obstacles, floor, rooftop:false, maze:true, entranceSide, entrance, stairs, waypoint, beacon:null, rooms,
     wallPal:['#6a6458','#2c2924','#48443c'] };
 }
-// Floors 1-4: a handful of Bandits/Bandit Archers (reusing Sunlit Plains'
+// Floors 1-4: a handful of Bandits/Bandit Archers (reusing Withered Crossroads'
 // exact monster types), a modest count appropriate to the small floor size
 // rather than the overworld's sprawling pack system -- just a simple fixed
 // spawnEnemy() call per enemy, same as how the Mine spreads a floor's count

@@ -128,7 +128,7 @@ function updateWraithLord(g, e, dt, target, d, isFT, chill, room){
   const go = (state, T, cd)=>{ e.wlState = state; e.wlT = T; if(cd!==undefined) e.wlCd = cd; };
   const stepTo = (tx,ty,mul)=>{ const a2 = steerAngleTo(e, tx, ty, room.obstacles), sp = e.speed*chill*(mul||1)*dt; e.x += Math.cos(a2)*sp; e.y += Math.sin(a2)*sp; e.moving = true; };
   if(st==='dormant'){
-    if(d<720 || e.hp<e.maxHp){ e.wlState = 'intro'; e.wlT = 2.4; e.invulnT = 2.4; e.guardHp = e.hp; bossMsg('THE WRAITH LORD', 'Fallen commander of Shadow Keep', 3.4); shakeScreen(g, 4, 0.6); }
+    if(d<720 || e.hp<e.maxHp){ e.wlState = 'intro'; e.wlT = 2.4; e.invulnT = 2.4; e.guardHp = e.hp; shakeScreen(g, 4, 0.6); }
     return;
   }
   if(st==='intro'){ e.wlT -= dt; face(toT()); if(e.wlAlpha!=null && e.wlAlpha<1) e.wlAlpha = clamp((2.6-e.wlT)/1.5, 0, 1); if(e.wlT<=0){ e.wlState = 'idle'; e.wlCd = 1.2; e.wlAlpha = 1; } return; }

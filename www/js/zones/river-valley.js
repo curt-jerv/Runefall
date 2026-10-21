@@ -1,7 +1,7 @@
 // ---------------- River Valley (v233) ----------------
-// New early-game region between the Dark Forest and the Sunlit Plains. A river born at a waterfall
+// New early-game region between the Dark Forest and the Withered Crossroads. A river born at a waterfall
 // under the west cliffs flows east across the middle of the map, widening into the plains. The road
-// runs from the Forest (north gate) south across an old plank bridge into the Sunlit Plains (south
+// runs from the Forest (north gate) south across an old plank bridge into the Withered Crossroads (south
 // gate). Bandits hold the bridge (clear the camp = "Clear the Old Bridge"). Forest thins to meadow
 // from north to south. The Minotaur Cave is tucked into the north-east corner.
 const RV_W = 4400, RV_H = 3600, RV_CY = 1800, RV_BX = 2200;
@@ -175,7 +175,7 @@ function spawnRiverValleyPack(g, anchor){
 // ---- The Old Bridge quest ----
 const QUEST_BRIDGE = {
   id:'river_bridge', name:'Clear the Old Bridge',
-  desc:"Bandits have seized the old bridge in the River Valley, south of the Dark Forest -- the only road to the Sunlit Plains. Clear out their camp.",
+  desc:"Bandits have seized the old bridge in the River Valley, south of the Dark Forest -- the only road to the Withered Crossroads. Clear out their camp.",
   descDone:"The bandits are driven off and the old bridge is open again. Return to the Old Man for your reward.",
   total:RV_CAMP_TOTAL,
 };
@@ -204,7 +204,7 @@ function completeBridgeQuest(q){
   updateQuestBadge(); saveGame();
 }
 // v239: turn-in at the Old Man: a Health Potion + XP that grows the further below the River Valley's
-// level band (top = level 7) you are, so an under-levelled character can catch up before Sunlit Plains.
+// level band (top = level 7) you are, so an under-levelled character can catch up before Withered Crossroads.
 function grantBridgeReward(p, q){
   const bi = classRewardItem(p, Math.max(p.level||1, 6), 'magic');
   if(!giveRewardIfRoom(p, [bi])) return;   // v493: the Old Man offers it again once there is room

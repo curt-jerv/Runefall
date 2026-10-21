@@ -47,7 +47,7 @@ window.__test = { spawnSquid, spawnEel, classResistRewardItem, makeSkillTomeItem
   // (bigger zone, ~10x monster count, repositioned cave entrances, Treant).
   makeForest, FOREST_W, FOREST_H, FOREST_PACK_ANCHOR_TARGET,
   FOREST_PACK_TEMPLATES, forestPackSize, drawTreantIso,
-  // v69 batch: exposed for regression testing of the new Sunlit Plains
+  // v69 batch: exposed for regression testing of the new Withered Crossroads
   // zone (Dark Forest's new north exit, the "+"-shaped crossroad, its
   // waypoint/teleport wiring, and the Bandit/Bandit Archer/Wild Boar
   // enemies -- including the boar's long-range charge + knockback).
@@ -61,7 +61,7 @@ window.__test = { spawnSquid, spawnEel, classResistRewardItem, makeSkillTomeItem
   // test hooks (headless bots): drive the joystick and buttons
   setJoy:(x,y)=>{ joyVec={x,y}; }, press:(k)=>{ if(k==='attack') wantAttack=true; else if(k==='dodge') wantDodge=true; else if(k==='slot1') triggerSkillSlot('slot1'); else if(k==='slot2') triggerSkillSlot('slot2'); else if(k==='slot3') triggerSkillSlot('slot3'); else if(k==='potion') usePotionSlot(); },
   // v70 batch: exposed for regression testing of Lighthouse Tower (the
-  // Sunlit Plains west gate, the 5 fixed ascending floors with permanent
+  // Withered Crossroads west gate, the 5 fixed ascending floors with permanent
   // alternating-side stairs, its two waypoints, the Bandit Brute enemy,
   // and the rooftop beacon/chest).
   makeLighthouseFloor, enterLighthouseTower, lighthouseAscend,
@@ -70,7 +70,7 @@ window.__test = { spawnSquid, spawnEel, classResistRewardItem, makeSkillTomeItem
   LIGHTHOUSE_ROOFTOP_W, LIGHTHOUSE_ROOFTOP_H,
   drawLighthouseBeaconIso, drawLighthouseDoorIso,
   // v71 batch: exposed for regression testing of Lakeside Ruins (the
-  // Sunlit Plains east gate, the water/bridge/island collision geometry,
+  // Withered Crossroads east gate, the water/bridge/island collision geometry,
   // the new Skeleton/Leviathan enemy types, and the island Stonehenge).
   makeLakesideRuins, enterLakesideRuins, spawnLakesidePack, makeBlackMarsh, enterBlackMarsh, BM_W, BM_H, bmRiverY, bmWaterAt, drawRegionDarkening,
   LAKE_W, LAKE_H, LAKE_CX, LAKE_CY, LAKE_ROAD_HALFW,
@@ -78,7 +78,7 @@ window.__test = { spawnSquid, spawnEel, classResistRewardItem, makeSkillTomeItem
   LAKE_PACK_ANCHOR_TARGET, LAKE_PACK_COUNT, LAKE_LEVIATHAN_COUNT,
   lakeOnRoad, lakeOnIsland, drawLakesideStoneIso, drawRuinsGateIso,
   // v72 batch: exposed for regression testing of Cursed Cemetery (the
-  // Sunlit Plains south gate, the half-area zone sizing, the Skeleton/
+  // Withered Crossroads south gate, the half-area zone sizing, the Skeleton/
   // Zombie Skeleton Archer/Spider/Skeletal Brute spawn pool, the dead
   // tree/grave scatter, the zone-clear -> tomb-unlock trigger, and the
   // Dark Crypt stub it leads to).
@@ -215,7 +215,7 @@ window.__test = { spawnSquid, spawnEel, classResistRewardItem, makeSkillTomeItem
   renderQuestLog, QUEST_FIND_HUNTERS,
   HUNTER_ARMOR_CATEGORIES, addToBag, findBagSpot, itemShape, genBardShopStock, genGamblerStock, genShopStock, refreshBarStock, usePotion, makePotionItem, tickBuffs,
   // v87 batch: exposed for regression testing of the sunGate relocation
-  // (Forest's north edge -> south edge, to connect to Sunlit Plains'
+  // (Forest's north edge -> south edge, to connect to Withered Crossroads'
   // unchanged north-edge forestGate) and the 3 new findable-from-a-
   // distance landmark totems (drawSpiderTotemIso/drawBearTotemIso/
   // drawSunTotemIso) added at each Forest gate.
@@ -225,7 +225,7 @@ window.__test = { spawnSquid, spawnEel, classResistRewardItem, makeSkillTomeItem
   // monster-level scaling (v90: renamed effectiveDepth->zoneMonsterLevel/
   // ZONE_DEPTH_LEVEL_K->MONSTER_LEVEL_STEP_K, identical formula/output --
   // see the v90 comment block above zoneMonsterLevel's definition),
-  // applied to Dark Forest/Sunlit Plains/Mountain Pass/Lakeside Ruins/
+  // applied to Dark Forest/Withered Crossroads/Mountain Pass/Lakeside Ruins/
   // Cursed Cemetery/Spider Lair/Bear Cave/Dark Crypt -- Abandoned Mine and
   // Lighthouse Tower are untouched) and the item modifier-value formula
   // rework (baseStatAtLevel/ITEM_TIER_ROLL_RANGE, plugged into the
@@ -239,7 +239,7 @@ window.__test = { spawnSquid, spawnEel, classResistRewardItem, makeSkillTomeItem
   ITEM_BASE_STAT_A, ITEM_BASE_STAT_B,
   // Sept 2026 patch: exposed for regression testing of the Town Guard
   // NPCs (stationary Bandit-Archer-skinned defenders flanking the Forest's
-  // townGate), the Dark Forest/Sunlit Plains Region Map schematics, and
+  // townGate), the Dark Forest/Withered Crossroads Region Map schematics, and
   // the doubled Hunter Wolf/Bear/Templar Squire base HP.
   makeTownGuards, updateTownGuards, GUARD_ATTACK_RANGE, GUARD_ATK_CD_MAX,
   GUARD_DMG, GUARD_ARROW_SPEED, GUARD_FLANK_OFFSET,

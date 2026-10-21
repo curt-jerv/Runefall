@@ -431,7 +431,7 @@ function enterIcyZone(kind, from, opts){
   updateInteractPrompt(null);
 }
 
-// Sunlit Plains (v69) sits off the Dark Forest's new north exit -- an
+// Withered Crossroads (v69) sits off the Dark Forest's new north exit -- an
 // open, sparse grassland zone, structurally a sibling of the Forest/
 // Mountain Pass (standing population, no genRoom() floors). Its own
 // permanent waypoint sits at the crossroad center; the south/west/east
@@ -475,7 +475,7 @@ function enterSunlitPlains(from){
     g.player.x = g.sun.forestGate.x; g.player.y = g.sun.forestGate.y + 120;
   }
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null;
-  showMsg('Sunlit Plains', 1.4);
+  showMsg('Withered Crossroads', 1.4);
   // Same pack-anchor/pool-density approach as the Dark Forest's own
   // post-v68 population (see SUNLIT_PACK_ANCHOR_TARGET/SUNLIT_PACK_COUNT).
   const anchors = shuffle(breatheAnchors(g.sun.packAnchors, {gap:400}));

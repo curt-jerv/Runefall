@@ -1,4 +1,4 @@
-// ---------------- Sunlit Plains (v69) ----------------
+// ---------------- Withered Crossroads (v69) ----------------
 // Second of the 6-batch "new area off the Dark Forest" sequence -- an open,
 // sparse grassland reached via the Forest's new sunGate (top-middle exit,
 // using the strip the v68 batch deliberately kept clear for this). Same

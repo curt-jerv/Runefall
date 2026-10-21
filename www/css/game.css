@@ -349,7 +349,6 @@
   #btnStance{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#7a8a5a,#3a4a2a); color:#eef4e2; display:none; }
   #btnRally{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#e6c86a,#6a5218); color:#2a1e08; display:none; }
   #btnTrap{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#8a9a5a,#3a4018); color:#eef4e2; display:none; }
-  #btnPoisonKnives{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#8fe06a,#284018); color:#eef4e2; display:none; }
   #btnShadowStep{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#b48ce8,#3a2258); color:#f4ecff; display:none; }
   #btnVanish{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#8a7ad0,#241a3a); color:#f0ecff; display:none; }
   #btnRapidShot{ width:60px; height:60px; background:radial-gradient(circle at 35% 30%,#e8c44a,#6a4a18); color:#2a1e08; display:none; }
@@ -1298,21 +1297,21 @@
 #topWrap #buffBar{ justify-content:center; padding:4px 12px 0 !important; }
 #achToast{ top:calc(8px + env(safe-area-inset-top,0px)) !important; }
 
-/* Action buttons (v497): Strike 84px in the corner; the three skills sit 12px off it; Dodge, Potion and Interact sit one 12px
+/* Action buttons (v497): Strike 92px in the corner; the three skills sit 12px off it; Dodge, Potion and Interact sit one 12px
    gap beyond the skills: Dodge past skill 1 on the bottom row, Potion above skill 3, Interact outside skill 2 on the diagonal. */
 #actionCluster::before{ content:''; position:absolute; right:-133px; bottom:-133px; width:340px; height:340px; border-radius:50%; pointer-events:none;
   background:radial-gradient(circle, rgba(0,0,0,.3) 0, rgba(0,0,0,.16) 45%, rgba(0,0,0,0) 70%); }
-#actionCluster #btnAttack{ right:0 !important; bottom:0 !important; width:84px !important; height:84px !important; }
+#actionCluster #btnAttack{ right:0 !important; bottom:0 !important; width:92px !important; height:92px !important; }
 #actionCluster #btnAttack .slotIcon{ inset:14px; }
-#actionCluster .actbtn.skillSlotBtn{ width:48px !important; height:48px !important; }
-#actionCluster #btnSlot1{ right:96px !important; bottom:18px !important; }
-#actionCluster #btnSlot2{ right:73px !important; bottom:73px !important; }
-#actionCluster #btnSlot3{ right:18px !important; bottom:96px !important; }
-#actionCluster #btnDodge{ right:156px !important; bottom:20px !important; width:44px !important; height:44px !important; }
+#actionCluster .actbtn.skillSlotBtn{ width:54px !important; height:54px !important; }
+#actionCluster #btnSlot1{ right:104px !important; bottom:19px !important; }
+#actionCluster #btnSlot2{ right:79px !important; bottom:79px !important; }
+#actionCluster #btnSlot3{ right:19px !important; bottom:104px !important; }
+#actionCluster #btnDodge{ right:170px !important; bottom:22px !important; width:49px !important; height:49px !important; }
 #actionCluster #btnDodge .lbl{ font-size:8px !important; }
-#actionCluster #btnPotion{ right:20px !important; bottom:156px !important; width:44px !important; height:44px !important; }
-#actionCluster .interactBtn{ right:116px !important; bottom:116px !important; width:44px !important; height:44px !important; }
-body.noPotionBtn #actionCluster .interactBtn{ right:116px !important; bottom:116px !important; }
+#actionCluster #btnPotion{ right:22px !important; bottom:170px !important; width:49px !important; height:49px !important; }
+#actionCluster .interactBtn{ right:127px !important; bottom:127px !important; width:49px !important; height:49px !important; }
+body.noPotionBtn #actionCluster .interactBtn{ right:127px !important; bottom:127px !important; }
 
 /* Portrait: the globes and menu bar sit along the top; region name, buffs and messages line up underneath */
 @media (orientation:portrait){
@@ -1322,9 +1321,8 @@ body.noPotionBtn #actionCluster .interactBtn{ right:116px !important; bottom:116
   #dockMid{ padding:3px 0 0 !important; }
   #topWrap{ top:calc(70px + env(safe-area-inset-top,0px)) !important; }
   #subHud{ padding-top:0 !important; }
-  #bossBar{ top:calc(124px + env(safe-area-inset-top,0px)) !important; }
-  #msg{ top:calc(152px + env(safe-area-inset-top,0px)) !important; }
-  #bigMsg{ top:calc(148px + env(safe-area-inset-top,0px)) !important; }
   #achToast{ top:calc(118px + env(safe-area-inset-top,0px)) !important; }
   #joyzone{ bottom:0 !important; }
+  #bigMsg{ white-space:normal !important; width:max-content; max-width:94vw; }   /* v507: long boss names wrap instead of running off the screen */
+  #bigMsg .bmTitle{ white-space:normal !important; letter-spacing:.12em !important; }
 }

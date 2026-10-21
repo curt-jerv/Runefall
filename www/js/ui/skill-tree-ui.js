@@ -107,7 +107,6 @@ function skillAvgDamage(id, rank, p){
     case 'nova': v = (W*dmgK(16,1.6,0.6)) * NOVA_DMG_MULT * mult; break;
     case 'blizzard': v = (W*dmgK(24,2.2,0.6)) * mult * gen * BLIZZARD_TICK_MULT * HEAVY_SPELL_MULT; unit = 'per tick, every '+BLIZZARD_TICK+'s'; break;
     case 'pyroTorrent': v = (W*dmgK(9,1.3,0.4)) * mult * gen * PYRO_TORRENT_TICK_MULT * (1+PYRO_TORRENT_RAMP*0.5) * HEAVY_SPELL_MULT / PYRO_TORRENT_TICK_INTERVAL; unit = 'per second'; break;
-    case 'poisonKnives': v = (W*dmgK(11,1.7,0.6)) * mult; break;
     case 'shieldBash': v = (W*dmgK(12,2.2,1)) * mult * critX; break;
     case 'soulFire': v = soulFireDmg(p, rank); unit = 'to each enemy'; break;
     case 'plague': v = (W*dmgK(10,1.2,0)) * mult * PLAGUE_DMG_BUFF; unit = 'poison per tick'; break;
@@ -329,7 +328,7 @@ const RV268_TEXT = {
   soulFire:(r)=> r===0 ? 'Active: burst your souls outward, damaging and slowing every enemy around you. Costs '+SOULFIRE_SOUL_COST+' souls, or '+SOULFIRE_MANA_COST+' mana if you hold fewer. Each rank adds damage.' : 'Damage ~'+Math.round(soulFireDmg(game&&game.player?game.player:{level:1},r))+' &middot; Radius '+SOULFIRE_RADIUS+' &middot; Slows '+fmtNum(SOULFIRE_CHILL)+'s &middot; Cooldown '+SOULFIRE_CD+'s &middot; Costs '+SOULFIRE_SOUL_COST+' souls, or '+SOULFIRE_MANA_COST+' mana',
   fear:(r)=> r===0 ? 'Active: make every enemy around you flee in terror, and they take extra damage while afraid. Costs mana.' : 'Fear duration: '+fmtNum(fearDuration(r))+'s &middot; Feared enemies take +'+fmtNum(fearVulnPct(r))+'% damage &middot; Radius '+FEAR_RADIUS+' &middot; Cooldown '+fmtNum(fearCooldown(r))+'s &middot; Costs '+FEAR_SOUL_COST+' souls',
   sacrifice:(r)=> r===0 ? 'Passive: when one of your skeletons dies it bursts in poison, burning up to '+(1+Math.floor(1/2))+' soul(s) for a bigger blast. The poison is applied to whoever the burst hits, and nothing is left on the ground.' : 'Burst dmg ~'+Math.round((SACRIFICE_BASE_DMG)*skillMult(r))+' (+50% per soul burned, up to '+(1+Math.floor(r/2))+' souls) &middot; Radius '+SACRIFICE_RADIUS+' &middot; Poisons what it hits',
-  demonBind:(r)=> r===0 ? 'Passive: collecting '+DEMON_BIND_SOUL_THRESHOLD+' souls binds a demon that leeches life. It grows 5% and hits 10% harder for every 10 souls you hold. Its leech heals you and itself.' : 'Summons at '+DEMON_BIND_SOUL_THRESHOLD+' souls &middot; Life leech '+Math.round(necroDemonLeechPct(r)*100)+'% &middot; +5% size and +10% damage per 10 souls held &middot; Leeches life to you and itself'+(r>=BASE_MAX_RANK ? ' &middot; +10% damage at max rank' : ''),
+  demonBind:(r)=> r===0 ? 'Passive: collecting '+DEMON_BIND_SOUL_THRESHOLD+' souls binds a demon that leeches life. It grows 4% and hits 10% harder for every 10 souls you hold. Its leech heals you and itself.' : 'Summons at '+DEMON_BIND_SOUL_THRESHOLD+' souls &middot; Life leech '+Math.round(necroDemonLeechPct(r)*100)+'% &middot; +5% size and +10% damage per 10 souls held &middot; Leeches life to you and itself'+(r>=BASE_MAX_RANK ? ' &middot; +10% damage at max rank' : ''),
   plague:(r)=> r===0 ? 'Capstone (requires Sacrifice OR Demon Bind). Corrupt the ground with a large poison zone for '+fmtNum(PLAGUE_DUR_BASE)+'s. Costs mana, no souls. Cooldown starts when it ends.' : 'Tick dmg ~'+Math.round(10*skillMult(r)*PLAGUE_DMG_BUFF)+' (every '+PLAGUE_TICK_INTERVAL+'s, base, scales with level) &middot; Radius '+PLAGUE_RADIUS+' &middot; Duration '+fmtNum(PLAGUE_DUR_BASE)+'s &middot; Cooldown '+PLAGUE_CD+'s',
 };
 const _pc = (v)=>Math.round(v*100)+'%';
@@ -399,8 +398,8 @@ const V489_TEXT = {
     : necroSkeletonCount(r)+' skeletons &middot; Damage and life +'+Math.round((hunterFollowerStatMult(r)-1)*100)+'% from rank &middot; Up to +'+Math.round(NECRO_SKEL_SOUL_DMG*100)+'% damage from souls held &middot; A fallen one rises after 3s for 1 soul &middot; Recast: explode and re-raise &middot; '+RAISE_DEAD_MANA_PER_SKEL+' mana per skeleton &middot; Cooldown '+RAISE_DEAD_CD+'s',
   sacrifice:(r)=> r===0 ? 'Passive: when one of your skeletons dies (or you recast Raise Skeletons) it bursts in poison. The blast deals '+Math.round(sacrificeLifePct(1)*100)+'% of the skeleton\'s max life ('+Math.round(sacrificeLifePct(10)*100)+'% at rank 10) and poisons what it hits. Costs no souls.' : 'Blast: '+Math.round(sacrificeLifePct(r)*100)+'% of the skeleton\'s max life as poison &middot; Radius '+SACRIFICE_RADIUS+' &middot; Poisons what it hits &middot; No souls',
   fear:(r)=> r===0 ? 'Active: curse the biggest group of enemies in range. They flee in terror (bosses stand their ground) and take +'+Math.round(fearVulnPct(1))+'% damage ('+Math.round(fearVulnPct(10))+'% at rank 10) while cursed; a purple mark floats over them.' : 'Flee '+fmtNum(fearDuration(r))+'s &middot; +'+Math.round(fearVulnPct(r))+'% damage taken for '+fmtNum(fearDuration(r)+FEAR_VULN_EXTRA)+'s (bosses too) &middot; Radius '+FEAR_RADIUS+' &middot; Cooldown '+fmtNum(fearCooldown(r))+'s',
-  soulFire:(r)=> r===0 ? 'Active: hurl a big, slow, rolling ball of green soul-flame. It bursts on the first enemy it reaches, hitting everything around for half physical, half poison damage. Costs '+SOULFIRE_SOUL_COST+' souls and '+SOULFIRE_MANA_COST+' mana, '+SOULFIRE_CD+'s cooldown.' : 'Burst radius '+SOULFIRE_RADIUS+' &middot; Half physical, half poison &middot; More damage with souls held (Soul Hunger) &middot; Cooldown '+SOULFIRE_CD+'s &middot; Costs '+SOULFIRE_SOUL_COST+' souls + '+SOULFIRE_MANA_COST+' mana',
-  demonBind:(r)=> r===0 ? 'Passive: collecting '+DEMON_BIND_SOUL_THRESHOLD+' souls binds a hulking demon to your service. Its damage and life grow with this skill\'s rank, and it hits 10% harder (and grows 5%) for every 10 souls you hold. It leeches life with every hit, healing you and itself.' : 'Damage and life +'+Math.round((hunterFollowerStatMult(r)-1)*100)+'% from rank &middot; +10% damage per 10 souls held (up to +'+Math.round(DEMON_DMG_PER_10*SOUL_CAP/10*100)+'%) &middot; Life leech '+Math.round(necroDemonLeechPct(r)*100)+'% (heals you and the demon)'+(r>=BASE_MAX_RANK ? ' &middot; +10% damage at max rank' : ''),
+  soulFire:(r)=> r===0 ? 'Active: hurl a big, slow, rolling ball of green soul-flame. It bursts on the first enemy it reaches, hitting everything around for half physical, half poison damage. Costs '+SOULFIRE_COST_TXT+' souls (20% more damage at 20) and '+SOULFIRE_MANA_COST+' mana, '+SOULFIRE_CD+'s cooldown.' : 'Burst radius '+SOULFIRE_RADIUS+' &middot; Half physical, half poison &middot; More damage with souls held (Soul Hunger) &middot; Cooldown '+SOULFIRE_CD+'s &middot; Costs '+SOULFIRE_COST_TXT+' souls (+20% damage at 20) + '+SOULFIRE_MANA_COST+' mana',
+  demonBind:(r)=> r===0 ? 'Passive: collecting '+DEMON_BIND_SOUL_THRESHOLD+' souls binds a hulking demon to your service. Its damage and life grow with this skill\'s rank, and it hits 10% harder (and grows 4%) for every 10 souls you hold. It leeches life with every hit, healing you and itself.' : 'Damage and life +'+Math.round((hunterFollowerStatMult(r)-1)*100)+'% from rank &middot; +10% damage per 10 souls held (up to +'+Math.round(DEMON_DMG_PER_10*SOUL_CAP/10*100)+'%) &middot; Life leech '+Math.round(necroDemonLeechPct(r)*100)+'% (heals you and the demon)'+(r>=BASE_MAX_RANK ? ' &middot; +10% damage at max rank' : ''),
   plague:(r)=> r===0 ? 'Capstone (requires Demon Bind). Corrupt the ground with a large poison zone for '+fmtNum(PLAGUE_DUR_BASE)+'s. Costs mana, no souls. Cooldown starts when it ends.' : 'Radius '+PLAGUE_RADIUS+' &middot; Duration '+fmtNum(PLAGUE_DUR_BASE)+'s &middot; Cooldown '+PLAGUE_CD+'s (after it ends)',
 };
 function nodeEffectTextBase(node, rank){
@@ -557,11 +556,6 @@ function nodeEffectTextBase(node, rank){
     if(rank===0) return 'New DRESS button: stand still to regenerate health; moving cancels it. Fixed 2 minute cooldown at every rank.';
     const pct = Math.round(fieldDressRegenRate(rank)*100);
     return 'Regen '+pct+'%/s of max HP while channeling &middot; cancels on movement or at full HP &middot; Cooldown '+FIELD_DRESS_CD+'s (fixed, does not shrink with rank)';
-  }
-  if(node.id==='poisonKnives'){
-    if(rank===0) return 'New KNIVES button: throw a fan of 3 poisoned knives.';
-    const cd = poisonKnifeCooldown(rank);
-    return 'Dmg +'+Math.round((mult-1)*100)+'% &middot; Poison '+Math.round(POISON_DOT_PCT*100)+'%/s for '+POISON_DOT_DUR+'s &middot; Cooldown '+fmtNum(cd)+'s';
   }
   if(node.id==='sap'){
     if(rank===0) return 'Passive: bonus damage while you\'re at full health.';
@@ -744,7 +738,6 @@ function updateSkillButtonsVisibility(){
   document.getElementById('btnStance').style.display = 'none';   // v206: Commander's stance switch lives on a skill slot only
   document.getElementById('btnRally').style.display = 'none';
   document.getElementById('btnTrap').style.display = 'none';
-  document.getElementById('btnPoisonKnives').style.display = 'none';
   document.getElementById('btnShadowStep').style.display = 'none';
   document.getElementById('btnVanish').style.display = 'none';
   document.getElementById('btnRapidShot').style.display = 'none';

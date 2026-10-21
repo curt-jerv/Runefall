@@ -138,6 +138,7 @@ function syncGraphicsUI(){
   const v = settings.atmos===false ? 'off' : (settings.atmos==='low' ? 'low' : 'high');
   document.querySelectorAll('#atmosSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
   setToggleUI(document.getElementById('toggleGrain'), settings.grain!==false);
+  { const o = settings.orient || 'auto'; document.querySelectorAll('#orientSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===o)); }
 }
 document.getElementById('settingsGraphicsBtn').addEventListener('click', ()=>{ syncGraphicsUI(); settingsOverlay.style.display='none'; graphicsOverlay.style.display='flex'; });
 document.getElementById('graphicsClose').addEventListener('click', ()=>{ graphicsOverlay.style.display='none'; settingsOverlay.style.display='flex'; });

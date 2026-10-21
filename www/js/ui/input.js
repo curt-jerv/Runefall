@@ -85,7 +85,7 @@ window.addEventListener('mousemove',e=>{ if(aimMouse) aimMove(e.clientX,e.client
 window.addEventListener('mouseup',()=>{ if(aimMouse){ aimMouse=false; aimEnd(); } });
 
 // ---------- Input: buttons ----------
-let wantStormcall=false, wantRaiseDead=false, wantMeteor=false, wantAttack=false, wantDodge=false, wantShieldBash=false, wantThrow=false, wantGuardian=false, wantWhirlwind=false, wantBattlecry=false, wantAssault=false, wantStance=false, wantRally=false, wantTrap=false, wantPoisonKnives=false, wantVanish=false, wantShadowStep=false, wantRapidShot=false, wantCripplingShot=false, wantStunShot=false, wantPackTactics=false, wantFieldDress=false, wantNova=false, wantTornado=false, wantStorm=false, wantHurricane=false, wantFireball=false, wantIceBolt=false, wantIceArmor=false, wantPyroTorrent=false, wantBlizzard=false, wantImmolate=false, wantFlameVortex=false, wantPermafrost=false, wantFear=false, wantPlague=false,
+let wantStormcall=false, wantRaiseDead=false, wantMeteor=false, wantAttack=false, wantDodge=false, wantShieldBash=false, wantThrow=false, wantGuardian=false, wantWhirlwind=false, wantBattlecry=false, wantAssault=false, wantStance=false, wantRally=false, wantTrap=false, wantVanish=false, wantShadowStep=false, wantRapidShot=false, wantCripplingShot=false, wantStunShot=false, wantPackTactics=false, wantFieldDress=false, wantNova=false, wantTornado=false, wantStorm=false, wantHurricane=false, wantFireball=false, wantIceBolt=false, wantIceArmor=false, wantPyroTorrent=false, wantBlizzard=false, wantImmolate=false, wantFlameVortex=false, wantPermafrost=false, wantFear=false, wantPlague=false,
   // v79 batch: Survivalist tree (Ranger's reworked/renamed Assassin tree)
   // + Marksman's new Rain of Arrows capstone -- see ACTIVE_SKILL_REGISTRY
   // for how each of these gets triggered (either a legacy button's
@@ -170,7 +170,7 @@ bindBtn(document.getElementById('btnRapidShot'), ()=>wantRapidShot=true);
 // Dodge is exempt from combatActionsBlocked() above -- every other active
 // skill (and the basic Strike attack) is disabled in Town, but Dodge is
 // the one skill that keeps working everywhere, Town included: normal dash
-// physics in Dark Forest/Sunlit Plains/Mountain Pass/dungeon floors via
+// physics in Dark Forest/Withered Crossroads/Mountain Pass/dungeon floors via
 // the main combat update() (with the v91 sub-stepped anti-tunneling dash
 // collision), and via updateTown()'s own mirrored dodge block while in
 // Town. No "I cannot do that here" gate belongs on this button.
@@ -270,7 +270,6 @@ bindBtn(document.getElementById('btnAssault'), ()=>wantAssault=true);
 bindBtn(document.getElementById('btnStance'), ()=>wantStance=true);
 bindBtn(document.getElementById('btnRally'), ()=>wantRally=true);
 bindBtn(document.getElementById('btnTrap'), ()=>wantTrap=true);
-bindBtn(document.getElementById('btnPoisonKnives'), ()=>wantPoisonKnives=true);
 bindBtn(document.getElementById('btnShadowStep'), ()=>wantShadowStep=true);
 bindBtn(document.getElementById('btnVanish'), ()=>wantVanish=true);
 bindBtn(document.getElementById('btnCripplingShot'), ()=>wantCripplingShot=true);

@@ -163,7 +163,9 @@ const MUS_BANK = {"tavern":"audio/music/tavern.ogg","town":"audio/music/town.ogg
 Object.assign(MUS_BANK, {"d2world":"audio/music/d2world.ogg", "d2dungeon":"audio/music/d2dungeon.ogg", "d2boss":"audio/music/d2boss.ogg"});
 // v480: the towers and high halls get their own theme (Lighthouse, Forgotten and Frosthold towers, the Redridge watchtowers, Highward, the Shadow Keep halls)
 Object.assign(MUS_BANK, {"d2tower":"audio/music/d2tower.ogg"});
-const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, d2boss:0.5, d2tower:0.24 }, MUS_LEN = { d2tower:3528000/44100, tavern:1411200/44100, town:2275056/44100, d2world:3848727/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
+// v507: the Wraith Lord's fight in the Demon Hold has its own recorded theme
+Object.assign(MUS_BANK, {"wraithlord":"audio/music/wraithlord.ogg"});
+const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, d2boss:0.5, d2tower:0.24, wraithlord:0.66 }, MUS_LEN = { d2tower:3528000/44100, tavern:1411200/44100, town:2275056/44100, d2world:3848727/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
 AUD.mus = {};
 function musLoopMood(name){
   return { stepDur:1, step(){}, start(bus){
@@ -250,7 +252,7 @@ function audNear(x, y){ const d = Math.hypot(x-AUD.pos.x, y-AUD.pos.y); return d
 // ---------- skill -> sound mapping ----------
 const SKILL_SND = {
   strike:'swing', reave:'swing', shieldBash:'bash', shieldThrow:'clang', guardian:'summon', whirlwind:'spin', battlecry:'shout', leap:'thud', smite:'holy', vengeance:'holy', banner:'shout',
-  consecrate:'holy', judgment:'holy', bulwark:'clang', mirrorSteel:'clang', seismicSlam:'thud', seismicAnchor:'thud', bloodrage:'shout', assault:'swing', commander:'shout', rally:'shout', poisonKnives:'knife', shadowStep:'whoosh', vanish:'smoke',
+  consecrate:'holy', judgment:'holy', bulwark:'clang', mirrorSteel:'clang', seismicSlam:'thud', seismicAnchor:'thud', bloodrage:'shout', assault:'swing', commander:'shout', rally:'shout', shadowStep:'whoosh', vanish:'smoke',
   rapidShot:'bow', splinterShot:'bow', multiShot:'bow', explosiveShot:'bowHeavy', cripplingShot:'bow', stunShot:'bow', aimedShot:'bowHeavy', rainOfArrows:'bowHeavy', packTactics:'howl', beastFury:'howl', huntersMark:'mark', poisonTrap:'trap', frostTrap:'trap', explosiveTrap:'trap',
   fieldDress:'heal', survivalFieldDress:'heal', recall:'portal',
   nova:'arcane', tornado:'wind', hurricane:'wind', fireball:'fire', iceBolt:'ice', iceArmor:'ice', pyroTorrent:'fire', meteor:'fire', stormcall:'bolt', raiseDead:'summon', blizzard:'ice', immolate:'fire', flameVortex:'fire', permafrost:'ice',

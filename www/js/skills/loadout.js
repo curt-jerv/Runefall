@@ -54,7 +54,6 @@ const ACTIVE_SKILL_REGISTRY = {
   assault:       { oldBtnId:'btnAssault',      trigger(){ wantAssault=true; },       getCd(p){ return {cur:p.assaultCd, max:p.assaultCdMax}; } },
   commander:     { oldBtnId:'btnStance',       trigger(){ wantStance=true; },        getCd(p){ return {cur:p.stanceCd||0, max:0.5}; } },
   rally:         { oldBtnId:'btnRally',        trigger(){ wantRally=true; },         getCd(p){ return {cur:p.rallyCd, max:p.rallyCdMax}; } },
-  poisonKnives:  { oldBtnId:'btnPoisonKnives', trigger(){ wantPoisonKnives=true; },  getCd(p){ return {cur:p.poisonKnivesCd, max:p.poisonKnivesCdMax}; } },
   shadowStep:    { oldBtnId:'btnShadowStep',   trigger(){ wantShadowStep=true; },    getCd(p){ return {cur:p.shadowStepCd, max:p.shadowStepCdMax}; } },
   vanish:        { oldBtnId:'btnVanish',       trigger(){ wantVanish=true; },        getCd(p){ return {cur:p.vanishCd, max:p.vanishCdMax}; } },
   rapidShot:     { oldBtnId:'btnRapidShot',    trigger(){ wantRapidShot=true; },     getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },   // v489: a basic shot now
