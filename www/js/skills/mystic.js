@@ -431,17 +431,17 @@ function soulShieldFrac(rank){ return 0.40 + 0.05*(Math.max(1,rank)-1); }
 // each soul adds a slice of an equal-level enemy's attack rating. 50 souls ~ +25% of AR at rank 1 (about 15% fewer hits land, less with good gear).
 function soulShieldPerSoul(rank){ return rank>0 ? 0.005*(1+0.12*(Math.max(1,rank)-1)) : 0; }
 function soulShieldDefense(p){ return 0; const r = (p && p.skills && effectiveRank(p,'soulShield'))||0; return r>0 ? enemyAttackRating(p.level)*soulShieldPerSoul(r)*Math.min(SOUL_CAP,p.souls||0) : 0; }
-const SOULGATE_COST = 6, SOULGATE_CD = 20, SOULGATE_ARCHER_LIFE = 6, SOULGATE_ARCHER_CAP = 8, SOULGATE_ARCHER_BASE_DMG = 7;
+const SOULGATE_COST = 4, SOULGATE_CD = 20, SOULGATE_ARCHER_LIFE = 6, SOULGATE_ARCHER_CAP = 8, SOULGATE_ARCHER_BASE_DMG = 7;
 function soulGateDrain(rank){ return 2 - 0.2*(Math.max(1,rank)-1); }
 // v319: the gate now stays open a SET time and souls are paid per archer actually released (no archer out = no soul spent)
-const SOULGATE_DUR_BASE = 8, SOULGATE_DUR_STEP = 1, SOULGATE_SOULS_PER_ARCHER = 2;
+const SOULGATE_DUR_BASE = 8, SOULGATE_DUR_STEP = 1, SOULGATE_SOULS_PER_ARCHER = 4;   // v495: 4 souls per archer
 function soulGateCooldown(rank){ return Math.max(10, SOULGATE_CD - 2*(Math.min(Math.max(1,rank),8)-1)); }   // v320: 20s at rank 1, -2s per rank, floor 10s
 function soulGateDuration(rank){ return SOULGATE_DUR_BASE + SOULGATE_DUR_STEP*(Math.min(Math.max(1,rank),8)-1); }
 function soulGateInterval(rank){ return 1.0 - 0.1*(Math.max(1,rank)-1); }
 const FEAR_SOUL_COST = 0;   // v411: Fear costs mana only again
 // v419: Soul Nova -- a flat 10 souls, or 20 mana when you hold fewer; damage grows with rank
 // v489 Soul Fire (replaces Soul Nova): 5 souls + 20 mana, a big slow rolling ball of green soul-flame that bursts on impact (half physical, half poison)
-const SOULFIRE_SOUL_COST = 5, SOULFIRE_MANA_COST = 20, SOULFIRE_CD = 6, SOULFIRE_RADIUS = 105, SOULFIRE_SPEED = 170, SOULFIRE_LIFE = 3.2, SOULFIRE_R = 15;
+const SOULFIRE_SOUL_COST = 20, SOULFIRE_MANA_COST = 20, SOULFIRE_CD = 6, SOULFIRE_RADIUS = 105, SOULFIRE_SPEED = 170, SOULFIRE_LIFE = 3.2, SOULFIRE_R = 15;
 function soulFireExplode(g, p, pr){
   const R = pr.R || SOULFIRE_RADIUS;
   for(const e of g.enemies){

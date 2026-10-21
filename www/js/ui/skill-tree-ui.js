@@ -289,8 +289,8 @@ const RV266_TEXT = {
     : '+'+(rampageSpeedPerStack(r)*100).toFixed(1)+'% attack speed per stack (up to +'+Math.round(rampageSpeedPerStack(r)*RAMPAGE_MAX*100)+'%) &middot; +'+Math.round(rampagePerStack(r)*100)+'% damage at full Rage (scales down with the bar)',
   assault:(r)=> r===0 ? 'Capstone: fills your Rage on use, then rages for '+ASSAULT_BASE_DUR+'s: dealt damage ramps up to +'+Math.round(ASSAULT_DEALT_MAX*100)+'% (and damage taken too), with life leech and reflected damage. Each kill extends it and trims '+ASSAULT_KILL_CDR+'s off its cooldown, so you can chain it across packs. When it ends, all your remaining Rage explodes in a shockwave. Cooldown '+ASSAULT_CD+'s.'
     : 'Fills Rage on use &middot; Duration: '+fmtNum(ASSAULT_BASE_DUR+ASSAULT_RANK_STEP*(r-1))+'s &middot; +'+fmtNum(assaultKillExtend(r))+'s and -'+ASSAULT_KILL_CDR+'s cooldown per kill &middot; Ends in a Rage Burst',
-  squire:(r)=> r===0 ? 'Summons a squire to fight beside you (2nd at Rank 3, 3rd at Rank 5). Each rank: +15% follower damage and +10% follower life. Your followers hit x'+TEMPLAR_FOLLOWER_BASE+' harder, but your own hits deal '+Math.round(TEMPLAR_PLAYER_DMG*100)+'% damage while you command them.'
-    : squireFollowerCount(r)+' follower'+(squireFollowerCount(r)===1?'':'s')+' &middot; Follower damage: +'+Math.round(COMMANDER_DMG_PER_RANK*r*100)+'% (Commander bonus x'+TEMPLAR_FOLLOWER_BASE+') &middot; Your own hits: '+Math.round(TEMPLAR_PLAYER_DMG*100)+'% damage &middot; Follower life: '+knightLifeAtRank(game.player,r)+' each &middot; Re-summon: '+fmtNum(followerRespawnTime(game.player,'knight',r))+'s',
+  squire:(r)=> r===0 ? 'Summons a squire to fight beside you (2nd at Rank 3, 3rd at Rank 5). Each rank: +15% follower damage and +10% follower life. Your followers hit x'+TEMPLAR_FOLLOWER_BASE+' harder.'
+    : squireFollowerCount(r)+' follower'+(squireFollowerCount(r)===1?'':'s')+' &middot; Follower damage: +'+Math.round(COMMANDER_DMG_PER_RANK*r*100)+'% (Commander bonus x'+TEMPLAR_FOLLOWER_BASE+') &middot; Follower life: '+knightLifeAtRank(game.player,r)+' each &middot; Re-summon: '+fmtNum(followerRespawnTime(game.player,'knight',r))+'s',
   smite:(r)=> r===0 ? 'Active (Main attack): a bolt of holy light flies up to '+SMITE_RANGE+' and strikes the first foe in its path, healing followers it passes through. Damage is 85% of a normal hit, rising to 138% at Rank 10. Every '+WRATH_EVERY+'rd cast is Wrath: a wider, stronger bolt that also bursts in a small area on impact, with a bigger heal. Builds Conviction (Rage).'
     : 'Damage '+Math.round(smiteRankMult(r)*100)+'% &middot; Heals followers '+Math.round(SMITE_HEAL*(1+0.1*(r-1))*100)+'% (Wrath '+Math.round(WRATH_HEAL*(1+0.1*(r-1))*100)+'%) &middot; Wrath x'+WRATH_MULT+' damage &middot; Conviction +'+SMITE_CONV+' (Wrath +'+WRATH_CONV+')',
   vengeance:(r)=> r===0 ? 'Active: a melee cone of holy fire (half fire, half physical). Your followers deal more damage and crit more for '+VENG_BUFF_DUR+'s. Attacks as fast as Strike, no cooldown. Builds Conviction (Rage). While your bar is over '+Math.round(VENG_OVERFLOW_AT*100)+'% full it burns '+VENG_OVERFLOW_COST+' Conviction to deal +'+Math.round(VENG_OVERFLOW_DMG*100)+'% damage.'
@@ -615,10 +615,9 @@ function nodeEffectTextBase(node, rank){
     return 'Dmg x'+fmtNum(swd('rapidShot',rank))+' weapon damage per arrow &middot; Final-arrow armor pen (same target only): '+pen+'% &middot; Free, refills '+STAMINA_ON_SHOT+' Stamina';
   }
   if(node.id==='multiShot'){
-    if(rank===0) return 'Passive: your bow\'s basic attack fires 3 arrows at once instead of one.';
+    if(rank===0) return 'Basic shot (free, refills '+STAMINA_ON_SHOT+' Stamina): loose a fan of '+multiShotCount(1)+' arrows at once, each '+Math.round(MARKSMAN_DMG_TUNE*100)+'% of a normal shot. Your Strike stays a single arrow.';
     const count = multiShotCount(rank);
-    const atkspd = Math.round(MULTI_SHOT_ATKSPD_PER_RANK*rank*100);
-    return 'Fires '+count+' arrows at once &middot; Attack speed +'+atkspd+'%'+(rank>=5?' &middot; Max rank bonus: 5-arrow spread':'');
+    return 'Fires '+count+' arrows in a fan, each '+Math.round(MARKSMAN_DMG_TUNE*100)+'% weapon damage &middot; Free, refills '+STAMINA_ON_SHOT+' Stamina'+(rank>=5?' &middot; Max rank bonus: 5-arrow spread':'');
   }
   if(node.id==='arrowEye'){
     if(rank===0) return 'Passive: increases Critical Chance while a bow is equipped, from +5% up to +25%.';

@@ -5,6 +5,79 @@ function warriorShieldPath(w, h){
   ctx.beginPath(); ctx.moveTo(-w/2,-h/2); ctx.lineTo(w/2,-h/2); ctx.lineTo(w/2,h*0.12); ctx.quadraticCurveTo(w/2,h*0.4,0,h/2); ctx.quadraticCurveTo(-w/2,h*0.4,-w/2,h*0.12); ctx.closePath();
 }
 let _wsTint = null;   // v482: per-figure shield field colours (Summit protectors)
+// v494: the player turns their back to the camera while facing up the screen. Only the player character does this --
+// every other figure that borrows these rigs (squires, Knights, Highward, protectors, guards, the Mirage) always faces front.
+function heroBackView(p){
+  if(!game || p!==game.player || !p.facing) return false;
+  const fx = p.facing.x||0, fy = p.facing.y||0, up = -(fx+fy)/(Math.hypot(fx,fy)||1);   // > 0 means towards the top of the screen
+  if(p._backView){ if(up < 0.1) p._backView = false; } else if(up > 0.3) p._backView = true;   // a little hysteresis so it never flickers
+  return !!p._backView;
+}
+// v494: the player's shield art follows the shield's item tier (tier 1 item -> 0 ... tier 5 item -> 3); everyone else keeps tier 2
+function heroShieldTier(p, it){
+  if(!game || p!==game.player || !it) return 2;
+  let b = it.bracket;
+  if(b===undefined) b = it.ilvl ? baseBracketIdx(it.ilvl) : (it.tier ? [0,2,4][Math.min(3,it.tier)-1] : 0);
+  return b<=0 ? 0 : b===1 ? 1 : b<=3 ? 2 : 3;
+}
+// tier 0: a round wooden buckler; 1: an iron-rimmed wooden heater; 2: the steel-and-crimson heater (drawWarriorShield); 3: a gilded knight's shield.
+// backSide: the inside of the shield (planks and arm straps), seen when the player faces away.
+function drawHeroShield(w, h, glow, face, tier, backSide){
+  if(tier===2 && !backSide){ drawWarriorShield(w, h, glow, face); return; }
+  const ww = w*(0.55+0.45*face);
+  if(glow){ ctx.shadowColor = glow; ctx.shadowBlur = 12; }
+  const shape = (k)=>{ if(tier===0){ ctx.beginPath(); ctx.ellipse(0,0,ww*0.56*k,h*0.4*k,0,0,7); } else warriorShieldPath(ww*k, h*k); };
+  if(backSide){
+    shape(1); const wg = ctx.createLinearGradient(-ww/2,0,ww/2,0); wg.addColorStop(0,'#6a4a2a'); wg.addColorStop(1,'#3a2614');
+    ctx.fillStyle = wg; ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = tier>=2 ? '#8a94a8' : tier===1 ? '#5a5f68' : '#2e1e0e'; ctx.lineWidth = tier>=1 ? 2 : 1.4; ctx.stroke();
+    ctx.strokeStyle = 'rgba(30,18,8,0.55)'; ctx.lineWidth = 0.7; ctx.beginPath(); for(const px of [-0.22,0,0.22]){ ctx.moveTo(ww*px,-h*0.36); ctx.lineTo(ww*px,h*0.34); } ctx.stroke();
+    ctx.fillStyle = '#2a1a0c'; ctx.fillRect(-ww*0.3,-h*0.14,ww*0.6,2.2); ctx.fillRect(-ww*0.3,h*0.08,ww*0.6,2.2);   // arm straps
+    return;
+  }
+  if(tier===0){
+    shape(1); const wg = ctx.createRadialGradient(-ww*0.15,-h*0.12,1,0,0,h*0.45); wg.addColorStop(0,'#9a7246'); wg.addColorStop(1,'#4e331a');
+    ctx.fillStyle = wg; ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = '#2e1e0e'; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.strokeStyle = 'rgba(40,24,10,0.5)'; ctx.lineWidth = 0.7; ctx.beginPath(); for(const px of [-0.24,0,0.24]){ ctx.moveTo(ww*px,-h*0.36); ctx.lineTo(ww*px,h*0.36); } ctx.stroke();
+    ctx.fillStyle = '#7a7e86'; ctx.beginPath(); ctx.arc(0,0,2.2+1.2*face,0,7); ctx.fill(); ctx.strokeStyle = '#2c2e34'; ctx.lineWidth = 0.8; ctx.stroke();
+    return;
+  }
+  if(tier===1){
+    shape(1); const wg = ctx.createLinearGradient(-ww/2,-h/2,ww/2,h/2); wg.addColorStop(0,'#8e6a40'); wg.addColorStop(1,'#4a3018');
+    ctx.fillStyle = wg; ctx.fill(); ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(40,24,10,0.5)'; ctx.lineWidth = 0.7; ctx.beginPath(); for(const px of [-0.2,0.2]){ ctx.moveTo(ww*px,-h*0.42); ctx.lineTo(ww*px,h*0.3); } ctx.stroke();
+    shape(1); ctx.strokeStyle = '#5c616b'; ctx.lineWidth = 2.4; ctx.stroke(); ctx.strokeStyle = '#1c1e24'; ctx.lineWidth = 0.7; ctx.stroke();
+    ctx.fillStyle = '#9aa0aa'; for(const [rx,ry] of [[-0.34,-0.38],[0.34,-0.38],[-0.34,0.06],[0.34,0.06]]){ ctx.beginPath(); ctx.arc(ww*rx,h*ry,0.9,0,7); ctx.fill(); }
+    ctx.fillStyle = '#8a909a'; ctx.beginPath(); ctx.arc(0,-h*0.04,2.4+1.2*face,0,7); ctx.fill(); ctx.strokeStyle = '#2c2e34'; ctx.lineWidth = 0.8; ctx.stroke();
+    return;
+  }
+  // tier 3: polished steel rim edged in gold, a deep crimson field with a flared gold cross and a sapphire boss
+  shape(1); const rim = ctx.createLinearGradient(-ww/2,-h/2,ww/2,h/2); rim.addColorStop(0,'#ffffff'); rim.addColorStop(0.45,'#b4bfd0'); rim.addColorStop(1,'#56607a');
+  ctx.fillStyle = rim; ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = '#d8b04a'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.strokeStyle = '#3a2a0a'; ctx.lineWidth = 0.6; ctx.stroke();
+  ctx.save(); ctx.translate(0,h*0.012); shape(0.74);
+  const fld = ctx.createLinearGradient(0,-h/2,0,h/2); fld.addColorStop(0,'#9a1a30'); fld.addColorStop(1,'#3e0812'); ctx.fillStyle = fld; ctx.fill();
+  ctx.strokeStyle = '#d8b04a'; ctx.lineWidth = 0.9; ctx.stroke(); ctx.restore();
+  if(face>0.35){
+    ctx.fillStyle = '#e8c45a'; ctx.strokeStyle = '#6a4a12'; ctx.lineWidth = 0.6;
+    const a = ww*0.2, c = h*0.3, t = 1.5;
+    ctx.beginPath(); ctx.moveTo(-t,-c); ctx.lineTo(t,-c); ctx.lineTo(t*0.6,-h*0.14); ctx.lineTo(a,-h*0.16); ctx.lineTo(a,-h*0.08); ctx.lineTo(t*0.6,-h*0.1);
+    ctx.lineTo(t,c*0.9); ctx.lineTo(-t,c*0.9); ctx.lineTo(-t*0.6,-h*0.1); ctx.lineTo(-a,-h*0.08); ctx.lineTo(-a,-h*0.16); ctx.lineTo(-t*0.6,-h*0.14); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  ctx.fillStyle = '#e8c45a'; ctx.beginPath(); ctx.arc(0,-h*0.12,2.8+1.2*face,0,7); ctx.fill(); ctx.strokeStyle = '#6a4a12'; ctx.lineWidth = 0.7; ctx.stroke();
+  ctx.fillStyle = '#4a8ae8'; ctx.shadowColor = '#7ab0ff'; ctx.shadowBlur = 4; ctx.beginPath(); ctx.arc(0,-h*0.12,1.3+0.6*face,0,7); ctx.fill(); ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(-ww/2+1.6,-h/2+3); ctx.lineTo(-ww/2+1.6,h*0.1); ctx.stroke();
+}
+// v494: a cape / cloak hanging down the back (back view), drawn over the torso
+function drawHeroBackCape(c0, c1, bob, flutter, top, bottom, halfTop, halfBot){
+  const g = ctx.createLinearGradient(0,top+bob,0,bottom); g.addColorStop(0,c0); g.addColorStop(1,c1);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-halfTop,top+bob); ctx.lineTo(halfTop,top+bob);
+  ctx.quadraticCurveTo(halfBot+1+flutter*0.3,(top+bottom)/2+bob*0.5,halfBot+flutter*0.5,bottom);
+  ctx.quadraticCurveTo(0,bottom+2,-halfBot+flutter*0.5,bottom);
+  ctx.quadraticCurveTo(-halfBot-1+flutter*0.3,(top+bottom)/2+bob*0.5,-halfTop,top+bob); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.8; ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 1; ctx.beginPath();
+  for(const fx of [-0.4,0.35]){ ctx.moveTo(halfTop*fx,top+4+bob); ctx.quadraticCurveTo(halfBot*fx*1.1+flutter*0.2,(top+bottom)/2,halfBot*fx*1.2+flutter*0.4,bottom-1); }
+  ctx.stroke();
+}
 function drawWarriorShield(w, h, glow, face){
   // face: 0 = seen edge-on (carried at the side), 1 = full face on
   const ww = w*(0.55+0.45*face);
@@ -46,6 +119,7 @@ function drawWarrior(p){
   const furyOffSwing = offhandSword && p.furyHandT>0 && p.furyHand==='off';   // v419: Fury's middle hit is the off-hand sword
   const LK = charLooks(p), bodyLook = LK.body, helmLook = LK.helm;   // v393: 0 starter / 1 tier 1 / 2 tier 3 / 3 tier 5
   const plainHelm = p.isSquire ? helmLook<3 : helmLook===2;
+  const back = heroBackView(p), shTier = heroShieldTier(p, offh);   // v494
   const armCol = bodyLook>=2 ? '#5c6678' : bodyLook===1 ? '#6a4a2c' : '#c8b48c';
   const handA = bodyLook>=2 ? '#c9d2e0' : bodyLook===1 ? '#9a7a54' : '#e0bc94', handB = bodyLook>=2 ? '#5b6575' : bodyLook===1 ? '#4a3220' : '#b08a60';
 
@@ -73,7 +147,7 @@ function drawWarrior(p){
   else if(throwT>=0) lunge = 3*Math.sin(throwT*Math.PI);
   ctx.translate(lunge, 0);
 
-  if(bodyLook>=3){
+  if(bodyLook>=3 && !back){
   // cape (two layers)
   const capeBackGrad = ctx.createLinearGradient(-4,-44+bob,-24,-2);
   capeBackGrad.addColorStop(0,p.capeT?p.capeT[2]:p.isSquire?'#2a2216':'#2c0a15'); capeBackGrad.addColorStop(1,p.capeT?p.capeT[3]:p.isSquire?'#14100a':'#160510');
@@ -123,7 +197,7 @@ function drawWarrior(p){
   // v301: plain fighter's kit: leather harness straps across the plate and a studded belt (no tabard/cross)
   ctx.strokeStyle='#4a3220'; ctx.lineWidth=2.6; ctx.lineCap='butt';
   ctx.beginPath(); ctx.moveTo(-8.5,-43+bob); ctx.lineTo(8,-25+bob); ctx.moveTo(8.5,-43+bob); ctx.lineTo(-8,-25+bob); ctx.stroke();
-  ctx.fillStyle='#b8923a'; ctx.beginPath(); ctx.arc(0,-34+bob,2,0,7); ctx.fill(); ctx.strokeStyle='#3a2a12'; ctx.lineWidth=0.8; ctx.stroke();
+  if(!back){ ctx.fillStyle='#b8923a'; ctx.beginPath(); ctx.arc(0,-34+bob,2,0,7); ctx.fill(); ctx.strokeStyle='#3a2a12'; ctx.lineWidth=0.8; ctx.stroke(); }
   ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(-5,-44+bob); ctx.lineTo(-5,-27+bob); ctx.stroke();
   ctx.fillStyle='#4a3220'; ctx.fillRect(-10.5,-24+bob,21,3.2); ctx.fillStyle='#b8923a'; ctx.fillRect(-2.4,-24.4+bob,4.8,4);
   if(p.isSquire){   // squire's quilted tan surcoat over the plate, so they never read as the player
@@ -150,7 +224,7 @@ function drawWarrior(p){
     ctx.strokeStyle='#d8b04a'; ctx.lineWidth=1.3;
     roundRect(-10.5,-46+bob,21,26,6); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-10,-24+bob); ctx.lineTo(10,-24+bob); ctx.lineTo(11,-14+bob); ctx.lineTo(0,-11+bob); ctx.lineTo(-11,-14+bob); ctx.closePath(); ctx.stroke();
-    ctx.fillStyle='#d8b04a'; ctx.beginPath(); ctx.moveTo(0,-41+bob); ctx.lineTo(2.6,-37.5+bob); ctx.lineTo(0,-34+bob); ctx.lineTo(-2.6,-37.5+bob); ctx.closePath(); ctx.fill();
+    if(!back){ ctx.fillStyle='#d8b04a'; ctx.beginPath(); ctx.moveTo(0,-41+bob); ctx.lineTo(2.6,-37.5+bob); ctx.lineTo(0,-34+bob); ctx.lineTo(-2.6,-37.5+bob); ctx.closePath(); ctx.fill(); }
     for(const sideSign of [-1,1]){ ctx.beginPath(); ctx.ellipse(sideSign*11,-43+bob,6.8,5.6,0,0,7); ctx.stroke(); }
   }
   } else {
@@ -163,7 +237,7 @@ function drawWarrior(p){
     ctx.strokeStyle='rgba(20,12,6,0.5)'; ctx.lineWidth=0.8; for(let qi=0;qi<5;qi++){ ctx.beginPath(); ctx.moveTo(-9,-42+bob+qi*4.4); ctx.lineTo(9,-42+bob+qi*4.4); ctx.stroke(); }
     ctx.strokeStyle='#2e2014'; ctx.lineWidth=2.4; ctx.beginPath(); ctx.moveTo(-8.5,-43+bob); ctx.lineTo(8,-25+bob); ctx.stroke();
     ctx.fillStyle='#b8b2a0'; for(const [sx2,sy2] of [[-6,-38],[6,-38],[-6,-31],[6,-31],[-3,-26],[3,-26]]){ ctx.beginPath(); ctx.arc(sx2,sy2+bob,0.9,0,7); ctx.fill(); }
-  } else {
+  } else if(!back){
     ctx.strokeStyle='#6a5a3c'; ctx.lineWidth=0.9; ctx.beginPath(); ctx.moveTo(-2.4,-46+bob); ctx.lineTo(0,-39+bob); ctx.lineTo(2.4,-46+bob); ctx.stroke();
     ctx.fillStyle='#8a7048'; ctx.fillRect(3,-36+bob,5,4.2); ctx.strokeStyle='rgba(60,44,24,0.6)'; ctx.lineWidth=0.6; ctx.strokeRect(3,-36+bob,5,4.2);
   }
@@ -179,6 +253,7 @@ function drawWarrior(p){
     ctx.fillStyle = bodyLook===1 ? '#5a4026' : '#c8b88e'; ctx.strokeStyle = bodyLook===1 ? '#1f150c' : '#4a3c26'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.ellipse(0,0.4, bodyLook===1?5.4:4.4, bodyLook===1?4.4:3.6,0,0,7); ctx.fill(); ctx.stroke(); ctx.restore(); }
   }
+  if(back && bodyLook>=3) drawHeroBackCape(p.capeT?p.capeT[0]:(p.isSquire?'#9a8458':'#b8364a'), p.capeT?p.capeT[1]:(p.isSquire?'#40331c':'#3a0f1c'), bob, flutter, -45, -1, 9.5, 12.5);   // v494
   // off-hand: a big heater shield, or an armoured fist (empty while the shield is thrown)
   if(hasShield && !shieldAway){
     ctx.save();
@@ -200,7 +275,7 @@ function drawWarrior(p){
     // the arm holding it
     ctx.strokeStyle=armCol; ctx.lineWidth=4.2; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(-10.5,-40+bob); ctx.lineTo(sx+(blocking||bashT>=0?-2:4),sy+3); ctx.stroke();
     ctx.translate(sx, sy); ctx.rotate(rot); ctx.scale(sc,sc);
-    drawWarriorShield(p.towerShield ? 25 : 17, p.towerShield ? 44 : 26, glow, fc);
+    drawHeroShield(p.towerShield ? 25 : 17, p.towerShield ? 44 : 26, glow, fc, shTier, back && !blocking && bashT<0);   // v494: tiered art, inside face when turned away
     ctx.restore();
   } else if(offhandSword){
     ctx.save(); ctx.translate(-11,-34+bob);
@@ -303,16 +378,24 @@ function drawWarrior(p){
   const hy = -50+bob;
   ctx.fillStyle = p.hitFlash>0 ? '#ffe0d0' : '#d9b48c'; ctx.beginPath(); ctx.arc(0,hy+0.5,6.4,0,7); ctx.fill();
   ctx.strokeStyle='#4a3220'; ctx.lineWidth=0.9; ctx.stroke();
+  if(!back){
   ctx.fillStyle='#2a1e16'; ctx.beginPath(); ctx.arc(-2.6,hy+0.4,0.95,0,7); ctx.arc(2.6,hy+0.4,0.95,0,7); ctx.fill();
   ctx.strokeStyle='rgba(60,36,24,0.7)'; ctx.lineWidth=0.9; ctx.beginPath(); ctx.moveTo(-2,hy+4.2); ctx.lineTo(2,hy+4.2); ctx.stroke();
+  }
   if(helmLook>=2 || (p.isSquire && helmLook>=2)){
   const hg = ctx.createRadialGradient(-2.5,hy-4,1,0,hy-2,10); hg.addColorStop(0,'#e6ebf3'); hg.addColorStop(0.6,'#98a3b6'); hg.addColorStop(1,'#566073');
+  if(back){   // v494: the back of the helm -- a closed dome and a plated neck guard
+    ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(0,hy-0.6,7.6,0,7); ctx.fill(); ctx.strokeStyle='#2c3340'; ctx.lineWidth=1.3; ctx.stroke();
+    ctx.fillStyle='#7c869a'; ctx.beginPath(); ctx.moveTo(-6.6,hy+3); ctx.lineTo(6.6,hy+3); ctx.lineTo(7.6,hy+7); ctx.lineTo(-7.6,hy+7); ctx.closePath(); ctx.fill(); ctx.lineWidth=0.9; ctx.stroke();
+    ctx.fillStyle='#8a94a8'; ctx.fillRect(-7.8,hy-1.6,15.6,1.8);
+  } else {
   ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(0,hy-1,7.6,Math.PI,0); ctx.lineTo(7.6,hy-0.4); ctx.lineTo(-7.6,hy-0.4); ctx.closePath(); ctx.fill();
   ctx.strokeStyle='#2c3340'; ctx.lineWidth=1.3; ctx.stroke();
   ctx.fillStyle='#8a94a8'; ctx.fillRect(-7.8,hy-1.6,15.6,1.8);                       // brow band
   ctx.fillStyle='#aab3c4'; ctx.fillRect(-0.9,hy-1.2,1.8,6.2); ctx.strokeStyle='#2c3340'; ctx.lineWidth=0.6; ctx.strokeRect(-0.9,hy-1.2,1.8,6.2);   // nose guard
   ctx.fillStyle='#7c869a'; ctx.beginPath(); ctx.moveTo(-7.4,hy-0.4); ctx.lineTo(-5.6,hy-0.4); ctx.lineTo(-5.2,hy+4.6); ctx.lineTo(-7,hy+3.6); ctx.closePath(); ctx.fill(); ctx.stroke();   // cheek plates
   ctx.beginPath(); ctx.moveTo(7.4,hy-0.4); ctx.lineTo(5.6,hy-0.4); ctx.lineTo(5.2,hy+4.6); ctx.lineTo(7,hy+3.6); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
   ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(0,hy-1,6,3.6,4.9); ctx.stroke();
   const crestC = p.crestC || (p.isSquire?'#7a6a46':'#b02a2a'), trimC = p.isSquire?'#8a7a56':'#c9a24a';
   // swept-back winged helm: steel wings with gold trim, a raised ridge and a tall flowing crest (Squires wear a plain helm: no wings, ridge or crest)
@@ -331,11 +414,14 @@ function drawWarrior(p){
 
   } else if(helmLook===1){   // tier 1: iron skullcap with a nose bar and a chinstrap
     const cg = ctx.createRadialGradient(-2.5,hy-4,1,0,hy-2,10); cg.addColorStop(0,'#aab0ba'); cg.addColorStop(0.6,'#6e7480'); cg.addColorStop(1,'#3e434e');
+    if(back){ ctx.fillStyle='#4a3020'; ctx.beginPath(); ctx.arc(0,hy+0.6,6.6,0,7); ctx.fill(); }   // v494: hair at the nape under the cap
     ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(0,hy-1.4,7.2,Math.PI,0); ctx.lineTo(7.2,hy-1.4); ctx.lineTo(-7.2,hy-1.4); ctx.closePath(); ctx.fill(); ctx.strokeStyle='#23272f'; ctx.lineWidth=1.2; ctx.stroke();
     ctx.fillStyle='#4a4f5a'; ctx.fillRect(-7.4,hy-2.4,14.8,1.6);
-    ctx.fillStyle='#8a909c'; ctx.fillRect(-0.8,hy-1.2,1.6,5); ctx.strokeStyle='#23272f'; ctx.lineWidth=0.5; ctx.strokeRect(-0.8,hy-1.2,1.6,5);
+    if(!back){ ctx.fillStyle='#8a909c'; ctx.fillRect(-0.8,hy-1.2,1.6,5); ctx.strokeStyle='#23272f'; ctx.lineWidth=0.5; ctx.strokeRect(-0.8,hy-1.2,1.6,5); }
     ctx.fillStyle='#b8b2a0'; for(const rx of [-4.6,0,4.6]){ ctx.beginPath(); ctx.arc(rx,hy-3.6-(rx?0:1),0.7,0,7); ctx.fill(); }
-    ctx.strokeStyle='#3a2818'; ctx.lineWidth=0.8; ctx.beginPath(); ctx.moveTo(-6.4,hy+1); ctx.lineTo(-4.6,hy+6.4); ctx.moveTo(6.4,hy+1); ctx.lineTo(4.6,hy+6.4); ctx.stroke();
+    if(!back){ ctx.strokeStyle='#3a2818'; ctx.lineWidth=0.8; ctx.beginPath(); ctx.moveTo(-6.4,hy+1); ctx.lineTo(-4.6,hy+6.4); ctx.moveTo(6.4,hy+1); ctx.lineTo(4.6,hy+6.4); ctx.stroke(); }
+  } else if(back){   // v494: starter, seen from behind -- a full head of short hair
+    ctx.fillStyle='#4a3020'; ctx.beginPath(); ctx.arc(0,hy-0.2,6.9,0,7); ctx.fill(); ctx.strokeStyle='#241810'; ctx.lineWidth=0.8; ctx.stroke();
   } else {   // starter: bare head, short unkempt hair
     ctx.fillStyle='#4a3020'; ctx.beginPath(); ctx.arc(0,hy-1,6.9,Math.PI*0.96,Math.PI*2.04); ctx.lineTo(6.2,hy-1.6); ctx.quadraticCurveTo(2,hy-3.4,-1,hy-2.2); ctx.quadraticCurveTo(-4,hy-3.6,-6.2,hy-1.6); ctx.closePath(); ctx.fill(); ctx.strokeStyle='#241810'; ctx.lineWidth=0.8; ctx.stroke();
   }
@@ -360,7 +446,7 @@ function lookFromItem(it){
 }
 function squireLook(){ const pl = game && game.player; const r = (pl && pl.skills) ? (effectiveRank(pl,'squire')||0) : 1; return r>=5 ? 3 : r>=3 ? 2 : 1; }
 function charLooks(p){
-  if(p.isSquire){ const l = squireLook(); return {body:l, helm:l}; }
+  if(p.isSquire){ const l = squireLook(); return {body:l, helm:2}; }   // v494: squires always wear the tier-2 helm
   const eq = p.equipment || {};
   return {body: p.lookBody!==undefined ? p.lookBody : lookFromItem(eq.armor), helm: p.lookHelm!==undefined ? p.lookHelm : lookFromItem(eq.helm)};
 }
@@ -385,6 +471,7 @@ function drawRanger(p){
   const hasShield = !!(offh && offh.slotType==='shield');
   const offhandSword = !!(offh && offh.slotType==='weapon1h');
   const LK = charLooks(p), bodyLook = LK.body, helmLook = LK.helm;   // v393
+  const back = heroBackView(p);   // v494
 
   drawShadow(iso.x, iso.y, 15*s, 7*s);
   if(p.iceArmorT>0) drawIceArmorAura(p, iso, s);
@@ -403,7 +490,7 @@ function drawRanger(p){
   const legSwing = walk*7;
   const flutter = Math.sin(t*6)*3 + walk*2;
 
-  if(bodyLook>=2){
+  if(bodyLook>=2 && !back){
   // travel cloak (two-layer, weathered dark green-brown instead of a bright cape)
   const cloakBackGrad = ctx.createLinearGradient(-4,-40+bob,-22,-2);
   cloakBackGrad.addColorStop(0,'#1c2016'); cloakBackGrad.addColorStop(1,'#0c0d08');
@@ -428,15 +515,15 @@ function drawRanger(p){
   ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=0.8; ctx.stroke();
   if(bodyLook>=3){ ctx.strokeStyle='#d8b04a'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(-7,-40+bob*0.3); ctx.quadraticCurveTo(-15+walk*2+flutter,-20+bob*0.3,-8-flutter*0.4,-1); ctx.stroke(); }
   }
-  if(bodyLook>=1){
+  const drawQuiver = ()=>{
   // v352: quiver slung across the back, fletched arrows poking out over the shoulder
   ctx.save(); ctx.translate(-5,-38+bob); ctx.rotate(-0.35);
   ctx.fillStyle='#4a3420'; roundRect(-3.2,-2,6.4,19,2.6); ctx.fill(); ctx.strokeStyle='#1c140c'; ctx.lineWidth=0.9; ctx.stroke();
   ctx.fillStyle='#8a6a44'; ctx.fillRect(-3.2,2,6.4,1.4);
   for(const [ax,fc] of [[-1.8,'#b8423a'],[0,'#e8e0c8'],[1.8,'#b8423a']]){ ctx.strokeStyle='#cbb98c'; ctx.lineWidth=0.9; ctx.beginPath(); ctx.moveTo(ax,-1); ctx.lineTo(ax*1.6,-8); ctx.stroke(); ctx.fillStyle=fc; ctx.beginPath(); ctx.moveTo(ax*1.6,-8); ctx.lineTo(ax*1.6-1.3,-5.6); ctx.lineTo(ax*1.6+1.3,-5.6); ctx.closePath(); ctx.fill(); }
   ctx.restore();
-
-  }
+  };
+  if(bodyLook>=1 && !back) drawQuiver();   // v494: from behind it is drawn over the back instead (below)
   // legs (worn leather trousers tucked into boots)
   const legGradL = ctx.createLinearGradient(-7,-18,-1,0);
   legGradL.addColorStop(0, bodyLook===0 ? '#8a7a5a' : '#5a4530'); legGradL.addColorStop(1, bodyLook===0 ? '#4e4230' : '#2c2015');
@@ -458,12 +545,12 @@ function drawRanger(p){
   torsoGrad.addColorStop(0,'#8a6a44'); torsoGrad.addColorStop(0.55,'#5f4a2e'); torsoGrad.addColorStop(1,'#3a2c1a');
   ctx.fillStyle = torsoGrad;
   roundRect(-9,-42+bob, 18, 24, 5); ctx.fill();
-  ctx.strokeStyle='#241a0f'; ctx.lineWidth=1.4; ctx.stroke();
+  ctx.strokeStyle='rgba(36,26,15,0.55)'; ctx.lineWidth=0.8; ctx.stroke();   // v494: a soft edge instead of a bold frame
   ctx.strokeStyle='rgba(255,240,210,0.18)'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(-7,-40+bob); ctx.lineTo(-7,-20+bob); ctx.stroke();
   // criss-crossed lacing up the chest instead of a chest seam + belt buckle
   ctx.strokeStyle='#2a1e10'; ctx.lineWidth=1;
-  for(const ly of [-37,-32,-27,-22]){
+  if(!back) for(const ly of [-37,-32,-27,-22]){
     ctx.beginPath(); ctx.moveTo(-3,ly+bob); ctx.lineTo(3,ly+3+bob); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(3,ly+bob); ctx.lineTo(-3,ly+3+bob); ctx.stroke();
   }
@@ -476,26 +563,29 @@ function drawRanger(p){
   // v352: studded belt with a buckle and a hip pouch, leather bracers and a bronze clasp on the baldric
   ctx.fillStyle='#2a1e10'; ctx.fillRect(-9,-21+bob,18,3.4); ctx.fillStyle='#b8923a'; ctx.fillRect(-2,-21.4+bob,4,4.2);
   ctx.fillStyle='#5a4228'; roundRect(4.4,-19.5+bob,5.4,6.4,1.6); ctx.fill(); ctx.strokeStyle='#1c140c'; ctx.lineWidth=0.8; ctx.stroke();
-  ctx.fillStyle='#b8923a'; ctx.beginPath(); ctx.arc(-1,-31+bob,1.5,0,7); ctx.fill();
+  if(!back){ ctx.fillStyle='#b8923a'; ctx.beginPath(); ctx.arc(-1,-31+bob,1.5,0,7); ctx.fill(); }
   ctx.fillStyle='#3a2c1a'; ctx.fillRect(-12.6,-35+bob,3.6,5.6);
   // shoulder mantle
-  ctx.fillStyle='#4a4a34'; ctx.beginPath(); ctx.ellipse(-8.2,-38.6+bob,3.4,2.4,0.3,0,7); ctx.ellipse(8.2,-38.6+bob,3.4,2.4,-0.3,0,7); ctx.fill(); ctx.strokeStyle='#14170c'; ctx.lineWidth=0.9; ctx.stroke();
+  ctx.fillStyle='#4a4a34'; ctx.beginPath(); ctx.ellipse(-8.2,-38.6+bob,3.4,2.4,0.3,0,7); ctx.ellipse(8.2,-38.6+bob,3.4,2.4,-0.3,0,7); ctx.fill();   // v494: no outline
 
   if(bodyLook>=2){   // tier 3: studded leather
     ctx.fillStyle='#9a8a62'; for(const [sx3,sy3] of [[-7,-38],[7,-38],[-7,-30],[7,-30],[-7,-24],[7,-24]]){ ctx.beginPath(); ctx.arc(sx3,sy3+bob,0.8,0,7); ctx.fill(); }
   }
   if(bodyLook>=3){   // tier 5: gold trim, a leaf-green mantle and a gilded clasp
-    ctx.strokeStyle='#d8b04a'; ctx.lineWidth=1; roundRect(-9,-42+bob,18,24,5); ctx.stroke();
-    ctx.fillStyle='#3f6e46'; ctx.strokeStyle='#14270f'; ctx.lineWidth=0.8; ctx.beginPath(); ctx.ellipse(-8.4,-39+bob,4.8,3.2,0.3,0,7); ctx.ellipse(8.4,-39+bob,4.8,3.2,-0.3,0,7); ctx.fill(); ctx.stroke();
-    ctx.fillStyle='#d8b04a'; ctx.beginPath(); ctx.arc(-1,-31+bob,2.1,0,7); ctx.fill();
+    ctx.fillStyle='#3f6e46'; ctx.beginPath(); ctx.ellipse(-8.4,-39+bob,4.8,3.2,0.3,0,7); ctx.ellipse(8.4,-39+bob,4.8,3.2,-0.3,0,7); ctx.fill();   // v494: no gold frame or outlines
+    if(!back){ ctx.fillStyle='#d8b04a'; ctx.beginPath(); ctx.arc(-1,-31+bob,2.1,0,7); ctx.fill(); }
   }
   } else {
   // v393: starter -- a worn linen shirt, a rope belt, nothing else
   const tg = ctx.createLinearGradient(-9,-42+bob,9,-18+bob); tg.addColorStop(0,'#cdbf9c'); tg.addColorStop(0.6,'#a8987a'); tg.addColorStop(1,'#6e6048');
-  ctx.fillStyle=tg; roundRect(-9,-42+bob,18,24,5); ctx.fill(); ctx.strokeStyle='#3e3220'; ctx.lineWidth=1.2; ctx.stroke();
-  ctx.strokeStyle='#6a5a3c'; ctx.lineWidth=0.9; ctx.beginPath(); ctx.moveTo(-2.4,-42+bob); ctx.lineTo(0,-35+bob); ctx.lineTo(2.4,-42+bob); ctx.stroke();
+  ctx.fillStyle=tg; roundRect(-9,-42+bob,18,24,5); ctx.fill(); ctx.strokeStyle='rgba(62,50,32,0.55)'; ctx.lineWidth=0.8; ctx.stroke();
+  if(!back){ ctx.strokeStyle='#6a5a3c'; ctx.lineWidth=0.9; ctx.beginPath(); ctx.moveTo(-2.4,-42+bob); ctx.lineTo(0,-35+bob); ctx.lineTo(2.4,-42+bob); ctx.stroke(); }
   ctx.strokeStyle='#7a5a32'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(-9,-21+bob); ctx.lineTo(9,-21+bob); ctx.stroke();
-  ctx.fillStyle='#8a7048'; ctx.fillRect(2,-33+bob,5,4); ctx.fillStyle='#b8a888'; ctx.beginPath(); ctx.ellipse(-8.6,-39+bob,3.4,2.6,0.3,0,7); ctx.ellipse(8.6,-39+bob,3.4,2.6,-0.3,0,7); ctx.fill();
+  if(!back){ ctx.fillStyle='#8a7048'; ctx.fillRect(2,-33+bob,5,4); } ctx.fillStyle='#b8a888'; ctx.beginPath(); ctx.ellipse(-8.6,-39+bob,3.4,2.6,0.3,0,7); ctx.ellipse(8.6,-39+bob,3.4,2.6,-0.3,0,7); ctx.fill();
+  }
+  if(back){   // v494: from behind -- the cloak hangs over the back and the quiver sits on top of it
+    if(bodyLook>=2) drawHeroBackCape(p.invuln>0 ? '#c9b06a' : (bodyLook>=3 ? '#3f6e46' : '#4a4a34'), '#20200f', bob, flutter, -41, -2, 8.5, 11);
+    if(bodyLook>=1) drawQuiver();
   }
   // off-hand: shield if one is equipped, otherwise a leather-gloved fist
   if(hasShield){
@@ -605,7 +695,19 @@ function drawRanger(p){
   // head: a pointed leather hood instead of a metal helm, with a shadowed
   // weathered face and no bright plume
   const headY = -48+bob;
-  if(helmLook>=2){
+  if(back){   // v494: the back of the head -- hood, cap or hair, no face
+    ctx.fillStyle='#c9976a'; ctx.beginPath(); ctx.arc(0,headY+1,6,0,7); ctx.fill();
+    if(helmLook>=2){
+      const hb = ctx.createLinearGradient(0,headY-10,0,headY+7); hb.addColorStop(0,'#3a4a30'); hb.addColorStop(1,'#1a2414');
+      ctx.fillStyle=hb; ctx.beginPath(); ctx.moveTo(-7,headY+5); ctx.quadraticCurveTo(-8.4,headY-9,0,headY-10); ctx.quadraticCurveTo(8.4,headY-9,7,headY+5); ctx.quadraticCurveTo(0,headY+8.5,-7,headY+5); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='rgba(14,20,9,0.7)'; ctx.lineWidth=0.8; ctx.stroke();
+      ctx.fillStyle='#b8423a'; ctx.beginPath(); ctx.moveTo(5.4,headY-6.6); ctx.quadraticCurveTo(11,headY-12,12,headY-4.4); ctx.quadraticCurveTo(8,headY-8,5.4,headY-5.4); ctx.closePath(); ctx.fill();
+      if(helmLook>=3){ ctx.fillStyle='#2f8a4a'; ctx.beginPath(); ctx.moveTo(5.6,headY-6.6); ctx.quadraticCurveTo(14,headY-16,16,headY-6); ctx.quadraticCurveTo(10,headY-10,5.6,headY-5.4); ctx.closePath(); ctx.fill(); }
+    } else {
+      ctx.fillStyle='#5a3a22'; ctx.beginPath(); ctx.arc(0,headY+0.4,6.6,0,7); ctx.fill(); ctx.strokeStyle='#2a1a0e'; ctx.lineWidth=0.8; ctx.stroke();
+      if(helmLook===1){ ctx.fillStyle='#5a4a30'; ctx.strokeStyle='#241a0f'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(0,headY-1.2,7,Math.PI,0); ctx.lineTo(7.4,headY-1.4); ctx.lineTo(-7.4,headY-1.4); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    }
+  } else if(helmLook>=2){
   ctx.fillStyle = '#c9976a'; // sun-weathered skin, mostly hidden by the hood
   ctx.beginPath(); ctx.arc(0, headY+1, 6, 0.15, Math.PI-0.15); ctx.fill();
   // hood -- a deep cowl framing the face, drawn over the top/sides of the head
@@ -668,6 +770,7 @@ function drawMystic(p){
   const spell = (mh && mh.spell) || 'fire';
   const spellColor = p.cultist ? '#e03a48' : p.mendicant ? '#ffe08a' : STAFF_SPELL_INFO[spell].color;
   const LK = charLooks(p), bodyLook = LK.body, helmLook = LK.helm;   // v393: 0 peasant / 1 apprentice / 2 adept / 3 archmage
+  const back = heroBackView(p);   // v494
   let RB = [['#7a6a52','#3e3226'],['#505070','#26263c'],['#3a1f52','#170c22'],['#4a2470','#1c0c30']][bodyLook];
   let RT = [['#8a7a60','#5a4c38','#2e241a'],['#6a6a8c','#464668','#26263c'],['#6a3a8a','#4a2568','#2a1440'],['#8a4aba','#5a2c88','#2e1250']][bodyLook];
   if(p.cultist){ RB = ['#1a1418','#070507']; RT = ['#2e262c','#17121a','#080609']; }
@@ -718,31 +821,31 @@ function drawMystic(p){
   robeGrad.addColorStop(0,RT[0]); robeGrad.addColorStop(0.55,RT[1]); robeGrad.addColorStop(1,RT[2]);
   ctx.fillStyle = robeGrad;
   roundRect(-9,-42+bob, 18, 26, 5); ctx.fill();
-  ctx.strokeStyle='#1a0e28'; ctx.lineWidth=1.4; ctx.stroke();
+  ctx.strokeStyle='rgba(26,14,40,0.55)'; ctx.lineWidth=0.8; ctx.stroke();   // v494: a soft edge instead of a bold frame
   // green undershirt collar/chest strip
+  if(!back){
   ctx.fillStyle = bodyLook>=2 ? '#3a7a4a' : '#d8ccae';
   ctx.beginPath();
   ctx.moveTo(-3.5,-42+bob); ctx.lineTo(3.5,-42+bob); ctx.lineTo(2,-30+bob); ctx.lineTo(-2,-30+bob);
   ctx.closePath(); ctx.fill();
+  }
   ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(-7,-40+bob); ctx.lineTo(-7,-18+bob); ctx.stroke();
   // a rope-cord belt instead of lacing/buckle
   ctx.strokeStyle = bodyLook>=2 ? '#c9a24a' : '#7a5a32'; ctx.lineWidth=1.6;
   ctx.beginPath(); ctx.moveTo(-9,-20+bob); ctx.lineTo(9,-20+bob); ctx.stroke();
   // v352: wide sleeves with glowing cuffs, runic trim down the front, a shoulder mantle and a dangling sash
-  if(bodyLook>=2){
+  if(bodyLook>=2 && !back){
   ctx.strokeStyle=spellColor; ctx.lineWidth=0.9; ctx.globalAlpha=alpha*0.75;
   ctx.beginPath(); ctx.moveTo(0,-30+bob); ctx.lineTo(0,-21+bob); ctx.moveTo(-2,-27+bob); ctx.lineTo(2,-27+bob); ctx.moveTo(-1.4,-24+bob); ctx.lineTo(1.4,-24+bob); ctx.stroke();
   ctx.globalAlpha=alpha;
   }
-  ctx.fillStyle=RB[0]; ctx.beginPath(); ctx.ellipse(-8.6,-41.4+bob,5,3.4,0.25,0,7); ctx.ellipse(8.6,-41.4+bob,5,3.4,-0.25,0,7); ctx.fill(); ctx.strokeStyle='#1a0e28'; ctx.lineWidth=0.9; ctx.stroke();
+  ctx.fillStyle=RB[0]; ctx.beginPath(); ctx.ellipse(-8.6,-41.4+bob,5,3.4,0.25,0,7); ctx.ellipse(8.6,-41.4+bob,5,3.4,-0.25,0,7); ctx.fill(); ctx.strokeStyle='#1a0e28'; ctx.lineWidth=0.9;   // v494: shoulder mantle without an outline
   ctx.fillStyle=RT[0]; ctx.beginPath(); ctx.moveTo(-9.8,-38+bob); ctx.lineTo(-14,-30+bob); ctx.lineTo(-7.5,-30+bob); ctx.closePath(); ctx.fill(); ctx.stroke();   // off-hand sleeve
   if(bodyLook>=2){ ctx.strokeStyle=spellColor; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(-14,-30+bob); ctx.lineTo(-7.5,-30+bob); ctx.stroke(); }
-  ctx.fillStyle='#c9a24a'; ctx.beginPath(); ctx.moveTo(2,-20+bob); ctx.lineTo(5,-20+bob); ctx.lineTo(4+flutter*0.2,-9+bob); ctx.lineTo(2.4+flutter*0.2,-9+bob); ctx.closePath(); ctx.fill();
+  if(!back){ ctx.fillStyle='#c9a24a'; ctx.beginPath(); ctx.moveTo(2,-20+bob); ctx.lineTo(5,-20+bob); ctx.lineTo(4+flutter*0.2,-9+bob); ctx.lineTo(2.4+flutter*0.2,-9+bob); ctx.closePath(); ctx.fill(); }
 
-  if(bodyLook>=3){   // archmage: gold embroidery and a few orbiting sparks
-    ctx.strokeStyle='#d8b04a'; ctx.lineWidth=1.1; roundRect(-9,-42+bob,18,26,5); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-9,-30+bob); ctx.lineTo(-6,-26+bob); ctx.lineTo(-9,-22+bob); ctx.moveTo(9,-30+bob); ctx.lineTo(6,-26+bob); ctx.lineTo(9,-22+bob); ctx.stroke();
+  if(bodyLook>=3){   // archmage: a few orbiting sparks (v494: the gold frame around the torso is gone)
     ctx.fillStyle=spellColor; ctx.globalAlpha=alpha*0.8; for(let i=0;i<3;i++){ const a2=t*2.2+i*2.1; ctx.beginPath(); ctx.arc(Math.cos(a2)*13,-30+bob+Math.sin(a2)*6,1.2,0,7); ctx.fill(); } ctx.globalAlpha=alpha;
   }
   // off-hand: empty, spell-charged glowing fingertips (staff is always two-handed)
@@ -776,6 +879,21 @@ function drawMystic(p){
   const headY = -48+bob;
   ctx.fillStyle = '#d9b48a';
   ctx.beginPath(); ctx.arc(0, headY+1, 6, 0, 7); ctx.fill();
+  if(back){   // v494: the back of the head -- long hair (or the cowl / hat), no face
+    const hairC = helmLook>=2 ? '#2a1a3a' : '#4a3020';
+    ctx.fillStyle=hairC; ctx.beginPath(); ctx.arc(0,headY,6.8,0,7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-6.4,headY+1); ctx.quadraticCurveTo(-7+flutter*0.2,headY+8,-4.6-flutter*0.2,headY+11); ctx.lineTo(4.6-flutter*0.2,headY+11); ctx.quadraticCurveTo(7+flutter*0.2,headY+8,6.4,headY+1); ctx.closePath(); ctx.fill();
+    if(helmLook>=2){ ctx.strokeStyle='#6a3a8a'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(0, headY-2, 6.3, 3.4, 6.0); ctx.stroke(); }
+    ctx.fillStyle=RT[1]; ctx.beginPath(); ctx.moveTo(-7.4,-42+bob); ctx.quadraticCurveTo(0,-45.5+bob,7.4,-42+bob); ctx.lineTo(6,-39+bob); ctx.quadraticCurveTo(0,-41+bob,-6,-39+bob); ctx.closePath(); ctx.fill();
+    if(helmLook===1){ ctx.fillStyle='#5a5a7a'; ctx.strokeStyle='#26263c'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(-7.2,headY+5); ctx.quadraticCurveTo(-8,headY-9,0,headY-11); ctx.quadraticCurveTo(8,headY-9,7.2,headY+5); ctx.quadraticCurveTo(0,headY+8,-7.2,headY+5); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    else if(helmLook>=3){
+      ctx.fillStyle='#2e1450'; ctx.strokeStyle='#160a28'; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(0,headY-4.6,10.4,2.8,0,0,7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#3a1860'; ctx.beginPath(); ctx.moveTo(-7.4,headY-5); ctx.quadraticCurveTo(-4,headY-8,-1.4,headY-19); ctx.quadraticCurveTo(5+flutter*0.3,headY-26,10+flutter*0.5,headY-24); ctx.quadraticCurveTo(5,headY-16,7.4,headY-5); ctx.quadraticCurveTo(0,headY-7.4,-7.4,headY-5); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#d8b04a'; ctx.beginPath(); ctx.ellipse(0,headY-5.8,7.4,1.6,0,0,7); ctx.fill();
+    }
+    ctx.restore();
+    return;
+  }
   if(helmLook>=2){ ctx.strokeStyle='#6a3a8a'; ctx.lineWidth=1.4;
   ctx.beginPath(); ctx.arc(0, headY-2, 6.3, 3.4, 6.0); ctx.stroke(); }
   ctx.fillStyle='rgba(60,40,25,0.25)';

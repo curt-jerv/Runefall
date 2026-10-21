@@ -459,8 +459,6 @@ function recalcStats(p){
   // of the block chance it used to passively grant with no Shield Bash rank).
   if(hasShieldEquipped(p)) atkSpeedMod *= (1 - SHIELD_ATKSPD_BONUS_PCT);
   // Multi Shot (Marksman): bow attack speed +4%/rank, up to +20% at Rank5.
-  const multiShotRank = (p.skills && effectiveRank(p,'multiShot')) || 0;
-  if(mh && mh.slotType==='bow' && multiShotRank>0) atkSpeedMod *= (1 - MULTI_SHOT_ATKSPD_PER_RANK*multiShotRank);
   // v83: item-derived Attack Speed % (Cunning prefix/suffix, several
   // categories) -- folded in as one more multiplicative discount on the
   // attack cooldown, same shape every other atkSpeedMod source above uses.

@@ -308,6 +308,20 @@ function newGame(saved, cls){
         setTimeout(()=>{ try{ showMsg('Warrior Defender was reworked -- '+rf9+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3000);
       }
     }
+    if(!saved.skillsV495){   // v495: Bulwark now hangs off Mirror of Steel, Multi Shot and Predator's Instinct swapped places, Soul Gate / Soul Hunger moved to the Lv.14 row
+      const lvl = saved.level||player.level||1, nodes = [[SKILL_TREES,'defender'],[RANGER_SKILL_TREES,'marksman'],[MYSTIC_SKILL_TREES,'necromancer']].flatMap(([T,k])=>(T && T[k] && T[k].nodes)||[]);
+      let rf495 = 0, changed = true;
+      while(changed){ changed = false;
+        for(const n of nodes){
+          const r = player.skills[n.id]||0; if(r<=0) continue;
+          const pre = n.prereq||[], ok = !pre.length || (n.prereqMode==='or' ? pre.some(id=>(player.skills[id]||0)>=1) : pre.every(id=>(player.skills[id]||0)>=1));
+          if(ok && (n.reqLevel||1) <= lvl) continue;
+          rf495 += r; player.skills[n.id] = 0; changed = true;
+          for(const sk of Object.keys(player.skillSlots)) if(player.skillSlots[sk]===n.id) player.skillSlots[sk] = (sk==='main' ? 'strike' : null);
+        }
+      }
+      if(rf495>0){ player.skillPoints = (player.skillPoints||0) + rf495; setTimeout(()=>{ try{ showMsg('Skill trees were rearranged -- '+rf495+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3200); }
+    }
     if(!saved.skillsV481 && (saved.cls||cls)==='mystic'){   // v481: Windrunner / Tornado / Storm moved
       const ids = DJINN_NODE_IDS; let rf = 0;
       for(const k of ids){ rf += player.skills[k]||0; player.skills[k] = 0; }
