@@ -107,7 +107,6 @@ function skillAvgDamage(id, rank, p){
     case 'nova': v = (W*dmgK(16,1.6,0.6)) * NOVA_DMG_MULT * mult; break;
     case 'blizzard': v = (W*dmgK(24,2.2,0.6)) * mult * gen * BLIZZARD_TICK_MULT * HEAVY_SPELL_MULT; unit = 'per tick, every '+BLIZZARD_TICK+'s'; break;
     case 'pyroTorrent': v = (W*dmgK(9,1.3,0.4)) * mult * gen * PYRO_TORRENT_TICK_MULT * (1+PYRO_TORRENT_RAMP*0.5) * HEAVY_SPELL_MULT / PYRO_TORRENT_TICK_INTERVAL; unit = 'per second'; break;
-    case 'poisonKnives': v = (W*dmgK(11,1.7,0.6)) * mult; break;
     case 'shieldBash': v = (W*dmgK(12,2.2,1)) * mult * critX; break;
     case 'soulFire': v = soulFireDmg(p, rank); unit = 'to each enemy'; break;
     case 'plague': v = (W*dmgK(10,1.2,0)) * mult * PLAGUE_DMG_BUFF; unit = 'poison per tick'; break;
@@ -558,11 +557,6 @@ function nodeEffectTextBase(node, rank){
     const pct = Math.round(fieldDressRegenRate(rank)*100);
     return 'Regen '+pct+'%/s of max HP while channeling &middot; cancels on movement or at full HP &middot; Cooldown '+FIELD_DRESS_CD+'s (fixed, does not shrink with rank)';
   }
-  if(node.id==='poisonKnives'){
-    if(rank===0) return 'New KNIVES button: throw a fan of 3 poisoned knives.';
-    const cd = poisonKnifeCooldown(rank);
-    return 'Dmg +'+Math.round((mult-1)*100)+'% &middot; Poison '+Math.round(POISON_DOT_PCT*100)+'%/s for '+POISON_DOT_DUR+'s &middot; Cooldown '+fmtNum(cd)+'s';
-  }
   if(node.id==='sap'){
     if(rank===0) return 'Passive: bonus damage while you\'re at full health.';
     const pct = Math.round(sapDamageBonus(rank)*100);
@@ -744,7 +738,6 @@ function updateSkillButtonsVisibility(){
   document.getElementById('btnStance').style.display = 'none';   // v206: Commander's stance switch lives on a skill slot only
   document.getElementById('btnRally').style.display = 'none';
   document.getElementById('btnTrap').style.display = 'none';
-  document.getElementById('btnPoisonKnives').style.display = 'none';
   document.getElementById('btnShadowStep').style.display = 'none';
   document.getElementById('btnVanish').style.display = 'none';
   document.getElementById('btnRapidShot').style.display = 'none';

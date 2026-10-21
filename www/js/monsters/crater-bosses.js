@@ -298,7 +298,7 @@ function updateTrex(g, e, dt, target, d, isFollowerTarget, chillMult, room){
   e.moving = false;
   const face = (ang)=>{ e.facing = {x:Math.cos(ang), y:Math.sin(ang)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y); };
   const enr = e.hp < e.maxHp*0.3, spd = e.speed*(enr?1.25:1)*chillMult, st = e.trState;
-  if(!e.trWoke && d < 520){ e.trWoke = true; bossMsg('REX', 'The Crater King hunts you!', 3.0); shakeScreen(g, 6, 0.5); }
+  if(!e.trWoke && d < 520){ e.trWoke = true; shakeScreen(g, 6, 0.5); }
   if(st==='idle'){
     e.trCd -= dt;
     if(tickEnemyWindup(g, e, target, isFollowerTarget, e.r+target.r+2, dt)) return;

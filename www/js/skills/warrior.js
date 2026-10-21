@@ -519,7 +519,7 @@ function necroSkeletonDeath(g, f, recast){
     if(e.hp<=0) continue;
     if(dist(f,e) < radius+e.r){
       e.hp -= applyEnemyArmor(p, e, dmg, 0, 'poison'); e.hitT = 0.15;   // v474: poison damage
-      e.poisonT = Math.max(e.poisonT||0, POISON_DOT_DUR); e.poisonDps = Math.max(e.poisonDps||0, dmg*POISON_DOT_PCT);
+      addPoison(e, dmg*POISON_DOT_PCT, 'sacrifice');
       checkExecute(g, e);
     }
   }
@@ -619,7 +619,6 @@ soulShieldFrac = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(soulShieldF
 soulGateDrain = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(soulGateDrain);
 soulGateInterval = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(soulGateInterval);
 necroDemonLeechPct = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(necroDemonLeechPct);
-poisonKnifeCooldown = (f=>(r,...a)=>f((r==null||r!==r)?r:rkSpread5(r),...a))(poisonKnifeCooldown);
 executeThreshold = (f=>(r,...a)=>f((r==null||r!==r)?r:rkSpread5(r),...a))(executeThreshold);
 survFieldDressRegenRate = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(survFieldDressRegenRate);
 frostTrapFreezeDuration = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(frostTrapFreezeDuration);

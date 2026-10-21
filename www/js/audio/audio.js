@@ -252,7 +252,7 @@ function audNear(x, y){ const d = Math.hypot(x-AUD.pos.x, y-AUD.pos.y); return d
 // ---------- skill -> sound mapping ----------
 const SKILL_SND = {
   strike:'swing', reave:'swing', shieldBash:'bash', shieldThrow:'clang', guardian:'summon', whirlwind:'spin', battlecry:'shout', leap:'thud', smite:'holy', vengeance:'holy', banner:'shout',
-  consecrate:'holy', judgment:'holy', bulwark:'clang', mirrorSteel:'clang', seismicSlam:'thud', seismicAnchor:'thud', bloodrage:'shout', assault:'swing', commander:'shout', rally:'shout', poisonKnives:'knife', shadowStep:'whoosh', vanish:'smoke',
+  consecrate:'holy', judgment:'holy', bulwark:'clang', mirrorSteel:'clang', seismicSlam:'thud', seismicAnchor:'thud', bloodrage:'shout', assault:'swing', commander:'shout', rally:'shout', shadowStep:'whoosh', vanish:'smoke',
   rapidShot:'bow', splinterShot:'bow', multiShot:'bow', explosiveShot:'bowHeavy', cripplingShot:'bow', stunShot:'bow', aimedShot:'bowHeavy', rainOfArrows:'bowHeavy', packTactics:'howl', beastFury:'howl', huntersMark:'mark', poisonTrap:'trap', frostTrap:'trap', explosiveTrap:'trap',
   fieldDress:'heal', survivalFieldDress:'heal', recall:'portal',
   nova:'arcane', tornado:'wind', hurricane:'wind', fireball:'fire', iceBolt:'ice', iceArmor:'ice', pyroTorrent:'fire', meteor:'fire', stormcall:'bolt', raiseDead:'summon', blizzard:'ice', immolate:'fire', flameVortex:'fire', permafrost:'ice',

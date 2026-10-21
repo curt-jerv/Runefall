@@ -763,7 +763,7 @@ function updateKeep(g, dt){
       if(!g.blackFx.spawned && g.blackFx.t>=0.3 && t.bossPos){
         g.blackFx.spawned = true;
         const e = spawnWraithLord(g, t.bossPos);
-        if(e){ e.wlState = 'intro'; e.wlT = 2.6; e.invulnT = 2.6; e.guardHp = e.hp; e.wlAlpha = 0; e.aggroed = true; e.engaged = true; bossMsg('THE WRAITH LORD', 'Fallen commander of Shadow Keep', 3.4); shakeScreen(g, 4, 0.8); }
+        if(e){ e.wlState = 'intro'; e.wlT = 2.6; e.invulnT = 2.6; e.guardHp = e.hp; e.wlAlpha = 0; e.aggroed = true; e.engaged = true; shakeScreen(g, 4, 0.8); }
       }
       if(g.blackFx.t>1.5) g.blackFx = null;
     }
@@ -1233,7 +1233,7 @@ function updateDemonBoss(g, e, dt, target, d, isFT, chill, room){
   const st = e.dbState;
   const stepTo = (tx,ty,mul)=>{ const a2 = steerAngleTo(e, tx, ty, room.obstacles), sp = e.speed*chill*(mul||1)*dt; e.x += Math.cos(a2)*sp; e.y += Math.sin(a2)*sp; e.moving = true; };
   const zone = (o)=>{ o.max = o.t; e.wlZones.push(o); };
-  if(st==='dormant'){ if(d<760 || e.hp<e.maxHp){ e.dbState = 'intro'; e.dbT = 2.0; e.invulnT = 2.0; e.guardHp = e.hp; bossMsg(e.bossName.toUpperCase(), 'A demon lord of the breach', 3.2); shakeScreen(g, 5, 0.6); } return; }
+  if(st==='dormant'){ if(d<760 || e.hp<e.maxHp){ e.dbState = 'intro'; e.dbT = 2.0; e.invulnT = 2.0; e.guardHp = e.hp; shakeScreen(g, 5, 0.6); } return; }
   if(st==='intro'){ e.dbT -= dt; face(toT()); if(e.dbT<=0){ e.dbState = 'idle'; e.dbCd = 1.2; } return; }
   if(e.dbPh<1 && frac<0.66){ e.dbPh = 1; dbSummon(g, e, dbAdds(kind), 200); showMsg(e.bossName+' calls its brood!', 2.4, '#ff9a6a'); shakeScreen(g, 5, 0.4); }
   if(e.dbPh<2 && frac<0.33){ e.dbPh = 2; e.dbEnr = true; e.speed = e.baseSpeed*1.2; dbSummon(g, e, dbAdds(kind), 210); bossMsg('ENRAGED', e.bossName, 2.6); shakeScreen(g, 7, 0.6); }

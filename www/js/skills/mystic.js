@@ -483,7 +483,7 @@ function soulFireExplode(g, p, pr){
   for(const e of g.enemies){
     if(e.hp>0 && dist(pr,e) < R+e.r){
       e.hp -= splitHit(p, e, pr.dmg, 0.5, 'poison'); e.hitT = 0.2;
-      e.poisonT = Math.max(e.poisonT||0, POISON_DOT_DUR); e.poisonDps = Math.max(e.poisonDps||0, pr.dmg*0.5*POISON_DOT_PCT);
+      addPoison(e, pr.dmg*0.5*POISON_DOT_PCT, 'soulfire');
       checkExecute(g, e);
     }
   }
@@ -536,13 +536,24 @@ const PLAGUE_DUR_BASE = 8, PLAGUE_DUR_PER_SOUL = 0;
 function plagueDuration(soulsConsumed){ return PLAGUE_DUR_BASE + PLAGUE_DUR_PER_SOUL*(soulsConsumed||0); }
 // Assassin tree: Poison Knives (active fan-throw + poison DoT), Execute
 // (passive low-HP finisher), Vanish (active stealth: no aggro/collision).
-const POISON_KNIFE_CD = 6, POISON_KNIFE_CD_MIN = 2;
-const POISON_KNIFE_COUNT = 3, POISON_KNIFE_SPREAD = 0.5; // total fan spread, radians
-const POISON_KNIFE_SPEED = 560, POISON_KNIFE_LIFE = 0.75;
 const POISON_DOT_DUR = 3, POISON_DOT_PCT = 0.35; // poison: 35% of hit damage/sec for 3s
-function poisonKnifeCooldown(rank){
-  if(rank<=0) return POISON_KNIFE_CD;
-  return POISON_KNIFE_CD - (POISON_KNIFE_CD-POISON_KNIFE_CD_MIN)/4*(rank-1);
+// v508: poison from DIFFERENT sources now stacks. Each source (a skill, gear, a trap...) keeps one stack on the enemy; a fresh hit from the
+// same source refreshes its stack (keeping the stronger damage), and the enemy takes the SUM of all stacks per second. Up to 6 stacks;
+// a full set is replaced weakest-first. `replace` is for sources that re-apply every tick (clouds), which simply set their stack.
+const POISON_MAX_STACKS = 6;
+function addPoison(e, dps, src, dur, replace){
+  if(!e || !(dps>0)) return;
+  const st = e.poisonStacks || (e.poisonStacks = []), d = dur || POISON_DOT_DUR;
+  let s = st.find(x=>x.src===src);
+  if(s){ s.dps = replace ? dps : Math.max(s.dps, dps); s.t = Math.max(s.t, d); }
+  else if(st.length < POISON_MAX_STACKS) st.push({src, dps, t:d});
+  else { let wi = 0; for(let i=1;i<st.length;i++) if(st[i].dps < st[wi].dps) wi = i; if(st[wi].dps < dps) st[wi] = {src, dps, t:d}; }
+  poisonSync(e);
+}
+function poisonSync(e){
+  const st = e.poisonStacks; let sum = 0, tm = 0;
+  if(st) for(const s of st){ sum += s.dps; if(s.t>tm) tm = s.t; }
+  e.poisonDps = sum; e.poisonT = tm;   // (the single-slot fields still drive the green tint, 'ailing' checks and the damage tick)
 }
 // Execute: threshold ramps linearly from 10% (rank1) to 25% (rank5).
 const EXECUTE_THRESHOLD_BASE = 0.10, EXECUTE_THRESHOLD_PER_RANK = 0.0375;

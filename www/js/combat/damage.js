@@ -22,7 +22,6 @@ function projElement(pr){
   if(pr.isFireball || pr.spell==='fire') return 'fire';
   if(pr.isIceBolt || pr.spell==='ice') return 'cold';
   if(pr.isLightningArc || pr.spell==='lightning') return 'lightning';
-  if(pr.isPoisonKnife) return 'poison';
   return null;
 }
 // ---------- Charged (lightning ailment, v298) ----------
@@ -87,7 +86,6 @@ const SKILL_WD = {
   consecrate:   {t:'physical', c:'weapon', r:[46,67],   per:'per tick', split:{t:'fire', f:0.5}},
   // --- Ranger ---
   trap:         {t:'physical', c:'weapon', r:[43,62],   per:'when sprung'},
-  poisonKnives: {t:'poison',   c:'weapon', r:[70,102],  per:'per knife (plus Poison)'},
   rapidShot:    {t:'physical', c:'weapon', r:[60,85],   per:'per arrow (3 arrows)'},   // v489: free basic shot now
   splinterShot: {t:'physical', c:'weapon', r:[90,130],  per:'per arrow (splinters 70%)'},   // v489: free basic shot now
   cripplingShot:{t:'physical', c:'weapon', r:[180,260], per:'per arrow (plus Bleed)'},   // v489: big boost, costs more + cooldown
@@ -170,7 +168,7 @@ function gearElemHit(p, e, mainEl){
       if(el==='fire'){ e.burnT = Math.max(e.burnT||0, FIRE_DOT_DUR); e.burnDps = Math.max(e.burnDps||0, v*BURN_DPS_PCT*2); }
       else if(el==='cold'){ coldHit(e, 1); }
       else if(el==='lightning'){ if((e.charges||0) < CHARGE_MAX) e.charges = (e.charges||0)+1; e.chgT = CHARGE_DECAY; }   // v454: Charged replaces the old shock DoT
-      else { e.poisonT = Math.max(e.poisonT||0, POISON_DOT_DUR); e.poisonDps = Math.max(e.poisonDps||0, v*POISON_DOT_PCT); }
+      else { addPoison(e, v*POISON_DOT_PCT, 'gear'); }
       if(game && game.particles) game.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:({fire:'#ff9a4a',cold:'#9fe0ff',lightning:'#f2ee6a',poison:'#8fe05a'})[el]});
     }
   }
@@ -235,7 +233,7 @@ function applyEnemyArmor(p, e, dmg, extraPen, el){
   { const sp = p.partB && p.partB.sp;   // v361 cauldron stone procs
     if(sp){
       if(sp.healhit && p.hp>0 && Math.random()<0.08){ p.hp = Math.min(p.maxHp, p.hp + p.maxHp*0.04); game.particles.push({type:'burst', x:p.x, y:p.y, t:0.3, max:0.3, color:'#ff6a9a'}); }
-      if(sp.poisonhit){ e.poisonT = Math.max(e.poisonT||0, POISON_DOT_DUR); e.poisonDps = Math.max(e.poisonDps||0, final*POISON_DOT_PCT*0.6); }
+      if(sp.poisonhit){ addPoison(e, final*POISON_DOT_PCT*0.6, 'poisonhit'); }
       if(sp.chain && !p._chainBusy && Math.random()<0.10){
         p._chainBusy = true;
         let from = e, hit = 0; const done = [e];

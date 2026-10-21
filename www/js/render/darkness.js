@@ -422,7 +422,7 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   // v507: the character's own light -- a warm yellow glow on the ground, monsters and walls near you; it grows with the light radius
   { const gk = glow==null ? 1 : glow;
     if(gk>0.02){
-      const GR = LR*0.85;
+      const GR = LR*0.64;   // (v508: 25% smaller)
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(1, 0.86);
       const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
       gg.addColorStop(0,'rgba(255,204,112,'+(0.2*gk).toFixed(3)+')'); gg.addColorStop(0.45,'rgba(255,172,72,'+(0.09*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');

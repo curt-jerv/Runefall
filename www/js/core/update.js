@@ -626,32 +626,6 @@ function updateStep(dt){
     }
   }
 
-  // Poison Knives (Assassin skill): throw a fan of 3 knives; each one deals
-  // damage and applies a poison DoT (a field distinct from Bleed, so both
-  // can be active on the same enemy at once). Ranks raise damage & lower cooldown.
-  if(p.poisonKnivesCd>0) p.poisonKnivesCd -= dt;
-  if(wantPoisonKnives){
-    wantPoisonKnives=false;
-    const pkRank = effectiveRank(p,'poisonKnives')||0;
-    if(pkRank>0 && p.poisonKnivesCd<=0){
-      const target = nearestEnemy(g, p, 360);
-      const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y,p.facing.x);
-      p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
-      p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
-      p.atkAnimT = 0.2;
-      const dmg = wpnDmg(p) * swd('poisonKnives', pkRank);
-      p.poisonKnivesCdMax = applyCdr(p, poisonKnifeCooldown(pkRank));
-      p.poisonKnivesCd = p.poisonKnivesCdMax;
-      for(let k=0;k<POISON_KNIFE_COUNT;k++){
-        const off = (k-(POISON_KNIFE_COUNT-1)/2) * (POISON_KNIFE_SPREAD/(POISON_KNIFE_COUNT-1));
-        const kAng = ang + off;
-        g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(kAng)*POISON_KNIFE_SPEED, vy:Math.sin(kAng)*POISON_KNIFE_SPEED,
-          r:5, dmg, from:'player', life:POISON_KNIFE_LIFE, color:'#7dd45a', isArrow:true, isPoisonKnife:true});
-      }
-      showMsg('Poison Knives!', 0.7);
-    }
-  }
-
   // Shadow Step (Assassin skill): teleport behind the closest enemy in
   // range and immediately trigger a basic attack. The attack itself is not
   // duplicated here -- clearing atkCd and setting wantAttack just lets the
@@ -1124,8 +1098,7 @@ function updateStep(dt){
         for(const e of g.enemies){
           if(dist(pc,e) < (pc.r||SURV_TRAP_RADIUS)+e.r){
             const cm = cloudStayMult(g, e, POISON_TRAP_TICK_INTERVAL);
-            e.poisonT = Math.max(e.poisonT||0, POISON_TRAP_TICK_INTERVAL+0.15);
-            e.poisonDps = (e.poisonT>POISON_TRAP_TICK_INTERVAL+0.2) ? Math.max(e.poisonDps||0, pc.dmg*cm) : pc.dmg*cm;
+            addPoison(e, pc.dmg*cm, 'trap', POISON_TRAP_TICK_INTERVAL+0.15, true);
           }
         }
       }
@@ -2181,8 +2154,7 @@ function updateStep(dt){
       for(const e of g.enemies){
         if(dist(pz,e) < (pz.r||PLAGUE_RADIUS)+e.r){
           const cm = cloudStayMult(g, e, PLAGUE_TICK_INTERVAL);
-          e.poisonT = Math.max(e.poisonT||0, PLAGUE_TICK_INTERVAL+0.15);
-          e.poisonDps = (e.poisonT>PLAGUE_TICK_INTERVAL+0.2) ? Math.max(e.poisonDps||0, tickDmg*cm) : tickDmg*cm;
+          addPoison(e, tickDmg*cm, 'plague', PLAGUE_TICK_INTERVAL+0.15, true);
         }
       }
 
@@ -2220,9 +2192,12 @@ function updateStep(dt){
       { const bdt = e.bleedDps*dt*dotPctMult(null); e.hp -= bdt; dotAdd(e, bdt, '#e0566b'); }
       if(Math.random()<0.15) g.particles.push({type:'burst', x:e.x, y:e.y, t:0.2, max:0.2, color:'#b4293f'});
     }
-    // Poison Knives DoT: distinct field from Bleed so the two can stack/coexist.
+    // Poison DoT (v508: one stack per source, all summed): its own field, so it coexists with Bleed.
+    if(e.poisonStacks && e.poisonStacks.length){
+      for(let pi=e.poisonStacks.length-1; pi>=0; pi--){ e.poisonStacks[pi].t -= dt*sdm; if(e.poisonStacks[pi].t<=0) e.poisonStacks.splice(pi,1); }
+      poisonSync(e);
+    } else if(e.poisonT>0){ e.poisonT = 0; e.poisonDps = 0; }
     if(e.poisonT>0){
-      e.poisonT -= dt*sdm;
       e.hp -= e.poisonDps*dt*dotPctMult('poison')*(1-enemyResist(e,"poison")); dotAdd(e, e.poisonDps*dt*dotPctMult('poison')*(1-enemyResist(e,"poison")), '#8fe05a');
       if(Math.random()<0.15) g.particles.push({type:'burst', x:e.x, y:e.y, t:0.2, max:0.2, color:'#7dd45a'});
     }
@@ -3241,11 +3216,10 @@ function updateStep(dt){
             if(pr.pierceLeft>0){ pr.pierceLeft--; (pr.pierceHit||(pr.pierceHit=[])).push(e); if(!pr.pierceNoFall) pr.dmg*=AIMED_SHOT_FALLOFF; } else if(quiverPierce(p, pr)){ (pr.pierceHit||(pr.pierceHit=[])).push(e); } else dead=true;   // v499 Phantom Quiver
             lastHitCrit = false;
             if(pr.isRapidShot && pr.rsBurst && pr.rsBurst.target===e) pr.rsBurst.hitsOnTarget = (pr.rsBurst.hitsOnTarget||0)+1;
-            g.particles.push({type:'burst', x:e.x, y:e.y, t:0.22, max:0.22, color:pr.crit?'#ffe27a':(pr.isArcaneBolt?'#c89bff':pr.isPoisonKnife?'#7dd45a':pr.spell==='fire'?'#ff7a3d':pr.spell==='ice'?'#7ad0ff':pr.spell==='lightning'?'#e6e35a':pr.isLightningArc?'#e6e35a':pr.isFireball?'#ff7a3d':pr.isIceBolt?'#7ad0ff':pr.isSoulSap?'#a06ad0':'#e8c44a')});
+            g.particles.push({type:'burst', x:e.x, y:e.y, t:0.22, max:0.22, color:pr.crit?'#ffe27a':(pr.isArcaneBolt?'#c89bff':pr.spell==='fire'?'#ff7a3d':pr.spell==='ice'?'#7ad0ff':pr.spell==='lightning'?'#e6e35a':pr.isLightningArc?'#e6e35a':pr.isFireball?'#ff7a3d':pr.isIceBolt?'#7ad0ff':pr.isSoulSap?'#a06ad0':'#e8c44a')});
             if(pr.spell==='fire'){ e.burnT = Math.max(e.burnT||0, FIRE_DOT_DUR); e.burnDps = Math.max(e.burnDps||0, pr.dmg*FIRE_DOT_PCT); }
             else if(pr.spell==='ice'){ e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR); }
             else if(pr.spell==='lightning'){ /* v456: lightning adds a Charge (via applyEnemyArmor), no stun */ }
-            else if(pr.isPoisonKnife){ e.poisonT = Math.max(e.poisonT||0, POISON_DOT_DUR); e.poisonDps = Math.max(e.poisonDps||0, pr.dmg*POISON_DOT_PCT); }
             else if(pr.isCripplingShot){ e.bleedDps = Math.max(e.bleedDps||0, pr.dmg*(pr.bleedPct||0)); e.bleedT = Math.max(e.bleedT||0, CRIPPLING_SHOT_BLEED_DUR); }
             else if(pr.isStunShot){ if(Math.random() < (pr.stunChance!=null ? pr.stunChance : 1) && !(e.stunT>0)){ e.stunT = Math.max(e.stunT||0, pr.stunDur||0); g.particles.push({type:'ring', x:e.x, y:e.y, t:0.3, max:0.3, r:e.r+16, color:'#f0d078'}); showMsg('Stunned!', 0.4); } }
             else if(pr.isLightningArc){
@@ -4018,7 +3992,6 @@ function updateStep(dt){
   cdFn(document.querySelector('#btnAssault .cd'), Math.max(0,p.assaultCd), p.assaultCdMax);
   cdFn(document.querySelector('#btnRally .cd'), Math.max(0,p.rallyCd), p.rallyCdMax);
   cdFn(document.querySelector('#btnTrap .cd'), Math.max(0,p.trapCd), p.trapCdMax);
-  cdFn(document.querySelector('#btnPoisonKnives .cd'), Math.max(0,p.poisonKnivesCd), p.poisonKnivesCdMax);
   cdFn(document.querySelector('#btnShadowStep .cd'), Math.max(0,p.shadowStepCd), p.shadowStepCdMax);
   cdFn(document.querySelector('#btnVanish .cd'), Math.max(0,p.vanishCd), p.vanishCdMax);
   cdFn(document.querySelector('#btnRapidShot .cd'), Math.max(0,p.rapidShotCd), p.rapidShotCdMax);
