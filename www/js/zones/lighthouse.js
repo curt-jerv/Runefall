@@ -262,6 +262,10 @@ function spawnLighthouseFloor(g, floor){
       for(let k=0;k<nA;k++){ const q = spot(r); if(q) spawnEnemy(g, 'banditarcher', q); }
       if(r.steps>0 && dist({x:r.cx,y:r.cy}, room.stairs) < 500){ const q = spot(r); if(q) spawnEnemy(g, 'banditbrute', q); }
     }
+    // v505: every maze floor has a Map Bearer (ringed in gold) in the next room or so; slaying it charts the floor
+    { const ent = room.entrance, cand = g.enemies.filter(e=>e.hp>0 && e.type!=='banditbrute').map(e=>({e, d:dist(e,ent)})).filter(c=>c.d>=300).sort((x,y)=>Math.abs(x.d-650)-Math.abs(y.d-650));
+      const b = cand.length ? cand[0].e : null;
+      if(b){ b.mapCarrier = true; b.mapHolder = true; b.hp = Math.round(b.hp*2); b.maxHp = Math.round(b.maxHp*2); b.r = Math.round(b.r*1.12); b.xpMul = Math.max(b.xpMul||1, 2.5); } }
     g.enemies._dense = true;   // exactly these packs
   } else if(!room.rooftop){
     const banditCount = 2 + Math.floor(floor/2); // floors 1-4: 2,2,3,3

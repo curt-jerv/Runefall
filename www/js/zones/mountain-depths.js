@@ -6,20 +6,23 @@ const DEEP_FLOORS = 3, DEEP_BASE_LEVEL = 36;
 const DEEP_NAMES = ['Mountain Depths', 'Ember Caverns', 'Heart of the Mountain'];
 const HEART_W = 4020, HEART_H = 1400, HEART_AX0 = 1886, HEART_AX1 = 3836, HEART_AY0 = 148, HEART_AY1 = 1252;   // (v352) arena halved (was 5520x3128); v456 halved again and made an organic bowl
 const HEART_CX = (HEART_AX0+HEART_AX1)/2, HEART_CY = HEART_H/2, HEART_RX = (HEART_AX1-HEART_AX0)/2, HEART_RY = (HEART_AY1-HEART_AY0)/2;
+// v505: the Breach's Molten Colossus floor brings its own bowl (room.heartGeo); every other room uses the real Heart of the Mountain
+const HEART_DEF = {AX0:HEART_AX0, AX1:HEART_AX1, AY0:HEART_AY0, AY1:HEART_AY1, CX:HEART_CX, CY:HEART_CY, RX:HEART_RX, RY:HEART_RY};
+function heartG(){ const r = (typeof game!=='undefined' && game && game.room) || null; return (r && r.heartGeo) || HEART_DEF; }
 // v456: the arena is an ellipse; this keeps a point (or a body of radius m) inside it
-function heartEllD(x, y){ const nx = (x-HEART_CX)/HEART_RX, ny = (y-HEART_CY)/HEART_RY; return Math.sqrt(nx*nx+ny*ny); }
+function heartEllD(x, y){ const G = heartG(), nx = (x-G.CX)/G.RX, ny = (y-G.CY)/G.RY; return Math.sqrt(nx*nx+ny*ny); }
 function heartClampPt(x, y, m){
-  const k = 0.9, rx = Math.max(40, HEART_RX*k - m), ry = Math.max(40, HEART_RY*k - m), nx = (x-HEART_CX)/rx, ny = (y-HEART_CY)/ry, d = Math.sqrt(nx*nx+ny*ny);
-  return d<=1 ? {x, y} : {x:HEART_CX + (x-HEART_CX)/d, y:HEART_CY + (y-HEART_CY)/d};
+  const G = heartG(), k = 0.9, rx = Math.max(40, G.RX*k - m), ry = Math.max(40, G.RY*k - m), nx = (x-G.CX)/rx, ny = (y-G.CY)/ry, d = Math.sqrt(nx*nx+ny*ny);
+  return d<=1 ? {x, y} : {x:G.CX + (x-G.CX)/d, y:G.CY + (y-G.CY)/d};
 }
 const HIT_FLASH = '#8e3a32';   // (v263) dull red hit flash for bosses (the old pure white was blinding)
 function deepFloorLevel(f){ return DEEP_BASE_LEVEL + f - 1; }
 function deepEntranceSide(f){ return (f%2===1) ? 'left' : 'right'; }
 function heartLavaAt(room, x, y){
   if(!(room.lavaInset > 0)) return false;
-  if(x<HEART_AX0-120) return false;
+  if(x<heartG().AX0-120) return false;
   const d = heartEllD(x, y);   // v456: the lava creeps in from the rim of the bowl
-  return d < 1.25 && (1-d)*HEART_RY*0.95 < room.lavaInset;
+  return d < 1.25 && (1-d)*heartG().RY*0.95 < room.lavaInset;
 }
 // v456: Ember Caverns and the Heart of the Mountain are organic caves now (like the Bear Cave), with lava pools in the caverns
 const deepOrgCache = {};

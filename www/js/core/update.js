@@ -3088,10 +3088,10 @@ function updateStep(dt){
       try{ bossRecipeDrop(g, g.enemies[i]); }catch(err){}   // v464
       { const rk = bossRekillFlag(g.enemies[i]); if(rk && p[rk]) bossRekillRare(g, g.enemies[i]); }
       if(g.enemies[i].bkBoss && g.tower) g.tower.bkDeath = {x:g.enemies[i].x, y:g.enemies[i].y};   // v490: the Bandit King's chest and portal appear where he fell   // v489: re-killed bosses drop a rare instead of their quest item
-      if(g.enemies[i].mastodon) huntBossKilled('hunt_mastodon');
-      if(g.enemies[i].minotaur) huntBossKilled('hunt_minotaur');
+      if(g.enemies[i].mastodon && !g.enemies[i].brBoss) huntBossKilled('hunt_mastodon');
+      if(g.enemies[i].minotaur && !g.enemies[i].brBoss) huntBossKilled('hunt_minotaur');
       if(g.enemies[i].defiler) defilerSlain(g, g.enemies[i]);
-      if(g.enemies[i].kraken) huntBossKilled('hunt_kraken'); else if(g.enemies[i].lvBoss) huntBossKilled('hunt_leviathan');
+      if(!g.enemies[i].brBoss){ if(g.enemies[i].kraken) huntBossKilled('hunt_kraken'); else if(g.enemies[i].lvBoss) huntBossKilled('hunt_leviathan'); }
       if(g.enemies[i].lr){ bossMsg('The Flame Raptor is slain','Its fire dies in the den', 3.4); }
       if(g.enemies[i].gj && !g.enemies[i].brBoss) gojiraSlain(g.enemies[i]);
       if(g.enemies[i].harpyQueen) harpyQueenSlain(g, g.enemies[i]);
@@ -3113,7 +3113,7 @@ function updateStep(dt){
       if(g.enemies[i].ftMapCarrier && !p.ftMapFound){ p.ftMapFound = true; showMsg('Forgotten Tower map found \u2014 every floor is now charted', 3.4, '#e8c44a'); saveGame(); }   // v490
       if(g.enemies[i].hwMapCarrier && !p.hwMapFound){ p.hwMapFound = true; showMsg('Highward map found — every floor is now charted', 3.4, '#e8c44a'); saveGame(); }
       if(g.enemies[i].mapBrute && room.subzone==='keep'){ p.keepMaps = p.keepMaps || {}; if(!p.keepMaps[room.kpArea]){ p.keepMaps[room.kpArea] = true; showMsg('Floor map found \u2014 this floor is now charted', 3.4, '#e8c44a'); saveGame(); } }
-      if(room.floorRects && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; showMsg('Dungeon map found', 2.8, '#e8c44a'); }
+      if((room.floorRects || room.maze) && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; showMsg('Dungeon map found', 2.8, '#e8c44a'); }
       { const dp = (g.enemies[i].swimmer && room.nearestDry) ? room.nearestDry(g.enemies[i].x, g.enemies[i].y) : g.enemies[i];
         dropLoot(g, dp.x, dp.y, g.enemies[i].type, g.enemies[i].isLairBoss, g.enemies[i]);
         partsMaybeDrop(g, g.enemies[i]);

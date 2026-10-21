@@ -92,7 +92,7 @@ function initColossus(e){
   e.cPools = []; e.cStrikes = []; e.cCracks = []; e.cErupts = []; e.colWeak = 0; e.armorBase = e.armor || 0; e.cCata = 0; e.cSafe = null; e.baseR = e.r;
   e.cMove = ''; e.cBreathDir = 0;
 }
-function colArena(e){ return {x0:HEART_AX0+e.r, x1:HEART_AX1-e.r, y0:HEART_AY0+e.r, y1:HEART_AY1-e.r}; }
+function colArena(e){ const G = heartG(); return {x0:G.AX0+e.r, x1:G.AX1-e.r, y0:G.AY0+e.r, y1:G.AY1-e.r}; }
 function colHit(g, e, tgt, mult, phys){
   const dm = teleDmg(e, mult);
   const src = phys ? {dmgType:'normal', hp:0, x:e.x, y:e.y, r:0} : e;
@@ -115,7 +115,7 @@ function segDist(px,py,x1,y1,x2,y2){
   return Math.hypot(px-(x1+dx*u), py-(y1+dy*u));
 }
 function colPickSafe(e, g, room){
-  const p = g.player, A = {x0:HEART_CX-HEART_RX*0.55, x1:HEART_CX+HEART_RX*0.55, y0:HEART_CY-HEART_RY*0.45, y1:HEART_CY+HEART_RY*0.45};   // v456: inside the bowl
+  const p = g.player, G = heartG(), A = {x0:G.CX-G.RX*0.55, x1:G.CX+G.RX*0.55, y0:G.CY-G.RY*0.45, y1:G.CY+G.RY*0.45};   // v456: inside the bowl
   const out = [];
   const a0 = Math.random()*Math.PI*2;
   out.push({x:clamp(p.x+Math.cos(a0)*330, A.x0, A.x1), y:clamp(p.y+Math.sin(a0)*330, A.y0, A.y1), r:COL_SAFE_R});
@@ -176,7 +176,7 @@ function updateColossus(g, e, dt, target, d, isFollowerTarget, chillMult, room){
       e.cErupts.splice(i,1);
     }
   }
-  if(P3 && room.lavaInset < COL_MAX_INSET) room.lavaInset = Math.min(COL_MAX_INSET, room.lavaInset + 2.6*dt);
+  if(P3 && !room.heartGeo && room.lavaInset < COL_MAX_INSET) room.lavaInset = Math.min(COL_MAX_INSET, room.lavaInset + 2.6*dt);
   // ---- state machine ----
   const st = e.cState;
   const lanesOK = ()=>true;
@@ -300,13 +300,13 @@ function updateColossus(g, e, dt, target, d, isFollowerTarget, chillMult, room){
       if(e.cPhase===2){
         for(let k=0;k<6;k++){
           for(let tries=0;tries<12;tries++){
-            const c = heartClampPt(rand(HEART_AX0+150, HEART_AX1-150), rand(HEART_AY0+120, HEART_AY1-120), 120);
+            const G = heartG(), c = heartClampPt(rand(G.AX0+150, G.AX1-150), rand(G.AY0+120, G.AY1-120), 120);
             if(dist(c,p) > 360 && dist(c,e) > e.r+160 && e.cPools.every(q=>dist(q,c) > 340)){ colPool(e, c.x, c.y, 100, 45); break; }
           }
         }
         g.particles.push({type:'ring', x:e.x, y:e.y, t:0.7, max:0.7, r:480, color:'#ff5a20'});
       } else {
-        room.lavaInset = 1;
+        if(!room.heartGeo) room.lavaInset = 1;   // (the Breach's bowl has no lava flood)
         g.particles.push({type:'ring', x:e.x, y:e.y, t:0.8, max:0.8, r:620, color:'#ffd08a'});
       }
       shakeScreen(g, 12, 0.6);
@@ -335,7 +335,7 @@ function updateColossus(g, e, dt, target, d, isFollowerTarget, chillMult, room){
 }
 function colossusSlain(e){
   const g = game, p = g.player, room = g.room;
-  p.colossusSlain = true;
+  if(!e.brBoss) p.colossusSlain = true;
   if(room){ room.lavaInset = 0; }
   for(const x of g.enemies) if(x.colAdd) x.hp = 0;
   e.cPools = []; e.cStrikes = []; e.cErupts = []; e.cCracks = [];
