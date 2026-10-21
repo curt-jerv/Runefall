@@ -341,23 +341,9 @@ function updateStep(dt){
         r:6, dmg, from:'player', life:1.4, color:'#b57bff', isArrow:true, isArcaneBolt:true, crit:isCrit});
     } else if(isBow){
       if(p.cls==='ranger') gainResource(p, STAMINA_ON_SHOT);
-      // Ranger basic attack: fire an arrow instead of swinging a melee arc.
-      // Multi Shot (Marksman): once ranked, this fires 3 arrows at once in a
-      // small fan instead of one (5 at Rank 5), each rolling the same dmg/crit
-      // already computed above -- distinct from Rapid Shot's sequential burst.
-      const msRank = effectiveRank(p,'multiShot')||0;
-      if(msRank>0){
-        const count = multiShotCount(msRank);
-        for(let k=0;k<count;k++){
-          const off = (k-(count-1)/2) * (MULTI_SHOT_SPREAD/(count-1));
-          const kAng = ang+off;
-          g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(kAng)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(kAng)*BOW_ARROW_SPEED*projectileSpeedMult(p),
-            r:5, dmg:dmg*MARKSMAN_DMG_TUNE, from:'player', life:1.4, color:'#e8c44a', isArrow:true, crit:isCrit});
-        }
-      } else {
-        g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
-          r:5, dmg, from:'player', life:1.4, color:'#e8c44a', isArrow:true, crit:isCrit});
-      }
+      // Ranger basic attack: one arrow (v495: Multi Shot is its own button now and no longer changes Strike)
+      g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
+        r:5, dmg, from:'player', life:1.4, color:'#e8c44a', isArrow:true, crit:isCrit});
     } else {
       // Cleave (Berserker, v56): while wielding a two-handed weapon AND
       // ranked, the basic Strike auto-becomes the wide-arc Cleave sweep
@@ -761,6 +747,28 @@ function updateStep(dt){
         const csDmg = wpnDmg(p) * swd('cripplingShot', csRank) * assaultDealtMult(p) * weaponDmgMult(p);
         g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
           r:5, dmg:csDmg, from:'player', life:1.4, color:'#b4293f', isArrow:true, isCripplingShot:true, bleedPct:cripplingShotBleedPct(csRank)});
+      }
+    }
+  }
+  if(wantMultiShot){   // v495 Multi Shot: a free basic shot like Splinter and Rapid Shot -- a fan of arrows that refills Stamina
+    const msRank = effectiveRank(p,'multiShot')||0;
+    if(msRank>0 && p.atkCd>0 && p.atkCd<0.25){ /* buffer the press until Strike is ready */ }
+    else {
+      wantMultiShot=false;
+      if(msRank>0 && isBow && p.atkCd<=0 && !p.dodging){
+        const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+        const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
+        p.facing = {x:Math.cos(ang), y:Math.sin(ang)}; p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
+        p.atkAnimT = 0.22; p.atkAnimMax = 0.22; p.atkCd = p.atkCdMax;
+        gainResource(p, STAMINA_ON_SHOT);
+        const msCrit = Math.random()*100 < (p.critChance||0) + (p.rallyT>0 ? RALLY_CRIT_BONUS : 0) + arrowEyeCritBonus(p);
+        const msDmg = wpnDmg(p) * MARKSMAN_DMG_TUNE * assaultDealtMult(p) * weaponDmgMult(p) * (msCrit ? critMultOf(p) : 1);
+        const count = multiShotCount(msRank);
+        for(let k=0;k<count;k++){
+          const kAng = ang + (k-(count-1)/2) * (MULTI_SHOT_SPREAD/(count-1));
+          g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(kAng)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(kAng)*BOW_ARROW_SPEED*projectileSpeedMult(p),
+            r:5, dmg:msDmg, from:'player', life:1.4, color:'#e8c44a', isArrow:true, crit:msCrit});
+        }
       }
     }
   }

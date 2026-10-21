@@ -248,13 +248,13 @@ function audNear(x, y){ const d = Math.hypot(x-AUD.pos.x, y-AUD.pos.y); return d
 const SKILL_SND = {
   strike:'swing', reave:'swing', shieldBash:'bash', shieldThrow:'clang', guardian:'summon', whirlwind:'spin', battlecry:'shout', leap:'thud', smite:'holy', vengeance:'holy', banner:'shout',
   consecrate:'holy', judgment:'holy', bulwark:'clang', mirrorSteel:'clang', seismicSlam:'thud', seismicAnchor:'thud', bloodrage:'shout', assault:'swing', commander:'shout', rally:'shout', poisonKnives:'knife', shadowStep:'whoosh', vanish:'smoke',
-  rapidShot:'bow', splinterShot:'bow', explosiveShot:'bowHeavy', cripplingShot:'bow', stunShot:'bow', aimedShot:'bowHeavy', rainOfArrows:'bowHeavy', packTactics:'howl', beastFury:'howl', huntersMark:'mark', poisonTrap:'trap', frostTrap:'trap', explosiveTrap:'trap',
+  rapidShot:'bow', splinterShot:'bow', multiShot:'bow', explosiveShot:'bowHeavy', cripplingShot:'bow', stunShot:'bow', aimedShot:'bowHeavy', rainOfArrows:'bowHeavy', packTactics:'howl', beastFury:'howl', huntersMark:'mark', poisonTrap:'trap', frostTrap:'trap', explosiveTrap:'trap',
   fieldDress:'heal', survivalFieldDress:'heal', recall:'portal',
   nova:'arcane', tornado:'wind', hurricane:'wind', fireball:'fire', iceBolt:'ice', iceArmor:'ice', pyroTorrent:'fire', meteor:'fire', stormcall:'bolt', raiseDead:'summon', blizzard:'ice', immolate:'fire', flameVortex:'fire', permafrost:'ice',
   fear:'curse', soulFire:'curse', soulSap:'arcane', lightningArc:'arc', deathBolt:'curse', soulGate:'summon', plague:'poison'
 };
 const SND_ELEM = { arc:'bolt', fire:'fire', ice:'ice', bolt:'bolt', arcane:'arcane', curse:'arcane', poison:'poison', explode:'fire' };
-const ATK_SHARED = { explosiveShot:1, splinterShot:1, reave:1, strike:1, shieldBash:1, smite:1, vengeance:1, cripplingShot:1, stunShot:1, fireball:1, iceBolt:1, lightningArc:1, soulSap:1, deathBolt:1 };
+const ATK_SHARED = { explosiveShot:1, splinterShot:1, multiShot:1, reave:1, strike:1, shieldBash:1, smite:1, vengeance:1, cripplingShot:1, stunShot:1, fireball:1, iceBolt:1, lightningArc:1, soulSap:1, deathBolt:1 };
 function audWrapTriggers(){
   try{ for(const k in ACTIVE_SKILL_REGISTRY){ const en = ACTIVE_SKILL_REGISTRY[k]; if(en._audW) continue; en._audW = true; const o = en.trigger; en.trigger = function(){ AUD.lastTrig = {id:k, t:performance.now()}; return o.apply(this, arguments); }; } }catch(e){}
 }

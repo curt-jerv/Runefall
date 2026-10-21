@@ -59,6 +59,7 @@ const ACTIVE_SKILL_REGISTRY = {
   vanish:        { oldBtnId:'btnVanish',       trigger(){ wantVanish=true; },        getCd(p){ return {cur:p.vanishCd, max:p.vanishCdMax}; } },
   rapidShot:     { oldBtnId:'btnRapidShot',    trigger(){ wantRapidShot=true; },     getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },   // v489: a basic shot now
   splinterShot:  { oldBtnId:null, trigger(){ wantSplinterShot=true; }, getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
+  multiShot:     { oldBtnId:null, trigger(){ wantMultiShot=true; },    getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },   // v495
   cripplingShot: { oldBtnId:'btnCripplingShot',trigger(){ wantCripplingShot=true; }, getCd(p){ return {cur:p.cripplingShotCd, max:p.cripplingShotCdMax}; } },
   explosiveShot: { oldBtnId:null, trigger(){ wantExplosiveShot=true; }, getCd(p){ return {cur:p.explosiveShotCd||0, max:p.explosiveShotCdMax||EXPLOSIVE_SHOT_CD}; } },
   stunShot:      { oldBtnId:'btnStunShot',     trigger(){ wantStunShot=true; },      getCd(p){ return {cur:p.stunShotCd, max:p.stunShotCdMax}; } },

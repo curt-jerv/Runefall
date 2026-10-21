@@ -615,10 +615,9 @@ function nodeEffectTextBase(node, rank){
     return 'Dmg x'+fmtNum(swd('rapidShot',rank))+' weapon damage per arrow &middot; Final-arrow armor pen (same target only): '+pen+'% &middot; Free, refills '+STAMINA_ON_SHOT+' Stamina';
   }
   if(node.id==='multiShot'){
-    if(rank===0) return 'Passive: your bow\'s basic attack fires 3 arrows at once instead of one.';
+    if(rank===0) return 'Basic shot (free, refills '+STAMINA_ON_SHOT+' Stamina): loose a fan of '+multiShotCount(1)+' arrows at once, each '+Math.round(MARKSMAN_DMG_TUNE*100)+'% of a normal shot. Your Strike stays a single arrow.';
     const count = multiShotCount(rank);
-    const atkspd = Math.round(MULTI_SHOT_ATKSPD_PER_RANK*rank*100);
-    return 'Fires '+count+' arrows at once &middot; Attack speed +'+atkspd+'%'+(rank>=5?' &middot; Max rank bonus: 5-arrow spread':'');
+    return 'Fires '+count+' arrows in a fan, each '+Math.round(MARKSMAN_DMG_TUNE*100)+'% weapon damage &middot; Free, refills '+STAMINA_ON_SHOT+' Stamina'+(rank>=5?' &middot; Max rank bonus: 5-arrow spread':'');
   }
   if(node.id==='arrowEye'){
     if(rank===0) return 'Passive: increases Critical Chance while a bow is equipped, from +5% up to +25%.';
