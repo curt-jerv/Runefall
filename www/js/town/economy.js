@@ -508,7 +508,7 @@ function makeTown(charLevel){
     // waits on the dock; talking to any of them gives a random tip (talkTownTip)
     tipNpcs:[
       {id:1, x:905, y:332, r:18, kind:'townsfolk', name:'Townswoman', robe:'#5a3a4a', hood:'#3a2a34', long:true},
-      {id:2, x:884, y:506, r:18, kind:'townsfolk', name:'Townsman', robe:'#3e4a3a', tool:'lantern'},
+      {id:2, x:1156, y:272, r:18, kind:'townsfolk', name:'Townsman', robe:'#3e4a3a', tool:'lantern'},   // v507: stands in front of the timber house door (next to the hunter's camp)
       {id:3, x:172, y:1022, r:18, kind:'dockCaptain', name:'Ship Captain', robe:'#26304a', hat:'captain'},
     ],
     spawn:{x:160, y:TOWN_ROAD_Y},

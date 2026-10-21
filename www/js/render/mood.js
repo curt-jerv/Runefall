@@ -11,7 +11,7 @@ const MOOD_PROFILES = {
   town:          {desat:0.22, mul:'rgb(232,220,208)', vig:0.40, grime:0.30},
   tavern:        {desat:0.18, mul:'rgb(240,222,200)', vig:0.38, grime:0.22},
   forest:        {desat:0.30, mul:'rgb(208,214,200)', vig:0.48, grime:0.34},
-  sunlitplains:  {desat:0.42, mul:'rgb(214,196,170)', vig:0.46, grime:0.42, crush:0.10},
+  sunlitplains:  {desat:0.08, mul:'rgb(242,230,206)', vig:0.38, grime:0.28, crush:0.02},   // v507: the evening grade was draining the colour; keep it warm and green
   rivervalley:   {desat:0.40, mul:'rgb(206,204,182)', vig:0.44, grime:0.40, crush:0.08},
   lakesideruins: {desat:0.36, mul:'rgb(204,206,196)', vig:0.44, grime:0.36},
   blackmarsh:    {desat:0.30, mul:'rgb(196,206,184)', vig:0.50, grime:0.34},
@@ -135,7 +135,7 @@ function applyMoodCss(g){
   try{
     const N = 256, c = document.createElement('canvas'); c.width = c.height = N;
     const x = c.getContext('2d'), img = x.createImageData(N, N), d = img.data;
-    for(let i=0;i<N*N;i++){ if(Math.random() < 0.30){ const lt = Math.random() < 0.5, v = lt ? 235 : 10; d[i*4] = d[i*4+1] = d[i*4+2] = v; d[i*4+3] = Math.round((lt ? 7 : 16) + Math.random()*(lt ? 10 : 16)); } }
+    for(let i=0;i<N*N;i++){ if(Math.random() < 0.14){ const lt = Math.random() < 0.5, v = lt ? 235 : 10; d[i*4] = d[i*4+1] = d[i*4+2] = v; d[i*4+3] = Math.round((lt ? 4 : 8) + Math.random()*(lt ? 5 : 8)); } }   // v507: about a third of the old grain
     x.putImageData(img, 0, 0);
     if(moodGrainEl) moodGrainEl.style.backgroundImage = 'url('+c.toDataURL('image/png')+')';
   }catch(e){}
@@ -184,7 +184,7 @@ function drawRegionDarkening(g){
   const p = g.player;
   let a = 0, col = '8,6,26';
   const sm = (v)=>{ v = clamp(v,0,1); return v*v*(3-2*v); };
-  if(g.scene==='sunlitplains'){ a = 0.2 + sm((p.y-SUN_H*0.42)/(SUN_H*0.5))*0.38; col='64,28,14'; }
+  if(g.scene==='sunlitplains'){ a = 0.04 + sm((p.y-SUN_H*0.42)/(SUN_H*0.5))*0.42; col='64,28,14'; }   // v507: lighter to the north, still dusk toward the Cemetery
   else if(g.scene==='lakesideruins'){ a = 0.30 + sm((p.x-LAKE_W*0.6)/(LAKE_W*0.38))*0.26; col='10,12,8'; drawGrittyGrade(g); }
   else if(g.scene==='blackmarsh'){ a = 0.44 + 0.14*clamp(p.x/BM_W,0,1); col='4,22,12'; }
   else if(g.scene==='highlands'){ a = 0.2; col='26,34,48'; }
@@ -220,7 +220,7 @@ function drawSunsetGlow(g){
   // west in this projection is up-left on screen
   const sx = -W*0.06, sy = -H*0.18, R = H*1.05;
   ctx.save();
-  const wash = ctx.createLinearGradient(0,0,W,H); wash.addColorStop(0,'rgba(255,150,60,0.16)'); wash.addColorStop(1,'rgba(120,50,90,0.14)');
+  const wash = ctx.createLinearGradient(0,0,W,H); wash.addColorStop(0,'rgba(255,170,70,0.09)'); wash.addColorStop(1,'rgba(255,190,110,0.03)');
   ctx.fillStyle = wash; ctx.fillRect(0,0,W,H);   // warm evening grade (plain alpha fill, mobile-friendly)
   ctx.globalCompositeOperation = 'lighter';
   const rg = ctx.createRadialGradient(sx,sy,10, sx,sy,R);

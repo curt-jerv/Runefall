@@ -450,7 +450,7 @@ const NECRO_SACRIFICE_FALLBACK_RADIUS_MULT = 0.55, NECRO_SACRIFICE_FALLBACK_DMG_
 // Dark Crypt Vampire's own lifesteal-on-hit pattern (VAMPIRE_LIFESTEAL_PCT),
 // just applied from the follower-attack side instead of the enemy side,
 // and split across two recipients instead of one.
-const DEMON_BIND_SOUL_THRESHOLD = 10;
+const DEMON_BIND_SOUL_THRESHOLD = 5;   // v507: 5 souls to bind (and re-bind) the demon
 // ===== v268 Necromancer redesign =====
 const DEATHBOLT_MULT = 0.95, DEATHBOLT_BOUNCE_MULT = 0.5, DEATHBOLT_BOUNCE_RANGE = 260, DEATHBOLT_LOW_MULT = 1.5, DEATHBOLT_LIFESTEAL = 0.08;   // v317: life steal 10% -> 8%
 function deathBoltBounces(rank){ return rank>0 ? 1 + Math.ceil(rank/2) : 0; }
@@ -477,7 +477,7 @@ function soulGateInterval(rank){ return 1.0 - 0.1*(Math.max(1,rank)-1); }
 const FEAR_SOUL_COST = 0;   // v411: Fear costs mana only again
 // v419: Soul Nova -- a flat 10 souls, or 20 mana when you hold fewer; damage grows with rank
 // v489 Soul Fire (replaces Soul Nova): 5 souls + 20 mana, a big slow rolling ball of green soul-flame that bursts on impact (half physical, half poison)
-const SOULFIRE_SOUL_COST = 20, SOULFIRE_MANA_COST = 20, SOULFIRE_CD = 6, SOULFIRE_RADIUS = 105, SOULFIRE_SPEED = 170, SOULFIRE_LIFE = 3.2, SOULFIRE_R = 15;
+const SOULFIRE_SOUL_MIN = 10, SOULFIRE_SOUL_COST = 20, SOULFIRE_BONUS = 0.2, SOULFIRE_COST_TXT = '10-20', SOULFIRE_MANA_COST = 20, SOULFIRE_CD = 6, SOULFIRE_RADIUS = 105, SOULFIRE_SPEED = 170, SOULFIRE_LIFE = 3.2, SOULFIRE_R = 15;
 function soulFireExplode(g, p, pr){
   const R = pr.R || SOULFIRE_RADIUS;
   for(const e of g.enemies){
@@ -496,14 +496,14 @@ function soulFireExplode(g, p, pr){
   try{ sfxPlay('fireHit', 0.9); }catch(err){}
 }
 function soulFireDmg(p, rank){ return wpnDmg(p) * swd('soulFire', rank) * soulHungerMult(p); }
-const DEMON_LINK_SHARE = 0.5, DEMON_SIZE_PER_10 = 0.05, DEMON_DMG_PER_10 = 0.10;
+const DEMON_LINK_SHARE = 0.5, DEMON_SIZE_PER_10 = 0.04, DEMON_DMG_PER_10 = 0.10;   // v507: +20% size at 50 souls (4% per 10)
 function demonSoulMult(p, per){ return 1 + per*Math.min(SOUL_CAP,(p.souls||0))/10; }
 function necroSkeletonCount(rank){ return rank>0 ? [0,2,2,3,4,5][Math.min(5,rank)] : 0; }
 const NECRO_RESPAWN_SOULS = 1;
 // v460 Raise Skeletons: passive + active. A fallen skeleton stays down until you press Raise Skeletons --
 // unless you hold a soul: then one soul is spent automatically to raise it after a short delay.
 const RAISE_DEAD_CD = 6;   // v489
-function skelSoulRaiseDelay(rank){ return 3; }   // v489: a held soul raises a fallen skeleton after 3s
+function skelSoulRaiseDelay(rank){ return 1; }   // v507: a held soul raises a fallen skeleton after 1s (was 3s)
 const RAISE_DEAD_MANA_PER_SKEL = 12;
 function necroSkeletonLimit(p){ const r = (p && p.skills && effectiveRank(p,'raiseDead'))||0; return r>0 ? necroSkeletonCount(r) + (uq(p,'uq_necromancer') ? 2 : 0) : 0; }
 function sacrificeLifePct(r){ r = Math.max(1, r||1); return 0.25 + 0.20*(Math.min(10,r)-1)/9 + 0.01*Math.max(0, r-10); }   // v489: blast = 25% -> 45% of the skeleton's max life
@@ -513,7 +513,7 @@ const NECRO_SKEL_SOUL_DMG = 0.25;   // v416: +25% skeleton damage at a full soul
 const PLAGUE_DMG_BUFF = 1.3;
 function necroHasSoulSkills(p){ if(!p || !p.skills) return false; for(const id of ['deathBolt','soulSap','soulHunger','soulGate','soulShield','demonBind','sacrifice','fear','raiseDead','soulFire']) if((effectiveRank(p,id)||0)>0) return true; return false; }
 const NECRO_TREE_IDS = ['soulNova','soulFire','deathBolt','raiseDead','soulSap','soulHunger','soulGate','soulShield','demonBind','fear','sacrifice','plague'];
-const NECRO_DEMON_BASE_DMG = 14, NECRO_DEMON_HP_MULT = 1.4, NECRO_DEMON_R = 13.8;   // v402/v409: 15% smaller twice (was 19)
+const NECRO_DEMON_BASE_DMG = 14, NECRO_DEMON_HP_MULT = 1.4, NECRO_DEMON_R = 19;   // v507: the old 50-soul size (17.25) plus 10% is now the starting size
 const NECRO_DEMON_LEECH_BASE = 0.10, NECRO_DEMON_LEECH_STEP = 0.025; // 10% at Rank1 -> 20% at Rank5 (halved)
 // v382: wolves life-leech too: 5% of the damage they deal at Rank 1, rising to 20% at Rank 10 (heals only the wolf)
 function wolfLeechPct(rank){ return rank>0 ? 0.05 + (Math.min(10,rank)-1)*(0.15/9) : 0; }

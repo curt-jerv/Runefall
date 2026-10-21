@@ -846,7 +846,7 @@ function hudTextAnchor(belowBanner){
   const bm = document.getElementById('bigMsg');
   if(bm){
     if(bm.style.top !== Math.round(y)+'px') bm.style.top = Math.round(y)+'px';
-    if(belowBanner && parseFloat(getComputedStyle(bm).opacity) > 0.05) y = bm.getBoundingClientRect().bottom + 2;
+    if(belowBanner && (parseFloat(getComputedStyle(bm).opacity) > 0.05 || Date.now() < (showBigMsg._until||0))) y = Math.max(y, bm.getBoundingClientRect().bottom + 2);
   }
   return y;
 }

@@ -1027,10 +1027,10 @@ const BR_TIER_PACKS = [[0,1,2],[1,2,3,4],[3,4,5,6,7],[4,5,6,7,8]];
 const BR_THEME_PAL = {
   minotaur:{wp:['#6a6254','#2a2418','#4a4234'], fl:['#2a2620','#221e18','#322c24','#2a251e']},
   revenant:{wp:['#4a5468','#1c2230','#303a4c'], fl:['#22283a','#1a2030','#2a3248','#202638']},
-  mastodon:{wp:['#5a7084','#26384a','#40586c'], fl:['#3c4c58','#323f4a','#465664','#3a4a56']},
+  mastodon:{wp:['#5a7084','#26384a','#40586c'], fl:['#34424d','#2c3842','#3e4c58','#323f4a']},
   leviathan:{wp:['#3a4a2e','#141c10','#2a3a22'], fl:['#2a3a24','#20301c','#344630','#2c3c26']},
   colossus:{wp:['#4a2216','#1a0a05','#321610'], fl:['#241410','#1c100c','#2e1c14','#22140e']},
-  kraken:{wp:['#2a4a5a','#0e1c26','#1e3644'], fl:['#1e3440','#162a34','#264450','#1c303c']}
+  kraken:{wp:['#3a6074','#16293a','#2a4a5e'], fl:['#2e4a58','#264050','#38586a','#2c4656']}
 };
 const BR_THEME_PACKS = {
   minotaur:[['skeleton','skeleton','skeletonarcher'],['skeletonbrute','skeleton','skeleton'],['skeletonbrute','skeletonbrute'],['skeleton','skeleton','skeleton','skeletonarcher']],

@@ -2138,11 +2138,12 @@ function updateStep(dt){
     wantSoulFire=false;
     const sfRank = effectiveRank(p,'soulFire')||0;
     if(sfRank>0 && p.soulFireCd<=0){
-      if((p.souls||0) < SOULFIRE_SOUL_COST){ if(!(p.resMsgT>0)){ p.resMsgT = 0.9; showMsg('Not enough souls ('+SOULFIRE_SOUL_COST+' needed)', 0.9); } }
+      if((p.souls||0) < SOULFIRE_SOUL_MIN){ if(!(p.resMsgT>0)){ p.resMsgT = 0.9; showMsg('Not enough souls ('+SOULFIRE_SOUL_MIN+' needed)', 0.9); } }
       else if((p.mp||0) < SOULFIRE_MANA_COST){ noResourceMsg(p); }
       else {
-        const dmg = soulFireDmg(p, sfRank);   // (with the souls still held, so Soul Hunger counts them)
-        p.souls -= SOULFIRE_SOUL_COST; p.mp = Math.max(0, (p.mp||0) - SOULFIRE_MANA_COST);
+        const sfSpent = Math.min(SOULFIRE_SOUL_COST, Math.floor(p.souls||0));   // v507: 10 to 20 souls; the full 20 adds 20% damage
+        const dmg = soulFireDmg(p, sfRank) * (1 + SOULFIRE_BONUS*(sfSpent-SOULFIRE_SOUL_MIN)/(SOULFIRE_SOUL_COST-SOULFIRE_SOUL_MIN));   // (with the souls still held, so Soul Hunger counts them)
+        p.souls -= sfSpent; p.mp = Math.max(0, (p.mp||0) - SOULFIRE_MANA_COST);
         p.soulFireCdMax = applyCdr(p, SOULFIRE_CD); p.soulFireCd = p.soulFireCdMax;
         const tg = nearestEnemyOnScreen(g, p, 520);
         const ang = tg ? Math.atan2(tg.y-p.y, tg.x-p.x) : Math.atan2(p.facing.y, p.facing.x);

@@ -337,7 +337,7 @@ function drawLosMask(g, pts, defer){
   if(!losCanvas || losCanvas.width!==lw || losCanvas.height!==lh){ losCanvas = document.createElement('canvas'); losCanvas.width = lw; losCanvas.height = lh; losCtx = losCanvas.getContext('2d'); }
   const m = losCtx, cam = g.camera;
   m.setTransform(1,0,0,1,0,0); m.globalCompositeOperation = 'source-over'; m.clearRect(0,0,lw,lh);
-  m.fillStyle = (g.room && g.room.theme) ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.82)'; m.fillRect(0,0,lw,lh);   // (v506: themed Breach floors see a little further into the shadows)
+  m.fillStyle = (g.room && (g.room.theme || g.room.subzone==='sunken')) ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.82)'; m.fillRect(0,0,lw,lh);   // (v506: themed Breach floors see a little further into the shadows)
   m.globalCompositeOperation = 'destination-out'; m.fillStyle = '#000';
   for(const lift of [0, 30]){   // second pass lifts the lit area so wall faces next to you stay readable
     m.beginPath();
@@ -351,7 +351,7 @@ function drawLosMask(g, pts, defer){
 // Outside the circle the world is VEIL_MAX_A dark (towers and halls darker still); inside it a light VEIL_CORE_DIM haze stays.
 // +Light Radius gear widens every circle of light except the Dark Crypt's.
 const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.8, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.42, UNDERGROUND_LIGHT_SCALE = 0.8;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
-const VEIL_THEME_R = 360, VEIL_THEME_A = 0.7, VEIL_THEME_DIM = 0.1;   // v506
+const VEIL_THEME_R = 290, VEIL_THEME_A = 0.8, VEIL_THEME_DIM = 0.2;   // v506
 function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
@@ -362,9 +362,10 @@ function lightVeilScene(g){
 function drawLightVeil(g){
   const indoor = g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g);
   const th = indoor && g.room && g.room.theme;   // v506: the Breach's themed boss floors are lit a good deal brighter than the Keep's halls
-  drawDarkCryptOverlay(g, (th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R)*lightRadiusMult(g.player), false, null, th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
+  const wet = th==='kraken' || th==='leviathan';   // the water floors are lit brighter still
+  drawDarkCryptOverlay(g, (wet ? 315 : th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R)*lightRadiusMult(g.player), false, null, wet ? 0.72 : th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
 }
-function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
+function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
   const cam = g.camera;
   // The camera always centers the player at this exact fixed screen point
@@ -418,6 +419,15 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim){
     if(!tint){ losPending = false; mctx.save(); mctx.setTransform(1,0,0,1,0,0); mctx.globalCompositeOperation = 'source-over'; mctx.drawImage(losCanvas, 0, 0); mctx.restore(); }
     else flushLosPending();
   }
+  // v507: the character's own light -- a warm yellow glow on the ground, monsters and walls near you; it grows with the light radius
+  { const gk = glow==null ? 1 : glow;
+    if(gk>0.02){
+      const GR = LR*0.85;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(1, 0.86);
+      const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
+      gg.addColorStop(0,'rgba(255,204,112,'+(0.2*gk).toFixed(3)+')'); gg.addColorStop(0.45,'rgba(255,172,72,'+(0.09*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
+    } }
   // Composite the finished mask onto the main canvas with plain
   // source-over -- transparent (hole) pixels leave the scene beneath
   // completely untouched, opaque black pixels paint over it, exactly the
