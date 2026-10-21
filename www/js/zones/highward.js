@@ -1,6 +1,6 @@
 // ---- Highward (v287): the floating Templar fortress. Five floors, an inverted pyramid (each floor wider than the last). ----
 const HW_DEPTH = 46;   // v489: Highward floors are Lv 46-50 (were 50-54)
-const HW_FLOORS = 5, HW_W = [5600,6400,7200,8000,2400], HW_H = [2600,3000,3400,3800,2500];   // v490: floor 5 is just the entrance room and the Warden's sanctum   // v421: rooms-and-halls fortress, ~4x the old floor area
+const HW_FLOORS = 5, HW_W = [5450,6100,6850,7600,2400], HW_H = [2600,2850,3250,3600,2500];   // v490: floor 5 is just the entrance room and the Warden's sanctum   // v421: rooms-and-halls fortress, ~4x the old floor area
 const HW_UP_FRAC = [0.5,0.82,0.18,0.82,null], HW_DOWN_FRAC = [null,0.5,0.82,0.18,0.82];
 const HW_WARNING = 'When shadows wake beneath the Hold, three bearers bind what none may hold.';
 function makeHighwardRunestoneItem(){
@@ -180,6 +180,7 @@ function spawnHighward(g){
   for(const e of made) e.xpMul = e.hwSentry ? 2 : mul;
 }
 function enterHighward(floor, opts){
+  floor = floor || 1;
   opts = opts || {};
   const g = game, p = g.player;
   hwStoreSave(g);

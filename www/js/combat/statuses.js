@@ -83,16 +83,16 @@ function drawBurnFx(ent, iso){
 }
 function drawWithStatus(ent, drawFn, allowTint){
   const chill = ent.chillT>0, poison = ent.poisonT>0, burn = ent.burnT>0 || ent.immolateT>0;
-  if(!(allowTint && (chill||poison)) || _statusDepth>0 || _statusUsed >= (gfxLevel===2 ? 24 : gfxLevel===1 ? 10 : 0)){ drawFn(); if(_statusDepth===0){ if(allowTint && (chill||poison)) drawStatusRing(ent, chill); if(burn) drawBurnFx(ent, toIso(ent.x, ent.y)); if(ent.charges>0) drawChargeFx(ent, toIso(ent.x, ent.y)); } return; }
+  if(!(allowTint && (chill||poison)) || _statusDepth>0 || _statusUsed >= (gfxLevel===2 ? 10 : gfxLevel===1 ? 5 : 0)){ drawFn(); if(_statusDepth===0){ if(allowTint && (chill||poison)) drawStatusRing(ent, chill); if(burn) drawBurnFx(ent, toIso(ent.x, ent.y)); if(ent.charges>0) drawChargeFx(ent, toIso(ent.x, ent.y)); } return; }
   const iso = toIso(ent.x, ent.y), r = ent.r||14;
-  const bw = r*5+110, bh = r*7+120, bx = iso.x-bw/2, by = iso.y-bh+40;
+  const bw = r*4.4+90, bh = r*6.4+100, bx = iso.x-bw/2, by = iso.y-bh+40;
   const m = ctx.getTransform(), sx = Math.abs(m.a)||1, sy = Math.abs(m.d)||1;
   const pw = Math.ceil(bw*sx), ph = Math.ceil(bh*sy);
   _statusUsed++; _statusIx = (_statusIx+1) % 6;
   _statusOff = _statusPool[_statusIx] || (_statusPool[_statusIx] = document.createElement('canvas'));
   if(_statusOff.width<pw || _statusOff.height<ph){ _statusOff.width = Math.max(_statusOff.width,pw); _statusOff.height = Math.max(_statusOff.height,ph); }
   const octx = _statusOff.getContext('2d');
-  octx.setTransform(1,0,0,1,0,0); octx.globalCompositeOperation = 'source-over'; octx.globalAlpha = 1; octx.clearRect(0,0,_statusOff.width,_statusOff.height);
+  octx.setTransform(1,0,0,1,0,0); octx.globalCompositeOperation = 'source-over'; octx.globalAlpha = 1; octx.clearRect(0,0,pw+2,ph+2);   // v502: only the part about to be used (the pooled canvas keeps its largest size)
   octx.setTransform(sx,0,0,sy,-bx*sx,-by*sy);
   const mainCtx = ctx; _statusDepth++; _hpQueue = [];
   const q = _hpQueue;

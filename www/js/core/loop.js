@@ -99,10 +99,11 @@ function placeSurvTrap(g, trap){
   }
 }
 // v205: like nearestEnemy, but only enemies actually visible on the player's screen count (Charge, ranged auto-aim)
+const ONSCREEN_PAD_X = 30, ONSCREEN_PAD_TOP = 70, ONSCREEN_PAD_BOTTOM = 36;   // v502
 function enemyOnScreen(g, e){
   const cam = g.camera; if(!cam) return true;
   const io = toIso(e.x, e.y), sx = io.x-cam.x, sy = io.y-cam.y;
-  return sx>=0 && sx<=W && sy>=0 && sy<=H;   // v497: exactly the visible screen -- if you can see it, you can auto-target it
+  return sx>=ONSCREEN_PAD_X && sx<=W-ONSCREEN_PAD_X && sy>=ONSCREEN_PAD_TOP && sy<=H-ONSCREEN_PAD_BOTTOM;   // v502: the enemy's feet must be a little inside the screen, so its whole body is in view (v497 used the exact edge)
 }
 // v315: with the mouse active the PLAYER's auto-target prefers the enemy under the cursor. Nothing under the cursor falls back to the
 // normal nearest-enemy pick, except while the strike button is held: then it returns null so the swing/shot goes toward the cursor.
