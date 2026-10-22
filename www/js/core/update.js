@@ -2394,37 +2394,8 @@ function updateStep(dt){
     e.facing = {x:Math.cos(fAng), y:Math.sin(fAng)};
     e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
 
-    // Leviathan (Lakeside Ruins, v71): fixed in place in the water --
-    // "active" (visible, popped up, and able to fire) only once the
-    // target is within oneScreenDist() of it, the same "roughly one
-    // viewport away" world-distance threshold the follower teleport-back
-    // failsafe uses (see oneScreenDist() above) rather than the isOnScreen
-    // camera-space check every other enemy type is gated on, so it can
-    // pop up the instant the player is in range even before the camera
-    // has actually panned to show it. Never moves (speed:0) and is
-    // handled in its own branch that `continue`s before the shared
-    // clamp+pushOutOfRect tail below -- so it's never shoved out of the
-    // water obstacle it deliberately sits inside.
-    if(e.type==='leviathan'){
-      if(e.lvBoss){ updateLeviathanBoss(g, e, dt, target, d, room); continue; }
-      e.active = d < oneScreenDist();
-      e.moving = false;
-      if(e.active && e.atkCd<=0){
-        e.atkCd = e.atkCdMax;
-        e.atkAnimT = 0.3;
-        const ang = Math.atan2(target.y-e.y, target.x-e.x);
-        // A slow, lobbed "poison ball" -- visually distinct (bigger,
-        // slower, green) from the Bandit Archer's arrow/Spider's web bolt,
-        // reusing the same enemy-projectile mechanism (see the projectile-
-        // update loop's pr.from!=='player' branch) as a plain direct-damage
-        // hit; there's no existing player-facing poison-DoT status to hook
-        // into (poisonT/poisonDps only exist on enemies, from the Rogue's
-        // own Poison Knives), so introducing one is left out of scope --
-        // the "poison" is a visual/thematic flourish here, not a new DoT.
-        g.projectiles.push({x:e.x,y:e.y,vx:Math.cos(ang)*170,vy:Math.sin(ang)*170,r:9,dmg:e.dmg,from:'enemy',life:2.6,color:'#7dd45a',srcEnemy:e,targetRef:target,isPoisonBall:true});
-      }
-      continue;
-    }
+    // Leviathans (Kraken, Marsh/Pool Leviathans, Breach pools): every one runs its own boss state machine
+    if(e.type==='leviathan'){ updateLeviathanBoss(g, e, dt, target, d, room); continue; }
 
     // Boss slam: an independent, ground-targeted AoE on its own cooldown --
     // telegraphed half a second early with a red ring, then it hits anyone

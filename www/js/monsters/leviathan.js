@@ -1,23 +1,20 @@
-// ---------------- Bridge Leviathan (v128) ----------------
-// The Hunter's first quest target. It swims the water alongside the bridge, tracking you
-// along it (west span or east span; it can't cross the island, so it dives to relocate).
-// Loop: Poison Volley -> Surge (telegraphed slam on the bridge) -> Volley -> Dive
+// ---------------- Leviathans (v128) ----------------
+// One state machine for every water boss: the Kraken (Sunken Depths, Breach), the Marsh Leviathan (Black Marsh river,
+// e.marsh) and the Marsh Pool / Breach Leviathans (free-swimming pools, e.cfg). (v530: the old Lakeside Ruins bridge
+// leviathans are gone -- nothing lives in that lake any more.)
+// Loop: Poison Volley -> Surge (telegraphed slam) -> Volley -> Dive
 // (invulnerable, re-emerges with a big telegraphed slam, then is Exposed: +25% damage taken).
-// Its bite reaches the bridge edge, so melee can trade blows; ranged is safer but slower.
 const LV_LANE = 190, LV_R = 70, LV_HP_MULT = 20, LV_DMG_MULT = 2.6;
 const LV_VOLLEY_TELE = 0.7, LV_SURGE_TELE = 1.1, LV_SURGE_R = 95, LV_DIVE_T = 1.4, LV_EMERGE_TELE = 0.9, LV_EMERGE_R = 110, LV_EXPOSED_T = 2.4;
-function lvZone(x){ return x < LAKE_CX-LAKE_ISLAND_HX ? 'west' : x > LAKE_CX+LAKE_ISLAND_HX ? 'east' : 'island'; }
-// (v157) The Lakeside boss is now THE KRAKEN (lightning). The smaller Marsh Leviathan (poison, half size)
-// lives in the Black Marsh river and reuses the same state machine (e.marsh).
 const KR_STRIKE_T = 1.15, KR_STRIKE_R = 62, KR_STRIKE_DMG = 0.945, KR_DMG_TUNE = 0.72;   // v206/v212: Kraken hits softened (~-20%, then another -10%)
 function spawnLeviathanBoss(g, pos, cfg){
   // v489: bosses come back on every visit (was: the Kraken stays dead)
-  const e = spawnEnemy(g, 'leviathan', pos || {x:LAKE_CX-700, y:LAKE_CY-LV_LANE});
+  const e = spawnEnemy(g, 'leviathan', pos);
   if(cfg) e.cfg = cfg;
   e.kraken = true; e.dmgType = 'lightning'; e.krStrikes = [];
   e.lvBoss = true; e.isLairBoss = true; e.bossName = 'The Kraken';
   e.r = LV_R; e.hp = Math.round(e.hp/3*LV_HP_MULT); e.maxHp = e.hp; e.dmg = e.dmg*LV_DMG_MULT*KR_DMG_TUNE; e.atkCdMax = 1.6; e.armor = 6;
-  e.lvState = 'idle'; e.lvT = 0; e.lvCd = 2.0; e.lvIdx = 0; e.lvSide = -1; e.lvWest = true; e.lvSpeed = 230; e.exposedT = 0; e.lvPt = null; e.lvSpoke = false;
+  e.lvState = 'idle'; e.lvT = 0; e.lvCd = 2.0; e.lvIdx = 0; e.lvSide = -1; e.lvSpeed = 230; e.exposedT = 0; e.lvPt = null; e.lvSpoke = false;
   return e;
 }
 function spawnMarshLeviathan(g, room){
@@ -26,7 +23,7 @@ function spawnMarshLeviathan(g, room){
   const e = spawnEnemy(g, 'leviathan', {x, y});
   e.marsh = true; e.lvBoss = true; e.isLairBoss = true; e.bossName = 'The Marsh Leviathan';
   e.r = LV_R/2; e.hp = Math.round(e.hp/3*LV_HP_MULT); e.maxHp = e.hp; e.dmg = e.dmg*LV_DMG_MULT; e.atkCdMax = 1.6; e.armor = 6;
-  e.lvState = 'idle'; e.lvT = 0; e.lvCd = 2.0; e.lvIdx = 0; e.lvSide = -1; e.lvWest = true; e.lvSpeed = 230; e.exposedT = 0; e.lvPt = null; e.lvSpoke = false;
+  e.lvState = 'idle'; e.lvT = 0; e.lvCd = 2.0; e.lvIdx = 0; e.lvSide = -1; e.lvSpeed = 230; e.exposedT = 0; e.lvPt = null; e.lvSpoke = false;
   return e;
 }
 function spawnSunkenKraken(g){
@@ -39,7 +36,7 @@ function spawnPoolLeviathan(g){
   e.cfg = {free:true, bounds:[POOL_CX-POOL_RX+80, POOL_CX+POOL_RX-80], y0:POOL_CY-POOL_RY+80, y1:POOL_CY+POOL_RY-80, cx:POOL_CX, cy:POOL_CY};
   e.pool = true; e.lvBoss = true; e.isLairBoss = true; e.bossName = 'The Leviathan';
   e.r = Math.round(LV_R*0.7); e.hp = Math.round(e.hp/3*LV_HP_MULT); e.maxHp = e.hp; e.dmg = e.dmg*LV_DMG_MULT; e.atkCdMax = 1.6; e.armor = 6;
-  e.lvState = 'idle'; e.lvT = 0; e.lvCd = 2.0; e.lvIdx = 0; e.lvSide = -1; e.lvWest = true; e.lvSpeed = 230; e.exposedT = 0; e.lvPt = null; e.lvSpoke = false;
+  e.lvState = 'idle'; e.lvT = 0; e.lvCd = 2.0; e.lvIdx = 0; e.lvSide = -1; e.lvSpeed = 230; e.exposedT = 0; e.lvPt = null; e.lvSpoke = false;
   return e;
 }
 // free-swimming pool: pull a point toward the pool's centre until it is open water
@@ -59,14 +56,11 @@ function lvShorePt(e, tx, ty){
 }
 function lvHomeY(e, x){
   if(e.cfg) return e.cfg.cy + e.lvSide*LV_LANE;
-  if(e.marsh) return bmRiverY(bmSliceC(x)) + e.lvSide*32;
-  return LAKE_CY + e.lvSide*LV_LANE;
+  return bmRiverY(bmSliceC(x)) + e.lvSide*32;   // the Marsh Leviathan
 }
-function lvBounds(west, e){
+function lvBounds(e){
   if(e && e.cfg) return e.cfg.bounds;
-  if(e && e.marsh) return [BM_BRIDGES[0]-1100, BM_BRIDGES[0]+1100];
-  const X1 = LAKE_WATER_X+LAKE_WATER_W;
-  return west ? [LAKE_WATER_X+70, LAKE_CX-LAKE_ISLAND_HX-40] : [LAKE_CX+LAKE_ISLAND_HX+40, X1-70];
+  return [BM_BRIDGES[0]-1100, BM_BRIDGES[0]+1100];   // the Marsh Leviathan
 }
 function lvHit(g, e, cx, cy, R, mult, kb){
   const p = g.player;
@@ -100,10 +94,9 @@ function updateLeviathanBoss(g, e, dt, target, d, room){
     }
   }
   const face = ()=>{ const a=Math.atan2(target.y-e.y, target.x-e.x); e.facing={x:Math.cos(a),y:Math.sin(a)}; e.faceSign=screenFacingSign(e.facing.x,e.facing.y); return a; };
-  // swim: follow the target along the bridge on its own side of the island, hugging the near shore
+  // swim: follow the target along its water, hugging the near shore
   const swim = ()=>{
-    const zone = (e.marsh||e.cfg) ? 'marsh' : lvZone(target.x);
-    const [lo,hi] = lvBounds(e.lvWest, e);
+    const [lo,hi] = lvBounds(e);
     let tx = clamp(target.x, lo, hi), ty;
     if(e.cfg && e.cfg.free){ const pt = lvPoolPt(e, tx, clamp(target.y, e.cfg.y0, e.cfg.y1)); tx = pt.x; ty = pt.y; }
     else ty = lvHomeY(e, e.x);
@@ -111,7 +104,6 @@ function updateLeviathanBoss(g, e, dt, target, d, room){
     const sp = e.lvSpeed*(enraged?1.2:1);
     if(Math.abs(dx)>4){ e.x += Math.sign(dx)*Math.min(Math.abs(dx), sp*dt); e.moving = true; }
     if(Math.abs(dy)>4){ e.y += Math.sign(dy)*Math.min(Math.abs(dy), (e.cfg&&e.cfg.free?230:160)*dt); }
-    return zone;
   };
   // v521 Marsh Pool Leviathan: at 75% life it hauls itself out of the pool and fights on the shore (skeleton-speed walk);
   // at 25% it plods back into the water and finishes the fight there.
@@ -146,10 +138,8 @@ function updateLeviathanBoss(g, e, dt, target, d, room){
     e.facing = {x:dx/dd, y:dy/dd}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
     if(room.waterAt(e.x,e.y) && room.waterAt(e.x+34,e.y) && room.waterAt(e.x-34,e.y)){ e.onLand = false; e.invulnT = 0; e.lvState = 'idle'; e.lvCd = 1.2; }
   } else if(st==='idle'){
-    const zone = swim();
+    swim();
     face();
-    // wrong span (player crossed the island or the other span): dive to relocate
-    if(!e.marsh && !e.cfg && zone!=='island' && (zone==='west')!==e.lvWest){ e.lvState='dive'; e.lvT=LV_DIVE_T; e.invulnT=LV_DIVE_T; e.guardHp=e.hp; e.windT=0; return; }
     if(tickEnemyWindup(g, e, target, target!==p, e.r+target.r+30, dt)) return;
     if(d < e.r+target.r+30 && e.atkCd<=0) beginEnemyMelee(e);
     e.lvCd -= dt;
@@ -182,7 +172,7 @@ function updateLeviathanBoss(g, e, dt, target, d, room){
   } else if(st==='surgeTele'){
     e.lvT -= dt; face(); e.atkAnimT = 0.1;
     // lunge toward the marked spot while charging up
-    if(!e.onLand){ const [lo,hi] = lvBounds(e.lvWest, e); e.x += clamp(e.lvPt.x-e.x,-90*dt,90*dt); e.x = clamp(e.x,lo,hi); }
+    if(!e.onLand){ const [lo,hi] = lvBounds(e); e.x += clamp(e.lvPt.x-e.x,-90*dt,90*dt); e.x = clamp(e.x,lo,hi); }
     if(e.lvT<=0){
       lvHit(g, e, e.lvPt.x, e.lvPt.y, LV_SURGE_R, 1.5, 100);
       g.particles.push({type:'ring', x:e.lvPt.x, y:e.lvPt.y, t:0.5, max:0.5, r:LV_SURGE_R, color:e.kraken?'#ffe046':'#7dd45a'});
@@ -193,10 +183,8 @@ function updateLeviathanBoss(g, e, dt, target, d, room){
     e.lvT -= dt; e.sub = true;
     if(e.lvT<=0){
       // resurface on the player's side, opposite lane, right under them
-      const zone = (e.marsh||e.cfg) ? 'marsh' : lvZone(target.x);
-      if(!e.marsh && !e.cfg) e.lvWest = zone==='island' ? (target.x<LAKE_CX) : (zone==='west');
       e.lvSide = -e.lvSide;
-      const [lo,hi] = lvBounds(e.lvWest, e);
+      const [lo,hi] = lvBounds(e);
       e.x = clamp(target.x, lo, hi); e.y = lvHomeY(e, e.x);
       if(e.cfg && e.cfg.free){ const pt = lvPoolPt(e, e.x, clamp(target.y, e.cfg.y0, e.cfg.y1)); e.x = pt.x; e.y = pt.y; }
       e.lvPt = {x:target.x, y:target.y}; e.sub = false;

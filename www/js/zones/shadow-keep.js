@@ -1199,7 +1199,7 @@ function spawnThemedBreachBoss(g, kind, pos){
       e = spawnEnemy(g, 'leviathan', {x:P.cx, y:P.cy-1}); e.cfg = cfg;
       e.pool = true; e.lvBoss = true; e.isLairBoss = true; e.bossName = BR_BOSS_NAME.leviathan;
       e.r = Math.round(LV_R*0.7); e.hp = Math.round(e.hp/3*LV_HP_MULT); e.maxHp = e.hp; e.dmg = e.dmg*LV_DMG_MULT; e.atkCdMax = 1.6; e.armor = 6;
-      e.lvState = 'idle'; e.lvT = 0; e.lvCd = 2.0; e.lvIdx = 0; e.lvSide = -1; e.lvWest = true; e.lvSpeed = 230; e.exposedT = 0; e.lvPt = null; e.lvSpoke = false;
+      e.lvState = 'idle'; e.lvT = 0; e.lvCd = 2.0; e.lvIdx = 0; e.lvSide = -1; e.lvSpeed = 230; e.exposedT = 0; e.lvPt = null; e.lvSpoke = false;
     }
   } else if(kind==='colossus'){
     e = spawnEnemy(g, 'colossus', pos);

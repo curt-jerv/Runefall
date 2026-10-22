@@ -87,11 +87,6 @@ const LAKE_PACK_TEMPLATES = [
   // v215: Tortuga (lake-bank turtle, drops Tortuga Shell parts)
   { type:'tortuga', countMin:2, countMax:3 },
 ];
-// Leviathans (v71) are NOT part of the pack-anchor system above -- they
-// live in the water, hidden until the player is close (see the dedicated
-// e.type==='leviathan' branch in update()), so they're spawned directly at
-// these fixed spots deep inside the two water rects instead.
-const LAKE_LEVIATHAN_COUNT = 3;
 function lakeNearWaterAt(x,y,m){ for(const d of [[0,0],[m,0],[-m,0],[0,m],[0,-m],[m*0.7,m*0.7],[-m*0.7,-m*0.7],[m*0.7,-m*0.7],[-m*0.7,m*0.7]]) if(lakeWaterAt(x+d[0],y+d[1])) return true; return false; }
 function makeLakesideRuins(){
   const g = game, saveRand = Math.random;
@@ -152,15 +147,6 @@ function lakeBuild(){
     packAnchors.push({x,y});
   }
 
-  // Leviathan spawn spots -- well inside each water rect (padded off both
-  // the shoreline and the bridge gap), spread across both halves of the lake.
-  // (v121) Now hugging the bridge (just outside its edge, west of the island)
-  // so they engage anyone crossing, instead of lurking far out in the lake.
-  const leviathanSpots = [
-    {x:LAKE_CX-950, y:LAKE_CY-200},
-    {x:LAKE_CX-620, y:LAKE_CY+200},
-    {x:LAKE_CX+900, y:LAKE_CY-200},
-  ];
 
   // Zone-edge boundary markers (Sept 2026 patch): a ring of plain trees
   // (drawTreeIso, the same prop the Dark Forest's own treeline border
@@ -230,7 +216,7 @@ function lakeBuild(){
   for(const o of lakeProps) obstacles.push(o);
   for(const o of groveObs) obstacles.push(o);
   return { w, h, obstacles, dryObstacles:obstacles.filter(o=>!o.isWater), decor:lakeDecor, sunlitGate, marshGate, rocks, grassTufts, trees, groves, waypoint, packAnchors,
-    ruinsSpot, sunkenGate, islandStones, leviathanSpots, waterNorth, waterSouth,
+    ruinsSpot, sunkenGate, islandStones, waterNorth, waterSouth,
     scholarSpot:{x:ruinsSpot.x-58, y:ruinsSpot.y+34, id:7, robe:'#2c4a78', long:true, tool:'book'},
     entranceSpot:LAKESIDE_ENTRANCE_SPOT, roads:LAKE_ROADS, roadGrid:LAKE_ROAD_GRID };
 }

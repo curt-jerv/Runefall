@@ -75,7 +75,7 @@ window.__test = { spawnSquid, spawnEel, classResistRewardItem, makeSkillTomeItem
   makeLakesideRuins, enterLakesideRuins, spawnLakesidePack, makeBlackMarsh, enterBlackMarsh, BM_W, BM_H, bmRiverY, bmWaterAt, drawRegionDarkening,
   LAKE_W, LAKE_H, LAKE_CX, LAKE_CY, LAKE_ROAD_HALFW,
   LAKE_WATER_X, LAKE_WATER_W, LAKE_WATER_Y0, LAKE_WATER_Y1, LAKE_ISLAND_R,
-  LAKE_PACK_ANCHOR_TARGET, LAKE_PACK_COUNT, LAKE_LEVIATHAN_COUNT,
+  LAKE_PACK_ANCHOR_TARGET, LAKE_PACK_COUNT,
   lakeOnRoad, lakeOnIsland, drawLakesideStoneIso, drawRuinsGateIso,
   // v72 batch: exposed for regression testing of Cursed Cemetery (the
   // Withered Crossroads south gate, the half-area zone sizing, the Skeleton/
