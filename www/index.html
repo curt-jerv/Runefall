@@ -664,7 +664,7 @@ window.onerror = function(msg, src, line, col, err){
     </button>
     <button id="settingsGraphicsBtn" class="skillChoice" style="margin-bottom:8px;">
       <div class="schIcon">&#9681;</div>
-      <div><div class="schName">Graphics</div><div class="schDesc">Atmosphere and film grain</div></div>
+      <div><div class="schName">Graphics</div><div class="schDesc">Brightness and film grain</div></div>
     </button>
     <div id="toggleHideAch" class="toggleRow" style="margin-bottom:8px;">
       <div class="schIcon">&#127942;</div>
@@ -719,9 +719,9 @@ window.onerror = function(msg, src, line, col, err){
     </div>
     <div class="toggleRow segRow">
       <div class="toggleRowBody">
-        <div class="schName">Atmosphere</div>
-        <div class="schDesc">Colour grading, light falloff, ground grime and soft outlines. Low drops the heaviest effects for slower phones.</div>
-        <div class="segCtl" id="atmosSeg"><button type="button" data-v="high">High</button><button type="button" data-v="low">Low</button><button type="button" data-v="off">Off</button></div>
+        <div class="schName">Brightness <b id="brightValueLabel">100%</b></div>
+        <div class="schDesc">Makes the whole picture lighter or darker.</div>
+        <input type="range" id="brightSlider" class="settingsSlider" min="70" max="140" step="5" value="100">
       </div>
     </div>
     <div id="toggleGrain" class="toggleRow">

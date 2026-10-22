@@ -408,7 +408,7 @@ function playerGlowScene(g){ return !!(g && g.started && g.player && g.scene!=='
 // v516/v517: overworld mood -- black fading in only at the screen edges (soft, strongest in the corners), like the Spider Lair's dark but much further out.
 // A screen-sized elliptical vignette (nothing is cut around the player); the warm ground glow is set up for drawPlayerGroundGlow.
 function drawOverworldRing(g){
-  const sc = g.scene, mA = sc==='sunlitplains' ? 0.66 : sc==='town' ? 0.42 : 0.6;
+  const sc = g.scene, mA = sc==='sunlitplains' || sc==='lakesideruins' ? 0.42 : sc==='town' ? 0.42 : 0.55;   // v522: the open Crossroads/Lakeside get only a light edge
   g._glowLR = VEIL_LIGHT_R*1.3*0.72*lightRadiusMult(g.player); g._glowK = 1;
   const cx = W/2, cy = H/2, rx = W*0.6, ry = H*0.8;
   ctx.save(); ctx.translate(cx, cy); ctx.scale(rx, ry);

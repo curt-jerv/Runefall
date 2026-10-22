@@ -58,7 +58,7 @@ function makeSunlitPlains(){
   for(let i=0;i<160;i++){
     const x = rand(50, w-50), y = rand(50, h-50);
     if(onRoad(x,y)) continue;
-    grassTufts.push({x, y, s:rand(0.7,1.2)});
+    grassTufts.push({x, y, s:rand(0.7,1.2), c:['#8a7a4a','#7d6c42','#6e6a3e','#94844f'][Math.floor(Math.random()*4)]});   // v522: dead, sun-bleached grass
   }
 
   // A dedicated, permanent waypoint fixture, same shared mechanism/art as
