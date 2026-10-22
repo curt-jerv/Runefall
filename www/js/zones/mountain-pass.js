@@ -186,14 +186,14 @@ function makeMountainPass(){
     let c;
     if(K[i]>=3){
       c = mix(ROCK, SNOW, (h2>0.55 ? 0.55 : 0.12) + Math.min(0.3, E[i]/1200));
-      if(x < 1800) c = mix(c, MOSS, 0.35*(1-x/1800)*(h2<0.5?1:0.3));
-      if(x < 1100) c = mix(c, [20,36,28], clamp(1.25-x/950,0,1)*0.92);          // Dark Forest: the walls become a black-green wall of woods
+      if(x < 2200) c = mix(c, [118,104,84], 0.45*(1-x/2200)*(h2<0.5?1:0.4));   // v516: the west end matches the Barren Highlands (dry brown rock, patchy snow)
+      if(x < 900) c = mix(c, [74,66,58], clamp(1.0-x/900,0,1)*0.55);
       if(x > w-1500) c = mix(c, [118,126,140], clamp((x-(w-1500))/900,0,1)*0.85);   // Frosthold: dressed castle stone
       if(y > MTN_BAR_Y1-120 && Math.abs(x-MTN_JX) < MTN_STEM_HALF+420) c = mix(c, [44,42,54], clamp(0.35+(y-MTN_BAR_Y1)/1800,0,0.92));   // (v263) south stem: dark basalt
     } else {
       c = SNOW;
-      const fw = clamp(1-(x-MTN_M)/2300,0,1);
-      if(fw>0 && h2 < fw*1.15) c = mix(c, h2<fw*0.55 ? MOSS : DIRT, 0.55+0.35*hh);
+      const fw = clamp(0.62-(x-MTN_M)/2800,0,0.62);   // v516: patchy barren ground over the snow, fading out eastward (the Highlands' top-right corner is the same patchy snow)
+      if(fw>0 && h2 < fw*1.15) c = mix(c, h2<fw*0.55 ? [152,134,94] : [114,96,74], 0.6+0.3*hh);
       const fe = clamp((x-(w-3300))/1700,0,1);
       if(fe>0 && y>=MTN_BAR_Y0) c = mix(c, FLAG, fe*0.8 + ((ix+iy)%2?0.03:-0.03));
       const fi = clamp((2900-y)/1900,0,1);
@@ -206,7 +206,7 @@ function makeMountainPass(){
         if(dm<1) c = mix(c, SPOIL, (1-dm)*0.55*(0.6+0.4*h2));
       } else
       if(dm<1) c = mix(c, SPOIL, (1-dm)*0.85*(0.6+0.4*h2));
-      { const dw = dist({x,y},forestGate)/900; if(dw<1) c = mix(c, h2<0.5?[40,62,44]:[52,46,34], (1-dw)*0.9); }   // dark loam and moss at the forest gate
+      { const dw = dist({x,y},forestGate)/900; if(dw<1) c = mix(c, h2<0.5?[126,108,82]:[108,92,70], (1-dw)*0.7); }   // v516: trampled barren soil at the Highlands gate
       if(nearTrail(x,y,70)) c = mix(c, ROAD, 0.85);
       else if(nearTrail(x,y,105)) c = mix(c, ROAD, 0.3);
     }
@@ -244,7 +244,7 @@ function makeMountainPass(){
       const hi = clamp((2900-y)/1900,0,1);
       put(q<0.38+0.2*hi?'crag':q<0.62?'drift':q<0.85?'rock':'pine', x,y, rand(0.7,1.5), {h:rand(55,120)});
     } else if(x<2500){
-      put(q<0.42?'pine':q<0.56?'deadpine':q<0.7?'rock':q<0.9?'drift':q<0.96?'cairn':'wagon', x,y, rand(0.8,1.5));
+      put(q<0.16?'pine':q<0.4?'deadpine':q<0.62?'rock':q<0.84?'drift':q<0.94?'cairn':'wagon', x,y, rand(0.8,1.5));
     } else if(x>w-3100){
       put(q<0.4?'rock':q<0.65?'drift':q<0.8?'crag':q<0.9?'statue':'pine', x,y, rand(0.8,1.4), {h:rand(50,90)});
     } else {
@@ -258,24 +258,21 @@ function makeMountainPass(){
     put(((x/330|0)%2)?'brazier':'banner', x, ty+120, 1);
   }
   // forest border: a dense, dark treeline hugging the first stretch of road, and a solid wall of woods standing on the cliff blocks
-  for(let x=MTN_M+120; x<2200; x+=150){
-    const ty = mtnTrailY(x), fade = clamp(1-(x-MTN_M)/1900,0.15,1);
-    put(Math.random()<fade?'fpine':'pine', x+rand(-30,30), ty-rand(150,260), rand(1.1,1.6));
-    put(Math.random()<fade?'fpine':'pine', x+rand(-30,30), ty+rand(150,260), rand(1.1,1.6));
+  for(let x=MTN_M+120; x<2200; x+=190){   // v516: dead trees, boulders and snowy pines line the first stretch (no dark forest border any more)
+    const ty = mtnTrailY(x);
+    for(const sy of [-1,1]){ const q = Math.random(); put(q<0.4?'deadpine':q<0.7?'rock':'pine', x+rand(-30,30), ty+sy*rand(150,260), rand(1.0,1.5)); }
   }
-  for(let x=60; x<1000; x+=80){
-    for(let y=MTN_BAR_Y0-260; y<MTN_BAR_Y1+260; y+=95){
+  // v516: the old wall of woods on the west cliffs is gone -- those cliffs are plain rock now, with a few boulders
+  for(let x=60; x<1000; x+=170){
+    for(let y=MTN_BAR_Y0-260; y<MTN_BAR_Y1+260; y+=240){
       const ix=Math.floor(x/TS), iy=Math.floor(y/TS); if(ix<0||iy<0||ix>=cols||iy>=rows) continue;
       if(K[iy*cols+ix]<3) continue;
       if(x>MTN_M-40 && Math.abs(y-forestGate.y)<150) continue;   // keep the gateway itself open
-      deco.push({k:'fpine', x:x+rand(-30,30), y:y+rand(-30,30), s:rand(1.5,2.3)});
+      deco.push({k:Math.random()<0.5?'rock':'crag', x:x+rand(-30,30), y:y+rand(-30,30), s:rand(1.0,1.6), h:rand(50,100)});
     }
   }
   // the descent: braziers light each ramp gap, a lantern post stands at the foot
   for(const lg of ledgeGaps){ put('brazier', lg.gx-210, lg.ly-30, 1); put('brazier', lg.gx+210, lg.ly-30, 1); put('brazier', lg.gx-210, lg.ly+150, 1); put('brazier', lg.gx+210, lg.ly+150, 1); }
-  deco.push({k:'forestgiant', x:forestGate.x+70, y:forestGate.y-120, s:1});
-  deco.push({k:'forestgiant', x:forestGate.x+70, y:forestGate.y+120, s:1.1});
-  deco.push({k:'forestarch', x:forestGate.x+70, y:forestGate.y, s:1});
   // north stem: ice spires flank the road toward the summit cave
   for(let y=MTN_BAR_Y0-120; y>MTN_M+160; y-=260){
     const tx = mtnTrailX(y);
@@ -283,7 +280,7 @@ function makeMountainPass(){
     put('crag', tx+170+rand(0,60), y, rand(0.9,1.4), {h:rand(80,140)});
   }
   deco.sort((a,b)=>(a.x+a.y)-(b.x+b.y));
-  return { isMtn:true, name:'Mountain Pass', w, h, ts:TS, cols, rows, E, K, B, CH, C, wallDrop:120, colorFn:mtnColor,
+  return { isMtn:true, name:'Mountain Pass', w, h, ts:TS, cols, rows, E, K, B, CH, C, wallDrop:120, edgeLines:true, colorFn:mtnColor,
     obstacles, rocks:[], waypoints:[], packAnchors, waypoint, deco, forestGate, frostGate, mineGate, depthsGate:mineGate, summitGate, ledgeGaps };
 }
 function mtnColor(R, i, hj, k, f){

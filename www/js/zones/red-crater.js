@@ -138,7 +138,7 @@ function crColor(e, h, k, f){
 function drawCraterTerrain(R, cam){
   const TS = R.ts || CR_TS, cols = R.cols, rows = R.rows, CH = R.CH, E = R.E, K = R.K;
   const WD = R.wallDrop || 250, colF = R.colorFn || ((RR,ii,hh,kk,ff)=>crColor(RR.E[ii],hh,kk,ff));
-  const cx0 = cam.x, cy0 = cam.y;
+  const cx0 = cam.x, cy0 = cam.y, edgeSegs = [];
   ctx.lineWidth = 1; ctx.lineJoin = 'round';
   for(let ix=0; ix<cols; ix++){
     for(let iy=0; iy<rows; iy++){
@@ -175,10 +175,29 @@ function drawCraterTerrain(R, cam){
       ctx.beginPath(); ctx.moveTo(X0,Y0); ctx.lineTo(X1,Y1); ctx.lineTo(X2,Y2); ctx.lineTo(X3,Y3); ctx.closePath(); ctx.fill(); ctx.stroke();
       const slope = (CH[b+1]+CH[b+2]-CH[b]-CH[b+3])*0.5;
       if(Math.abs(slope) > 1){ ctx.fillStyle = slope>0 ? 'rgba(0,0,0,0.16)' : 'rgba(255,220,170,0.12)'; ctx.fill(); }
+      // v516: bold edge lines along every cliff lip you cannot cross (tiles blocked by a height step), so a ledge facing away from the screen still shows
+      if(R.edgeLines && k<3 && !R.B[i]){
+        const Bm = R.B;
+        if(ix+1<cols && Bm[i+1] && K[i+1]<3) edgeSegs.push(X1,Y1,X2,Y2);
+        if(ix>0 && Bm[i-1] && K[i-1]<3) edgeSegs.push(X0,Y0,X3,Y3);
+        if(iy+1<rows && Bm[i+cols] && K[i+cols]<3) edgeSegs.push(X3,Y3,X2,Y2);
+        if(iy>0 && Bm[i-cols] && K[i-cols]<3) edgeSegs.push(X0,Y0,X1,Y1);
+      }
       if(!R.isMtn && k===0 && h>0.9){ ctx.strokeStyle='rgba(255,120,40,0.55)'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo((X0+X3)/2,(Y0+Y3)/2); ctx.lineTo((X1+X2)/2+2,(Y1+Y2)/2-1); ctx.lineTo((X1+X3)/2,(Y1+Y3)/2+3); ctx.stroke(); ctx.lineWidth=1; }
     }
   }
+  if(edgeSegs.length){   // v516: bold lip lines, drawn after every tile so no neighbour paints over them
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(14,8,3,0.9)'; ctx.lineWidth = 4.6; ctx.beginPath();
+    for(let q=0;q<edgeSegs.length;q+=4){ ctx.moveTo(edgeSegs[q],edgeSegs[q+1]); ctx.lineTo(edgeSegs[q+2],edgeSegs[q+3]); }
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,240,205,0.6)'; ctx.lineWidth = 1.5; ctx.beginPath();
+    for(let q=0;q<edgeSegs.length;q+=4){ ctx.moveTo(edgeSegs[q],edgeSegs[q+1]-2.4); ctx.lineTo(edgeSegs[q+2],edgeSegs[q+3]-2.4); }
+    ctx.stroke();
+    ctx.lineCap = 'butt'; ctx.lineWidth = 1;
+  }
 }
+
 function drawCraterDeco(d){
   if(d.k==='vent'){
     const iso = toIso(d.x,d.y), t = (game.clock||0)*3+d.x;

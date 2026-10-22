@@ -277,7 +277,8 @@ function render(){
     if(g.mtn){
       { const vis = (x,y)=>{ const i=toIso(x,y); return i.x>cam.x-160 && i.x<cam.x+W+160 && i.y>cam.y-260 && i.y<cam.y+H+200; };
         for(const dd of g.mtn.deco) if(vis(dd.x,dd.y)) drawables.push({depth:dd.x+dd.y, draw:()=>drawMtnDeco(dd)}); }
-      drawables.push({depth:g.mtn.forestGate.x+g.mtn.forestGate.y, draw:()=>drawEdgeLabelIso(g.mtn.forestGate, 'BARREN HIGHLANDS')});
+      drawables.push({depth:g.mtn.forestGate.x+g.mtn.forestGate.y+120, draw:()=>{ const gt = g.mtn.forestGate; gt.art = true; drawGateArtIso(gt, g.clock||0); }});   // v516: the same stone arch as the Highlands' end of this road
+      drawables.push({depth:g.mtn.forestGate.x+g.mtn.forestGate.y+121, draw:()=>drawEdgeLabelIso(g.mtn.forestGate, 'BARREN HIGHLANDS', 80)});
       drawables.push({depth:g.mtn.summitGate.x+g.mtn.summitGate.y-1, draw:()=>drawIceCaveIso(g.mtn.summitGate, g.clock||0)});
       drawables.push({depth:g.mtn.summitGate.x+g.mtn.summitGate.y, draw:()=>drawEdgeLabelIso(g.mtn.summitGate, 'ICY SUMMIT', 130)});
       drawables.push({depth:-1e6, draw:()=>{ const q=toIso(g.mtn.frostGate.x,g.mtn.frostGate.y); ctx.save(); ctx.translate(q.x,q.y); ctx.scale(0.5,0.5); ctx.translate(-q.x,-q.y); drawFrostholdBackdrop(g.mtn.frostGate, g.clock||0); ctx.restore(); }});
