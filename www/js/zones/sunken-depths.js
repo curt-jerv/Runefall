@@ -247,6 +247,12 @@ function subBossDown(g){
   const t = g.tower, p = g.player;
   if(!t || !t.chestSpot || t.clearPortal) return;
   if(t.subzone==='sunken') t.portalPending = true;   // v507: the Kraken's portal (to the Lakeside Ruins) opens only after the chests are emptied
+  else if(t.subzone==='pool' && g.lastKillPos){   // v521: the way home opens where the Leviathan fell (pulled out of the water toward the shore)
+    let x = g.lastKillPos.x, y = g.lastKillPos.y, n = 0;
+    const cs = t.chestSpot, rm = g.room, d0 = Math.max(1, Math.hypot(cs.x-x, cs.y-y)), ux = (cs.x-x)/d0, uy = (cs.y-y)/d0;
+    while(n++<80 && rm.waterAt && (rm.waterAt(x,y) || rm.waterAt(x+40,y) || rm.waterAt(x-40,y) || rm.waterAt(x,y+40) || rm.waterAt(x,y-40))){ x += ux*20; y += uy*20; }
+    t.clearPortal = {x, y, r:24, toTown:true};
+  }
   else t.clearPortal = t.portalSpot ? {x:t.portalSpot.x, y:t.portalSpot.y, r:24, toTown:true} : {x:t.chestSpot.x-40, y:t.chestSpot.y+140, r:24, toTown:true};
   const looted = t.subzone==='sunken' ? p.sunkenChestLooted : p.poolChestLooted;
   if(!looted) g.chest = {x:t.chestSpot.x, y:t.chestSpot.y, r:24, opened:false, subBoss:true};
@@ -316,7 +322,7 @@ function drawPoolOverlay(g){
   ctx.font = "bold 12px Cinzel, Georgia, serif"; ctx.textAlign='center';
   ctx.fillStyle = '#c8ff9a'; ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=4;
   const pct = POOL_POISON_TICK_PCT*100*(1-elementResist(g.player,'poison')/100);
-  ctx.fillText('☠ POISONED  −'+pct.toFixed(1).replace(/\.0$/,'')+'% max life every '+POOL_POISON_TICK_S+'s', W/2, hudBottomPx()+16);
+  ctx.fillText('☠ POISONED  −'+pct.toFixed(1).replace(/\.0$/,'')+'% max life every '+POOL_POISON_TICK_S+'s', W/2, Math.max(hudBottomPx(), window.__bossBarBottom||0)+16);
   ctx.restore();
 }
 // ---- painting ----

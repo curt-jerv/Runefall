@@ -357,6 +357,7 @@ function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
   // v515: the dark ring is for towers and dungeons only (every overworld zone, town included, is plainly lit); the player's warm glow still shows (drawPlayerGlowOnly)
   if(g.scene!=='lighthouse' || isUndergroundScene(g) || kpOutdoor(g)) return false;
+  if(g.room && g.room.subzone==='pool') return false;   // v521: the Marsh Pool is open ground, not underground -- plain lit with the edge ring
   if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
   return true;
 }

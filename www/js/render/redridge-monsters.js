@@ -241,12 +241,13 @@ function drawLeviathanIso(e){
   const exposed = e.exposedT>0, tele = (e.lvState==='volleyTele'||e.lvState==='surgeTele'||e.lvState==='emergeTele');
   const jaw = (e.atkAnimT>0 || tele) ? 1 : 0.15;
   ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(s, s);
-  // water: layered wake rings
-  ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle='#bfe8dc';
+  // water: layered wake rings (none once it has dragged itself ashore)
+  if(e.onLand){ ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle='#04120c'; ctx.beginPath(); ctx.ellipse(-8, 18, 66, 15, 0, 0, 7); ctx.fill(); ctx.restore(); }
+  else{ ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle='#bfe8dc';
   ctx.beginPath(); ctx.ellipse(0, 16, 62, 17, 0, 0, 7); ctx.fill();
   ctx.globalAlpha = 0.5; ctx.strokeStyle='#e8fff6'; ctx.lineWidth=1.2;
   ctx.beginPath(); ctx.ellipse(0, 16, 70+Math.sin(t*2)*4, 20+Math.sin(t*2)*1.2, 0, 0, 7); ctx.stroke();
-  ctx.restore();
+  ctx.restore(); }
   // body: five arching humps, rippling
   const humps = [];
   for(let i=0;i<5;i++){

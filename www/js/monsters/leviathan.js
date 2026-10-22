@@ -5,7 +5,7 @@
 // (invulnerable, re-emerges with a big telegraphed slam, then is Exposed: +25% damage taken).
 // Its bite reaches the bridge edge, so melee can trade blows; ranged is safer but slower.
 const LV_LANE = 190, LV_R = 70, LV_HP_MULT = 20, LV_DMG_MULT = 2.6;
-const LV_VOLLEY_TELE = 0.7, LV_SURGE_TELE = 1.1, LV_SURGE_R = 115, LV_DIVE_T = 1.4, LV_EMERGE_TELE = 0.9, LV_EMERGE_R = 135, LV_EXPOSED_T = 2.4;
+const LV_VOLLEY_TELE = 0.7, LV_SURGE_TELE = 1.1, LV_SURGE_R = 95, LV_DIVE_T = 1.4, LV_EMERGE_TELE = 0.9, LV_EMERGE_R = 110, LV_EXPOSED_T = 2.4;
 function lvZone(x){ return x < LAKE_CX-LAKE_ISLAND_HX ? 'west' : x > LAKE_CX+LAKE_ISLAND_HX ? 'east' : 'island'; }
 // (v157) The Lakeside boss is now THE KRAKEN (lightning). The smaller Marsh Leviathan (poison, half size)
 // lives in the Black Marsh river and reuses the same state machine (e.marsh).
@@ -33,6 +33,7 @@ function spawnSunkenKraken(g){
   // v456: free-swimming in the great pool (it circles the island instead of patrolling a bridge)
   return spawnLeviathanBoss(g, {x:SKP.cx+260, y:SKP.cy}, {free:true, bounds:[SKP.cx-SKP.rx+90, SKP.cx+SKP.rx-90], y0:SKP.cy-SKP.ry+80, y1:SKP.cy+SKP.ry-80, cx:SKP.cx+240, cy:SKP.cy});
 }
+const LV_LAND_SPEED = 130;   // v521: about a skeleton's walking pace
 function spawnPoolLeviathan(g){
   const e = spawnEnemy(g, 'leviathan', {x:POOL_CX-POOL_RX+260, y:POOL_CY});
   e.cfg = {free:true, bounds:[POOL_CX-POOL_RX+80, POOL_CX+POOL_RX-80], y0:POOL_CY-POOL_RY+80, y1:POOL_CY+POOL_RY-80, cx:POOL_CX, cy:POOL_CY};
@@ -50,6 +51,12 @@ function lvPoolPt(e, x, y){
   }
   return {x:c.cx, y:c.cy};
 }
+// v521: where the pool leviathan climbs ashore: follow the line from the pool's centre toward the player to the water's edge, plus a little
+function lvShorePt(e, tx, ty){
+  const c = e.cfg, rm = game.room, a = Math.atan2(ty-c.cy, tx-c.cx), ux = Math.cos(a), uy = Math.sin(a);
+  let r = 0; while(r<2200 && rm.waterAt(c.cx+ux*r, c.cy+uy*r)) r += 20;
+  return {x:c.cx+ux*(r+90), y:c.cy+uy*(r+90)};
+}
 function lvHomeY(e, x){
   if(e.cfg) return e.cfg.cy + e.lvSide*LV_LANE;
   if(e.marsh) return bmRiverY(bmSliceC(x)) + e.lvSide*32;
@@ -63,12 +70,12 @@ function lvBounds(west, e){
 }
 function lvHit(g, e, cx, cy, R, mult, kb){
   const p = g.player;
-  if(dist({x:cx,y:cy}, p) < R + p.r){
+  if(dist({x:cx,y:cy}, p) < R){   // v521: exactly the drawn ring (it used to add the player's radius on top)
     let k = null;
     if(kb){ const a = Math.atan2(p.y-cy, p.x-cx); k = {x:Math.cos(a)*kb, y:Math.sin(a)*kb}; }
     playerDamage(g, e.dmg*mult, e, k);
   }
-  if(g.followers) for(const f of g.followers) if(dist({x:cx,y:cy}, f) < R + f.r) applyFollowerDamage(g, f, e.dmg*mult, e);
+  if(g.followers) for(const f of g.followers) if(dist({x:cx,y:cy}, f) < R) applyFollowerDamage(g, f, e.dmg*mult, e);
 }
 function updateLeviathanBoss(g, e, dt, target, d, room){
   const p = g.player;
@@ -106,8 +113,39 @@ function updateLeviathanBoss(g, e, dt, target, d, room){
     if(Math.abs(dy)>4){ e.y += Math.sign(dy)*Math.min(Math.abs(dy), (e.cfg&&e.cfg.free?230:160)*dt); }
     return zone;
   };
+  // v521 Marsh Pool Leviathan: at 75% life it hauls itself out of the pool and fights on the shore (skeleton-speed walk);
+  // at 25% it plods back into the water and finishes the fight there.
+  if(e.pool){
+    const fr = e.hp/e.maxHp;
+    if(!e.lvBeached && fr<=0.75 && e.lvState==='idle'){ e.lvBeached = true; e.lvState = 'beach'; e.lvShore = lvShorePt(e, target.x, target.y); showMsg('The Leviathan heaves itself out of the pool!', 2.4, '#b6ff7a'); }
+    else if(e.onLand && !e.lvReturned && fr<=0.25 && (e.lvState==='land' || e.lvState==='volleyTele' || e.lvState==='surgeTele')){ e.lvReturned = true; e.lvState = 'retreat'; e.windT = 0; showMsg('The Leviathan retreats into the pool!', 2.4, '#b6ff7a'); }
+  }
   const st = e.lvState;
-  if(st==='idle'){
+  if(st==='beach'){
+    face(); const sp = 150, dx = e.lvShore.x-e.x, dy = e.lvShore.y-e.y, dd = Math.hypot(dx,dy);
+    if(dd>8){ e.x += dx/dd*Math.min(dd,sp*dt); e.y += dy/dd*Math.min(dd,sp*dt); e.moving = true; }
+    else { e.onLand = true; e.lvState = 'exposed'; e.lvT = 1.4; e.exposedT = 1.4; e.lvCd = 1.2; }
+  } else if(st==='land'){
+    face(); const reach = e.r+target.r+26;
+    e.lvCd -= dt;
+    if(tickEnemyWindup(g, e, target, target!==p, reach, dt)){
+      // mid bite
+    } else if(e.lvCd<=0 && d<420){
+      e.windT = 0; e.lvIdx = (e.lvIdx||0)+1;
+      if(e.lvIdx%3===0){ e.lvState = 'volleyTele'; e.lvT = LV_VOLLEY_TELE; }
+      else { e.lvState = 'surgeTele'; e.lvT = LV_SURGE_TELE; e.lvPt = {x:target.x, y:target.y}; }
+    } else if(d>reach){
+      const ang = steerAngleTo(e, target.x, target.y, room.obstacles);
+      e.x += Math.cos(ang)*LV_LAND_SPEED*dt; e.y += Math.sin(ang)*LV_LAND_SPEED*dt; e.moving = true;
+      pushOutOfObstacles(e, room.obstacles); e.x = clamp(e.x, e.r, room.w-e.r); e.y = clamp(e.y, e.r, room.h-e.r);
+    } else if(e.atkCd<=0) beginEnemyMelee(e);
+  } else if(st==='retreat'){
+    e.invulnT = 1; e.guardHp = e.hp; e.moving = true;
+    const c = e.cfg, dx = c.cx-e.x, dy = c.cy-e.y, dd = Math.hypot(dx,dy);
+    e.x += dx/dd*160*dt; e.y += dy/dd*160*dt;
+    e.facing = {x:dx/dd, y:dy/dd}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
+    if(room.waterAt(e.x,e.y) && room.waterAt(e.x+34,e.y) && room.waterAt(e.x-34,e.y)){ e.onLand = false; e.invulnT = 0; e.lvState = 'idle'; e.lvCd = 1.2; }
+  } else if(st==='idle'){
     const zone = swim();
     face();
     // wrong span (player crossed the island or the other span): dive to relocate
@@ -139,17 +177,17 @@ function updateLeviathanBoss(g, e, dt, target, d, room){
         if(e.kraken) g.projectiles.push({x:e.x,y:e.y,vx:Math.cos(aa)*250,vy:Math.sin(aa)*250,r:9,dmg:e.dmg*0.6,from:'enemy',life:2.6,color:'#8fd0ff',srcEnemy:e,targetRef:target});
         else g.projectiles.push({x:e.x,y:e.y,vx:Math.cos(aa)*210,vy:Math.sin(aa)*210,r:9,dmg:e.dmg*0.6,from:'enemy',life:2.6,color:'#7dd45a',srcEnemy:e,targetRef:target,isPoisonBall:true});
       }
-      e.lvState='idle'; e.lvCd = enraged ? 1.1 : 1.7;
+      e.lvState = e.onLand ? 'land' : 'idle'; e.lvCd = enraged ? 1.1 : 1.7;
     }
   } else if(st==='surgeTele'){
     e.lvT -= dt; face(); e.atkAnimT = 0.1;
     // lunge toward the marked spot while charging up
-    const [lo,hi] = lvBounds(e.lvWest, e); e.x += clamp(e.lvPt.x-e.x,-90*dt,90*dt); e.x = clamp(e.x,lo,hi);
+    if(!e.onLand){ const [lo,hi] = lvBounds(e.lvWest, e); e.x += clamp(e.lvPt.x-e.x,-90*dt,90*dt); e.x = clamp(e.x,lo,hi); }
     if(e.lvT<=0){
       lvHit(g, e, e.lvPt.x, e.lvPt.y, LV_SURGE_R, 1.5, 100);
       g.particles.push({type:'ring', x:e.lvPt.x, y:e.lvPt.y, t:0.5, max:0.5, r:LV_SURGE_R, color:e.kraken?'#ffe046':'#7dd45a'});
       g.particles.push({type:'burst', x:e.lvPt.x, y:e.lvPt.y, t:0.4, max:0.4, color:e.kraken?'#fff2a0':'#7dd45a'});
-      e.lvState='idle'; e.lvCd = enraged ? 1.1 : 1.8; e.exposedT = Math.max(e.exposedT, 0.8);
+      e.lvState = e.onLand ? 'land' : 'idle'; e.lvCd = enraged ? 1.1 : 1.8; e.exposedT = Math.max(e.exposedT, 0.8);
     }
   } else if(st==='dive'){
     e.lvT -= dt; e.sub = true;
@@ -175,7 +213,7 @@ function updateLeviathanBoss(g, e, dt, target, d, room){
     }
   } else { // exposed: it's stunned and open to attack
     e.lvT -= dt; face();
-    if(e.lvT<=0){ e.lvState='idle'; e.lvCd = enraged ? 1.2 : 1.8; }
+    if(e.lvT<=0){ e.lvState = e.onLand ? 'land' : 'idle'; e.lvCd = enraged ? 1.2 : 1.8; }
   }
 }
 // v207: the Kraken's ground warnings are yellow and crackle with lightning (Marsh Leviathan stays green).
@@ -201,7 +239,7 @@ function drawZapBolts(Rpx, frac, seed){
 function drawLeviathanTelegraph(e){
   if(e.kraken && e.krStrikes){
     for(const k of e.krStrikes){
-      const f = clamp(1-k.t/k.max,0,1), iso = toIso(k.x,k.y), Rpx = KR_STRIKE_R*ISO_KX;
+      const f = clamp(1-k.t/k.max,0,1), iso = toIso(k.x,k.y), Rpx = KR_STRIKE_R*ISO_KX*Math.SQRT2;
       ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(1, ISO_KY/ISO_KX);
       ctx.strokeStyle='rgba(255,224,70,'+(0.55+f*0.45)+')'; ctx.lineWidth=2.5;
       ctx.beginPath(); ctx.arc(0,0,Rpx,0,7); ctx.stroke();
@@ -218,10 +256,10 @@ function drawLeviathanTelegraph(e){
   const iso = toIso(pt.x, pt.y);
   ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(1, ISO_KY/ISO_KX);
   ctx.strokeStyle='rgba('+col+','+(0.5+frac*0.5)+')'; ctx.lineWidth=2.5;
-  ctx.beginPath(); ctx.arc(0,0,R*ISO_KX,0,7); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,R*ISO_KX*Math.SQRT2,0,7); ctx.stroke();
   ctx.fillStyle='rgba('+col+','+(0.10+frac*0.28)+')';
-  ctx.beginPath(); ctx.arc(0,0,R*ISO_KX*frac,0,7); ctx.fill();
-  if(e.kraken) drawZapBolts(R*ISO_KX, frac, pt.x*0.011);
+  ctx.beginPath(); ctx.arc(0,0,R*ISO_KX*Math.SQRT2*frac,0,7); ctx.fill();
+  if(e.kraken) drawZapBolts(R*ISO_KX*Math.SQRT2, frac, pt.x*0.011);
   ctx.restore();
 }
 function spawnLakesidePack(g, anchor, template){

@@ -1351,6 +1351,8 @@ body.noPotionBtn #actionCluster .interactBtn{ right:127px !important; bottom:127
   #dockMid{ padding:3px 0 0 !important; }
   #topWrap{ top:calc(70px + env(safe-area-inset-top,0px)) !important; }
   #subHud{ padding-top:0 !important; }
+  /* v521: the soul counter sits right under the mana orb, freeing the row under the menu bar */
+  #subHud #soulsWrap{ position:fixed !important; top:calc(6px + 60px + 2px + env(safe-area-inset-top,0px)) !important; right:calc(8px + env(safe-area-inset-right,0px)) !important; width:60px; box-sizing:border-box; justify-content:center; padding:0 !important; margin:0 !important; z-index:6; }
   #achToast{ top:calc(118px + env(safe-area-inset-top,0px)) !important; }
   #joyzone{ bottom:0 !important; }
   #bigMsg{ white-space:normal !important; width:max-content; max-width:94vw; }   /* v507: long boss names wrap instead of running off the screen */

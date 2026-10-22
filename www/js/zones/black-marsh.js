@@ -111,7 +111,7 @@ function makeBlackMarsh(){
   const eastGate = {x:w-16, y:bmTrailPt(w-16).y, r:34};
   const highGate = {x:16, y:bmUpTrailY(16), r:34};   // v459: the north arm's far end -- the road up into the Barren Highlands
   // (v262) the Marsh Pool: a sinkhole gate. v490: moved to the north edge of the north arm, east beyond the tower bridge
-  const pgx = w-850;
+  const pgx = Math.round(w*0.5);   // v521: halfway along the north edge between the Forgotten Tower and the Barren Highlands road
   const poolGate = {x:pgx, y:bmTopY(pgx)+16, r:34};
   // the dead-bog outside the two arms: impassable slices (80px) along the outer edges (v490: the middle is the river now)
   for(let sx=0; sx<w; sx+=80){
