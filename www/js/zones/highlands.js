@@ -3,18 +3,20 @@
 // cliff edges (one or two ramps up each), steep impassable ridgelines, shallow ravines, standing boulders, natural stone
 // arches and the odd ruined watchtower. Giants roam, wargs prowl, rams graze in herds, rocs circle overhead and troll
 // tribes huddle round camp fires on the plateaus. Built on the same height-field terrain engine as the Mountain Pass.
-const HL_W = 6400, HL_H = 4800, HL_DEPTH = 32;   // v483: was 30
+const HL_W = 7600, HL_H = 5400, HL_DEPTH = 32;   // v483: was 30; v516: bigger, a winding route with the Mountain Pass gate in the top-right corner
 function makeHighlands(){
   const TS = 50, w = HL_W, h = HL_H, cols = w/TS, rows = h/TS, N = cols*rows, M = 300;
   const gates = [
-    {id:'marsh', x:4700, y:h-324, r:70, label:'BLACK MARSH', act:'toMarshFromHighlands', art:true, big:1.0, labelH:80},
-    {id:'pass',  x:324,  y:1100,  r:70, label:'MOUNTAIN PASS', act:'toPassFromHighlands', art:true, big:1.0, labelH:80},
+    {id:'marsh', x:5700, y:h-324, r:70, label:'BLACK MARSH', act:'toMarshFromHighlands', art:true, big:1.0, labelH:80},
+    {id:'pass',  x:w-324, y:520,  r:70, label:'MOUNTAIN PASS', act:'toPassFromHighlands', art:true, big:1.0, labelH:80},
   ];
   const marshGate = gates[0], passGate = gates[1];
   const waypoint = {x:marshGate.x-430, y:marshGate.y-360, r:22};
-  // the trail winds north-west from the marsh road, through the hills, to the pass
-  const trail = [{x:marshGate.x, y:marshGate.y}, {x:4560+rand(-60,60), y:3950}, {x:4950+rand(-80,80), y:3250}, {x:4350+rand(-80,80), y:2550},
-                 {x:3500+rand(-80,80), y:2350+rand(-80,80)}, {x:2750+rand(-80,80), y:1800}, {x:1950+rand(-80,80), y:1650+rand(-80,80)}, {x:1250, y:1150+rand(-60,60)}, {x:passGate.x, y:passGate.y}];
+  // v516: the trail switches back twice: west along the south, up the west side, east through the middle, then up the east side to the pass in the top-right corner
+  const j = (a)=>rand(-a,a);
+  const trail = [{x:marshGate.x, y:marshGate.y}, {x:5560+j(60), y:4560}, {x:4700+j(80), y:4250}, {x:3350+j(80), y:4400}, {x:2100+j(80), y:4050},
+                 {x:1450+j(60), y:3500}, {x:1750+j(60), y:2900}, {x:3000+j(80), y:2650}, {x:4400+j(80), y:2850}, {x:5500+j(80), y:2650},
+                 {x:6150+j(60), y:2050}, {x:5500+j(80), y:1450}, {x:6300+j(80), y:1000}, {x:w-760, y:680}, {x:passGate.x, y:passGate.y}];
   const trailD = (x,y)=>distToPolyline(trail,x,y).d;
   const keepouts = gates.map(gt=>({x:gt.x,y:gt.y,r:380})).concat([{x:waypoint.x,y:waypoint.y,r:260}]);
   // rolling hills + shallow ravines
@@ -31,8 +33,9 @@ function makeHighlands(){
     plateaus.push({x, y, R, up:rand(70,95), ph:Math.random()*6.28, ramps:[ra].concat(Math.random()<0.6 ? [ra+Math.PI*rand(0.7,1.3)] : [])});
   }
   // steep ridgelines: long, narrow, impassable rock spines
-  const ridges = []; tries = 0;
-  while(ridges.length < 5 && tries < 4000){ tries++;
+  // two long barrier ridges between the legs of the trail (each reaches one edge of the map, leaving the turn at the other end), so the way really winds
+  const ridges = [{x0:2500, y0:3560, x1:w-250, y1:3500, hw:70}, {x0:800, y0:1880, x1:5000, y1:1920, hw:70}]; tries = 0;
+  while(ridges.length < 6 && tries < 4000){ tries++;
     const x0 = rand(M+400, w-M-400), y0 = rand(M+400, h-M-400), a = Math.random()*6.28, L = rand(700, 1300), x1 = x0+Math.cos(a)*L, y1 = y0+Math.sin(a)*L;
     if(x1<M+300 || x1>w-M-300 || y1<M+300 || y1>h-M-300) continue;
     let ok = true; for(let t=0;t<=1 && ok;t+=0.1){ const px = x0+(x1-x0)*t, py = y0+(y1-y0)*t; if(trailD(px,py) < 330 || keepouts.some(k=>dist({x:px,y:py},k)<k.r+200) || plateaus.some(q=>dist(q,{x:px,y:py})<q.R+420)) ok = false; }
@@ -130,11 +133,13 @@ function makeHighlands(){
   // ground colours: faded ochre grass and dusty soil in patches, exposed stone on the heights, a worn dirt trail
   const C = new Uint8Array(N*3);
   const mix = (a,b,t)=>[a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+  // v516: the top-right corner (the way to the Mountain Pass) turns to patchy snow, matching the west end of the Pass
+  const SNOWC=[228,236,242], snowK = (x,y)=> Math.pow(clamp(1.05-dist({x,y},passGate)/2700,0,1),1.2)*0.62;
   const OCHRE=[158,138,90], DRY=[140,124,84], SOIL=[112,94,72], DUST=[128,110,86], OLIVE=[82,86,56], STONE=[120,120,116], STONED=[78,80,84], TRAIL=[146,124,96];
   for(let iy=0; iy<rows; iy++) for(let ix=0; ix<cols; ix++){
     const i = iy*cols+ix, x = (ix+0.5)*TS, y = (iy+0.5)*TS, hh = tileHash(ix,iy), h2 = tileHash(ix*3+7,iy*5+1);
     let c;
-    if(K[i]>=3){ c = mix(STONED, STONE, clamp(E[i]/360,0,1)*0.7 + (h2>0.6?0.18:0)); }
+    if(K[i]>=3){ c = mix(STONED, STONE, clamp(E[i]/360,0,1)*0.7 + (h2>0.6?0.18:0)); const sk0 = snowK(x,y); if(sk0>0) c = mix(c, SNOWC, sk0*(h2>0.5?0.75:0.35)); }
     else {
       const patch = 0.5 + 0.5*Math.sin(x/310+1.1)*Math.cos(y/270+0.4) + (hh-0.5)*0.35;
       c = patch > 0.55 ? mix(DRY, OCHRE, clamp((patch-0.55)*2.4,0,1)) : mix(SOIL, DUST, clamp(patch*1.6,0,1));
@@ -142,6 +147,7 @@ function makeHighlands(){
       const hi = clamp((E[i]-100)/120,0,1); if(hi>0) c = mix(c, STONE, hi*(h2>0.4?0.75:0.45));
       if(ravD(x,y) < 120) c = mix(c, SOIL, 0.35);
       const td = trailD(x,y); if(td < 70) c = mix(c, TRAIL, td < 46 ? 0.85 : 0.85*(70-td)/24);
+      { const sk = snowK(x,y); if(sk>0 && hh < sk*1.5) c = mix(c, td < 60 ? [196,204,212] : SNOWC, 0.55+0.4*h2); }
       if(((ix+iy)&1)) c = mix(c, [255,245,220], 0.025);
     }
     C[i*3] = c[0]; C[i*3+1] = c[1]; C[i*3+2] = c[2];
@@ -153,8 +159,10 @@ function makeHighlands(){
   const freeSpot = (x,y,d,trailPad)=> flat(x,y,d) && trailD(x,y) > (trailPad||90) && !keepouts.some(k=>dist({x,y},k)<k.r*0.6) && !deco.some(o=>o.solid && dist(o,{x,y}) < (o.rad||40)+d);
   // troll camps on the plateaus (and a couple in the open)
   const camps = [];
-  for(const q of plateaus){ if(camps.length>=4) break; const x = q.x+rand(-60,60), y = q.y+rand(-60,60); if(flat(x,y,120)) camps.push({x,y}); }
-  for(tries=0; camps.length<5 && tries<3000; tries++){ const x = rand(M+400,w-M-400), y = rand(M+400,h-M-400); if(freeSpot(x,y,140,420) && !camps.some(c=>dist(c,{x,y})<1300)) camps.push({x,y}); }
+  // v516: a camp (fire, logs, tent, bones) needs a wide level patch -- no cliff lip, ridge or boulder band anywhere within ~300 of the fire
+  const campClear = (x,y,R0)=>{ R0 = R0||300; if(!walk(x,y)) return false; const ix0 = Math.max(0,Math.floor((x-R0)/TS)), ix1 = Math.min(cols-1,Math.floor((x+R0)/TS)), iy0 = Math.max(0,Math.floor((y-R0)/TS)), iy1 = Math.min(rows-1,Math.floor((y+R0)/TS)); for(let iy=iy0;iy<=iy1;iy++) for(let ix=ix0;ix<=ix1;ix++){ if(dist({x:(ix+0.5)*TS,y:(iy+0.5)*TS},{x,y})>R0) continue; const i = iy*cols+ix; if(B[i] || K[i]>=3 || Math.abs(E[i]-E[Math.floor(y/TS)*cols+Math.floor(x/TS)])>CR_STEP) return false; } return ridges.every(r=>distToPolyline([{x:r.x0,y:r.y0},{x:r.x1,y:r.y1}],x,y).d > R0+120); };
+  for(const q of plateaus){ if(camps.length>=4) break; for(let k=0;k<12;k++){ const x = q.x+rand(-90,90), y = q.y+rand(-90,90); if(campClear(x,y)){ camps.push({x,y}); break; } } }
+  for(tries=0; camps.length<5 && tries<9000; tries++){ const x = rand(M+400,w-M-400), y = rand(M+400,h-M-400); if(freeSpot(x,y,140,420) && campClear(x,y, tries<6000 ? 300 : 240) && !camps.some(c=>dist(c,{x,y})<1300)) camps.push({x,y}); }
   for(const c of camps){
     deco.push({k:'campfire', x:c.x, y:c.y, s:1, solid:true, rad:70}); solid(c.x, c.y, 40, 40);
     for(let a=0;a<6.28;a+=6.28/3) deco.push({k:'sitlog', x:c.x+Math.cos(a+0.4)*95, y:c.y+Math.sin(a+0.4)*95, r:a+0.4+Math.PI/2, s:1});
@@ -183,13 +191,18 @@ function makeHighlands(){
   for(let n=0, t=0; n<220 && t<8000; t++){ const x = rand(M+60,w-M-60), y = rand(M+60,h-M-60); if(!walk(x,y) || trailD(x,y)<55) continue; deco.push({k:'shrub', x, y, s:rand(0.7,1.3), seed:Math.random()}); n++; }
   for(let n=0, t=0; n<900 && t<12000; t++){ const x = rand(M+40,w-M-40), y = rand(M+40,h-M-40); if(!walk(x,y) || trailD(x,y)<48) continue; deco.push({k:'grass', x, y, s:rand(0.8,1.5), c:Math.random()<0.5 ? '#a8925a' : '#8e8a52'}); n++; }
   for(let n=0, t=0; n<40 && t<4000; t++){ const x = rand(M+60,w-M-60), y = rand(M+60,h-M-60); if(!walk(x,y)) continue; deco.push({k: Math.random()<0.5 ? 'pebbles' : 'cairn', x, y, s:rand(0.7,1.2)}); n++; }
+  // snowy pines, ice crags and drifts thicken toward the pass; barren scrub thins out
+  for(let i=deco.length-1;i>=0;i--){ const d0 = deco[i]; if((d0.k==='grass'||d0.k==='shrub'||d0.k==='twisted') && snowK(d0.x,d0.y) > 0.28 + Math.random()*0.2) deco.splice(i,1); }
+  for(let n=0, t=0; n<130 && t<9000; t++){ const x = rand(w-3000,w-M-60), y = rand(M+60,2700); if(snowK(x,y) < 0.12+Math.random()*0.3 || !walk(x,y) || trailD(x,y)<85) continue;
+    if(dist({x,y},passGate)<260) continue;
+    const q = Math.random(); deco.push(q<0.38 ? {k:'pine', x, y, s:rand(0.9,1.4)} : q<0.6 ? {k:'crag', x, y, s:rand(0.8,1.3), h:rand(55,105)} : q<0.82 ? {k:'drift', x, y, s:rand(0.8,1.4)} : {k:'rock', x, y, s:rand(0.8,1.3)}); n++; }
   deco.sort((a,b)=>(a.x+a.y)-(b.x+b.y));
   // anchors for packs, herds, giants and rocs
-  const okAnchor = (x,y,d)=> flat(x,y,d||70) && dist({x,y},marshGate)>700 && dist({x,y},waypoint)>600 && !keepouts.some(k=>dist({x,y},k)<k.r+40) && !camps.some(c=>dist(c,{x,y})<500);
+  const okAnchor = (x,y,d)=> flat(x,y,d||70) && dist({x,y},marshGate)>700 && dist({x,y},passGate)>600 && dist({x,y},waypoint)>600 && !keepouts.some(k=>dist({x,y},k)<k.r+40) && !camps.some(c=>dist(c,{x,y})<500);
   const pick = (n, d, gap)=>{ const out = []; let tt = 0; while(out.length<n && tt<40000){ tt++; const x=rand(M+150,w-M-150), y=rand(M+150,h-M-150); if(!okAnchor(x,y,d) || out.some(a=>dist(a,{x,y})<gap)) continue; out.push({x,y}); } return out; };
   const packAnchors = pick(30, 70, 360), herdAnchors = pick(6, 150, 900), giantAnchors = pick(7, 100, 1100), rocAnchors = pick(8, 40, 900);
   return { isMtn:true, hl:true, w, h, depth:HL_DEPTH, name:'Barren Highlands', ts:TS, cols, rows, E, K, B, CH, C, wallDrop:140, colorFn:mtnColor,
-    obstacles, gates, waypoint, trail, plateaus, ridges, camps, deco, packAnchors, herdAnchors, giantAnchors, rocAnchors, roadPolys:[{pts:trail, hw:46}], gatesForTest:{marsh:marshGate, pass:passGate, wp:waypoint} };
+    obstacles, gates, waypoint, trail, plateaus, ridges, camps, deco, packAnchors, herdAnchors, giantAnchors, rocAnchors, edgeLines:true, roadPolys:[{pts:trail, hw:46}], gatesForTest:{marsh:marshGate, pass:passGate, wp:waypoint} };
 }
 function hlGate(hl, id){ return (hl.gates||[]).find(gt=>gt.id===id) || hl.gates[0]; }
 function enterHighlands(opts){
@@ -200,7 +213,7 @@ function enterHighlands(opts){
   g.room = g.hl;
   g.depth = HL_DEPTH;
   if(opts.atWaypoint){ p.x = g.hl.waypoint.x; p.y = g.hl.waypoint.y + 40; }
-  else if(opts.fromPass){ const gt = hlGate(g.hl,'pass'); p.x = gt.x + 130; p.y = gt.y; }
+  else if(opts.fromPass){ const gt = hlGate(g.hl,'pass'); p.x = gt.x - 130; p.y = gt.y + 40; }
   else { const gt = hlGate(g.hl,'marsh'); p.x = gt.x; p.y = gt.y - 130; }
   p.crX = undefined;
   g.hl.entrySpawn = {x:p.x, y:p.y};
@@ -241,6 +254,7 @@ function drawHlDecoIso(d, clock){
   if(k==='grass'){ drawGrassTuftIso(d); return; }
   if(k==='pine'){ drawMtnDeco({k:'pine', x:d.x, y:d.y, s:d.s}); return; }
   if(k==='cairn'){ drawMtnDeco({k:'cairn', x:d.x, y:d.y, s:d.s}); return; }
+  if(k==='crag' || k==='drift' || k==='rock'){ drawMtnDeco(d); return; }   // v516: the snowy corner by the pass
   if(k==='wallmark') return;
   const iso = toIso(d.x, d.y), s = d.s||1, t = clock||0;
   ctx.save(); ctx.translate(iso.x, iso.y); ctx.lineJoin = 'round'; ctx.lineCap = 'round';

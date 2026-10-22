@@ -224,7 +224,8 @@ function render(){
       if(g.town.outerTrees) for(const tr of g.town.outerTrees){ const io = toIso(tr.x,tr.y); if(io.x>cam.x-160 && io.x<cam.x+W+160 && io.y>cam.y-300 && io.y<cam.y+H+200) drawables.push({depth:tr.x+tr.y, draw:()=>(tr.dead ? drawDeadTreeIso(tr) : drawTreeIso(tr))}); }
       if(g.town.props) for(const pr of g.town.props) drawables.push({depth:pr.x+pr.y+(pr.k==='fence'?pr.len/2:0), draw:()=>drawTownProp(pr, g.clock||0)});
       drawables.push({depth:500+930, draw:()=>drawSignIso({x:500,y:930}, ['DOCKS'])});
-      for(const tn of townTipNpcs(g)) drawables.push({depth:tn.x+tn.y, draw:()=>drawSimpleNpcIso(tn, g.clock||0)});   // v490
+      for(const tn of townTipNpcs(g)){ drawables.push({depth:tn.x+tn.y, draw:()=>drawSimpleNpcIso(tn, g.clock||0)});   // v490
+        if(tn.kind==='locketWoman' && locketWomanMark(g.player)) drawables.push({depth:tn.x+tn.y+0.5, draw:()=>drawQuestMarkIso(tn.x, tn.y, g.clock||0, 62)}); }   // v519: '!'
       if(tavernIsOpen(p) && g.town.boat){ const bt = g.town.boat; drawables.push({depth:bt.x+bt.y, draw:()=>drawTownBoat(bt, g.clock||0)}); }
       if(g.followers) for(const f of g.followers) drawables.push({depth:f.x+f.y, draw:()=>drawFollowerIso(f)});
       pushNecroDrawables(g, drawables);
@@ -277,7 +278,8 @@ function render(){
     if(g.mtn){
       { const vis = (x,y)=>{ const i=toIso(x,y); return i.x>cam.x-160 && i.x<cam.x+W+160 && i.y>cam.y-260 && i.y<cam.y+H+200; };
         for(const dd of g.mtn.deco) if(vis(dd.x,dd.y)) drawables.push({depth:dd.x+dd.y, draw:()=>drawMtnDeco(dd)}); }
-      drawables.push({depth:g.mtn.forestGate.x+g.mtn.forestGate.y, draw:()=>drawEdgeLabelIso(g.mtn.forestGate, 'BARREN HIGHLANDS')});
+      drawables.push({depth:g.mtn.forestGate.x+g.mtn.forestGate.y+120, draw:()=>{ const gt = g.mtn.forestGate; gt.art = true; drawGateArtIso(gt, g.clock||0); }});   // v516: the same stone arch as the Highlands' end of this road
+      drawables.push({depth:g.mtn.forestGate.x+g.mtn.forestGate.y+121, draw:()=>drawEdgeLabelIso(g.mtn.forestGate, 'BARREN HIGHLANDS', 80)});
       drawables.push({depth:g.mtn.summitGate.x+g.mtn.summitGate.y-1, draw:()=>drawIceCaveIso(g.mtn.summitGate, g.clock||0)});
       drawables.push({depth:g.mtn.summitGate.x+g.mtn.summitGate.y, draw:()=>drawEdgeLabelIso(g.mtn.summitGate, 'ICY SUMMIT', 130)});
       drawables.push({depth:-1e6, draw:()=>{ const q=toIso(g.mtn.frostGate.x,g.mtn.frostGate.y); ctx.save(); ctx.translate(q.x,q.y); ctx.scale(0.5,0.5); ctx.translate(-q.x,-q.y); drawFrostholdBackdrop(g.mtn.frostGate, g.clock||0); ctx.restore(); }});
@@ -584,6 +586,7 @@ function render(){
         drawables.push({depth:rp.x+rp.y-1, draw:()=>drawBluePortalIso(rp, g.clock||0)});
         drawables.push({depth:rp.x+rp.y, draw:()=>drawEdgeLabelIso(rp, 'CURSED CEMETERY')});
       }
+      for(const sc of (g.crypt.sideChests||[])) drawables.push({depth:sc.x+sc.y, draw:()=>drawChestIso(sc)});   // v516: dead-end chests
       if(!g.player.darkCryptChestLooted && g.crypt.chestShown){
         drawables.push({depth:g.crypt.chestSpot.x+g.crypt.chestSpot.y, draw:()=>drawChestIso(g.crypt.chestSpot)});
       }
@@ -823,7 +826,7 @@ function render(){
         // reuses the same swirling blue-portal art Town's own permanent
         // waypoint uses once unlocked.
         drawables.push({depth:t.clearPortal.x+t.clearPortal.y-1, draw:()=>drawBluePortalIso(t.clearPortal, g.clock||0)});
-        drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, t.fht ? 'FROSTHOLD KEEP' : (t.ft) ? (t.clearPortal.toTown ? 'MISTFALL' : 'BLACK MARSH') : 'WITHERED CROSSROADS')});
+        drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, t.fht ? 'FROSTHOLD KEEP' : (t.ft) ? (t.clearPortal.toTown ? 'MISTFALL' : t.clearPortal.toWitch ? "WITCH'S CAMP" : 'BLACK MARSH') : 'WITHERED CROSSROADS')});
       }
     }
     if(g.chest) drawables.push({depth:g.chest.x+g.chest.y, draw:()=>drawChestIso(g.chest)});
@@ -962,6 +965,7 @@ function render(){
     d.draw = function(){ ctx.save(); ctx.globalAlpha = OCCLUDE_ALPHA; originalDraw(); ctx.restore(); };
   }
   for(const gl of collectGlows(g, g.player)) drawables.push({depth:gl.x+gl.y-0.5, draw:()=>drawGlowIso(gl, g.clock||0)});
+  drawPlayerGroundGlow(g);   // v517
   drawRetribAura(g.player);
   drawBulwarkRing(g.player);
   drawJuggFx(g.player);
@@ -989,9 +993,10 @@ function render(){
     ctx.restore();
   }
   if(g.scene==='darkcrypt') drawDarkCryptOverlay(g, DARKCRYPT_PLAYER_LIGHT_R, true);
-  else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3, sunk = g.scene==='lighthouse' && g.room && g.room.subzone==='sunken'; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*UNDERGROUND_LIGHT_SCALE*lightRadiusMult(g.player)*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : sunk ? 1.05 : 1), false, hrt ? '#1c0503' : null, sunk ? 0.92 : null, sunk ? 0.28 : UNDERGROUND_CORE_DIM); }   // v507: the Sunken Depths are lit a good deal brighter   // v493: +Light Radius
+  else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3, sunk = g.scene==='lighthouse' && g.room && g.room.subzone==='sunken'; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*UNDERGROUND_LIGHT_SCALE*lightRadiusMult(g.player)*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : sunk ? 1.05 : 1), false, hrt ? '#1c0503' : null, sunk ? 0.92 : null, sunk ? 0.12 : UNDERGROUND_CORE_DIM); }   // v507: the Sunken Depths are lit a good deal brighter   // v493: +Light Radius
   else if(wlDarkFight(g)) drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*0.9*lightRadiusMult(g.player), false);   // v434: darkness closes in during the Wraith Lord fight (10% tighter than the caves)
-  else if(lightVeilScene(g)) drawLightVeil(g);   // v492/v493: the dark around every zone but town, lit by your own light
+  else if(lightVeilScene(g)) drawLightVeil(g);   // v492/v493: the dark around towers and halls, lit by your own light
+  else if(playerGlowScene(g)) drawOverworldRing(g);   // v516: overworld zones: a gentle edge ring and your warm glow
   flushLosPending();   // (v501) normally already folded into the veil above
   if(g.enemies && g.enemies.some(x=>x.dwc && (x.cState==='laser' || x.cState==='flatten'))){ ctx.save(); ctx.translate(-cam.x+shX, -cam.y+shY); for(const x of g.enemies) if(x.dwc) drawDwBeam(x); ctx.restore(); }   // v490: Construct's Furnace Beam glows over the dark
   else if(g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g)) drawDungeonVignette(g);

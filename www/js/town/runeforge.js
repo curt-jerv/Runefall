@@ -58,9 +58,9 @@ function giveRuneToSmith(){
   p.inventory = p.inventory.filter(it=>!(it && it.questId==='obsidian_runestone'));
   p.runeforgeUnlocked = true;
   const q = getQuest(p, 'slay_gojira');
-  if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'The Blacksmith set the Obsidian Obelisk into an Obsidian Forge beside his forge.'; }
+  if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'Brom set the Obsidian Obelisk into an Obsidian Forge beside his forge.'; }
   gainXp(game, Math.round(xpForKill(44, true)*3));
-  showMsg('Obsidian Forge unlocked — it now stands by the Blacksmith', 3.2);
+  showMsg('Obsidian Forge unlocked — it now stands by Brom', 3.2);
   updateQuestBadge(); bagPulse(); saveGame();
 }
 // ---- the Runeforge ----
@@ -197,7 +197,8 @@ function drawRuneforgeAnvilIso(a, clock){
 }
 
 function drawFrostholdFloor(room, cam){
-  const TS = 46, Wl = room.wall, cy = room.h/2;
+  const TS = 46, Wl = room.wall, In = room.inner, cy = room.h/2, CZ = room.causeway, WA = room.approach;
+  const tcx = (In.x0+In.x1)/2;
   for(let wx=-GROUND_MARGIN; wx<=room.w+GROUND_MARGIN; wx+=TS){
     for(let wy=-GROUND_MARGIN; wy<=room.h+GROUND_MARGIN; wy+=TS){
       const iso = toIso(wx,wy);
@@ -205,8 +206,11 @@ function drawFrostholdFloor(room, cam){
       if(sx < -80 || sx > W+80 || sy < -80 || sy > H+80) continue;
       const checker = (((Math.floor(wx/TS)+Math.floor(wy/TS))%2)+2)%2;
       const inside = wx>Wl.x0 && wx<Wl.x1 && wy>Wl.y0 && wy<Wl.y1;
+      const court = wx>In.x0 && wx<In.x1 && wy>In.y0 && wy<In.y1;
       const eastF = wx > Wl.x1 ? clamp((wx-Wl.x1)/(room.w-Wl.x1),0,1) : 0;
-      const road = Math.abs(wy-cy) < 70 && (wx < 3400 || wx > Wl.x1-120) || (Math.abs(wx-2800) < 60 && wy > cy && wy < 2960);
+      const onLane = Math.abs(wy-cy) < 70;
+      const road = (onLane && (wx < Wl.x0+40 || wx > Wl.x1-40 || (wx > In.x1-90 && wx < In.x1+420))) || (court && Math.hypot(wx-tcx, wy-cy) < 300);
+      const ring = inside && !court && ((wx < In.x0-80 || wx > In.x1+80) ? (Math.abs(wx-(wx<In.x0?(Wl.x0+In.x0)/2:(Wl.x1+In.x1)/2)) < 70) : (Math.abs(wy-(wy<In.y0?(Wl.y0+In.y0)/2:(Wl.y1+In.y1)/2)) < 70));   // a paved lane round the ring
       if(eastF>0){
         // snow melts into red canyon dirt toward Redridge
         const hs = ((Math.floor(wx/TS)*73856093) ^ (Math.floor(wy/TS)*19349663)) & 7;
@@ -215,7 +219,9 @@ function drawFrostholdFloor(room, cam){
         const f = clamp(eastF*1.5-0.15,0,1) * (hs<3 && eastF<0.6 ? 0.6 : 1);
         ctx.fillStyle = 'rgb('+Math.round(a[0]+(b[0]-a[0])*f)+','+Math.round(a[1]+(b[1]-a[1])*f)+','+Math.round(a[2]+(b[2]-a[2])*f)+')';
       }
+      else if(court) ctx.fillStyle = road ? (checker ? '#c4cdd6' : '#b6c0cb') : (checker ? '#9aa4b1' : '#8e98a5');
       else if(road) ctx.fillStyle = checker ? '#b4bfca' : '#a5b1bd';
+      else if(ring) ctx.fillStyle = checker ? '#929cab' : '#858f9d';
       else if(inside) ctx.fillStyle = checker ? '#8993a0' : '#7c8794';
       else ctx.fillStyle = checker ? '#e6eef5' : '#d6e2ec';
       drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);

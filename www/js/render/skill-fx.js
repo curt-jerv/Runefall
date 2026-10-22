@@ -57,24 +57,59 @@ function drawShieldThrowIso(st){
   drawWarriorShield(17, 26, '#cdd8e6', 1);
   ctx.restore();
 }
-// Precise Shot (Marksman capstone): a simple red straight line drawn from
-// the player outward in the current aim direction while p.aiming is true --
-// reuses the exact same world-to-iso projection (toIso) the arrows above
-// draw with, just as a stroked line instead of a sprite.
+// Precise / Aimed Shot: an aiming light drawn from the bow along the aim direction while p.aiming is true (v517: a soft
+// tapered ribbon of light instead of a red laser line -- warm gold core, wide faint halo that fades with distance, little chevrons
+// and motes drifting toward the mark, and a flat isometric reticle on the ground where the arrow will land).
 function drawAimLineIso(p){
   if(!p || !(p.aiming || (p.aimShotHold && holdAimCommit))) return;
-  const len = 220;
-  const iso1 = toIso(p.x, p.y);
-  const iso2 = toIso(p.x + p.aimDir.x*len, p.y + p.aimDir.y*len);
-  ctx.save();
-  ctx.strokeStyle = '#e2384f';
-  ctx.lineWidth = 2.5;
-  ctx.globalAlpha = 0.85;
-  ctx.shadowColor = '#e2384f'; ctx.shadowBlur = 6;
-  ctx.beginPath();
-  ctx.moveTo(iso1.x, iso1.y-34);   // (v245) chest/shoulder height
-  ctx.lineTo(iso2.x, iso2.y-34);
-  ctx.stroke();
+  const len = 240, T = (game && game.clock) || 0;
+  const iso1 = toIso(p.x, p.y), iso2 = toIso(p.x + p.aimDir.x*len, p.y + p.aimDir.y*len);
+  const x1 = iso1.x, y1 = iso1.y-34, x2 = iso2.x, y2 = iso2.y-34;   // (v245) chest/shoulder height
+  const dx = x2-x1, dy = y2-y1, L = Math.hypot(dx,dy) || 1, ux = dx/L, uy = dy/L, nx = -uy, ny = ux;
+  const pulse = 0.5+0.5*Math.sin(T*7);
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // the ground shadow of the beam (flat, so the line reads as light in the air above the floor)
+  ctx.globalAlpha = 0.16; ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(iso1.x, iso1.y+1); ctx.lineTo(iso2.x, iso2.y+1); ctx.stroke();
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'lighter';
+  // halo, glow and core: every layer is brightest at the bow and thins out toward the mark
+  const lg = (r,g,b,a0,a1)=>{ const q = ctx.createLinearGradient(x1,y1,x2,y2); q.addColorStop(0,'rgba('+r+','+g+','+b+','+a0+')'); q.addColorStop(0.7,'rgba('+r+','+g+','+b+','+(a0*0.45+a1*0.55)+')'); q.addColorStop(1,'rgba('+r+','+g+','+b+','+a1+')'); return q; };
+  for(const [w,st] of [[11,lg(255,170,70,0.10,0.02)],[5.5,lg(255,205,120,0.2,0.05)],[2.2,lg(255,240,200,0.75,0.2)]]){
+    ctx.strokeStyle = st; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  }
+  // a thin pale filament beside the core that shimmers
+  for(const side of [-1,1]){
+    ctx.strokeStyle = lg(255,226,170,0.28+0.12*pulse,0); ctx.lineWidth = 0.9;
+    ctx.beginPath(); ctx.moveTo(x1+nx*side*2.4, y1+ny*side*2.4); ctx.quadraticCurveTo((x1+x2)/2+nx*side*(3+1.6*Math.sin(T*3+side)), (y1+y2)/2+ny*side*(3+1.6*Math.sin(T*3+side)), x2+nx*side*0.6, y2+ny*side*0.6); ctx.stroke();
+  }
+  // chevrons marching toward the mark
+  ctx.fillStyle = '#fff2c8'; ctx.strokeStyle = '#fff2c8';
+  for(let i=0;i<5;i++){
+    const u = (T*0.55 + i/5) % 1, cx = x1+dx*u, cy = y1+dy*u, a = Math.sin(u*Math.PI)*0.75, sz = 4.5*(1-u*0.4);
+    ctx.globalAlpha = a; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx-ux*sz-nx*sz, cy-uy*sz-ny*sz); ctx.lineTo(cx+ux*sz*0.4, cy+uy*sz*0.4); ctx.lineTo(cx-ux*sz+nx*sz, cy-uy*sz+ny*sz); ctx.stroke();
+  }
+  // drifting motes
+  for(let i=0;i<8;i++){
+    const u = (T*0.35 + i*0.137) % 1, off = Math.sin(i*4.1+T*2.1)*5*(0.4+u), cx = x1+dx*u+nx*off, cy = y1+dy*u+ny*off-u*6;
+    ctx.globalAlpha = Math.sin(u*Math.PI)*0.7; ctx.fillRect(cx-0.8, cy-0.8, 1.6, 1.6);
+  }
+  ctx.globalAlpha = 1;
+  // the mark: a flat isometric reticle on the ground with two slowly turning arcs and four ticks
+  ctx.save(); ctx.translate(iso2.x, iso2.y); ctx.scale(1, 0.5);
+  const R = 17+1.5*pulse;
+  ctx.fillStyle = 'rgba(255,200,110,0.09)'; ctx.beginPath(); ctx.arc(0,0,R,0,7); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,226,160,0.7)'; ctx.lineWidth = 1.4;
+  ctx.rotate(T*0.9);
+  ctx.beginPath(); ctx.arc(0,0,R,0.2,1.35); ctx.stroke(); ctx.beginPath(); ctx.arc(0,0,R,Math.PI+0.2,Math.PI+1.35); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,240,200,0.55)'; ctx.lineWidth = 1;
+  ctx.rotate(-T*1.8);
+  ctx.beginPath(); ctx.arc(0,0,R*0.62,1.9,3.0); ctx.stroke(); ctx.beginPath(); ctx.arc(0,0,R*0.62,-1.25,-0.15); ctx.stroke();
+  ctx.rotate(T*0.9);
+  ctx.strokeStyle = 'rgba(255,236,180,0.6)';
+  for(let k=0;k<4;k++){ const a = k*Math.PI/2; ctx.beginPath(); ctx.moveTo(Math.cos(a)*(R+3), Math.sin(a)*(R+3)); ctx.lineTo(Math.cos(a)*(R+9), Math.sin(a)*(R+9)); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(255,248,224,0.85)'; ctx.beginPath(); ctx.arc(0,0,1.8,0,7); ctx.fill();
+  ctx.restore();
   ctx.restore();
 }
 // v236: Guardian -- golden aegis dome with rotating globe lines, ground sigil and rising motes
@@ -814,7 +849,7 @@ function drawParticlesIso(list, pass){
       if(pt.color){ ctx.globalAlpha = a; ctx.strokeStyle = pt.color; }
       else { ctx.strokeStyle = pt.crit ? ('rgba(255,226,122,'+a+')') : ('rgba(255,220,180,'+a+')'); }
       ctx.lineWidth = pt.crit ? 6 : 4;
-      ctx.beginPath(); ctx.arc(0,0,pt.crit?23.5:20,-0.9,0.9); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,0,pt.crit?21:18,-0.7,0.7); ctx.stroke();
       ctx.globalAlpha = 1;
       ctx.restore();
     } else if(pt.type==='arcaneStrike'){

@@ -386,7 +386,7 @@ function itemBaseAffix(item){
   return null;
 }
 function itemSubtitle(item){
-  return RARITY[item.rarity].name+' \u00B7 '+itemBaseName(item)+(item.ilvl ? ' \u00B7 Item Level '+item.ilvl : '');
+  return RARITY[item.rarity].name+' \u00B7 '+itemBaseName(item)+(item.ilvl && !item.questId ? ' \u00B7 Item Level '+item.ilvl : '');
 }
 function deltaHtml(nv, ov){
   if(typeof nv!=='number' || typeof ov!=='number') return '';
@@ -441,6 +441,7 @@ function itemCardHtml(item, other){
     }
   }
   if(!mods.length && !base && !imps.length) h += '<div style="color:#8d8672">No modifiers</div>';
+  if(item.questId && item.questDesc) h += '<div class="icDiv"></div><div style="color:#b8b0c8;font-style:italic">'+item.questDesc+'</div>';   // v519: a wearable quest item (the Silver Locket)
   return h;
 }
 // Full eligibility check for one candidate affix on a specific item: the

@@ -350,7 +350,7 @@ function renderRegionMap0(){
   // (v147/148) Layout-style maps: real floor plans for maze/room dungeons.
   const LAYOUT = {
     ancientruins: ()=>g.ruins && ({R:g.ruins, marks:[[g.ruins.entrance,'E','#7fd87f'],[g.ruins.stairsDown,'\u25BC','#e8c44a'],[g.ruins.waypoint,'W','#5fd0ff'],...(g.bossKilled?[[g.ruins.chestSpot,'\u2605','#e8c44a']]:[])]}),
-    darkcrypt: ()=>g.crypt && ({R:g.crypt, marks:[[g.crypt.cemeteryGate,'C','#7fd87f'],[g.crypt.waypoint,'W','#5fd0ff'],[g.crypt.chestShown?g.crypt.chestSpot:g.crypt.tomb,'\u2605','#e8c44a']]}),
+    darkcrypt: ()=>g.crypt && ({R:g.crypt, marks:[[g.crypt.cemeteryGate,'C','#7fd87f'],[g.crypt.waypoint,'W','#5fd0ff'],[g.crypt.chestShown?g.crypt.chestSpot:g.crypt.tomb,'\u2605','#e8c44a']].concat((g.crypt.sideChests||[]).filter(c=>!c.opened).map(c=>[c,'\u25A0','#e8c44a']))}),
     raptorlair: ()=>g.rlair && ({R:g.rlair, marks:[[g.rlair.entrance,'E','#7fd87f'],[g.rlair.stairsDown,'\u25BC','#e8c44a'],[g.rlair.bossSpot,'!','#e05a5a']]}),
     dungeon: ()=>g.room && g.room.floorRects && ({R:g.room, marks:[[g.room.entranceSpawn,'E','#7fd87f'],[rectCenterSafe(g.room.exitRoom),'!','#e05a5a']]}),
     spiderlair: ()=>g.room && g.room.floorRects && ({R:g.room, marks:[[g.room.entranceSpawn,'E','#7fd87f'],[rectCenterSafe(g.room.exitRoom),'!','#e05a5a']]}),
@@ -404,9 +404,9 @@ function renderRegionMap0(){
     const t = g.town;
     const pts = [
       {pos:t.waypoint, label:'Waypoint', icon:'W'},
-      {pos:t.blacksmith, label:'Blacksmith', icon:'B'},
+      {pos:t.blacksmith, label:'Brom', icon:'B'},
       {pos:t.stashChest, label:'Stash', icon:'S'},
-      {pos:t.questGiver, label:'Old Man', icon:'!'},
+      {pos:t.questGiver, label:'Aldric', icon:'!'},
       {pos:t.well, label:'Well', icon:'O'},
       {pos:t.gate, label:'Forest Gate', icon:'G'},
     ];

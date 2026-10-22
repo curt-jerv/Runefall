@@ -942,6 +942,10 @@ function spawnEnemy(g, type, pos){
     e = {type,x,y,r:15,hp:36+depth*4.4,maxHp:36+depth*4.4,speed:rand(100,118),dmg:10+depth*1.9,
          atkCd:0,atkCdMax:1.0,color:'#c4501e',state:'chase',hitT:0,armor:8,
          tState:'idle',tT:0,tCd:rand(1,3),tPt:null,hop:0,fbT:0,fbCd:rand(0.2,1.8)};
+  } else if(type==='windigo'){
+    // v520 Ice Windigo: upright frost beast -- claws (50% physical / 50% cold) and a ranged Frost Breath (100% cold)
+    e = {type,x,y,r:25,hp:70+depth*9,maxHp:70+depth*9,speed:rand(98,112),dmg:12+depth*2.2,
+         atkCd:0,atkCdMax:1.1,color:'#dbe9f0',state:'chase',hitT:0,armor:8,fbT:0,fbCd:rand(0.5,2.5)};
   } else if(type==='wraithling'){
     e = {type,x,y,r:14,physRes:0.5,hp:24+depth*3,maxHp:24+depth*3,speed:rand(130,150),dmg:9+depth*1.7,
          atkCd:0,atkCdMax:1.0,color:'#3a2a5a',state:'chase',hitT:0,armor:0,flying:true,fState:'orbit',fCd:rand(1,3),fT:0,hop:16,fbT:rand(1,3)};
@@ -1047,7 +1051,7 @@ function spawnEnemy(g, type, pos){
   // v228: Dark Forest / Bear Cave bears are softer (smaller life bonus, thinner hide)
   if(type==='bear' && (g.scene==='forest' || g.scene==='bearcave')){ e.hp = Math.round(e.hp*0.65); e.maxHp = e.hp; e.armor = Math.min(e.armor||0, 5); }
   e.dmg = e.dmg*ENEMY_DMG_MULT*mlDmgMult(e.ml);
-  { const gap = Math.min(6, Math.max(0, e.ml - ((g.player&&g.player.level)||1))); if(gap>0){ const k = 1 - 0.01*gap;   /* v490: was 4%/level -- harder zones now stay hard */ e.hp = Math.round(e.hp*k); e.maxHp = e.hp; e.dmg *= k; } }   // v237: under-levelled characters face slightly softer monsters (4%/level, max 6 levels) so a 21 can handle a 23 zone
+  // v515: no under-level softening at all -- a zone's monsters keep their full strength (v490 had 1%/level, v237 4%/level); the over-level taper in monsterLevel() is unchanged
   if(type==='colossus'){   // v354: no over-level scaling for the Colossus (monster level pinned to the area), and its base damage is cut ~40%
     const mlc = Math.min(e.ml, g.depth||e.ml);
     e.hp = Math.round(e.hp*mlEnemyHpMult(mlc)/mlEnemyHpMult(e.ml)); e.maxHp = e.hp;
@@ -1125,6 +1129,7 @@ function spawnEnemy(g, type, pos){
   else if(type==='hellhound' || type==='cinderfiend'){ e.aggroRange=520; e.leashRange=900; e.wanderRadius=40; }
   else if(type==='firebat'){ e.aggroRange=280; e.leashRange=480; e.wanderRadius=80; }
   else if(type==='giant'){ e.aggroRange=260; e.leashRange=560; e.wanderRadius=160; }
+  else if(type==='windigo'){ e.aggroRange=330; e.leashRange=560; e.wanderRadius=70; }
   else if(type==='warg'){ e.aggroRange=270; e.leashRange=480; e.wanderRadius=80; }
   else if(type==='roc'){ e.aggroRange=300; e.leashRange=560; e.wanderRadius=140; }
   else if(type==='ram'){ e.aggroRange=200; e.leashRange=460; e.wanderRadius=90; }

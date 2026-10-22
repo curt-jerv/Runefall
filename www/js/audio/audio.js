@@ -165,7 +165,7 @@ Object.assign(MUS_BANK, {"d2world":"audio/music/d2world.ogg", "d2dungeon":"audio
 Object.assign(MUS_BANK, {"d2tower":"audio/music/d2tower.ogg"});
 // v507: the Wraith Lord's fight in the Demon Hold has its own recorded theme
 Object.assign(MUS_BANK, {"wraithlord":"audio/music/wraithlord.ogg"});
-const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, d2boss:0.5, d2tower:0.24, wraithlord:0.66 }, MUS_LEN = { d2tower:3528000/44100, tavern:1411200/44100, town:2275056/44100, d2world:3848727/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
+const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, d2boss:0.5, d2tower:0.24, wraithlord:0.66 }, MUS_LEN = { d2tower:8388608/44100, tavern:1411200/44100, town:2275056/44100, d2world:8388608/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
 AUD.mus = {};
 function musLoopMood(name){
   return { stepDur:1, step(){}, start(bus){

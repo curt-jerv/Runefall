@@ -141,7 +141,7 @@ function enterForgottenTower(floor, opts){
   g.lighthouseFloor = floor;
   g.tower = makeForgottenTowerFloor(floor);
   g.room = g.tower;
-  if(floor===LIGHTHOUSE_FLOOR_COUNT && game.player.witchRescued){ g.tower.witch = null; const ws = g.tower.witchSpot || {x:g.tower.w/2, y:g.tower.h/2}; g.tower.clearPortal = {x:ws.x + (ws.x > g.tower.w/2 ? -130 : 130), y:ws.y+60, r:24, toTown:true}; }
+  if(floor===LIGHTHOUSE_FLOOR_COUNT && game.player.witchRescued){ g.tower.witch = null; const ws = g.tower.witchSpot || {x:g.tower.w/2, y:g.tower.h/2}; g.tower.clearPortal = {x:ws.x + (ws.x > g.tower.w/2 ? -130 : 130), y:ws.y+60, r:24, toWitch:true}; }
   g.depth = 28 + Math.ceil(floor*0.6); // 29..31
   if(opts.fromAbove && g.tower.stairs){
     g.player.x = g.tower.stairs.x + (lighthouseStairsSide(floor)==='right' ? -70 : 70); g.player.y = g.tower.stairs.y;

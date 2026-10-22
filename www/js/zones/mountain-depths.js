@@ -35,14 +35,16 @@ function makeDeepOrganicFloor(f){
     const boss = f===3;
     let chs, links, w, h;
     if(!boss){
-      w = 3900; h = 2300;
+      w = 5800; h = 3300;   // v514: ~2.1x the area (was 3900x2300): a longer chain of caverns with side loops
       chs = [{x:300, y:h*0.5, rx:200, ry:175}];
-      const xs = [900, 1500, 2150, 2800];
-      xs.forEach((x,i)=>{ const rx = 250+rnd()*120; chs.push({x:x+(rnd()-0.5)*160, y:h*(i%2 ? 0.32 : 0.66)+(rnd()-0.5)*220, rx, ry:rx*(0.75+rnd()*0.2)}); });
-      for(let i=0;i<2;i++){ const rx = 200+rnd()*80; chs.push({x:1200+i*1300+(rnd()-0.5)*200, y:i ? h*0.82 : h*0.16, rx, ry:rx*0.8}); }
+      const NM = 8;
+      for(let i=0;i<NM;i++){ const rx = 250+rnd()*120, x = 950 + i*((w-2200)/(NM-1)); chs.push({x:x+(rnd()-0.5)*160, y:h*(i%2 ? 0.30 : 0.68)+(rnd()-0.5)*260, rx, ry:rx*(0.75+rnd()*0.2)}); }
+      const NE = 4;
+      for(let i=0;i<NE;i++){ const rx = 200+rnd()*80; chs.push({x:1500+i*((w-3000)/(NE-1))+(rnd()-0.5)*220, y:i%2 ? h*0.85 : h*0.14, rx, ry:rx*0.8}); }
       chs.push({x:w-330, y:h*0.5, rx:230, ry:200});
       const E = chs.length-1;
-      links = [[0,1],[1,2],[2,3],[3,4],[4,E],[1,5],[5,3],[2,6],[6,4]];
+      links = [[0,1]]; for(let i=1;i<NM;i++) links.push([i,i+1]); links.push([NM,E]);
+      for(let i=0;i<NE;i++){ const m1 = 1 + Math.round(i*(NM-1)/(NE-0.5)) , m2 = Math.min(NM, m1+2); links.push([NM+1+i, m1]); links.push([NM+1+i, m2]); }
     } else {
       w = HEART_W; h = HEART_H;
       chs = [{x:300, y:h*0.5, rx:190, ry:165}, {x:820, y:h*0.3, rx:250, ry:200}, {x:1350, y:h*0.62, rx:240, ry:200},
@@ -133,18 +135,18 @@ function spawnDeepFloor(g, f){
   if(f===1){
     const avoidMine = [{x:room.entrance.x,y:room.entrance.y,r:380},{x:room.stairs.x,y:room.stairs.y,r:300},{x:room.camp.x,y:room.camp.y,r:360}];
     const mp = (type,pos)=> (pos && mineOpenAt(room,pos.x,pos.y) && !posBlockedByObstacles(pos.x,pos.y,22,room.obstacles)) ? spawnEnemy(g, type, pos) : null;
-    for(let i=0;i<16;i++){
+    for(let i=0;i<34;i++){
       const c = deepMineSpot(room, avoidMine, 80); if(!c) continue;
       for(let k=0;k<3+Math.floor(Math.random()*3);k++) mp('goblin', around(c,90));
       for(let k=0;k<1+(i%2);k++) mp('goblinarcher', around(c,100));
       if(i%2===0) mp('cavetroll', around(c,45));
     }
-    for(let i=0;i<3;i++){ const c = deepMineSpot(room, avoidMine, 80); if(c){ mp('cavetroll', c); mp('cavetroll', around(c,60)); } }
-    for(let i=0;i<5;i++){ const c = deepMineSpot(room, avoidMine, 80); if(c) for(let k=0;k<3;k++){ const e = spawnEnemy(g, 'firebat', around(c,110)); if(e && !mineOpenAt(room,e.x,e.y)){ e.x = c.x; e.y = c.y; } } }
+    for(let i=0;i<6;i++){ const c = deepMineSpot(room, avoidMine, 80); if(c){ mp('cavetroll', c); mp('cavetroll', around(c,60)); } }
+    for(let i=0;i<10;i++){ const c = deepMineSpot(room, avoidMine, 80); if(c) for(let k=0;k<3;k++){ const e = spawnEnemy(g, 'firebat', around(c,110)); if(e && !mineOpenAt(room,e.x,e.y)){ e.x = c.x; e.y = c.y; } } }
     if((g.player.minerQ||0)===1 && !g.enemies.some(e=>e.minerSwarm && e.hp>0)) startMinerSwarm(g);   // reloaded mid-quest: the horde is still coming
   } else {
     const heart = f===3, X1 = heart ? HEART_AX0-150 : room.w-160;
-    const nBeetle = heart ? 6 : 14, nBat = heart ? 3 : 5, nGolem = heart ? 5 : 7;
+    const nBeetle = heart ? 6 : 28, nBat = heart ? 3 : 10, nGolem = heart ? 5 : 14;
     for(let i=0;i<nBeetle;i++){ const c = spot(160, X1, 120, room.h-120); if(!c) continue; for(let k=0;k<3+Math.floor(Math.random()*2);k++) sp('lavabeetle', around(c,90)); }
     for(let i=0;i<nBat;i++){ const c = spot(160, X1, 120, room.h-120); if(!c) continue; for(let k=0;k<3;k++) sp('firebat', around(c,100)); }
     for(let i=0;i<nGolem;i++){ const c = spot(160, X1, 120, room.h-120); if(!c) continue; sp('magmagolem', c); if(i%3===0) sp('magmagolem', around(c,70)); }
@@ -186,7 +188,7 @@ function enterDeep(floor, opts){
 // ---------------- Mountain Depths, floor 1 (v377): a big organic goblin warren ----------------
 // About 3x the old floor's area: caverns joined by winding passages (several routes that loop back on each other),
 // a stairwell at the far end reached down terraced ramps, and a camp of three lost miners in a side cavern.
-const DEEP_MINE_W = 4600, DEEP_MINE_H = 2500;
+const DEEP_MINE_W = 6600, DEEP_MINE_H = 3500;   // v514: ~2x the area (was 4600x2500)
 let deepMineCache = null;
 const MINE_N8 = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
 function mineOpenAt(room, x, y){
@@ -245,11 +247,11 @@ function makeDeepMineFloor(){
   let R;
   try{
     const chs = [{x:330, y:h*0.52, rx:215, ry:185}];
-    const nCol = 5, nRow = 3;
+    const nCol = 7, nRow = 4;
     for(let cx=0; cx<nCol; cx++) for(let cy=0; cy<nRow; cy++){
       if(rnd() < 0.22) continue;
       const rx = 190 + rnd()*110;
-      chs.push({x: 850 + cx*((w-1700)/(nCol-1)) + (rnd()-0.5)*280, y: h*(0.17 + 0.33*cy + (cx%2 ? 0.06 : -0.02)) + (rnd()-0.5)*200, rx, ry: rx*(0.74+rnd()*0.2)});
+      chs.push({x: 850 + cx*((w-1700)/(nCol-1)) + (rnd()-0.5)*280, y: h*(0.14 + 0.25*cy + (cx%2 ? 0.05 : -0.02)) + (rnd()-0.5)*220, rx, ry: rx*(0.74+rnd()*0.2)});
     }
     chs.push({x:w-340, y:h*0.48, rx:270, ry:230});
     const n = chs.length, links = [], has = {};
@@ -262,7 +264,7 @@ function makeDeepMineFloor(){
     }
     const order = chs.map((_,i)=>i).sort(()=>rnd()-0.5);
     for(const i of order){   // extra passages so there are loops and more than one way through
-      const near = chs.map((c,j)=>({j, d:dist(chs[i],c)})).filter(o=>o.j!==i && o.d<1100).sort((a,b)=>a.d-b.d).slice(0,3);
+      const near = chs.map((c,j)=>({j, d:dist(chs[i],c)})).filter(o=>o.j!==i && o.d<1000).sort((a,b)=>a.d-b.d).slice(0,3);
       for(const o of near) if(rnd()<0.6 && link(i,o.j)) break;
     }
     const deg = chs.map(()=>0); links.forEach(([a,b])=>{ deg[a]++; deg[b]++; });

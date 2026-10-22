@@ -350,12 +350,13 @@ function drawLosMask(g, pts, defer){
 // v492/v493: the character's own circle of light in every zone but town (the Dark Crypt and the caves keep their own, stronger dark).
 // Outside the circle the world is VEIL_MAX_A dark (towers and halls darker still); inside it a light VEIL_CORE_DIM haze stays.
 // +Light Radius gear widens every circle of light except the Dark Crypt's.
-const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.88, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.12, UNDERGROUND_LIGHT_SCALE = 0.85;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
-const VEIL_THEME_R = 290, VEIL_THEME_A = 0.8, VEIL_THEME_DIM = 0.2;   // v506
+const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.88, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.1, UNDERGROUND_CORE_DIM = 0.05, UNDERGROUND_LIGHT_SCALE = 0.85;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
+const VEIL_THEME_R = 290, VEIL_THEME_A = 0.8, VEIL_THEME_DIM = 0.08;   // v506
 function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
-  const sc = g.scene; if(sc==='tavern' || sc==='darkcrypt' || isUndergroundScene(g)) return false;   // (v509: town is darkened like every other outdoor zone)
+  // v515: the dark ring is for towers and dungeons only (every overworld zone, town included, is plainly lit); the player's warm glow still shows (drawPlayerGlowOnly)
+  if(g.scene!=='lighthouse' || isUndergroundScene(g) || kpOutdoor(g)) return false;
   if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
   return true;
 }
@@ -398,8 +399,34 @@ function skillLights(g, cam){
   }
   return out;
 }
+const LIGHT_SOFT = 1.6;   // v517: how far past the old edge the light fades out
 const LIGHT_X = 1.15, LIGHT_Y = 0.575;   // v511: light shape = isometric ellipse (wider than tall, 2:1)
 const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
+// v515: overworld zones have no dark ring, but your own warm light is still there
+function playerGlowScene(g){ return !!(g && g.started && g.player && g.scene!=='tavern'); }
+// v516/v517: overworld mood -- black fading in only at the screen edges (soft, strongest in the corners), like the Spider Lair's dark but much further out.
+// A screen-sized elliptical vignette (nothing is cut around the player); the warm ground glow is set up for drawPlayerGroundGlow.
+function drawOverworldRing(g){
+  const sc = g.scene, mA = sc==='sunlitplains' ? 0.66 : sc==='town' ? 0.42 : 0.6;
+  g._glowLR = VEIL_LIGHT_R*1.3*0.72*lightRadiusMult(g.player); g._glowK = 1;
+  const cx = W/2, cy = H/2, rx = W*0.6, ry = H*0.8;
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(rx, ry);
+  const gr = ctx.createRadialGradient(0,0,0,0,0,1);
+  gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(0.5,'rgba(0,0,0,0)');
+  gr.addColorStop(0.72,'rgba(0,0,0,'+(0.2*mA).toFixed(3)+')'); gr.addColorStop(0.9,'rgba(0,0,0,'+(0.58*mA).toFixed(3)+')'); gr.addColorStop(1,'rgba(0,0,0,'+mA+')');
+  ctx.fillStyle = gr; ctx.fillRect(-2.2,-2.2,4.4,4.4);   // 1 unit = the ellipse radius; the fill reaches well past the screen corners
+  ctx.restore();
+}
+// v517: the warm glow is a flat oval on the ground under the player's feet, drawn before the sprites so it never covers the character; half as strong as before
+function drawPlayerGroundGlow(g){
+  const LR = g._glowLR, k = g._glowK==null ? 1 : g._glowK, p = g.player;
+  if(!LR || k<=0.02 || !p) return;
+  const iso = toIso(p.x, p.y), GR = LR*PLAYER_GLOW_FRAC*1.05;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(iso.x, iso.y+2); ctx.scale(LIGHT_X, LIGHT_Y);
+  const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
+  gg.addColorStop(0,'rgba(255,206,116,'+(0.15*k).toFixed(3)+')'); gg.addColorStop(0.5,'rgba(255,176,76,'+(0.08*k).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
+  ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
+}
 function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
   const cam = g.camera;
@@ -419,16 +446,18 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   const grdStops = [];
   const cl = 1 - (coreDim||0);   // v493: coreDim keeps a faint haze even at the centre of the light
   grdStops.push([0, 'rgba(0,0,0,'+cl+')']);
-  grdStops.push([0.62, 'rgba(0,0,0,'+(0.83*cl)+')']);   // (v245) ~10% darker falloff
-  grdStops.push([1, 'rgba(0,0,0,0)']);
+  // v517: the lit area keeps its size (clear to 0.62 of LR, half dark at 0.8 LR) but the fade now runs on out to LIGHT_SOFT x LR in a long, smooth tail instead of cutting to dark
+  const SO = LIGHT_SOFT, LRm = LR*SO;
+  grdStops.push([0, 'rgba(0,0,0,'+cl+')']);
+  for(const [f,al] of [[0.62,0.92],[0.8,0.5],[1.0,0.36],[1.2,0.24],[1.4,0.12],[1.6,0]]) grdStops.push([f/SO, 'rgba(0,0,0,'+(al*cl)+')']);
   // v511: every light is a flattened ellipse (3/4 isometric view, same 2:1 look as the ground tiles); the upper half still stops under the HUD
-  const sy0 = clamp((py - hudBottomPx()) / LR, 0.3, 1);
+  const sy0 = clamp((py - hudBottomPx()) / LRm, 0.3, 1);
   for(const up of [false, true]){
     mctx.save(); mctx.beginPath(); mctx.rect(0, up ? 0 : py, W, up ? py : H); mctx.clip();
     mctx.translate(px, py); mctx.scale(LIGHT_X, up ? Math.min(LIGHT_Y, sy0) : LIGHT_Y);
-    const lg = mctx.createRadialGradient(0, 0, 0, 0, 0, LR);
+    const lg = mctx.createRadialGradient(0, 0, 0, 0, 0, LRm);
     for(const [o,c] of grdStops) lg.addColorStop(o, c);
-    mctx.fillStyle = lg; mctx.beginPath(); mctx.arc(0, 0, LR, 0, Math.PI*2); mctx.fill(); mctx.restore();
+    mctx.fillStyle = lg; mctx.beginPath(); mctx.arc(0, 0, LRm, 0, Math.PI*2); mctx.fill(); mctx.restore();
   }
   if(useLights && g.crypt && g.crypt.lights){
     for(const lt of g.crypt.lights){
@@ -464,15 +493,7 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
     if(!tint){ losPending = false; mctx.save(); mctx.setTransform(1,0,0,1,0,0); mctx.globalCompositeOperation = 'source-over'; mctx.drawImage(losCanvas, 0, 0); mctx.restore(); }
     else flushLosPending();
   }
-  // v507: the character's own light -- a warm yellow glow on the ground, monsters and walls near you; it grows with the light radius
-  { const gk = glow==null ? 1 : glow;
-    if(gk>0.02){
-      const GR = LR*PLAYER_GLOW_FRAC;
-      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(LIGHT_X, LIGHT_Y);
-      const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
-      gg.addColorStop(0,'rgba(255,206,116,'+(0.3*gk).toFixed(3)+')'); gg.addColorStop(0.5,'rgba(255,176,76,'+(0.16*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
-      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
-    } }
+  g._glowLR = LR; g._glowK = (glow==null ? 1 : glow);   // v517: the ground glow itself is drawn under the sprites (drawPlayerGroundGlow)
   // Composite the finished mask onto the main canvas with plain
   // source-over -- transparent (hole) pixels leave the scene beneath
   // completely untouched, opaque black pixels paint over it, exactly the

@@ -300,7 +300,7 @@ function witchTowerInteract(){
     const q = addQuestOnce(p, 'witch_find', 'The Witch of the Black Marsh', 'Find the witch.', 1);
     q.status = 'complete'; q.rewarded = true; q.desc = 'You freed the witch from the Forgotten Tower.'; q.progress = q.total;
     showMsg('Quest complete: The Witch of the Black Marsh', 2.8);
-    if(game.tower && game.tower.ft){ game.tower.clearPortal = {x:wPos.x + (wPos.x > game.tower.w/2 ? -130 : 130), y:wPos.y+60, r:24, toTown:true}; showMsg('A portal opens -- it leads back to Mistfall.', 2.6, '#9fd8ff'); }
+    if(game.tower && game.tower.ft){ game.tower.clearPortal = {x:wPos.x + (wPos.x > game.tower.w/2 ? -130 : 130), y:wPos.y+60, r:24, toWitch:true}; showMsg("A portal opens -- it leads to the Witch's camp.", 2.6, '#9fd8ff'); }
     ensureHeartstoneQuest(p);
     updateQuestBadge(); saveGame();
   });

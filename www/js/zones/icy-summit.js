@@ -7,14 +7,14 @@
 const COLD_DPS = 1, COLD_DPS_PCT = 0.006;   // v490: bitter cold = the larger of 1 HP or 0.6% of max life per second (was a flat 1); the Icy Cellar is just as cold
 const MASTODON_HP_MULT = 11, MASTODON_DMG_MULT = 2.4, MASTODON_R_MULT = 2.1;
 const ICY_ZONE_DEFS = {
-  summit:{ name:'Icy Summit',          w:2900, h:2150, depth:35 },   // v490: bigger (was 2000x1500)
-  shrine:{ name:'Mountain Top Shrine', w:1500, h:1100, depth:37 },
-  cellar:{ name:'Icy Cellar',          w:1700, h:1200, depth:36 },
+  summit:{ name:'Icy Summit',          w:4200, h:3100, depth:35 },   // v490: bigger (was 2000x1500); v514: bigger again
+  shrine:{ name:'Mountain Top Shrine', w:2300, h:1700, depth:37 },
+  cellar:{ name:'Icy Cellar',          w:2700, h:1900, depth:36 },
 };
 const ICY_PACKS = {
-  summit:[ {type:'frozenzombie',count:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'wolf',countMin:4,countMax:5} ],
-  shrine:[ {type:'frozenzombie',count:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'wolf',countMin:4,countMax:5} ],
-  cellar:[ {type:'frozenzombie',count:6}, {type:'wolf',countMin:4,countMax:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'} ],
+  summit:[ {type:'frozenzombie',count:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'warg',countMin:4,countMax:5,variant:'white'}, {type:'windigo',countMin:1,countMax:2} ],
+  shrine:[ {type:'frozenzombie',count:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'warg',countMin:4,countMax:5,variant:'white'} ],
+  cellar:[ {type:'frozenzombie',count:6}, {type:'warg',countMin:4,countMax:5,variant:'white'}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'windigo',countMin:1,countMax:2} ],
 };
 function makeIcyZone(kind){
   const def = ICY_ZONE_DEFS[kind];
@@ -49,7 +49,7 @@ function makeIcyZone(kind){
   z.crags = [];
   const wallGaps = z.gates.map(gt=>({x:gt.x,y:gt.y,r:120}));
   for(const bp of zoneBorderPoints(w,h,8,52,wallGaps)) z.crags.push({x:bp.x+rand(-8,8),y:bp.y+rand(-8,8),s:rand(0.9,1.5),h:rand(60,110)});
-  const want = kind==='summit' ? 15 : kind==='shrine' ? 6 : 7;   // v490: more packs for the bigger summit
+  const want = kind==='summit' ? 30 : kind==='shrine' ? 12 : 15;   // v490: more packs for the bigger summit
   let tries=0;
   while(z.packAnchors.length<want && tries<1500){
     tries++;

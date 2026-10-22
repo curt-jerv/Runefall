@@ -121,6 +121,7 @@ function talkWayfarer(){
 }
 function talkScholar(){
   const p = game.player;
+  updateQuestBadge();   // v514: keep The Scholar's Theory in step with the runestone you carry
   if(hasInscription(p) && !p.scholarMeet){
     showNpcText('Scholar', '"A Templar crypt inscription... yes! Meet me at the Lakeside Ruins. I will wait at the entrance."', 'Give him the rubbing', ()=>{
       // v410: he only reads it -- you keep the inscription until the ruins are actually open
@@ -154,7 +155,7 @@ function talkScholar(){
   } else if(p.scholarMeet){
     const rs = findRunestone(p);
     if(rs && !p.scholarRead){
-      showNpcText('Scholar', '"It seems there is a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
+      showNpcText('Scholar', '"The runestone has a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
         { const si = classRewardItem(p, Math.max(p.level||1, 23), 'reward'); if(!giveRewardIfRoom(p, [si])) return; p.gold += 300; }   // v492: asks again until there is room
         p.scholarRead = true; bagPulse();
         const q = getQuest(p, 'scholar_ruins'); if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'You found the first runestone below the lake.'; }
@@ -178,6 +179,45 @@ function talkScholar(){
   } else showNpcText('Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close');
 }
 // generic townsperson art (graverobbers, scholar): hood or hat, robe, one handheld prop
+// v519: The Silver Locket. Mirelle arrives on the ship (she stands about the dock once the tavern re-opens). State lives in the quest itself:
+// none = not met, active + progress 0 = searching the Dark Crypt, active + progress 1 = locket found, complete = done.
+const LOCKET_QUEST = 'silver_locket';
+function locketWomanMark(p){ const q = getQuest(p, LOCKET_QUEST); return !q || (q.status==='active' && q.progress>=q.total); }
+function silverLocketFound(p){
+  const q = getQuest(p, LOCKET_QUEST); if(!q || q.status!=='active') return;
+  q.progress = q.total; q.desc = 'You found the silver locket in the Dark Crypt. Return to the woman in Mistfall.';
+  updateQuestBadge();
+}
+// v520: Mirelle keeps the locket -- take it from the body, the bag or the stash
+function takeSilverLocket(p){
+  const isL = it=>it && it.questId==='silver_locket';
+  for(const k of Object.keys(p.equipment||{})) if(isL(p.equipment[k])) p.equipment[k] = null;
+  if(p.inventory) for(let i=p.inventory.length-1;i>=0;i--) if(isL(p.inventory[i])) p.inventory.splice(i,1);
+  try{ if(typeof recalcStats==='function') recalcStats(p); }catch(e){}
+  try{ renderInventory(); }catch(e){}
+}
+function talkLocketWoman(){
+  const p = game.player, q = getQuest(p, LOCKET_QUEST);
+  if(!q){
+    showNpcText('Mirelle', '"I came in on the evening ship. My family lies in the Dark Crypt, and my grandmother\'s silver locket was buried with them -- it is all I have left of her. Please, search the crypt\'s side chambers for it."', 'I will look for it', ()=>{
+      addQuestOnce(p, LOCKET_QUEST, 'The Silver Locket', "Search for the woman's silver locket in the Dark Crypt.", 1);
+      npcMark(p, 'mirelle', false);
+      showMsg('New quest: The Silver Locket', 3.0); updateQuestBadge(); saveGame();
+    });
+  } else if(q.status==='active' && q.progress>=q.total){
+    showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. I will keep it close to my heart. And here: my grandfather had this old tome, I can\'t learn anything from it. Please, take it."', 'Thank you', ()=>{
+      const tome = makeSkillTomeItem(); tome.questDesc = "Mirelle's grandfather's old tome. Read it (Use, or right-click) to gain +1 skill point.";
+      if(!giveRewardIfRoom(p, [tome])) return;
+      takeSilverLocket(p);
+      q.status = 'complete'; q.rewarded = true; q.desc = 'You returned the silver locket to Mirelle. She gave you her grandfather\'s tome.';
+      p.gold += 250; showMsg('Quest complete: The Silver Locket (+250 gold, Tome of Skill)', 3.4); try{ bagPulse(); }catch(e){} updateQuestBadge(); saveGame();
+    });
+  } else if(q.status==='active'){
+    showNpcText('Mirelle', '"Any sign of the locket? It is in the Dark Crypt, in one of the quiet side chambers. Be careful down there."', 'Close');
+  } else {
+    showNpcText('Mirelle', '"The ship leaves with the tide, but I think I will stay a while. Thank you again."', 'Close');
+  }
+}
 function drawSimpleNpcIso(n, clock, o){
   o = o || {};
   const iso = toIso(n.x, n.y), t = clock||0, bob = Math.sin(t*2+(n.id||0)*1.7)*0.8;

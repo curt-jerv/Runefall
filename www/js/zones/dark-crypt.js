@@ -20,7 +20,7 @@
 // targeting already spreads non-'boss' spawns across exactly this array,
 // with no changes needed there); exitRoom is the vampire chamber holding
 // the fixed 5-Vampire pack and the permanent Ruins Map chest.
-const DARKCRYPT_W = 6600, DARKCRYPT_H = 7600;  // v503: about 2.7x the old area (was 3600x4200), so the monsters spread out
+const DARKCRYPT_W = 8400, DARKCRYPT_H = 9800;  // v503: about 2.7x the old area (was 3600x4200); v514: bigger again (5 x 7 chambers) with a winding route
 // Identical coarse-grid carve genRoom() uses for the Mine's own floors --
 // duplicated here (not extracted into a shared helper) to avoid touching
 // genRoom()'s own tested code path at all.
@@ -92,7 +92,7 @@ function makeDarkCrypt(){
   for(let t=0; t<40 && !tombRoom; t++){ const tr = {x:ri(80, w-980), y:50, w:900, h:600}; if(!rectsOverlap(tr, exitRoom, 40)) tombRoom = tr; }
   if(!tombRoom) tombRoom = {x:exitRoom.x < w/2 ? w-980 : 80, y:50, w:900, h:600};   // sealed: reached only through the hall's north door
   const entranceRoom = {x:ri(400, w-720), y:h-420, w:320, h:300};
-  const COLS = 4, ROWS = 5, gx0 = 220, gx1 = w-220, gy0 = 1550, gy1 = h-1050, cw = (gx1-gx0)/COLS, chh = (gy1-gy0)/ROWS;
+  const COLS = 5, ROWS = 7, gx0 = 220, gx1 = w-220, gy0 = 1550, gy1 = h-1050, cw = (gx1-gx0)/COLS, chh = (gy1-gy0)/ROWS;
   const forceTop = ri(0,COLS-1), forceBot = ri(0,COLS-1), rooms = [];
   for(let cy=0; cy<ROWS; cy++) for(let cx=0; cx<COLS; cx++){
     if(!((cy===0 && cx===forceTop) || (cy===ROWS-1 && cx===forceBot)) && Math.random()<0.18) continue;
@@ -107,9 +107,20 @@ function makeDarkCrypt(){
   for(let a=0;a<rooms.length;a++) for(let b=a+1;b<rooms.length;b++){ const d = dist(cen[a],cen[b]); if(d<3200) pairs.push({a,b,d,k:d*rand(0.8,1.25)}); }
   pairs.sort((x,y)=>x.k-y.k);
   const par = rooms.map((_,i)=>i), find = i=> par[i]===i ? i : (par[i]=find(par[i]));
+  // v514: a randomised depth-first walk over neighbouring chambers (instead of shortest links) makes one long winding route with dead-end branches
+  { const at = {}; rooms.forEach((r,i)=>{ at[r.cx+','+r.cy] = i; });
+    const ec = rectCenter(entranceRoom); let start = -1, bd0 = 1e9;
+    rooms.forEach((r,i)=>{ if(r.cy===ROWS-1){ const d = dist(cen[i], ec); if(d<bd0){ bd0 = d; start = i; } } });
+    const seen = new Set([start]), stack = [start];
+    while(stack.length){
+      const c = stack[stack.length-1], r = rooms[c];
+      const nb = [[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy])=>at[(r.cx+dx)+','+(r.cy+dy)]).filter(n=>n!=null && !seen.has(n));
+      if(!nb.length){ stack.pop(); continue; }
+      const n = nb[Math.floor(Math.random()*nb.length)]; seen.add(n); link(c,n); par[find(n)] = find(c); stack.push(n);
+    } }
   for(const pr of pairs){ const ra = find(pr.a), rb = find(pr.b); if(ra!==rb){ par[ra] = rb; link(pr.a, pr.b); } }
   for(let a=1;a<rooms.length;a++) if(find(a)!==find(0)){ let bd = 1e9, bb = 0; for(let b=0;b<rooms.length;b++) if(find(b)===find(0)){ const d = dist(cen[a],cen[b]); if(d<bd){ bd = d; bb = b; } } par[find(a)] = find(0); link(a, bb); }
-  for(const pr of pairs){ if(edges.length >= rooms.length-1 + 4) break; if(pr.d<2100 && Math.random()<0.12) link(pr.a, pr.b); }   // a few loops
+  for(const pr of pairs){ if(edges.length >= rooms.length-1 + 2) break; if(pr.d<2100 && Math.random()<0.05) link(pr.a, pr.b); }   // v514: at most one or two loops (shortcuts) now
   const nearestIn = (pt, list)=>{ let bi = list[0], bd = 1e9; for(const i of list){ const d = dist(pt, cen[i]); if(d<bd){ bd = d; bi = i; } } return bi; };
   const botRooms = rooms.map((r,i)=>r.cy===ROWS-1 ? i : -1).filter(i=>i>=0), topRooms = rooms.map((r,i)=>r.cy===0 ? i : -1).filter(i=>i>=0);
   const inRoom = nearestIn(rectCenter(entranceRoom), botRooms), outRoom = nearestIn(rectCenter(exitRoom), topRooms);
@@ -146,9 +157,18 @@ function makeDarkCrypt(){
   // v310: the doorway pair -- one in the hall's north wall, one at the south end of the tomb
   const hallDoor = {x:exitRoom.x+exitRoom.w/2, y:exitRoom.y+24, r:34};
   const tombDoor = {x:tombRoom.x+tombRoom.w/2, y:tombRoom.y+tombRoom.h-24, r:34};
+  // v516: a chest in every dead-end side room (a chamber with a single tunnel that is not on the way to the hall); marked on the map
+  const sideChests = [];
+  rooms.forEach((r,i)=>{ if(adj[i].length===1 && pathIdx.indexOf(i)<0){ const c = rectCenter(r); sideChests.push({x:Math.round(c.x), y:Math.round(c.y), r:22, opened:false}); } });
+  // v519: The Silver Locket -- while that quest is open, ONE random dead-end chest holds the locket (a different chest each visit until it is found)
+  { const lq = (typeof game!=='undefined' && game && game.player) ? getQuest(game.player, 'silver_locket') : null;
+    if(lq && lq.status==='active' && lq.progress<lq.total){
+      if(!sideChests.length){ const sr = rooms.find((r,i)=>pathIdx.indexOf(i)<0) || rooms[0]; if(sr){ const c = rectCenter(sr); sideChests.push({x:Math.round(c.x), y:Math.round(c.y), r:22, opened:false}); } }
+      if(sideChests.length) sideChests[Math.floor(Math.random()*sideChests.length)].locket = true;
+    } }
   const lights = []; // (v120) no candle/torch lights: the player's own light is the only illumination
   return { w, h, obstacles, floorRects, rooms:rooms, mainPath:mainRooms, tunnels, entranceRoom, exitRoom, tombRoom, hallDoor, tombDoor, bossSpawned:false, bossDone:false,
-    cemeteryGate, waypoint, chestSpot, lights, tomb, chestShown:false, wraithDone:false, chestDelay:0,
+    cemeteryGate, waypoint, chestSpot, sideChests, lights, tomb, chestShown:false, wraithDone:false, chestDelay:0,
     // v240: invisible respawn -- ONLY while the Wraith Lord fight is live, 'respawn in region' puts you in the chamber before the boss room
     cpRoom:rooms[outRoom], respawnPoint:{x:cen[outRoom].x, y:cen[outRoom].y} };
 }

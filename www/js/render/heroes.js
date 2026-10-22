@@ -761,7 +761,7 @@ function drawRanger(p){
 function drawMystic(p){
   const iso = toIso(p.x,p.y);
   const s = p.r/16, face = p.faceSign||1, t = p.animT||0;
-  const moving = p.moving, atk = p.atkAnimT||0;
+  const moving = p.moving, atk = p.atkAnimT||0, castT = p.castAnimT>0 ? clamp(p.castAnimT/0.3,0,1) : 0;   // v517: the cast pose
   let alpha = 1;
   if(p.dodging) alpha=0.5; else if(p.hitFlash>0) alpha = 0.55+Math.sin(p.hitFlash*40)*0.2; else if(p.vanishT>0) alpha = 0.3;
 
@@ -859,7 +859,7 @@ function drawMystic(p){
   const swing = atk>0 ? (atk/0.22) : 0;
   ctx.save();
   ctx.translate(9,-38+bob);
-  ctx.rotate(swing>0 ? (1-swing)*1.4-0.3 : 0);
+  ctx.rotate(swing>0 ? (1-swing)*1.4-0.3 : (castT>0 ? -0.55*Math.sin(Math.min(1,castT*1.6)*Math.PI*0.5) : 0));
   if(atk>0){ ctx.shadowColor=spellColor; ctx.shadowBlur=10*swing; }
   const shaftGrad = ctx.createLinearGradient(-2,-34,2,10);
   shaftGrad.addColorStop(0,'#7a5a34'); shaftGrad.addColorStop(1,'#3a2814');
@@ -873,6 +873,7 @@ function drawMystic(p){
   ctx.shadowColor = spellColor; ctx.shadowBlur = 8;
   ctx.beginPath(); ctx.arc(0,-35,5.2,0,7); ctx.fill();
   ctx.strokeStyle='#160f08'; ctx.lineWidth=1; ctx.stroke();
+  if(castT>0){ const gl = ctx.createRadialGradient(0,-35,1,0,-35,10+16*castT); gl.addColorStop(0,'rgba(255,255,255,'+(0.9*castT)+')'); gl.addColorStop(0.4,spellColor); gl.addColorStop(1,'rgba(0,0,0,0)'); ctx.save(); ctx.globalAlpha = 0.75*castT; ctx.globalCompositeOperation='lighter'; ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(0,-35,10+16*castT,0,7); ctx.fill(); ctx.restore(); }   // v517: the orb flares as you cast
   ctx.restore();
 
   // head, hairless simple hood-free caster face with a faint circlet

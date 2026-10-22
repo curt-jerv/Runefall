@@ -547,6 +547,23 @@ const FOLLOWER_GUARD_FOLLOW_DIST = 30;    // Guard stance: idle follow distance 
 const CAT_LOOT_SEEK_RANGE = 320; // Cat Companion (v81): how far from the PLAYER (not the cat) it'll consider a loot drop worth fetching
 const BLEED_DPS_PCT = 0.25; // Attack-stance follower hits apply Bleed: this fraction of the hit's damage, per second...
 const BLEED_DUR = 3;        // ...for this many seconds
+// v519: bleeds from different sources stack the way poison does -- one stack per source (the same source only refreshes, keeping the stronger hit),
+// up to 6, and the enemy takes the SUM per second. e.bleedDps / e.bleedT stay as the summed single-slot fields (tint, 'ailing' checks, the tick).
+const BLEED_MAX_STACKS = 6;
+function addBleed(e, dps, src, dur){
+  if(!e || !(dps>0)) return;
+  const st = e.bleedStacks || (e.bleedStacks = []), d = dur || BLEED_DUR;
+  let s = st.find(x=>x.src===src);
+  if(s){ s.dps = Math.max(s.dps, dps); s.t = Math.max(s.t, d); }
+  else if(st.length < BLEED_MAX_STACKS) st.push({src, dps, t:d});
+  else { let wi = 0; for(let i=1;i<st.length;i++) if(st[i].dps < st[wi].dps) wi = i; if(st[wi].dps < dps) st[wi] = {src, dps, t:d}; }
+  bleedSync(e);
+}
+function bleedSync(e){
+  const st = e.bleedStacks; let sum = 0, tm = 0;
+  if(st) for(const s of st){ sum += s.dps; if(s.t>tm) tm = s.t; }
+  e.bleedDps = sum; e.bleedT = tm;
+}
 // A follower that's fallen far behind (chasing something off-screen, or
 // wedged behind dungeon geometry) breaks off and teleports back to the
 // player rather than staying lost for the rest of the floor.
@@ -659,8 +676,7 @@ function ambushLand(g, p, f, target, mult){
   target.hp -= dmg; target.hitT = 0.15; spawnDmgNumber(g, target, dmg, false, {follower:1, col:'#9fd0ff'});
   markAttacked(target, f);
   if(f.kind==='wolf'){
-    target.bleedDps = Math.max(target.bleedDps||0, dmg*BLEED_DPS_PCT*partBleedMult()*wolfFuryBleed(p));
-    target.bleedT = Math.max(target.bleedT||0, BLEED_DUR);
+    addBleed(target, dmg*BLEED_DPS_PCT*partBleedMult()*wolfFuryBleed(p), 'wolf', BLEED_DUR);
   }
   g.particles.push({type:'burst', x:target.x, y:target.y, t:0.3, max:0.3, color: f.kind==='bear' ? '#8a6a2a' : '#b4293f'});
   packSlash(g, p, f, target, PACK_SLASH_MULT);

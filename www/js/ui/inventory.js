@@ -60,7 +60,7 @@ const treePointsText = document.getElementById('treePointsText');
 const RUNE_IDS = {shield:['templar_runestone','templar_runestone_awake'], sword:['frost_templar_runestone'], cross:['highward_runestone']};
 const RUNE_NAMES = {shield:'Defensive Runestone', sword:'Offensive Runestone', cross:'Templar Runestone'};
 function runeItemOf(p, rune){ return (p.inventory||[]).find(it=>it && RUNE_IDS[rune].indexOf(it.questId)>=0) || null; }
-function isNoStashItem(it){ return isRuneItem(it) || !!(it && it.questId==='fh_dungeon_key'); }   // v452
+function isNoStashItem(it){ return isRuneItem(it) || !!(it && (it.questId==='fh_dungeon_key' || it.questId==='silver_locket')); }   // v452
 function isRuneItem(it){ return !!(it && it.questId && Object.keys(RUNE_IDS).some(r=>RUNE_IDS[r].indexOf(it.questId)>=0)); }
 function runesHeld(p){ let n = 0; for(const r of ['shield','sword','cross']) if(runeItemOf(p, r)) n++; return n; }
 function elementResist(p, el){
@@ -594,7 +594,7 @@ function recipeBookHtml(p){
   const ready = known.filter(r=>recipePartIds(p, r)).length;
   let h = '<div class="rbHead" data-rbtoggle="1">\u{1F4D6} Recipe Book <span class="pSub">('+known.length+' / '+STONE_RECIPES.length+' known'+(ready ? ', '+ready+' ready' : '')+')</span><span style="float:right;">'+(recipeBookOpen ? '\u25B4' : '\u25BE')+'</span></div>';
   if(!recipeBookOpen) return h;
-  if(!known.length) return h + '<div class="pSub" style="padding:4px 10px 8px;">No recipes yet. The freed witch, the great bosses and your own cauldron experiments teach them.</div>';
+  if(!known.length) return h + '<div class="pSub" style="padding:4px 10px 8px;">No known recipes yet.</div>';
   h += '<div class="pSub" style="padding:0 4px 6px;">'+'\u2714 = you hold the parts. At the Witch\u2019s cauldron, tap the recipe in her Recipes tab to load them.'+'</div>';
   for(const r of known) h += recipeRowHtml(p, r);
   return h;
@@ -863,6 +863,7 @@ function openItemDetail(idx, source){
   // for one regardless of source, even though the branches above would
   // otherwise show it for a plain inv/stash/shopBag item.
   if(item.slotType==='questitem'){ equipBtn.style.display = 'none'; sellBtn.style.display = 'none'; dropBtn.style.display = 'none'; }
+  if(item.questId==='silver_locket') dropBtn.style.display = 'none';   // v519: the heirloom is kept
   if((item.questId==='recipe_book' || item.questId==='skill_tome') && source==='inv'){ useBtn.style.display = 'flex'; const un0 = useBtn.querySelector('.schName'); if(un0) un0.textContent = 'Read'; }
   if(item.slotType==='potion'){
     equipBtn.style.display = 'none'; sellBtn.style.display = 'none';

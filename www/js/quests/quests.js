@@ -11,9 +11,9 @@ const QUEST_FIND_HUNTERS = {
 // (v164) The Blacksmith's quest, offered once the 3 hunters are rescued.
 const QUEST_HAMMER = {
   id:'smith_hammer', name:'The Myth of the Ancient Hammer',
-  desc:"The Frosthold Commander carried an Ancient Smithing Hammer. Bring it to the Blacksmith.",
+  desc:"The Frosthold Commander carried an Ancient Smithing Hammer. Bring it to Brom the Blacksmith.",
   descReturn:"You found an ancient smithing hammer. I wonder if our blacksmith can put it to good use.",
-  descDone:"The Blacksmith can now socket your weapons and armor.",
+  descDone:"Brom can now socket your weapons and armor.",
   total:1,
 };
 // The Tavern's Barkeeper quest: bandits hold Lighthouse Tower and the
@@ -26,7 +26,7 @@ const QUEST_HAMMER = {
 const QUEST_LIGHT_THE_WAY = {
   id:'light_the_way', name:'Light the Way',
   desc:"Bandits hold Lighthouse Tower and its beacon is dark -- no ship can dock without it. The tower stands on the west edge of Withered Crossroads (through River Valley). Climb to the rooftop and light the beacon.",
-  descReturn:"The beacon is lit. Return to the Barkeeper in Mistfall.",
+  descReturn:"The beacon is lit. Return to Hobb the barkeeper in Mistfall.",
   total:1,
 };
 function getQuest(p, id){ return p.quests ? p.quests.find(q=>q.id===id) : null; }
@@ -87,8 +87,8 @@ function claimShrineBlessing(){
 // Crypt chest. Stages: toOldMan -> toRuins -> explore -> complete.
 const QUEST_HIDDEN_SECRETS = { id:'hidden_secrets', name:'Hidden Secrets', total:3 };
 const HIDDEN_SECRETS_DESC = {
-  toOldMan:"You found a Ruins Map in the Dark Crypt. Bring it to the Old Man.",
-  toRuins:"The Old Man says the map points to the Lakeside Ruins. Take the Ruins Map to the ancient stones on the island at the lake's center.",
+  toOldMan:"You found a Ruins Map in the Dark Crypt. Bring it to Aldric.",
+  toRuins:"Aldric says the map points to the Lakeside Ruins. Take the Ruins Map to the ancient stones on the island at the lake's center.",
   explore:"Descend to the bottom (level 5) of the Ancient Ruins beneath Lakeside Ruins and open the chest.",
   complete:"You found the Defensive Runestone. Take it to the sealed gate at the end of the Mountain Pass road (Frosthold Keep).",
 };
@@ -165,7 +165,7 @@ function turnOnBeacon(){
   const p = game.player;
   if(p.lighthouseBeaconOn) return;
   p.lighthouseBeaconOn = true;
-  showMsg('The beacon is lit. Return to the barkeeper.', 3.0);
+  showMsg('The beacon is lit. Return to Hobb.', 3.0);
   updateInteractPrompt(null);
   saveGame();
   checkLightTheWayQuest();
@@ -275,19 +275,19 @@ function talkToQuestGiver(){
       if(grantQuestRewardItem(p)) q.rewarded = true;
     } else if(!getQuest(p, QUEST_BRIDGE.id) && !p.bridgeCleared){
       pendingQuestGiver = 'oldmanBridge';
-      questGiverNameEl.textContent = 'Old Man';
+      questGiverNameEl.textContent = 'Aldric';
       questGiverTextEl.textContent = '"Bandits have seized the old bridge in the River Valley, south of the Dark Forest. It is the only road to the Withered Crossroads. Drive them out of their camp and the way will be safe again. Will you clear it?"';
       openQuestGiverDialogue();
     } else {
       const wq = getQuest(p, QUEST_WRAITH.id);
       if(false && p.witchRescued){   // v234: the mountain shrine legend waits until the witch is rescued
         pendingQuestGiver = 'oldmanLegend';
-        questGiverNameEl.textContent = 'Old Man';
+        questGiverNameEl.textContent = 'Aldric';
         questGiverTextEl.textContent = '"There is an old legend -- a shrine atop the mountain, north of the Mountain Pass, guarded by three protectors: a shield-bearer, a berserker and a templar. Defeat them and the shrine will grant you a great boon. Will you ascend?"';
         openQuestGiverDialogue();
       } else if(false && !wq && p.witchRescued && p.shrineBlessed && p.ancientRuinsChestLooted){   // v261: offered only after the summit shrine has blessed you AND the Ancient Ruins runestone is collected
         pendingQuestGiver = 'oldmanWraith';
-        questGiverNameEl.textContent = 'Old Man';
+        questGiverNameEl.textContent = 'Aldric';
         questGiverTextEl.textContent = '"So... you accidentally released the Wraith Lord from its crypt. Foolish, but what is done is done. The Frosthold dwarves keep a special runestone at the top of their tower. Retrieve it, and we can use it against the Wraith Lord. Will you climb Frosthold Tower?"';
         openQuestGiverDialogue();
       } else if(wq && wq.status==='active'){
@@ -302,7 +302,7 @@ function talkToQuestGiver(){
       q.omTalked = true; showMsg('"'+intro+'Check: '+left+'."', 4.4); updateQuestBadge(); saveGame(); }
   } else {
     pendingQuestGiver = 'oldman';
-    questGiverNameEl.textContent = 'Old Man';
+    questGiverNameEl.textContent = 'Aldric';
     questGiverTextEl.textContent = '"' + QUEST_FIND_HUNTERS.desc + '"';
     openQuestGiverDialogue();
   }
@@ -330,7 +330,7 @@ function talkToBarkeeper(){
     showMsg('"Please -- climb to the top of the Lighthouse and light the beacon."', 2.4);
   } else {
     pendingQuestGiver = 'barkeeper';
-    questGiverNameEl.textContent = 'Barkeeper';
+    questGiverNameEl.textContent = 'Hobb';
     questGiverTextEl.textContent = '"' + QUEST_LIGHT_THE_WAY.desc + '"';
     openQuestGiverDialogue();
   }
@@ -403,7 +403,7 @@ function checkLightTheWayQuest(){
     if(!p.quests) p.quests = [];
     q = {id:QUEST_LIGHT_THE_WAY.id, name:QUEST_LIGHT_THE_WAY.name, desc:QUEST_LIGHT_THE_WAY.descReturn, status:'active', progress:QUEST_LIGHT_THE_WAY.total, total:QUEST_LIGHT_THE_WAY.total, stage:'return'};
     p.quests.push(q);
-    showMsg('The beacon is lit. Return to the barkeeper.', 3.0);
+    showMsg('The beacon is lit. Return to Hobb.', 3.0);
     updateQuestBadge(); saveGame();
     return;
   }
@@ -411,7 +411,7 @@ function checkLightTheWayQuest(){
     // beacon lit: the quest now waits for the turn-in
     q.stage = 'return'; q.progress = q.total;
     q.desc = QUEST_LIGHT_THE_WAY.descReturn;
-    showMsg('The beacon is lit. Return to the barkeeper.', 3.0);
+    showMsg('The beacon is lit. Return to Hobb.', 3.0);
     updateQuestBadge();
     saveGame();
   }

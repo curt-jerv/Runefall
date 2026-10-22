@@ -510,6 +510,7 @@ function makeTown(charLevel){
       {id:1, x:905, y:332, r:18, kind:'townsfolk', name:'Townswoman', robe:'#5a3a4a', hood:'#3a2a34', long:true},
       {id:2, x:1156, y:272, r:18, kind:'townsfolk', name:'Townsman', robe:'#3e4a3a', tool:'lantern'},   // v507: stands in front of the timber house door (next to the hunter's camp)
       {id:3, x:172, y:1022, r:18, kind:'dockCaptain', name:'Ship Captain', robe:'#26304a', hat:'captain'},
+      {id:4, x:236, y:1080, r:18, kind:'locketWoman', name:'Mirelle', robe:'#6b4a5e', hood:'#44303d', long:true},   // v519: arrives with the ship; The Silver Locket quest
     ],
     spawn:{x:160, y:TOWN_ROAD_Y},
     // v86: `stock` is now the CURRENTLY OPEN vendor's stock array --

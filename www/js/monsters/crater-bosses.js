@@ -617,7 +617,8 @@ function drawGojiraTelegraph(e){
   }
   else if(st==='breathTele' || st==='breath'){
     const a = st==='breath' && e.gjBreathA!=null ? e.gjBreathA : e.gjDir, frac = st==='breath' ? 1 : clamp(1-e.gjT/1.3,0,1);
-    const o = toIso(e.x,e.y);
+    // v520: the flame starts at her mouth (tracks the head, in the air or on the ground), not at her feet
+    const bi = toIso(e.x,e.y), bs = e.r/62, bf = e.faceSign||1, o = {x:bi.x + bf*bs*138, y:bi.y - (e.gjLift||0)*0.9 - bs*94};
     const p1 = toIso(e.x+Math.cos(a-GJ_BREATH_HALF)*GJ_BREATH_LEN, e.y+Math.sin(a-GJ_BREATH_HALF)*GJ_BREATH_LEN);
     const p2 = toIso(e.x+Math.cos(a+GJ_BREATH_HALF)*GJ_BREATH_LEN, e.y+Math.sin(a+GJ_BREATH_HALF)*GJ_BREATH_LEN);
     const g2 = ctx.createLinearGradient(o.x, o.y, (p1.x+p2.x)/2, (p1.y+p2.y)/2);
