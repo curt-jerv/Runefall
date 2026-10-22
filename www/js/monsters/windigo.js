@@ -20,9 +20,8 @@ function updateWindigo(g, e, dt, target, d, isFollowerTarget, chillMult, room){
       if(inCone(p)) playerDamage(g, teleDmg(e, 0.2), src);
       if(g.followers) for(const f of g.followers) if(inCone(f)) applyFollowerDamage(g, f, teleDmg(e, 0.2), src);
     }
-    for(let k=0;k<2;k++){ const rr = rand(30,WINDIGO_CONE_LEN), sp = (Math.random()-0.5)*2*WINDIGO_CONE_HALF*(rr/WINDIGO_CONE_LEN+0.2); g.particles.push({type:'burst', x:e.x+Math.cos(e.brDir+sp)*rr, y:e.y+Math.sin(e.brDir+sp)*rr, t:0.3, max:0.3, color:Math.random()<0.5?'#4f82c8':'#7fb4f0'}); }
     e.facing = {x:Math.cos(e.brDir), y:Math.sin(e.brDir)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
-  } else if(e.fbT>0){   // wind-up: rears back, the cone fills on the ground; it tracks you until the last moments
+  } else if(e.fbT>0){   // wind-up: rears back drawing frost into its maw; it tracks you until the last moments
     e.fbT -= dt; e.moving = false; e.atkAnimT = 0.1;
     if(e.fbT>0.35){ const a = Math.atan2(target.y-e.y, target.x-e.x); e.brDir = (e.brDir==null) ? a : e.brDir + crAngDiff(a, e.brDir)*Math.min(1,dt*5); }
     e.facing = {x:Math.cos(e.brDir), y:Math.sin(e.brDir)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
@@ -84,7 +83,7 @@ function drawWindigoIso(e){
   ctx.beginPath(); ctx.ellipse(hx, hy, 9, 8, 0, 0, 7); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(hx+4, hy-3-up*0.2); ctx.lineTo(hx+19, hy+1-up); ctx.lineTo(hx+18, hy+6-up); ctx.lineTo(hx+4, hy+6); ctx.closePath(); ctx.fill(); ctx.stroke();   // snout
   ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(hx+19, hy+1-up, 1.6, 0, 7); ctx.fill();
-  if(fb){ ctx.fillStyle = 'rgba(210,245,255,'+(0.4+fbK*0.5)+')'; ctx.beginPath(); ctx.ellipse(hx+17, hy+6-up, 3+fbK*5, 2+fbK*3, 0, 0, 7); ctx.fill(); }   // frost gathering in the maw
+  if(fb){ ctx.fillStyle = 'rgba(28,44,100,'+(0.5+fbK*0.4)+')'; ctx.beginPath(); ctx.ellipse(hx+17, hy+6-up, 3+fbK*5, 2+fbK*3, 0, 0, 7); ctx.fill(); }   // frost gathering in the maw
   else if(slash){ ctx.strokeStyle = ink; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(hx+6, hy+6); ctx.lineTo(hx+18, hy+7); ctx.stroke(); }
   // pointed ears
   ctx.fillStyle = furD; ctx.beginPath(); ctx.moveTo(hx-5, hy-6); ctx.lineTo(hx-8, hy-16); ctx.lineTo(hx+1, hy-8); ctx.closePath(); ctx.fill();
@@ -107,27 +106,50 @@ function drawWindigoIso(e){
   drawHpBar(iso, 92*s, e.r, e.hp, e.maxHp);
 }
 
-// the aimed cone: a thin outline that fills during the wind-up, then a swirling deep-blue blast (Permafrost blue)
+// Frost Breath art (v520): no ground marker. Wind-up: navy frost swirls INTO the maw. Blast: a dark navy stream of
+// billowing frost pours from the mouth, widening and sinking toward the ground along the aimed cone, with ice glints.
 function drawWindigoCone(e){
   const breathing = e.brT>0; if(!breathing && !(e.fbT>0)) return;
-  const a = e.brDir||0, frac = breathing ? 1 : clamp(1-e.fbT/(e.fbMax||1),0,1), t = (game.clock||0);
+  const a = e.brDir||0, t = (game.clock||0);
   const bi = toIso(e.x,e.y), bs = e.r/24*1.12, bf = e.faceSign||1, o = {x:bi.x+bf*bs*27, y:bi.y-bs*73};
-  const L = WINDIGO_CONE_LEN, H = WINDIGO_CONE_HALF;
-  const p1 = toIso(e.x+Math.cos(a-H)*L, e.y+Math.sin(a-H)*L), p2 = toIso(e.x+Math.cos(a+H)*L, e.y+Math.sin(a+H)*L), pm = toIso(e.x+Math.cos(a)*L, e.y+Math.sin(a)*L);
   ctx.save();
-  const gr = ctx.createLinearGradient(o.x, o.y, pm.x, pm.y);
-  if(breathing){ gr.addColorStop(0,'rgba(120,175,240,0.8)'); gr.addColorStop(0.5,'rgba(60,110,200,0.55)'); gr.addColorStop(1,'rgba(40,80,170,0.2)'); }
-  else { gr.addColorStop(0,'rgba(79,130,200,'+(0.12+frac*0.3)+')'); gr.addColorStop(1,'rgba(50,95,180,'+(0.04+frac*0.14)+')'); }
-  ctx.beginPath(); ctx.moveTo(o.x,o.y); ctx.lineTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.closePath(); ctx.fillStyle = gr; ctx.fill();
-  ctx.strokeStyle = 'rgba(110,165,235,'+(0.35+frac*0.5)+')'; ctx.lineWidth = 1.8; ctx.stroke();
-  if(breathing){   // drifting frost puffs streaming down the cone
-    for(let k=0;k<18;k++){
-      const u = ((t*1.4+k*0.173)%1), side = Math.sin(k*2.7)*0.8, ang = a+side*H*u, rr = 20+u*L;
-      const q = toIso(e.x+Math.cos(ang)*rr, e.y+Math.sin(ang)*rr), ky = o.y+(q.y-o.y)*0.0;
-      ctx.globalAlpha = 0.55*(1-u*0.7); ctx.fillStyle = k%2 ? '#3f70c0' : '#6fa4e8';
-      ctx.beginPath(); ctx.arc(q.x, q.y-6-u*10, 6+u*16, 0, 7); ctx.fill();
+  if(!breathing){
+    const frac = clamp(1-e.fbT/(e.fbMax||1),0,1);
+    for(let k=0;k<14;k++){
+      const u = (t*1.7+k/14)%1, an = k*2.39+t*2, R = (8+46*(1-u))*(0.6+0.4*frac);
+      ctx.globalAlpha = frac*0.85*u; ctx.fillStyle = k%3 ? '#1d2c62' : '#4a68b8';
+      ctx.beginPath(); ctx.arc(o.x+Math.cos(an)*R, o.y+Math.sin(an)*R*0.55, 1.5+u*2.5, 0, 7); ctx.fill();
     }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 0.5*frac; ctx.fillStyle = '#16224e'; ctx.beginPath(); ctx.arc(o.x, o.y, 3+frac*5, 0, 7); ctx.fill();
+    ctx.restore(); return;
   }
+  const L = WINDIGO_CONE_LEN, H = WINDIGO_CONE_HALF, H0 = bs*66;
+  const fade = clamp(e.brT/0.25,0,1)*clamp((WINDIGO_BREATH_T-e.brT)/0.12,0,1);
+  const s0 = toIso(e.x+Math.cos(a)*14, e.y+Math.sin(a)*14), offX = o.x-s0.x;
+  const N = 40, puffs = [];
+  for(let k=0;k<N;k++){
+    const u = (t*1.9+k/N)%1, j = Math.sin(k*12.9898)*0.5+Math.sin(k*4.1+t*3)*0.35;
+    const ang = a + j*H*Math.min(1,u*1.4), rr = 14+u*L, w = toIso(e.x+Math.cos(ang)*rr, e.y+Math.sin(ang)*rr);
+    const h = H0*Math.pow(1-u,1.6)+6*u, x = w.x+offX*Math.pow(1-u,2), y = w.y-h;
+    puffs.push({u, x, y, k});
+  }
+  puffs.sort((p,q)=>q.u-p.u);   // far, faded puffs first; the dense jet at the mouth on top
+  for(const pf of puffs){
+    const u = pf.u, r = 4+u*24, al = fade*0.8*Math.pow(1-u,0.6);
+    const gr = ctx.createRadialGradient(pf.x, pf.y, 0, pf.x, pf.y, r);
+    gr.addColorStop(0, pf.k%4===0 ? 'rgba(70,100,175,'+al+')' : 'rgba(30,46,104,'+al+')');
+    gr.addColorStop(0.6, 'rgba(20,32,78,'+al*0.7+')'); gr.addColorStop(1, 'rgba(12,20,52,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(pf.x, pf.y, r, 0, 7); ctx.fill();
+  }
+  // a dense, tapering jet right out of the maw (small overlapping puffs, no hard edges)
+  for(let k=0;k<14;k++){
+    const u = ((t*2.6+k/14)%1)*0.3, ang = a + Math.sin(k*7.7+t*9)*0.08, rr = 14+u*L, w = toIso(e.x+Math.cos(ang)*rr, e.y+Math.sin(ang)*rr);
+    const x = w.x+offX*Math.pow(1-u,2), y = w.y-(H0*Math.pow(1-u,1.6)+6*u), r = 3+u*20, al = fade*0.7*(1-u*2);
+    const gr = ctx.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(18,28,72,'+al+')'); gr.addColorStop(1, 'rgba(18,28,72,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+  }
+  // ice glints caught in the stream
+  ctx.fillStyle = '#b8cdf6';
+  for(let k=0;k<12;k++){ const pf = puffs[(k*7)%N]; ctx.globalAlpha = fade*(0.5+0.5*Math.sin(t*14+k))*(1-pf.u); ctx.fillRect(pf.x+Math.sin(k*3.3)*6-1, pf.y+Math.cos(k*2.1)*4-1, 2, 2); }
   ctx.restore();
 }
