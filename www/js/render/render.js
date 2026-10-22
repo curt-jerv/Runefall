@@ -964,6 +964,7 @@ function render(){
     d.draw = function(){ ctx.save(); ctx.globalAlpha = OCCLUDE_ALPHA; originalDraw(); ctx.restore(); };
   }
   for(const gl of collectGlows(g, g.player)) drawables.push({depth:gl.x+gl.y-0.5, draw:()=>drawGlowIso(gl, g.clock||0)});
+  drawPlayerGroundGlow(g);   // v517
   drawRetribAura(g.player);
   drawBulwarkRing(g.player);
   drawJuggFx(g.player);

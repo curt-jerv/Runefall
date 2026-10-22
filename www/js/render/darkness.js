@@ -404,16 +404,27 @@ const LIGHT_X = 1.15, LIGHT_Y = 0.575;   // v511: light shape = isometric ellips
 const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
 // v515: overworld zones have no dark ring, but your own warm light is still there
 function playerGlowScene(g){ return !!(g && g.started && g.player && g.scene!=='tavern'); }
-// v516: a gentle dark ring at the screen edges for mood (and a sense of line of sight); the lit middle is fully clear
+// v516/v517: overworld mood -- black fading in only at the screen edges (soft, strongest in the corners), like the Spider Lair's dark but much further out.
+// A screen-sized elliptical vignette (nothing is cut around the player); the warm ground glow is set up for drawPlayerGroundGlow.
 function drawOverworldRing(g){
-  const sc = g.scene, a = sc==='sunlitplains' ? 0.6 : sc==='town' ? 0.42 : 0.52;
-  drawDarkCryptOverlay(g, VEIL_LIGHT_R*1.3*0.72*lightRadiusMult(g.player), false, null, a, 0, 1);
+  const sc = g.scene, mA = sc==='sunlitplains' ? 0.66 : sc==='town' ? 0.42 : 0.6;
+  g._glowLR = VEIL_LIGHT_R*1.3*0.72*lightRadiusMult(g.player); g._glowK = 1;
+  const cx = W/2, cy = H/2, rx = W*0.6, ry = H*0.8;
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(rx, ry);
+  const gr = ctx.createRadialGradient(0,0,0,0,0,1);
+  gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(0.5,'rgba(0,0,0,0)');
+  gr.addColorStop(0.72,'rgba(0,0,0,'+(0.2*mA).toFixed(3)+')'); gr.addColorStop(0.9,'rgba(0,0,0,'+(0.58*mA).toFixed(3)+')'); gr.addColorStop(1,'rgba(0,0,0,'+mA+')');
+  ctx.fillStyle = gr; ctx.fillRect(-2.2,-2.2,4.4,4.4);   // 1 unit = the ellipse radius; the fill reaches well past the screen corners
+  ctx.restore();
 }
-function drawPlayerGlowOnly(g){
-  const LR = VEIL_LIGHT_R*lightRadiusMult(g.player), px = W/2, py = Math.round(camPlayerY()/2)*2, GR = LR*PLAYER_GLOW_FRAC;
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(LIGHT_X, LIGHT_Y);
+// v517: the warm glow is a flat oval on the ground under the player's feet, drawn before the sprites so it never covers the character; half as strong as before
+function drawPlayerGroundGlow(g){
+  const LR = g._glowLR, k = g._glowK==null ? 1 : g._glowK, p = g.player;
+  if(!LR || k<=0.02 || !p) return;
+  const iso = toIso(p.x, p.y), GR = LR*PLAYER_GLOW_FRAC*1.05;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(iso.x, iso.y+2); ctx.scale(LIGHT_X, LIGHT_Y);
   const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
-  gg.addColorStop(0,'rgba(255,206,116,0.3)'); gg.addColorStop(0.5,'rgba(255,176,76,0.16)'); gg.addColorStop(1,'rgba(255,150,50,0)');
+  gg.addColorStop(0,'rgba(255,206,116,'+(0.15*k).toFixed(3)+')'); gg.addColorStop(0.5,'rgba(255,176,76,'+(0.08*k).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
   ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
 }
 function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
@@ -482,15 +493,7 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
     if(!tint){ losPending = false; mctx.save(); mctx.setTransform(1,0,0,1,0,0); mctx.globalCompositeOperation = 'source-over'; mctx.drawImage(losCanvas, 0, 0); mctx.restore(); }
     else flushLosPending();
   }
-  // v507: the character's own light -- a warm yellow glow on the ground, monsters and walls near you; it grows with the light radius
-  { const gk = glow==null ? 1 : glow;
-    if(gk>0.02){
-      const GR = LR*PLAYER_GLOW_FRAC;
-      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(LIGHT_X, LIGHT_Y);
-      const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
-      gg.addColorStop(0,'rgba(255,206,116,'+(0.3*gk).toFixed(3)+')'); gg.addColorStop(0.5,'rgba(255,176,76,'+(0.16*gk).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,150,50,0)');
-      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
-    } }
+  g._glowLR = LR; g._glowK = (glow==null ? 1 : glow);   // v517: the ground glow itself is drawn under the sprites (drawPlayerGroundGlow)
   // Composite the finished mask onto the main canvas with plain
   // source-over -- transparent (hole) pixels leave the scene beneath
   // completely untouched, opaque black pixels paint over it, exactly the

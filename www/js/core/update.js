@@ -936,7 +936,7 @@ function updateStep(dt){
         if(psCrit) psDmg *= critMultOf(p);
         psDmg *= assaultDealtMult(p) * weaponDmgMult(p);
         g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
-          r:6, dmg:psDmg, from:'player', life:1.4, color:'#e2384f', isArrow:true, crit:psCrit});
+          r:6, dmg:psDmg, from:'player', life:1.4, color:'#ffd27a', isArrow:true, crit:psCrit});
         p.atkAnimT = 0.22;
         showMsg('Precise Shot!', 0.6);
         const psRank = effectiveRank(p,'preciseShot')||0;
