@@ -83,8 +83,8 @@ function drawDwarfWallIso(pos, clock){
 // the lowlands (River Valley, Withered Crossroads, Cursed Cemetery, Lakeside, Black Marsh) to the south, matching each zone's gates.
 const WM_NODES = {
   town:{x:9,y:52,t:'Mistfall',l:'',up:1}, forest:{x:26,y:50,t:'Dark Forest',l:'1'},
-  river:{x:30,y:66,t:'River Valley',l:'6',f:'reachedRiverValley',dir:'l'}, sunlit:{x:44,y:78,t:'Withered Crossroads',l:'8',f:'reachedSunlitPlains',up:1},
-  lighthouse:{x:25,y:85,t:'Lighthouse Tower',l:'9-15',f:'reachedLighthouseTower'}, cemetery:{x:48,y:96,t:'Cursed Cemetery',l:'17',f:'reachedCursedCemetery',dir:'r'},
+  river:{x:30,y:66,t:'River Valley',l:'6',f:'reachedRiverValley',dir:'l'}, sunlit:{x:44,y:78,t:'Withered Crossroads',l:'10',f:'reachedSunlitPlains',up:1},
+  lighthouse:{x:25,y:85,t:'Lighthouse Tower',l:'11-16',f:'reachedLighthouseTower'}, cemetery:{x:48,y:96,t:'Cursed Cemetery',l:'17',f:'reachedCursedCemetery',dir:'r'},
   lakeside:{x:66,y:78,t:'Lakeside Ruins',l:'21',f:'reachedLakesideRuins'}, marsh:{x:90,y:80,t:'Black Marsh',l:'28',f:'reachedBlackMarsh'}, highlands:{x:62,y:54,t:'Barren Highlands',l:'32',f:'reachedHighlands'},
   pass:{x:36,y:34,t:'Mountain Pass',l:'33',f:'reachedMountainPass',dir:'l'}, summit:{x:36,y:15,t:'Icy Summit',l:'35',f:'reachedIcySummit',dir:'l'}, shrine:{x:54,y:10,t:'Mountain Top Shrine',l:'37',dir:'r'},
   frosthold:{x:58,y:33,t:'Frosthold Keep',l:'39',f:'frostholdUnlocked',up:1}, redridge:{x:82,y:36,t:'Redridge Canyon',l:'42',f:'reachedRedridge'}, highward:{x:90,y:19,t:'Highward Fortress',l:'46-50',f:'reachedHighwardWp',dir:'l'},
@@ -128,11 +128,24 @@ function wmPaintLand(CW, CH, sc, dpr){
   const coastPts = [[-8,5],[6,7.5],[20,8.5],[34,4.5],[44,1.5],[52,0.4],[60,2],[68,6.5],[76,13],[82,19.5],[87,20.5],[93,15],[100,10.5],[106,9],[118,9]];
   const coastX = y=>{ let i=0; while(i<coastPts.length-2 && coastPts[i+1][0]<y) i++; const [y0,x0]=coastPts[i], [y1,x1]=coastPts[i+1]; const t=Math.max(0,Math.min(1,(y-y0)/(y1-y0))), u=t*t*(3-2*t); return x0+(x1-x0)*u + Math.sin(y*0.9)*0.55 + Math.sin(y*2.3+1)*0.3; };
   // v489: an eastern coastline too -- the sea lies beyond Shadow Keep
-  const eastX = y=>126 + y*0.06 + Math.sin(y*0.7+2)*1.6 + Math.sin(y*1.9)*0.5;
-  const landPath = (ctx, off)=>{ ctx.beginPath(); ctx.moveTo(coastX(-WM_OFY-2)-off, -WM_OFY-2); for(let y=-WM_OFY-2; y<=VH; y+=0.5) ctx.lineTo(coastX(y)-off, y); for(let y=VH; y>=-WM_OFY-2; y-=0.5) ctx.lineTo(eastX(y)+off, y); ctx.closePath(); };
+  // v533: the east coast follows the eastern regions -- Shadow Keep on the shore, the sea cliffs of Cliffside, a long
+  // bay below Redridge -- and a ragged south coast with capes and coves runs under the lowlands; the north stays land.
+  const WM_SOUTH_Y = 101.5;   // where the west coast turns the corner into the south coast
+  const eastPts = [[-8,131],[2,129],[10,126],[16,123.5],[22,115],[28,110.5],[34,108.5],[40,103],[46,98],[52,94.5],[58,93],[64,95.5],[70,100.5],[76,104],[82,105.5],[88,103.5],[92,101]];
+  const southPts = [[0,WM_SOUTH_Y],[14,99],[20,95.5],[25,93.6],[30,95.8],[35,99.8],[41,103.4],[49,103.8],[55,100],[60,95],[65,92.4],[70,92],[75,93.6],[80,96.2],[85,95.2],[90,96.6],[95,95],[99,92.6],[103,91]];
+  const wmCurve = (P, v, wob)=>{ let i=0; while(i<P.length-2 && P[i+1][0]<v) i++; const [a0,b0]=P[i], [a1,b1]=P[i+1]; const t=Math.max(0,Math.min(1,(v-a0)/(a1-a0))), u=t*t*(3-2*t); return b0+(b1-b0)*u + (wob ? Math.sin(v*0.9+wob)*0.7 + Math.sin(v*2.3+wob*2)*0.35 + Math.sin(v*5.1+wob)*0.15 : 0); };
+  const eastX = y=>wmCurve(eastPts, y, 2);
+  const southY = x=>wmCurve(southPts, x, 5);
+  const SE_X = 103, SE_Y = 91;   // the south-east corner where the two coasts meet
+  const onLand = (x,y,m)=>{ m = m||0; return x > coastX(y)+m && (y < SE_Y ? x < eastX(y)-m : x < SE_X-m) && (x > SE_X ? y < SE_Y : y < southY(x)-m); };
+  const landPath = (ctx, off)=>{ ctx.beginPath(); ctx.moveTo(coastX(-WM_OFY-2)-off, -WM_OFY-2);
+    for(let y=-WM_OFY-2; y<=WM_SOUTH_Y; y+=0.5) ctx.lineTo(coastX(y)-off, y);
+    for(let x=coastX(WM_SOUTH_Y); x<=SE_X; x+=0.5) ctx.lineTo(x, southY(x)+off);
+    for(let y=SE_Y; y>=-WM_OFY-2; y-=0.5) ctx.lineTo(eastX(y)+off, y);
+    ctx.closePath(); };
   o.fillStyle = 'rgba(70,110,160,.10)'; landPath(o, 7); o.fill();
   o.fillStyle = 'rgba(70,110,160,.16)'; landPath(o, 3.6); o.fill();
-  o.strokeStyle = 'rgba(150,190,230,.22)'; o.lineWidth = 0.25; for(const d of [1.6,2.8]){ o.beginPath(); for(let y=-WM_OFY-2; y<=VH; y+=0.5){ const x = coastX(y)-d-Math.sin(y*1.7)*0.3; if(y===-WM_OFY-2) o.moveTo(x,y); else o.lineTo(x,y); } o.stroke(); o.beginPath(); for(let y=-WM_OFY-2; y<=VH; y+=0.5){ const x = eastX(y)+d+Math.sin(y*1.7)*0.3; if(y===-WM_OFY-2) o.moveTo(x,y); else o.lineTo(x,y); } o.stroke(); }
+  o.strokeStyle = 'rgba(150,190,230,.22)'; o.lineWidth = 0.25; for(const d of [1.6,2.8]){ landPath(o, d); o.stroke(); }   // surf lines all round the coast
   l.fillStyle = '#b8a8d4'; landPath(l, 0.55); l.fill();
   l.fillStyle = '#566344'; landPath(l, 0); l.fill();
   l.globalCompositeOperation = 'source-atop';
@@ -176,7 +189,7 @@ function wmPaintLand(CW, CH, sc, dpr){
   // v460: fill the open country between regions with each region's own scenery (kept clear of the markers and labels)
   { const r = wmRand(777), tuft = (x,y)=>{ l.strokeStyle = '#d6c36a'; l.lineWidth = 0.22; l.beginPath(); l.moveTo(x-0.5,y); l.lineTo(x-0.7,y-0.9); l.moveTo(x,y); l.lineTo(x,y-1.1); l.moveTo(x+0.5,y); l.lineTo(x+0.7,y-0.9); l.stroke(); };
     const hill = (x,y,sz)=>{ l.fillStyle = '#5f5644'; l.beginPath(); l.ellipse(x,y,sz*1.6,sz*0.8,0,Math.PI,0); l.fill(); l.fillStyle = '#8a7e62'; l.beginPath(); l.ellipse(x-sz*0.3,y,sz*0.9,sz*0.55,0,Math.PI,0); l.fill(); };
-    for(let i=0;i<1500;i++){ const x = -WM_OFS + r()*VW, y = -WM_OFY + r()*VH, sz = r(); if(x < coastX(y)+2.5 || x > eastX(y)-2.5) continue;
+    for(let i=0;i<1500;i++){ const x = -WM_OFS + r()*VW, y = -WM_OFY + r()*VH, sz = r(); if(!onLand(x,y,2.5)) continue;
       const [id, d] = nearestId(x,y); if(d < 8.5) continue; let busy = false; for(const [a,b] of WM_EDGES){ const A = WM_NODES[a], B = WM_NODES[b], vx = B.x-A.x, vy = B.y-A.y, t = Math.max(0,Math.min(1,((x-A.x)*vx+(y-A.y)*vy)/(vx*vx+vy*vy))); if(Math.hypot(A.x+vx*t-x, A.y+vy*t-y) < 2.6){ busy = true; break; } } if(busy) continue;
       if(id==='forest'||id==='town'||id==='river'||id==='lakeside'){ if(r()<0.75) pine(x,y,0.8+sz*0.6); }
       else if(id==='pass'||id==='cliffside'||id==='highward'){ if(r()<0.55) peak(x,y,1.3+sz*1.3,false); }
@@ -220,7 +233,7 @@ function renderWorldMap(){
   wmMark(g, p);
   const seen = id=>{ const n = WM_NODES[id]; return id==='town' || !!(p.wmSeen && p.wmSeen[id]) || !!(n.f && n.f!=='frostholdUnlocked' && p[n.f]); };
   const nbr = id=>WM_EDGES.some(([a,b])=>(a===id&&seen(b))||(b===id&&seen(a)));
-  const fit = mapFit(box), VW = 150, VH = 110, sc = Math.min(fit.W/VW, fit.H/VH), CW = Math.floor(VW*sc), CH = Math.floor(VH*sc), dpr = fit.dpr;
+  const fit = mapFit(box), VW = 150, VH = 114, sc = Math.min(fit.W/VW, fit.H/VH), CW = Math.floor(VW*sc), CH = Math.floor(VH*sc), dpr = fit.dpr;
   const cv = document.createElement('canvas'); cv.width = CW*dpr; cv.height = CH*dpr; cv.style.width = CW+'px'; cv.style.height = CH+'px'; box.appendChild(cv);
   const land = wmPaintLand(CW, CH, sc, dpr);
   // static layer = land + roads + fog/glow + nodes + labels

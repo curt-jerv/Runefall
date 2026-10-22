@@ -64,14 +64,122 @@ const ZONE_LANDMARKS = {
 // a fixed, known footprint (FOREST_W/H, SUN_W/H) and fixed gate objects
 // (g.forest.*Gate, g.sun.*Gate), so a real "you are here + exits" schematic
 // is possible for them the same way it already was for Town.
-const MAP_TINT = {highlands:'#5a5444', forest:'#2c3a2a', rivervalley:'#34463a', sunlitplains:'#5a5634', cursedcemetery:'#3a362c', lakesideruins:'#36463f', blackmarsh:'#313d33', mountainpass:'#4c4a46', icyzone:'#66727e', frosthold:'#575f68', redridge:'#6e4430', redcrater:'#5c3426', lighthouse:'#4d4b46', town:'#4f4636'};   // v481: muted, earthy D2 tones
-// Letter markers: gates green, waypoint cyan, danger red, stairs/loot gold
+// v533: earthier, painted ground colours per region (Diablo-style parchment maps)
+const MAP_TINT = {highlands:'#4f4838', forest:'#24301e', rivervalley:'#2e3d25', sunlitplains:'#5a5034', cursedcemetery:'#272834', lakesideruins:'#2b3a27', blackmarsh:'#26322a', mountainpass:'#47464a', icyzone:'#8996a3', frosthold:'#566070', redridge:'#6a3d28', redcrater:'#56291c', lighthouse:'#4a4842', town:'#4a4232'};
+// Marker colours (kept as the badge's inner glow): gates green, waypoint cyan, danger red, stairs/loot gold
 function mapMarkStyle(lm){
   const ic = lm.icon, lb = (lm.label||'');
   if(lb==='Waypoint') return '#5fd0ff';
   if(ic==='!' || /Gojira|Rex|Lair$|Boss|Bandit/.test(lb) && ic==='!') return '#e05a5a';
   if(ic==='▼' || ic==='▲' || ic==='*' || ic==='?' || ic==='O' || ic==='S' && /Altar|Stash/.test(lb)) return '#e8c44a';
   return '#7fd87f';
+}
+// which little picture a marker gets, from its letter and label
+function mapGlyphKind(ch, label, col){
+  const lb = label || '';
+  if(lb==='Waypoint' || (ch==='W' && col==='#5fd0ff')) return 'waypoint';
+  if(ch==='!') return 'skull';
+  if(ch==='▼') return 'down';
+  if(ch==='▲') return 'up';
+  if(ch==='★' || ch==='■') return 'chest';
+  if(ch==='✦') return 'flame';
+  if(/Cave|Lair|Depths|Tunnel|Mine|Den|Nest/.test(lb)) return 'cave';
+  if(/Tower|Watchtower|Lighthouse|Keep/.test(lb)) return 'tower';
+  if(/Camp|Graverobbers|Wayfarer|Cauldron/.test(lb)) return 'fire';
+  if(/House|Witch|Tavern/.test(lb)) return 'house';
+  if(/Statue|Shrine|Altar|Obelisk|Stone/.test(lb) || ch==='+') return 'shrine';
+  if(/Ruins|Crypt|Tomb/.test(lb)) return 'tomb';
+  if(/Bridge/.test(lb) || ch==='=') return 'bridge';
+  if(/Waterfall|Pool|Lake/.test(lb) || ch==='~') return 'water';
+  return 'gate';
+}
+// a dark iron medallion with a gold rim and a small drawn picture -- used by every region and dungeon map
+function mapBadge(c, x, y, ch, col, label, R){
+  R = R || 12;
+  const kind = mapGlyphKind(ch, label, col);
+  c.save(); c.translate(x, y);
+  c.fillStyle = 'rgba(0,0,0,.55)'; c.beginPath(); c.arc(1.5, 2, R+2, 0, 7); c.fill();
+  const gr = c.createRadialGradient(0, -R*0.3, 1, 0, 0, R);
+  gr.addColorStop(0, col); gr.addColorStop(0.55, 'rgba(30,22,14,.92)'); gr.addColorStop(1, '#120d08');
+  c.fillStyle = gr; c.globalAlpha = 1; c.beginPath(); c.arc(0, 0, R, 0, 7); c.fill();
+  c.lineWidth = 2.2; c.strokeStyle = '#b8902e'; c.stroke();
+  c.lineWidth = 0.8; c.strokeStyle = 'rgba(255,230,150,.55)'; c.beginPath(); c.arc(0, 0, R-2.2, Math.PI*1.1, Math.PI*1.9); c.stroke();
+  const s = R/12, fg = '#f2e4bc', dk = '#1a120a';
+  c.lineJoin = 'round'; c.lineCap = 'round'; c.scale(s, s);
+  const P = (pts, fill)=>{ c.beginPath(); pts.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])); c.closePath(); c.fillStyle = fill; c.fill(); };
+  if(kind==='waypoint'){ c.shadowColor = '#5fd0ff'; c.shadowBlur = 6; P([[0,-7],[5,0],[0,7],[-5,0]], '#bff0ff'); c.shadowBlur = 0; P([[0,-3.4],[2.4,0],[0,3.4],[-2.4,0]], '#2a6a8a'); }
+  else if(kind==='skull'){ c.fillStyle = '#f0e8d8'; c.beginPath(); c.arc(0,-1.5,5.6,0,7); c.fill(); c.fillRect(-3.4,2,6.8,3.6); c.fillStyle = dk; c.beginPath(); c.arc(-2.1,-1.6,1.6,0,7); c.arc(2.1,-1.6,1.6,0,7); c.fill(); c.fillRect(-0.5,0.6,1,1.6); c.fillRect(-2.4,3.6,1,2); c.fillRect(-0.5,3.6,1,2); c.fillRect(1.4,3.6,1,2); }
+  else if(kind==='down' || kind==='up'){ c.fillStyle = fg; for(let i=0;i<3;i++){ const w = 3+i*2.4, yy = kind==='down' ? -5+i*3.6 : 4-i*3.6; c.fillRect(-w, yy, w*2, 2.2); } P(kind==='down' ? [[-3,5.6],[3,5.6],[0,8.6]] : [[-3,-5.4],[3,-5.4],[0,-8.4]], '#e8c44a'); }
+  else if(kind==='chest'){ c.fillStyle = '#8a5a2a'; c.fillRect(-6,-2,12,7.5); c.fillStyle = '#a8703a'; c.beginPath(); c.moveTo(-6,-2); c.quadraticCurveTo(0,-8,6,-2); c.closePath(); c.fill(); c.fillStyle = '#e8c44a'; c.fillRect(-6,-1.2,12,1.3); c.fillRect(-1,-1,2,3.4); }
+  else if(kind==='flame'){ P([[0,-8],[4.5,0],[2.6,5],[-2.6,5],[-4.5,0]], '#ffb040'); P([[0,-3.5],[2,1.6],[0,4.6],[-2,1.6]], '#fff0a0'); }
+  else if(kind==='cave'){ P([[-8,6],[-6,-1],[-2,-6],[3,-6],[7,-1],[8,6]], '#8a8478'); P([[-4.2,6],[-4,0],[0,-3.4],[4,0],[4.2,6]], dk); }
+  else if(kind==='tower'){ c.fillStyle = fg; c.fillRect(-3.4,-4,6.8,10.5); for(let i=0;i<3;i++) c.fillRect(-4.2+i*3.2,-7,2.2,3.2); c.fillStyle = dk; c.fillRect(-1,-1.4,2,3); c.fillRect(-1.4,3.4,2.8,3.1); }
+  else if(kind==='fire'){ c.strokeStyle = '#7a5434'; c.lineWidth = 1.8; c.beginPath(); c.moveTo(-5,6); c.lineTo(5,3.6); c.moveTo(5,6); c.lineTo(-5,3.6); c.stroke(); P([[0,-7],[4,0],[2.4,4.6],[-2.4,4.6],[-4,0]], '#ff9a2a'); P([[0,-2.4],[1.8,2],[0,4.2],[-1.8,2]], '#ffe07a'); }
+  else if(kind==='house'){ P([[-7,-0.5],[0,-7],[7,-0.5]], '#b5543a'); c.fillStyle = fg; c.fillRect(-5,-0.5,10,7); c.fillStyle = dk; c.fillRect(-1.4,2,2.8,4.5); }
+  else if(kind==='shrine'){ c.fillStyle = fg; c.fillRect(-1.6,-8,3.2,15); c.fillRect(-5.4,-4.4,10.8,3); c.fillStyle = 'rgba(190,150,255,.8)'; c.beginPath(); c.arc(0,-3,1.4,0,7); c.fill(); }
+  else if(kind==='tomb'){ P([[-7,6],[-7,-1],[0,-7],[7,-1],[7,6]], '#9a948a'); c.fillStyle = dk; c.beginPath(); c.moveTo(-2.6,6); c.lineTo(-2.6,0.6); c.arc(0,0.6,2.6,Math.PI,0); c.lineTo(2.6,6); c.closePath(); c.fill(); }
+  else if(kind==='bridge'){ c.strokeStyle = fg; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-8,-1); c.lineTo(8,-1); c.stroke(); c.lineWidth = 1.6; c.beginPath(); c.arc(-3.5,5,4,Math.PI,0); c.arc(3.5,5,4,Math.PI,0); c.stroke(); }
+  else if(kind==='water'){ c.strokeStyle = '#8fd0ff'; c.lineWidth = 1.8; for(const yy of [-3,1.5,6]){ c.beginPath(); c.moveTo(-7,yy); c.quadraticCurveTo(-3.5,yy-3,0,yy); c.quadraticCurveTo(3.5,yy+3,7,yy); c.stroke(); } }
+  else {   // a stone archway: the way to another region
+    c.fillStyle = '#a8a092'; c.beginPath(); c.moveTo(-7,7); c.lineTo(-7,-1.5); c.arc(0,-1.5,7,Math.PI,0); c.lineTo(7,7); c.lineTo(3.8,7); c.lineTo(3.8,-1.5); c.arc(0,-1.5,3.8,0,Math.PI,true); c.lineTo(-3.8,7); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(127,216,127,.55)'; c.beginPath(); c.moveTo(-3.8,7); c.lineTo(-3.8,-1.5); c.arc(0,-1.5,3.8,Math.PI,0); c.lineTo(3.8,7); c.closePath(); c.fill();
+  }
+  c.restore();
+}
+// the painted ground of an overworld region map: the zone's own colours, water, roads, woods, graves and walls
+function paintRegionTerrain(c, R, w, h, k, ox, oy, tint){
+  const rnd = (seed=>()=>((seed = (seed*1664525 + 1013904223)>>>0)/4294967296))(9177 + Math.round(w+h));
+  const hx = parseInt(tint.slice(1,3),16), hy = parseInt(tint.slice(3,5),16), hz = parseInt(tint.slice(5,7),16);
+  const shade = (f, a)=>'rgba('+Math.round(clamp(hx*f,0,255))+','+Math.round(clamp(hy*f,0,255))+','+Math.round(clamp(hz*f,0,255))+','+a+')';
+  // height-field zones carry their own tile colours: paint them straight in
+  if(R.C && R.cols && R.rows){
+    const tc = document.createElement('canvas'); tc.width = R.cols; tc.height = R.rows; const tx = tc.getContext('2d'), im = tx.createImageData(R.cols, R.rows);
+    for(let i=0;i<R.cols*R.rows;i++){ const wall = R.K && R.K[i]>=3, f = wall ? 0.45 : 0.82; im.data[i*4] = R.C[i*3]*f; im.data[i*4+1] = R.C[i*3+1]*f; im.data[i*4+2] = R.C[i*3+2]*f; im.data[i*4+3] = 255; }
+    tx.putImageData(im, 0, 0); c.imageSmoothingEnabled = true; c.drawImage(tc, ox, oy, R.cols*R.ts*k, R.rows*R.ts*k);
+  } else {
+    c.fillStyle = tint; c.fillRect(ox, oy, w*k, h*k);
+    // mottled, painterly ground: soft blotches of lighter and darker earth
+    const n = Math.min(900, Math.round(w*h*k*k/260));
+    for(let i=0;i<n;i++){ const x = ox+rnd()*w*k, y = oy+rnd()*h*k, r = 6+rnd()*22, f = 0.7+rnd()*0.6; const gr = c.createRadialGradient(x,y,0,x,y,r); gr.addColorStop(0, shade(f, 0.32)); gr.addColorStop(1, shade(f, 0)); c.fillStyle = gr; c.fillRect(x-r,y-r,r*2,r*2); }
+  }
+  // water: deep blue with a pale shoreline
+  const water = (R.obstacles||[]).filter(o=>o.isWater && o.w!=null);
+  if(water.length){
+    // small free-standing ponds read as rounded pools; river slices and lake bands join up into one body of water
+    const pond = o=>o.w < 320 && o.h < 320 && !o.isLake && !o.bmMid && o.w > 60 && o.h > 40 && Math.abs(o.w-o.h) > 4;
+    const shape = (o, pad)=>{ const X = ox+o.x*k-pad, Y = oy+o.y*k-pad, Wd = Math.max(1.2,o.w*k)+pad*2, Hd = Math.max(1.2,o.h*k)+pad*2;
+      if(pond(o)){ c.beginPath(); c.ellipse(X+Wd/2, Y+Hd/2, Wd/2, Hd/2, 0, 0, 7); c.fill(); } else c.fillRect(X, Y, Wd, Hd); };
+    c.fillStyle = 'rgba(120,150,150,.5)'; for(const o of water) shape(o, 1.4);
+    c.fillStyle = '#1f3a52'; for(const o of water) shape(o, 0);
+  }
+  // dead bog and void around the edges of a zone
+  c.fillStyle = 'rgba(6,8,6,.8)'; for(const o of (R.obstacles||[])) if(o.bogVoid) c.fillRect(ox+o.x*k, oy+o.y*k, o.w*k, o.h*k);
+  // roads: a worn dirt track with a darker edge
+  const polys = [];
+  for(const rp of (R.roadPolys||[])) if(rp.pts && rp.pts.length>1) polys.push([rp.pts, rp.hw||40]);
+  for(const rd of (R.roads||[])) if(rd && rd.length>1) polys.push([rd, 46]);
+  if(game && game.scene==='rivervalley' && typeof RV_ROAD!=='undefined'){ polys.push([RV_ROAD, 46]); if(RV_TRAIL && RV_TRAIL.length>1) polys.push([RV_TRAIL, 30]); }
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for(const [pts, hw] of polys){
+    const path = ()=>{ c.beginPath(); pts.forEach((q,i)=>{ const X = ox+q.x*k, Y = oy+q.y*k; i?c.lineTo(X,Y):c.moveTo(X,Y); }); };
+    path(); c.strokeStyle = 'rgba(30,20,10,.55)'; c.lineWidth = Math.max(3.4, hw*2*k+2.4); c.stroke();
+    path(); c.strokeStyle = '#8a7650'; c.lineWidth = Math.max(2, hw*2*k); c.stroke();
+    path(); c.strokeStyle = 'rgba(200,180,130,.35)'; c.lineWidth = Math.max(0.8, hw*0.6*k); c.stroke();
+  }
+  // woods, dead trees, graves
+  const dots = (list, col, r, max)=>{ if(!list) return; c.fillStyle = col; let i = 0; for(const t of list){ if(++i > max) break; c.beginPath(); c.arc(ox+t.x*k, oy+t.y*k, r, 0, 7); c.fill(); } };
+  dots(R.trees, 'rgba(14,30,14,.75)', Math.max(1.4, 26*k), 2500);
+  dots(R.deadTrees, 'rgba(40,34,28,.8)', Math.max(1.2, 20*k), 800);
+  if(R.graves){ c.fillStyle = 'rgba(190,186,200,.4)'; for(const gr of R.graves){ const X = ox+gr.x*k, Y = oy+gr.y*k; c.fillRect(X-0.5, Y-2, 1, 3); c.fillRect(X-1.3, Y-1.3, 2.6, 0.8); } }
+  // walls, keeps, fences, cliffs and big rocks
+  for(const o of (R.obstacles||[])){
+    if(o.w==null || o.h==null || o.isWater) continue;
+    if(o.ironFence){ c.fillStyle = '#0c0b10'; c.fillRect(ox+o.x*k, oy+o.y*k, Math.max(1.6,o.w*k), Math.max(1.6,o.h*k)); continue; }
+    const big = Math.max(o.w,o.h)>=110 && Math.min(o.w,o.h)>=40;
+    if(!o.isCliff && !o.isKeep && !big && !o.owFeat && !o.mausoleum) continue;
+    c.fillStyle = o.isKeep ? 'rgba(20,14,8,.55)' : 'rgba(10,8,5,.45)';
+    c.fillRect(ox+o.x*k, oy+o.y*k, Math.max(1.2,o.w*k), Math.max(1.2,o.h*k));
+  }
 }
 function mapFit(box){
   const r = box.getBoundingClientRect();
@@ -97,20 +205,7 @@ function plotRegionMapPoints(box, pts, w, h, p){
     c.fillStyle = '#1d1812'; c.fillRect(ox,oy,w*k,h*k);
     c.fillStyle = tint; const st = 40;
     for(let y=0;y<h;y+=st) for(let x=0;x<w;x+=st) if(mtnInRegion(x+st/2,y+st/2)) c.fillRect(ox+x*k, oy+y*k, st*k+0.8, st*k+0.8);
-  } else { c.fillStyle = tint; c.fillRect(ox,oy,w*k,h*k); }
-  // roads
-  if(R.roadPolys){
-    c.lineCap = 'round'; c.lineJoin = 'round';
-    for(const rp of R.roadPolys){ if(!rp.pts||rp.pts.length<2) continue; c.strokeStyle = 'rgba(210,190,140,.40)'; c.lineWidth = Math.max(2, (rp.hw||40)*2*k); c.beginPath(); rp.pts.forEach((q,i)=>{ const X=ox+q.x*k, Y=oy+q.y*k; i?c.lineTo(X,Y):c.moveTo(X,Y); }); c.stroke(); }
-  }
-  // obstacles: water blue, cliffs/keeps/large rock dark, small props skipped
-  for(const o of (R.obstacles||[])){
-    if(o.w==null || o.h==null) continue;
-    const big = Math.max(o.w,o.h)>=110 && Math.min(o.w,o.h)>=40;
-    if(!o.isWater && !o.isCliff && !o.isKeep && !big) continue;
-    c.fillStyle = o.isWater ? '#2f4f73' : o.isKeep ? '#4a3f30' : 'rgba(10,8,5,.45)';
-    c.fillRect(ox+o.x*k, oy+o.y*k, Math.max(1.2,o.w*k), Math.max(1.2,o.h*k));
-  }
+  } else paintRegionTerrain(c, R, w, h, k, ox, oy, tint);   // v533: painted ground, water, roads, woods and walls
   c.restore();
   c.strokeStyle = '#9c7f4a'; c.lineWidth = 1.5; c.strokeRect(ox,oy,w*k,h*k);
   const mx = v=>ox+clamp(v,0,w)*k, my = v=>oy+clamp(v,0,h)*k;
@@ -119,8 +214,7 @@ function plotRegionMapPoints(box, pts, w, h, p){
   for(const lm of pts){
     if(!lm.pos) continue;
     const x = mx(lm.pos.x), y = my(lm.pos.y), col = mapMarkStyle(lm);
-    c.fillStyle = col; c.beginPath(); c.arc(x,y,rad,0,7); c.fill(); c.strokeStyle = '#000'; c.lineWidth = 2; c.stroke();
-    c.fillStyle = '#000'; c.font = 'bold '+Math.round(rad+1)+'px system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(lm.icon, x, y+1);
+    mapBadge(c, x, y, lm.icon, col, lm.label, rad);
     labels.push({x,y,t:lm.label});
   }
   c.font = 'bold 12px Alegreya,Georgia,serif'; c.textBaseline = 'middle';
@@ -161,7 +255,7 @@ function renderDeepMap(g, p, box){
     c.fillStyle = o.isLava ? '#c4501f' : '#1d1812';
     c.fillRect(ox+Math.max(0,o.x)*k, oy+Math.max(0,o.y)*k, Math.min(o.w, R.w-Math.max(0,o.x))*k, Math.min(o.h, R.h-Math.max(0,o.y))*k);
   }
-  const mark = (pt, ch, col)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; c.fillStyle=col; c.beginPath(); c.arc(x,y,13,0,7); c.fill(); c.strokeStyle='#000'; c.lineWidth=2; c.stroke(); c.fillStyle='#000'; c.font='bold 15px system-ui'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(ch,x,y+1); };
+  const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 13); };
   mark(R.entrance, R.deep===1 ? 'E' : '\u25B2', '#7fd87f');
   mark(R.stairs, '\u25BC', '#e8c44a');
   if(R.isDeepMine && R.camp && (p.minerQ||0)<3) mark(R.camp, '!', '#ffd870');
@@ -187,7 +281,7 @@ function renderKeepMap(g, p, box){
   c.fillStyle = '#3a3226'; c.fillRect(ox,oy,R.w*k,R.h*k);
   for(const f of (R.kpFloors||[])){ c.fillStyle = '#4a4131'; c.fillRect(ox+f.x0*k, oy+f.y0*k, (f.x1-f.x0)*k, (f.y1-f.y0)*k); }
   for(const o of R.obstacles){ c.fillStyle = o.mazeWall ? '#100c08' : o.isProp ? '#7a6a50' : '#221b14'; c.fillRect(ox+o.x*k, oy+o.y*k, Math.max(1.5,o.w*k), Math.max(1.5,o.h*k)); }
-  const mark = (pt, ch, col)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; c.fillStyle=col; c.beginPath(); c.arc(x,y,12,0,7); c.fill(); c.strokeStyle='#000'; c.lineWidth=2; c.stroke(); c.fillStyle='#000'; c.font='bold 14px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(ch,x,y+1); };
+  const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 12); };
   mark(R.entrance, 'E', '#7fd87f'); mark(R.exitDoor, '\u25B6', '#e8c44a'); mark(R.holdStairs, '\u25BC', R.beacons && !R.beacons.every(b=>b.lit) ? '#c05a4a' : '#e8c44a'); mark(R.waypoint, 'W', '#5fd0ff');
   if(R.beacons) for(const b of R.beacons) mark(b, '\u2726', b.lit ? '#ffcf7a' : '#8a7a60');
   if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(ox+p.x*k, oy+p.y*k, 9, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, ox+p.x*k, oy+p.y*k, S); }
@@ -209,7 +303,7 @@ function renderLhMazeMap(g, p, box){
   c.fillStyle = '#3e382d'; c.fillRect(ox,oy,R.w*k,R.h*k);
   for(const o of R.obstacles){ c.fillStyle = o.mazeWall ? '#100c08' : '#6a5a40'; c.fillRect(ox+o.x*k, oy+o.y*k, Math.max(1.5,o.w*k), Math.max(1.5,o.h*k)); }
   c.strokeStyle = '#8a6e40'; c.lineWidth = 2; c.strokeRect(ox, oy, R.w*k, R.h*k);
-  const mark = (pt, ch, col)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; c.fillStyle=col; c.beginPath(); c.arc(x,y,12,0,7); c.fill(); c.strokeStyle='#000'; c.lineWidth=2; c.stroke(); c.fillStyle='#000'; c.font='bold 14px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(ch,x,y+1); };
+  const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 12); };
   mark(R.entrance, R.floor===1 ? 'E' : '\u25BC', '#7fd87f'); mark(R.waypoint, 'W', '#5fd0ff');
   if(R.stairsSeen) mark(R.stairs, '\u25B2', '#e8c44a');
   if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(ox+p.x*k, oy+p.y*k, 9, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, ox+p.x*k, oy+p.y*k, S); }
@@ -238,7 +332,7 @@ function renderHwMap(g, p, box){
   }
   for(const o of (R.obstacles||[])) if(o.mazeWall){ c.fillStyle = '#2a1c10'; c.fillRect(ox+o.x*k, oy+o.y*k, o.w*k, o.h*k); }
   for(const d of (R.hwDeco||[])){ if(d.type==='brazier'){ c.fillStyle = '#ff9a3a'; c.fillRect(ox+d.x*k-1.5, oy+d.y*k-1.5, 3, 3); } else { c.fillStyle = '#e0c068'; c.fillRect(ox+d.x*k-2, oy+d.y*k-2, 4, 4); } }
-  const mark = (pt, ch, col)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; c.fillStyle=col; c.beginPath(); c.arc(x,y,12,0,7); c.fill(); c.strokeStyle='#000'; c.lineWidth=2; c.stroke(); c.fillStyle='#000'; c.font='bold 14px system-ui'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(ch,x,y+1); };
+  const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 12); };
   if(R.hwFloor===1){ mark(R.entrance,'R','#7fd87f'); if(R.eastGates) for(const gt of R.eastGates) mark(gt,'C','#7fd87f'); }
   else mark(R.entrance,'\u25BC','#e8c44a');
   mark(R.hwUp,'\u25B2','#e8c44a'); mark(R.waypoint,'W','#5fd0ff');
@@ -275,7 +369,7 @@ function renderSubCaveMap(g, p, box){
   for(const o of R.obstacles){ if(o.templeCol || (o.isProp && !o.organic)){ c.fillStyle = '#8a8070'; c.fillRect(X(o.x), Y(o.y), Math.max(2,o.w*k), Math.max(2,o.h*k)); } }
   if(R.woodBridge){ const b = R.woodBridge; c.fillStyle = '#9a7444'; c.fillRect(X(b.x0), Y(b.y-b.half), (b.x1-b.x0)*k, b.half*2*k); }
   if(R.island){ c.fillStyle = '#4f5a5c'; c.beginPath(); c.arc(X(R.island.x), Y(R.island.y), R.island.r*k, 0, 7); c.fill(); }
-  const mark = (pt, ch, col)=>{ if(!pt) return; const x=X(pt.x), y=Y(pt.y); c.fillStyle=col; c.beginPath(); c.arc(x,y,11,0,7); c.fill(); c.strokeStyle='#000'; c.lineWidth=2; c.stroke(); c.fillStyle='#000'; c.font='bold 13px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(ch,x,y+1); };
+  const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=X(pt.x), y=Y(pt.y); mapBadge(c, x, y, ch, col, lb, 11); };
   if(R.subzone==='temple'){ mark(R.entrance, 'E', '#7fd87f'); mark(R.waypoint, 'W', '#5fd0ff'); mark(R.stairsDown, '▼', '#e8c44a'); }
   else {
     mark(R.entrance, '▲', '#7fd87f');
@@ -308,7 +402,7 @@ function renderFtMap(g, p, box){
   if(R.hall){ const h = R.hall; c.fillStyle = '#56503f'; c.fillRect(ox+h.x0*k+3, oy+h.y0*k+3, (h.x1-h.x0)*k-6, (h.y1-h.y0)*k-6); }
   for(const o of R.obstacles){ c.fillStyle = o.mazeWall ? '#120e09' : '#7a6a50'; c.fillRect(ox+o.x*k, oy+o.y*k, Math.max(1.5,o.w*k), Math.max(1.5,o.h*k)); }
   c.strokeStyle = '#9c7f4a'; c.lineWidth = 2; c.strokeRect(ox, oy, R.w*k, R.h*k);
-  const mark = (pt, ch, col)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; c.fillStyle=col; c.beginPath(); c.arc(x,y,12,0,7); c.fill(); c.strokeStyle='#000'; c.lineWidth=2; c.stroke(); c.fillStyle='#000'; c.font='bold 14px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(ch,x,y+1); };
+  const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 12); };
   mark(R.entrance, R.floor===1 ? 'B' : '▼', '#7fd87f'); mark(R.stairs, '▲', '#e8c44a'); mark(R.waypoint, 'W', '#5fd0ff');
   if(R.witch) mark(R.witch, '?', '#e8c44a');
   if(R.clearPortal) mark(R.clearPortal, 'M', '#5fd0ff');
@@ -378,7 +472,7 @@ function renderRegionMap0(){
     for(const fr of R.floorRects) c.strokeRect(ox+fr.x*k, oy+fr.y*k, fr.w*k, fr.h*k);
     c.fillStyle = '#58503f';
     for(const fr of R.floorRects) c.fillRect(ox+fr.x*k+1.5, oy+fr.y*k+1.5, Math.max(0,fr.w*k-3), Math.max(0,fr.h*k-3)); // hide inner seams
-    const mark = (pt, ch, col)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; c.fillStyle=col; c.beginPath(); c.arc(x,y,13,0,7); c.fill(); c.strokeStyle='#000'; c.lineWidth=2; c.stroke(); c.fillStyle='#000'; c.font='bold 15px system-ui'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(ch,x,y+1); };
+    const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 13); };
     for(const [pt,ch,col] of lay.marks) mark(pt,ch,col);
     if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(ox+p.x*k, oy+p.y*k, 9, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, ox+p.x*k, oy+p.y*k, S); }
     return;
