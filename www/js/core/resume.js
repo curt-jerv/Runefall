@@ -47,7 +47,7 @@ logOutToTitle = (orig=>function(...a){ resumeOff = true; clearResume(); return o
     if(R.scene==='town' || !R.enter){ showMsg('Welcome back', 1.4); return; }
     if(typeof window[R.enter.fn]==='function') window[R.enter.fn](...(R.enter.args||[]));
     const g = game, p = g.player, room = g.room;
-    if(g.scene===R.scene && room && R.x>0 && R.y>0 && (!room.w || (R.x<room.w && R.y<room.h)) && !posBlockedByObstacles(R.x, R.y, p.r||14, room.obstacles) && (!room.floorMask || typeof mineOpenAt!=='function' || mineOpenAt(room, R.x, R.y))){   // v525: layouts can change between visits
+    if(g.scene===R.scene && room && R.x>0 && R.y>0 && (!room.w || (R.x<room.w && R.y<room.h)) && !posBlockedByObstacles(R.x, R.y, p.r||14, room.obstacles) && (!room.floorMask || typeof mineOpenAt!=='function' || mineOpenAt(room, R.x, R.y)) && (!room.isMtn || !room.B || typeof terrWalkAt!=='function' || terrWalkAt(room, R.x, R.y))){   // v525: layouts can change between visits
       p.x = R.x; p.y = R.y; p.crX = undefined;
       for(const f of (g.followers||[])){ f.x = p.x; f.y = p.y; }
     }

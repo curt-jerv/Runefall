@@ -8,6 +8,8 @@
 const OW_POI_ZONES = {
   cursedcemetery:{ cache:[1,2], shrine:0.6, hoard:0.5, feat:'cemetery' },
   blackmarsh:    { cache:[2,3], shrine:0.7, hoard:0.7, feat:'marsh' },
+  highlands:     { cache:[2,3], shrine:0.7, hoard:0.7, feat:null },   // v527
+  redridge:      { cache:[2,3], shrine:0.7, hoard:0.7, feat:null },   // v527 (each half of the canyon rolls its own)
 };
 const OW_SHRINES = {
   fury:   { name:'Shrine of Fury',    col:'255,120,70',  icon:'\u{1F525}', desc:'+25% damage' },
@@ -25,6 +27,16 @@ function owSpotOk(g, room, x, y, r){
   if(x < 160 || y < 160 || x > room.w-160 || y > room.h-160) return false;
   if(posBlockedByObstacles(x, y, r, room.obstacles)) return false;
   if(g.scene==='blackmarsh'){ if(!room.dryOK || !room.dryOK(x, y, r) || bmTrailDist(x, y) < r+70) return false; }
+  if(room.isMtn && room.B){   // v527: height-field zones -- flat, open ground you can actually walk to
+    if(!room._owReach){ const q = g.player || room.waypoint || {x:room.w/2, y:room.h/2}; room._owReach = terrReach(room, q.x, q.y); }
+    const e0 = crTileE(room, x, y);
+    for(const [dx,dy] of [[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*0.7,r*0.7],[-r*0.7,-r*0.7]]){
+      if(!terrWalkAt(room, x+dx, y+dy) || Math.abs(crTileE(room, x+dx, y+dy)-e0) > CR_STEP) return false;
+    }
+    if(!terrReachNear(room, room._owReach, x, y, 10)) return false;
+    for(const c of (room.camps||[]).concat(room.camp ? [room.camp] : [])) if(dist({x,y}, c) < r+500) return false;
+    for(const t of (room.towers||[])) if(dist({x,y}, t) < r+300 || dist({x,y}, t.door) < r+200) return false;
+  }
   if(g.scene==='cursedcemetery'){ if(Math.abs(x-CEM_CX) < CEM_ROAD_HALFW + r + 40) return false; if(room.statue && dist({x,y}, room.statue) < r+140) return false; if(room.tomb && dist({x,y}, room.tomb) < r+200) return false; }
   for(const q of spawnSafePoints(g)) if(Math.hypot(x-q.x, y-q.y) < 380 + r) return false;
   return true;
@@ -88,8 +100,8 @@ function owPoiRoll(g){
   }
   if(Math.random() < cfg.hoard){
     const s = owFindSpot(g, room, 120, taken, 800);
-    const types = g.enemies.filter(e=>e.hp>0 && specialEligible(e)).map(e=>e.type);
-    const type = types.length ? types[Math.floor(Math.random()*types.length)] : (g.scene==='blackmarsh' ? 'zombie' : 'skeleton');
+    const types = g.enemies.filter(e=>e.hp>0 && specialEligible(e) && !e.herdId && !e.flying && !e.campFire && !e.stormRaptor && e.type!=='giant').map(e=>e.type);
+    const type = types.length ? types[Math.floor(Math.random()*types.length)] : ({blackmarsh:'zombie', highlands:'warg', redridge:'raptor'}[g.scene] || 'skeleton');
     if(s){
       const chest = {kind:'hoard', x:s.x, y:s.y, r:26, opened:false, guards:[]};
       const boss = spawnEnemy(g, type, {x:s.x+60, y:s.y+40});

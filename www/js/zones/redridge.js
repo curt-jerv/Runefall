@@ -24,8 +24,99 @@ const RR_PARTS = {
     ramps:[[1500,3600],[1100,3000]], spines:[[2200,1700,2900,3000,0.6]], anchors:46, herds:5 }
 };
 function rrGate(rr, id){ return (rr.gates||[]).find(gt=>gt.id===id) || rr.gates[0]; }
+// v527: both halves of the canyon are re-rolled every trip -- the gates slide along their edges, the watchtowers, the
+// Wayfarer's camp, the tier cliffs, ramps and rock spines all move. One seed per trip (g._rrSeed, kept while you stay in
+// the canyon, its towers, Highward, the Raptor Lair or the Crater; see the enter wrapper in core/spawn-safety.js). Every
+// roll is checked by a walk flood (terrReach) and re-rolled if a gate, tower door, the camp or the waypoint is cut off.
+const RR_SEED_SCENES = ['redridge', 'redcrater', 'raptorlair'];
+function rrKeepsSeed(g){ return RR_SEED_SCENES.includes(g.scene) || (g.scene==='lighthouse' && g.tower && (g.tower.subzone==='rrtower' || g.tower.subzone==='highward')); }
 function makeRedridge(part){
-  const PC = RR_PARTS[part==='east' ? 'east' : 'west'];
+  part = part==='east' ? 'east' : 'west';
+  const g = game, saveRand = Math.random;
+  if(g && !g._rrSeed) g._rrSeed = 1 + Math.floor(Math.random()*1e8);
+  if(g && !window.__rrFixed){
+    try{
+      for(let k=0;k<14;k++){
+        Math.random = subSeeded(g._rrSeed + (part==='east' ? 50021 : 0) + k*7919);
+        const R = rrBuild(rrRandomParts(part), part);
+        if(rrLayoutOk(R)){ R.rrRoll = k; return R; }
+      }
+    } finally { Math.random = saveRand; }
+  }
+  return rrBuild(RR_PARTS[part], part);
+}
+function rrRandomParts(part){
+  const B = RR_PARTS[part], w = B.w, h = B.h;
+  const XB = B.XB.map(x=>Math.round(x + rand(-150, 150)));
+  const xb = (k,y)=> XB[k] + 120*Math.sin(y/700 + k*1.7);
+  const farB = (x,y,d)=> XB.every((_,k)=>Math.abs(x-xb(k,y)) > d);
+  const gates = B.gates.map(gt=>Object.assign({}, gt));
+  let waypoint = null, camp = null;
+  for(const gt of gates){
+    if(gt.x < 400 || gt.x > w-400){
+      gt.y = Math.round(gt.id==='frost' ? rand(950, h-1050) : rand(800, h-800));
+    } else {
+      for(let t=0;t<200;t++){ const x = rand(800, w-800); if(farB(x, gt.y, 340)){ gt.x = Math.round(x); break; } }
+    }
+  }
+  if(B.waypoint){ const fg = gates[0]; waypoint = {x:B.waypoint.x, y:fg.y-170, r:22}; camp = {x:B.camp.x, y:fg.y+300, r:34}; }
+  const towers = [];
+  for(const t0 of B.towers){
+    for(let t=0;t<600;t++){
+      const x = Math.round(rand(700, w-700)), y = Math.round(rand(700, h-700));
+      if(!farB(x, y, 340) || gates.some(gt=>dist(gt,{x,y}) < 950) || (camp && dist(camp,{x,y}) < 800) || (waypoint && dist(waypoint,{x,y}) < 800) || towers.some(q=>dist(q,{x,y}) < 1300)) continue;
+      towers.push({id:t0.id, x, y}); break;
+    }
+    if(towers.length < B.towers.indexOf(t0)+1) towers.push(Object.assign({}, t0));
+  }
+  const ramps = XB.map(()=>[Math.round(rand(500, h/2-250)), Math.round(rand(h/2+250, h-500))]);
+  const spines = B.spines.map(()=>{
+    for(let t=0;t<100;t++){
+      const L = rand(1200, 1600), a = rand(0, Math.PI*2), x0 = rand(700, w-700), y0 = rand(700, h-700), x1 = x0+Math.cos(a)*L, y1 = y0+Math.sin(a)*L;
+      if(x1 < 500 || x1 > w-500 || y1 < 500 || y1 > h-500) continue;
+      return [x0, y0, x1, y1, rand(0.3, 0.7)];
+    }
+    return B.spines[0];
+  });
+  return Object.assign({}, B, {XB, gates, waypoint, camp, towers, ramps, spines});
+}
+// walk flood over a height-field room (tiles that are not wall/cliff, steps no taller than CR_STEP)
+function terrWalkAt(R, x, y){ const ix = Math.floor(x/R.ts), iy = Math.floor(y/R.ts); if(ix<0||iy<0||ix>=R.cols||iy>=R.rows) return false; const i = iy*R.cols+ix; return !R.B[i] && R.K[i]<3; }
+function terrReach(R, sx, sy){
+  const cols = R.cols, rows = R.rows, reach = new Uint8Array(cols*rows);
+  let s = -1;
+  for(let r=0; r<6 && s<0; r++) for(let dy=-r; dy<=r && s<0; dy++) for(let dx=-r; dx<=r && s<0; dx++){ const x = sx+dx*R.ts, y = sy+dy*R.ts; if(terrWalkAt(R, x, y)) s = Math.floor(y/R.ts)*cols + Math.floor(x/R.ts); }
+  if(s < 0) return reach;
+  const q = [s]; reach[s] = 1;
+  for(let h=0; h<q.length; h++){
+    const i = q[h], ix = i%cols, iy = (i/cols)|0;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx = ix+dx, ny = iy+dy; if(nx<0||ny<0||nx>=cols||ny>=rows) continue;
+      const j = ny*cols+nx; if(reach[j] || R.B[j] || R.K[j]>=3 || Math.abs(R.E[j]-R.E[i]) > CR_STEP) continue;
+      reach[j] = 1; q.push(j);
+    }
+  }
+  return reach;
+}
+function terrReachNear(R, reach, x, y, rad){
+  const n = Math.ceil(rad/R.ts), cx = Math.floor(x/R.ts), cy = Math.floor(y/R.ts);
+  for(let dy=-n; dy<=n; dy++) for(let dx=-n; dx<=n; dx++){ const ix = cx+dx, iy = cy+dy; if(ix<0||iy<0||ix>=R.cols||iy>=R.rows) continue; if(reach[iy*R.cols+ix]) return true; }
+  return false;
+}
+function rrInner(R, gt){ return {x: gt.x < 400 ? gt.x+150 : gt.x > R.w-400 ? gt.x-150 : gt.x, y: gt.y < 400 ? gt.y+150 : gt.y > R.h-400 ? gt.y-150 : gt.y}; }
+function rrLayoutOk(R){
+  const s = rrInner(R, R.gates[0]), reach = terrReach(R, s.x, s.y);
+  for(const gt of R.gates){ const q = rrInner(R, gt); if(!terrReachNear(R, reach, q.x, q.y, 60)) return false; }
+  for(const t of R.towers) if(!terrReachNear(R, reach, t.door.x, t.door.y+40, 60)) return false;
+  if(R.waypoint && !terrReachNear(R, reach, R.waypoint.x, R.waypoint.y+45, 50)) return false;
+  if(R.camp && !terrReachNear(R, reach, R.camp.x, R.camp.y+120, 90)) return false;
+  // monsters only camp where you can reach them
+  const ok = a=>terrReachNear(R, reach, a.x, a.y, 30);
+  R.packAnchors = R.packAnchors.filter(ok); R.herdAnchors = R.herdAnchors.filter(ok);
+  let open = 0, got = 0; for(let i=0;i<reach.length;i++){ if(!R.B[i] && R.K[i]<3){ open++; if(reach[i]) got++; } }
+  return got > open*0.8 && R.packAnchors.length >= 20;
+}
+function rrBuild(PC, part){
   // v419: Redridge Canyon rebuilt on the height-field terrain engine (same one as the Crater and Mountain Pass): a SQUARE
   // canyon that steps down from the Frosthold plateau in the north-west to the scorched floor in the south-east, with
   // steep ramps between tiers, free-standing hills (the watchtowers stand on the tallest) and rough rock outcrops
@@ -250,6 +341,7 @@ function enterRedridge(from, opts){
   if(g.rr.part==='east') spawnStormRaptor(g);   // v389: one Storm Raptor somewhere in the canyon (drops the Storm Claw)
   { const ob = g.rr.obstacles; g.enemies = g.enemies.filter(e=>!ob.some(o=>e.x>o.x-e.r && e.x<o.x+o.w+e.r && e.y>o.y-e.r && e.y<o.y+o.h+e.r)); }
   p.crX = undefined;
+  owPoiRoll(g);   // v527: caches, a shrine, a guarded hoard
   showMsg(g.rr.name, 2.0);
   g.followers = [];
   ensureFollowers(g);
@@ -419,7 +511,7 @@ function drawRRWatchtower(tw, clock, lit){
 // Highward (a floating Templar fortress high above the canyon) and, far east, the black lights of Shadow Keep
 function drawRRSkyline(rr, clock){
   const t=clock||0;
-  const hx=rr.w*0.42, hy=700, z=520;
+  const brg=(rr.gates||[]).find(q=>q.id==='bridge'), hx=brg ? brg.x+140 : rr.w*0.42, hy=700, z=520;
   const P=(dx,dy,dz)=>{ const q=toIso(hx+dx, hy+dy); return {x:q.x, y:q.y-z-dz}; };
   ctx.save();
   ctx.globalAlpha=0.92;

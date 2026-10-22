@@ -38,6 +38,7 @@ function clearSpawnArea(g){
       const outer = !game._enterDepth; game._enterDepth = (game._enterDepth||0)+1; if(outer) game._famCalled = false;
       let r; try{ r = orig.apply(this, args); } finally { game._enterDepth--; }
       if(outer && !game._famCalled){ game._tripFam = null; game._tripBase = 0; }
+      if(outer && typeof rrKeepsSeed==='function' && !rrKeepsSeed(game)) game._rrSeed = 0;   // v527: leaving the canyon country re-rolls Redridge next time
       try{ clearSpawnArea(game); }catch(e){} return r; };
   }
 })();
