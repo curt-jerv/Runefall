@@ -157,9 +157,12 @@ function makeDarkCrypt(){
   // v310: the doorway pair -- one in the hall's north wall, one at the south end of the tomb
   const hallDoor = {x:exitRoom.x+exitRoom.w/2, y:exitRoom.y+24, r:34};
   const tombDoor = {x:tombRoom.x+tombRoom.w/2, y:tombRoom.y+tombRoom.h-24, r:34};
+  // v516: a chest in every dead-end side room (a chamber with a single tunnel that is not on the way to the hall); marked on the map
+  const sideChests = [];
+  rooms.forEach((r,i)=>{ if(adj[i].length===1 && pathIdx.indexOf(i)<0){ const c = rectCenter(r); sideChests.push({x:Math.round(c.x), y:Math.round(c.y), r:22, opened:false}); } });
   const lights = []; // (v120) no candle/torch lights: the player's own light is the only illumination
   return { w, h, obstacles, floorRects, rooms:rooms, mainPath:mainRooms, tunnels, entranceRoom, exitRoom, tombRoom, hallDoor, tombDoor, bossSpawned:false, bossDone:false,
-    cemeteryGate, waypoint, chestSpot, lights, tomb, chestShown:false, wraithDone:false, chestDelay:0,
+    cemeteryGate, waypoint, chestSpot, sideChests, lights, tomb, chestShown:false, wraithDone:false, chestDelay:0,
     // v240: invisible respawn -- ONLY while the Wraith Lord fight is live, 'respawn in region' puts you in the chamber before the boss room
     cpRoom:rooms[outRoom], respawnPoint:{x:cen[outRoom].x, y:cen[outRoom].y} };
 }

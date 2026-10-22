@@ -2378,7 +2378,7 @@ function updateStep(dt){
         else { e.moving = false; continue; }
       } else {
         if(enemyLOS(g,e,target)) e._noLosT = 0; else e._noLosT = (e._noLosT||0)+dt;
-        if(e._noLosT>4){ e.engaged = false; e._noLosT = 0; e.moving = false; continue; }
+        if(e._noLosT>(navRoomOn(room) ? 9 : 4)){ e.engaged = false; e._noLosT = 0; e.moving = false; continue; }
       }
     }
     const fAng = Math.atan2(target.y-e.y, target.x-e.x);
@@ -3766,6 +3766,18 @@ function updateStep(dt){
     // per-visit flag would let the chest be looted again on every
     // re-entry. This makes it a true one-time-ever reward, same
     // permanence pattern as p.cemeteryCleared/p.checkpointDepth.
+    // v516: dead-end chests -- the same loot a magic monster pack drops, a few items and some gold
+    for(const sc of (g.crypt.sideChests||[])){
+      if(sc.opened || dist(p, sc) > sc.r + p.r) continue;
+      sc.opened = true;
+      const lvl = Math.max(1, monsterLevel(g)), n0 = g.loot.length;
+      for(let k=0;k<2;k++) g.loot.push({type:'item', x:sc.x+rand(-26,26), y:sc.y+rand(26,46), r:8, item:generateItem(lvl, packRarity(lvl), null, null, p)});
+      if(Math.random()<0.5) g.loot.push({type:'item', x:sc.x+rand(-26,26), y:sc.y+rand(26,46), r:8, item:generateItem(lvl, packRarity(lvl), null, null, p)});
+      g.loot.push({type:'gold', x:sc.x+rand(-20,20), y:sc.y+rand(26,46), r:9, amt:Math.ceil((rand(30,60)+g.depth*3)*(1+clamp((p.goldFindPct||0),0,200)/100))});
+      for(let i=n0;i<g.loot.length;i++) fixLootSpot(g, g.loot[i]);
+      g.particles.push({type:'burst', x:sc.x, y:sc.y, t:0.4, max:0.4, color:'#e8c44a'});
+      showMsg('A forgotten chest', 1.8);
+    }
     if(!p.darkCryptChestLooted && g.crypt.chestShown && dist(p, g.crypt.chestSpot) < g.crypt.chestSpot.r + p.r){
       p.darkCryptChestLooted = true;
       const item = classRewardItem(p, Math.max(p.level, 19), 'reward');   // v483: the Ruins Map / Hidden Secrets quest is gone

@@ -166,12 +166,72 @@ function updateStuckTracking(ent, dt){
     ent._stuckCheckT = 0;
   }
 }
+// v516: wall-aware chasing. In rooms built from walls (towers, crypts, caves, the Keep) an enemy that cannot see its target follows a
+// flow field (breadth-first distances from the target over a coarse grid) around the walls instead of pressing into them.
+const NAV_CELL = 40, NAV_PAD = 20, NAV_MAX_GOALS = 8;
+function navBuild(room){
+  const n = room.obstacles.length;
+  if(room._nav && room._nav.n===n) return room._nav;
+  const cols = Math.ceil(room.w/NAV_CELL), rows = Math.ceil(room.h/NAV_CELL), blocked = new Uint8Array(cols*rows);
+  for(const o of room.obstacles){
+    if(o.w==null || o.noNav) continue;
+    const x0 = Math.max(0,Math.floor((o.x-NAV_PAD)/NAV_CELL)), x1 = Math.min(cols-1,Math.floor((o.x+o.w+NAV_PAD)/NAV_CELL));
+    const y0 = Math.max(0,Math.floor((o.y-NAV_PAD)/NAV_CELL)), y1 = Math.min(rows-1,Math.floor((o.y+o.h+NAV_PAD)/NAV_CELL));
+    for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
+      const cx = (x+0.5)*NAV_CELL, cy = (y+0.5)*NAV_CELL, dx = Math.max(o.x-cx,0,cx-(o.x+o.w)), dy = Math.max(o.y-cy,0,cy-(o.y+o.h));
+      if(dx*dx+dy*dy < (NAV_PAD+NAV_CELL*0.35)*(NAV_PAD+NAV_CELL*0.35)) blocked[y*cols+x] = 1;
+    }
+  }
+  return room._nav = {n, cols, rows, blocked, goals:new Map()};
+}
+function navField(nav, gx, gy){
+  const {cols, rows, blocked} = nav, key = gy*cols+gx;
+  const hit = nav.goals.get(key); if(hit) return hit;
+  const d = new Int32Array(cols*rows).fill(-1), q = [];
+  let start = key;
+  if(blocked[start]){ start = -1; for(let r=1;r<=3 && start<0;r++) for(let dy=-r;dy<=r && start<0;dy++) for(let dx=-r;dx<=r;dx++){ const x = gx+dx, y = gy+dy; if(x<0||y<0||x>=cols||y>=rows) continue; if(!blocked[y*cols+x]){ start = y*cols+x; break; } } }
+  if(start>=0){
+    d[start] = 0; q.push(start);
+    for(let qi=0; qi<q.length && qi<40000; qi++){
+      const i = q[qi], x = i%cols, y = (i-x)/cols;
+      for(let k=0;k<4;k++){
+        const nx = x+(k===0?1:k===1?-1:0), ny = y+(k===2?1:k===3?-1:0); if(nx<0||ny<0||nx>=cols||ny>=rows) continue;
+        const j = ny*cols+nx; if(d[j]>=0 || blocked[j]) continue; d[j] = d[i]+1; q.push(j);
+      }
+    }
+  }
+  if(nav.goals.size >= NAV_MAX_GOALS) nav.goals.delete(nav.goals.keys().next().value);
+  nav.goals.set(key, d);
+  return d;
+}
+function navFlowAngle(ent, tx, ty){
+  const room = game && game.room; if(!room || !room.obstacles) return null;
+  const nav = navBuild(room), cols = nav.cols, rows = nav.rows;
+  const gx = clamp(Math.floor(tx/NAV_CELL),0,cols-1), gy = clamp(Math.floor(ty/NAV_CELL),0,rows-1);
+  const d = navField(nav, gx, gy);
+  const ex = clamp(Math.floor(ent.x/NAV_CELL),0,cols-1), ey = clamp(Math.floor(ent.y/NAV_CELL),0,rows-1);
+  let best = -1, bx = 0, by = 0, here = d[ey*cols+ex];
+  // from inside the inflated wall band (or a pocket) look for the best neighbouring cell instead of giving up
+  for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+    if(!dx && !dy) continue; const x = ex+dx, y = ey+dy; if(x<0||y<0||x>=cols||y>=rows) continue;
+    const v = d[y*cols+x]; if(v<0) continue;
+    if(dx && dy && (nav.blocked[ey*cols+x] || nav.blocked[y*cols+ex])) continue;   // no cutting wall corners
+    if(best<0 || v<best){ best = v; bx = x; by = y; }
+  }
+  if(best<0 || (here>=0 && best>=here)) return null;
+  return Math.atan2((by+0.5)*NAV_CELL-ent.y, (bx+0.5)*NAV_CELL-ent.x);
+}
+function navRoomOn(room){ if(room._navOn===undefined) room._navOn = !!(room.obstacles && room.obstacles.some(o=>o.mazeWall)); return room._navOn; }
 function steerAngleTo(ent, tx, ty, obstacles){
   const dx = tx-ent.x, dy = ty-ent.y;
   const baseAng = Math.atan2(dy,dx);
   if(!obstacles || !obstacles.length) return baseAng;
   if(ent.flowChase && game && game.room && game.room.floorMask && game.player && Math.abs(tx-game.player.x)<6 && Math.abs(ty-game.player.y)<6 && losBlocked(obstacles, ent.x, ent.y, tx, ty)){
     const fa = mineFlowAngle(ent); if(fa!=null) return fa;   // v377: the quest horde finds its way through the warren
+  }
+  if(!ent.flying && game && game.room && navRoomOn(game.room) && game.player){
+    const toP = Math.abs(tx-game.player.x)<6 && Math.abs(ty-game.player.y)<6;
+    if(toP ? !enemyLOS(game, ent, game.player) : losBlocked(obstacles, ent.x, ent.y, tx, ty)){ const na = navFlowAngle(ent, tx, ty); if(na!=null) return na; }   // v516
   }
   const r = ent.r||10;
   const look = Math.max(r*1.6, 22);

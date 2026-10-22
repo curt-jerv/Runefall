@@ -403,6 +403,11 @@ const LIGHT_X = 1.15, LIGHT_Y = 0.575;   // v511: light shape = isometric ellips
 const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
 // v515: overworld zones have no dark ring, but your own warm light is still there
 function playerGlowScene(g){ return !!(g && g.started && g.player && g.scene!=='tavern'); }
+// v516: a gentle dark ring at the screen edges for mood (and a sense of line of sight); the lit middle is fully clear
+function drawOverworldRing(g){
+  const sc = g.scene, a = sc==='sunlitplains' ? 0.6 : sc==='town' ? 0.42 : 0.52;
+  drawDarkCryptOverlay(g, VEIL_LIGHT_R*1.3*lightRadiusMult(g.player), false, null, a, 0, 1);
+}
 function drawPlayerGlowOnly(g){
   const LR = VEIL_LIGHT_R*lightRadiusMult(g.player), px = W/2, py = Math.round(camPlayerY()/2)*2, GR = LR*PLAYER_GLOW_FRAC;
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(LIGHT_X, LIGHT_Y);

@@ -584,6 +584,7 @@ function render(){
         drawables.push({depth:rp.x+rp.y-1, draw:()=>drawBluePortalIso(rp, g.clock||0)});
         drawables.push({depth:rp.x+rp.y, draw:()=>drawEdgeLabelIso(rp, 'CURSED CEMETERY')});
       }
+      for(const sc of (g.crypt.sideChests||[])) drawables.push({depth:sc.x+sc.y, draw:()=>drawChestIso(sc)});   // v516: dead-end chests
       if(!g.player.darkCryptChestLooted && g.crypt.chestShown){
         drawables.push({depth:g.crypt.chestSpot.x+g.crypt.chestSpot.y, draw:()=>drawChestIso(g.crypt.chestSpot)});
       }
@@ -992,7 +993,7 @@ function render(){
   else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3, sunk = g.scene==='lighthouse' && g.room && g.room.subzone==='sunken'; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*UNDERGROUND_LIGHT_SCALE*lightRadiusMult(g.player)*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : sunk ? 1.05 : 1), false, hrt ? '#1c0503' : null, sunk ? 0.92 : null, sunk ? 0.12 : UNDERGROUND_CORE_DIM); }   // v507: the Sunken Depths are lit a good deal brighter   // v493: +Light Radius
   else if(wlDarkFight(g)) drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*0.9*lightRadiusMult(g.player), false);   // v434: darkness closes in during the Wraith Lord fight (10% tighter than the caves)
   else if(lightVeilScene(g)) drawLightVeil(g);   // v492/v493: the dark around towers and halls, lit by your own light
-  else if(playerGlowScene(g)) drawPlayerGlowOnly(g);   // v515: overworld zones: no dark ring, just your warm glow
+  else if(playerGlowScene(g)) drawOverworldRing(g);   // v516: overworld zones: a gentle edge ring and your warm glow
   flushLosPending();   // (v501) normally already folded into the veil above
   if(g.enemies && g.enemies.some(x=>x.dwc && (x.cState==='laser' || x.cState==='flatten'))){ ctx.save(); ctx.translate(-cam.x+shX, -cam.y+shY); for(const x of g.enemies) if(x.dwc) drawDwBeam(x); ctx.restore(); }   // v490: Construct's Furnace Beam glows over the dark
   else if(g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g)) drawDungeonVignette(g);
