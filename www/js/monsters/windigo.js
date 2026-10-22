@@ -2,7 +2,7 @@
 // A tall frost-furred beast that stands like a werewolf (1.5x the player). Claws: 50% physical / 50% cold (ENEMY_DMG_SPLIT).
 // Frost Breath: a slow swirling cloud of frost, 100% cold damage -- fired from range after a short rear-back wind-up.
 // Lives in the Icy Summit, Icy Cellar and the north end of the Mountain Pass.
-const WINDIGO_BREATH_WIND = 0.8;
+const WINDIGO_BREATH_WIND = 1.1, WINDIGO_BREATH_T = 1.1, WINDIGO_CONE_LEN = 340, WINDIGO_CONE_HALF = 0.36;   // Frost Breath: aimed cone, wind-up then a sustained blast
 function windigoBreathSrc(e){
   // the breath is pure cold: a stand-in source that reads like the windigo but has no physical share
   if(!e._breathSrc){ e._breathSrc = Object.create(e); e._breathSrc.dmgType = 'cold'; e._breathSrc.dmgSplit = null; }
@@ -11,17 +11,26 @@ function windigoBreathSrc(e){
 function updateWindigo(g, e, dt, target, d, isFollowerTarget, chillMult, room){
   const reach = e.r+target.r+4;
   updateStuckTracking(e, dt);
-  if(e.fbT>0){
-    e.fbT -= dt; e.moving = false; e.atkAnimT = 0.1;
-    if(e.fbT<=0){
-      const ang = Math.atan2(target.y-e.y, target.x-e.x), mx = e.x+Math.cos(ang)*e.r, my = e.y+Math.sin(ang)*e.r;
-      g.projectiles.push({x:mx,y:my,vx:Math.cos(ang)*185,vy:Math.sin(ang)*185,r:24,dmg:e.dmg*1.15,from:'enemy',life:2.6,color:'#bfeaff',srcEnemy:windigoBreathSrc(e),targetRef:target,isFrostCloud:true});
-      g.particles.push({type:'burst', x:mx, y:my, t:0.35, max:0.35, color:'#dff6ff'});
+  if(e.brT>0){   // the breath itself: a locked cone of pure cold, ticking
+    e.brT -= dt; e.moving = false; e.atkAnimT = 0.1; e.brTick -= dt;
+    if(e.brTick<=0){
+      e.brTick = 0.18;
+      const a = e.brDir, inCone = t=>{ const dd = dist(e,t); if(dd>WINDIGO_CONE_LEN+t.r) return false; const ta = Math.atan2(t.y-e.y,t.x-e.x); return dd<e.r+20 || Math.abs(crAngDiff(ta,a)) < WINDIGO_CONE_HALF + t.r/Math.max(60,dd); };
+      const src = windigoBreathSrc(e), p = g.player;
+      if(inCone(p)) playerDamage(g, teleDmg(e, 0.2), src);
+      if(g.followers) for(const f of g.followers) if(inCone(f)) applyFollowerDamage(g, f, teleDmg(e, 0.2), src);
     }
+    for(let k=0;k<2;k++){ const rr = rand(30,WINDIGO_CONE_LEN), sp = (Math.random()-0.5)*2*WINDIGO_CONE_HALF*(rr/WINDIGO_CONE_LEN+0.2); g.particles.push({type:'burst', x:e.x+Math.cos(e.brDir+sp)*rr, y:e.y+Math.sin(e.brDir+sp)*rr, t:0.3, max:0.3, color:Math.random()<0.5?'#4f82c8':'#7fb4f0'}); }
+    e.facing = {x:Math.cos(e.brDir), y:Math.sin(e.brDir)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
+  } else if(e.fbT>0){   // wind-up: rears back, the cone fills on the ground; it tracks you until the last moments
+    e.fbT -= dt; e.moving = false; e.atkAnimT = 0.1;
+    if(e.fbT>0.35){ const a = Math.atan2(target.y-e.y, target.x-e.x); e.brDir = (e.brDir==null) ? a : e.brDir + crAngDiff(a, e.brDir)*Math.min(1,dt*5); }
+    e.facing = {x:Math.cos(e.brDir), y:Math.sin(e.brDir)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
+    if(e.fbT<=0){ e.brT = WINDIGO_BREATH_T; e.brTick = 0; }
   } else {
     e.fbCd -= dt;
-    if(e.fbCd<=0 && d>150 && d<460 && enemyLOS(g,e,target)){
-      e.fbT = WINDIGO_BREATH_WIND; e.fbMax = WINDIGO_BREATH_WIND; e.fbCd = 3.4+Math.random()*2; e.windT = 0;
+    if(e.fbCd<=0 && d>110 && d<WINDIGO_CONE_LEN-30 && enemyLOS(g,e,target)){
+      e.fbT = WINDIGO_BREATH_WIND; e.fbMax = WINDIGO_BREATH_WIND; e.fbCd = 4+Math.random()*2; e.windT = 0; e.brDir = Math.atan2(target.y-e.y, target.x-e.x);
     } else if(tickEnemyWindup(g, e, target, isFollowerTarget, reach, dt)){
       // mid claw slash
     } else if(d>reach){
@@ -35,7 +44,7 @@ function updateWindigo(g, e, dt, target, d, isFollowerTarget, chillMult, room){
 }
 function drawWindigoIso(e){
   const iso = toIso(e.x,e.y), t = e.animT||0, face = e.faceSign||1, flash = e.hitT>0, s = e.r/24*1.12;
-  const fb = e.fbT>0, fbK = fb ? clamp(1-e.fbT/(e.fbMax||1),0,1) : 0, slash = (e.windT>0 || e.atkAnimT>0) && !fb ? 1 : 0;
+  const fb = e.fbT>0 || e.brT>0, fbK = e.brT>0 ? 1 : (e.fbT>0 ? clamp(1-e.fbT/(e.fbMax||1),0,1) : 0), slash = (e.windT>0 || e.atkAnimT>0) && !fb ? 1 : 0;
   const walk = e.moving ? Math.sin(t*8) : 0, bob = e.moving ? Math.abs(Math.sin(t*8))*1.8 : Math.sin(t*1.7)*0.8;
   drawShadow(iso.x, iso.y, 26*s, 8.5*s);
   ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(face*s, s);
@@ -96,4 +105,29 @@ function drawWindigoIso(e){
   ctx.globalAlpha = 1;
   ctx.restore();
   drawHpBar(iso, 92*s, e.r, e.hp, e.maxHp);
+}
+
+// the aimed cone: a thin outline that fills during the wind-up, then a swirling deep-blue blast (Permafrost blue)
+function drawWindigoCone(e){
+  const breathing = e.brT>0; if(!breathing && !(e.fbT>0)) return;
+  const a = e.brDir||0, frac = breathing ? 1 : clamp(1-e.fbT/(e.fbMax||1),0,1), t = (game.clock||0);
+  const bi = toIso(e.x,e.y), bs = e.r/24*1.12, bf = e.faceSign||1, o = {x:bi.x+bf*bs*27, y:bi.y-bs*73};
+  const L = WINDIGO_CONE_LEN, H = WINDIGO_CONE_HALF;
+  const p1 = toIso(e.x+Math.cos(a-H)*L, e.y+Math.sin(a-H)*L), p2 = toIso(e.x+Math.cos(a+H)*L, e.y+Math.sin(a+H)*L), pm = toIso(e.x+Math.cos(a)*L, e.y+Math.sin(a)*L);
+  ctx.save();
+  const gr = ctx.createLinearGradient(o.x, o.y, pm.x, pm.y);
+  if(breathing){ gr.addColorStop(0,'rgba(120,175,240,0.8)'); gr.addColorStop(0.5,'rgba(60,110,200,0.55)'); gr.addColorStop(1,'rgba(40,80,170,0.2)'); }
+  else { gr.addColorStop(0,'rgba(79,130,200,'+(0.12+frac*0.3)+')'); gr.addColorStop(1,'rgba(50,95,180,'+(0.04+frac*0.14)+')'); }
+  ctx.beginPath(); ctx.moveTo(o.x,o.y); ctx.lineTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.closePath(); ctx.fillStyle = gr; ctx.fill();
+  ctx.strokeStyle = 'rgba(110,165,235,'+(0.35+frac*0.5)+')'; ctx.lineWidth = 1.8; ctx.stroke();
+  if(breathing){   // drifting frost puffs streaming down the cone
+    for(let k=0;k<18;k++){
+      const u = ((t*1.4+k*0.173)%1), side = Math.sin(k*2.7)*0.8, ang = a+side*H*u, rr = 20+u*L;
+      const q = toIso(e.x+Math.cos(ang)*rr, e.y+Math.sin(ang)*rr), ky = o.y+(q.y-o.y)*0.0;
+      ctx.globalAlpha = 0.55*(1-u*0.7); ctx.fillStyle = k%2 ? '#3f70c0' : '#6fa4e8';
+      ctx.beginPath(); ctx.arc(q.x, q.y-6-u*10, 6+u*16, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
 }

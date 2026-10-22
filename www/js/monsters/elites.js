@@ -287,6 +287,7 @@ function pushEnemyDrawables(drawables, e){
   if(e.dwc) drawables.push({depth:-100000+e.x*0.001, draw:()=>drawDwTelegraph(e)});
   if(e.mastodon) drawables.push({depth:-100000+e.x*0.001, draw:()=>drawMstTelegraph(e)});
   if((e.type==='cavetroll'||e.type==='fhtemplar'||e.type==='magmagolem'||e.type==='gearguard'||e.type==='fallengolem'||e.type==='poisonwalker'||e.type==='brimstonebrute'||e.type==='giant'||e.type==='mtroll') && e.tState==='tele') drawables.push({depth:e.x+e.y-2, draw:()=>drawTrollTelegraph(e)});
+  if(e.type==='windigo' && (e.fbT>0 || e.brT>0)) drawables.push({depth:e.x+e.y-2, draw:()=>drawWindigoCone(e)});
   if(e.type==='lavabeetle' && e.tState==='tele' && e.tPt) drawables.push({depth:e.x+e.y-2, draw:()=>drawBeetleTelegraph(e)});
   if(e.colossus) drawables.push({depth:-100000+e.x*0.001, draw:()=>drawColossusTelegraph(e)});
   if(e.harpyQueen && !isCliff(game)) drawables.push({depth:-100000+e.x*0.001, draw:()=>drawQueenTelegraph(e)});
