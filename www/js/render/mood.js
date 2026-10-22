@@ -189,7 +189,11 @@ function drawRegionDarkening(g){
   // the Crossroads darken toward the Cursed Cemetery (south), the Lakeside toward the Black Marsh (east)
   if(g.scene==='sunlitplains'){ a = 0.02 + sm((p.y-SUN_H*0.5)/(SUN_H*0.48))*0.28; col='22,14,24'; }
   else if(g.scene==='lakesideruins'){ const k = sm((p.x-LAKE_W*0.45)/(LAKE_W*0.5)); a = 0.03 + k*0.36; col='8,14,10'; }
-  else if(g.scene==='blackmarsh'){ a = 0.36 + 0.12*clamp(p.x/BM_W,0,1); col='4,22,12'; }
+  else if(g.scene==='blackmarsh'){   // v524: murky but not black; the north arm brightens toward the Barren Highlands road (west), the far east stays gloomiest
+    const north = p.y < bmMidY(p.x) ? 1 : 0, toHigh = north * sm(1 - p.x/(BM_W*0.7));
+    a = Math.max(0, 0.2 + 0.12*clamp(p.x/BM_W,0,1) - 0.24*toHigh); col='4,22,12';
+    if(toHigh > 0.03){ ctx.save(); ctx.fillStyle = 'rgba(150,156,140,'+(0.26*toHigh).toFixed(3)+')'; ctx.fillRect(0,0,W,H); ctx.restore(); }   // the open highland air leaking in: a pale haze
+  }
   else if(g.scene==='highlands'){ a = 0.2; col='26,34,48'; }
   else if(g.scene==='lighthouse' && g.room && g.room.subzone==='pool'){ a = 0.52; col='4,22,12'; }
   else if(g.scene==='forest'){   // v229: a little lighter, and brighter again toward the Withered Crossroads exit (south)

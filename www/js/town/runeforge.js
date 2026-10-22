@@ -33,7 +33,7 @@ function claimGojiraChain(p, stage){
     p.hunterRuneRewarded = true;
     p.skillPoints = (p.skillPoints||0) + 2;
     const q = getQuest(p, 'slay_gojira');
-    if(q && q.status==='active') q.desc = 'The Hunter thanks you. Someone in town could use the Obsidian Obelisk.';
+    if(q && q.status==='active') q.desc = 'Garrick the Hunter thanks you. Someone in town could use the Obsidian Obelisk.';
     showMsg('+2 Skill Points', 3.0);
     try{ if(typeof updateSkillPointsUi==='function') updateSkillPointsUi(); }catch(e){}
     updateQuestBadge(); saveGame();

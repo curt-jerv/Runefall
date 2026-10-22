@@ -326,7 +326,7 @@ function huntBossKilled(id){
     q.killed = true; q.progress = q.total; q.desc = def.Q.descDone;
     { const hq = getQuest(game.player, QUEST_FIND_HUNTERS.id), hunterHome = !!(hq && hq.status==='complete');   // v486: the Hunter may not be in Mistfall yet
       if(!hunterHome){ q.desc = MINO_NO_HUNTER; showMsg('"I hold a unique item. Perhaps I can find someone who knows what to do with it."', 3.6); }
-      else showMsg('Target slain! Return to the Hunter.', 3.0); }
+      else showMsg('Target slain! Return to Garrick the Hunter.', 3.0); }
     updateQuestBadge(); saveGame();
   }
 }

@@ -176,7 +176,7 @@ function spawnRiverValleyPack(g, anchor){
 const QUEST_BRIDGE = {
   id:'river_bridge', name:'Clear the Old Bridge',
   desc:"Bandits have seized the old bridge in the River Valley, south of the Dark Forest -- the only road to the Withered Crossroads. Clear out their camp.",
-  descDone:"The bandits are driven off and the old bridge is open again. Return to Aldric for your reward.",
+  descDone:"The bandits are driven off and the old bridge is open again. Return to Aldric the Elder for your reward.",
   total:RV_CAMP_TOTAL,
 };
 function bridgeCampKilled(e){
@@ -200,7 +200,7 @@ function completeBridgeQuest(q){
   const g = game, p = g.player;
   p.bridgeCleared = true;
   q.status = 'complete'; q.progress = q.total; q.desc = QUEST_BRIDGE.descDone; q.rewarded = false;   // v239: the reward is handed over by the Old Man
-  showMsg('The old bridge is clear \u2014 return to Aldric in Mistfall.', 3.4);
+  showMsg('The old bridge is clear \u2014 return to Aldric the Elder in Mistfall.', 3.4);
   updateQuestBadge(); saveGame();
 }
 // v239: turn-in at the Old Man: a Health Potion + XP that grows the further below the River Valley's
