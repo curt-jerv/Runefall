@@ -1418,8 +1418,7 @@ function updateStep(dt){
           staggerEnemy(e, STAGGER_DUR);
           if(isCrit) hitStop(g, 0.04);
           checkExecute(g, e);
-          e.bleedDps = Math.max(e.bleedDps||0, dmg*reaveBleedPct(rvRank)*partBleedMult());
-          e.bleedT = Math.max(e.bleedT||0, REAVE_BLEED_DUR);
+          addBleed(e, dmg*reaveBleedPct(rvRank)*partBleedMult(), 'reave', REAVE_BLEED_DUR);
           g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#c0262b'});
           const kb=8; e.x += Math.cos(eang)*kb; e.y += Math.sin(eang)*kb;
         }
@@ -2188,8 +2187,11 @@ function updateStep(dt){
     if(e.rev || e.lr || e.gj || e.trex || e.colossus){ e.stunT=0; e.frozenT=0; e.fearT=0; e.staggerT=0; e.trapRootT=0; } // immune to crowd control
     const sdm = 1/(1+((g.player&&g.player.statusDurPct)||0)+((g.player&&g.player.skillDurPct)||0));   // v440 Status Duration % (+ v489 Skill Duration %)
     // Bleed (Commander Attack stance): ticks even through a stun.
+    if(e.bleedStacks && e.bleedStacks.length){   // v519: one stack per source, all summed (like poison)
+      for(let bi=e.bleedStacks.length-1; bi>=0; bi--){ e.bleedStacks[bi].t -= dt*sdm; if(e.bleedStacks[bi].t<=0) e.bleedStacks.splice(bi,1); }
+      bleedSync(e);
+    } else if(e.bleedT>0){ e.bleedT = 0; e.bleedDps = 0; }
     if(e.bleedT>0){
-      e.bleedT -= dt*sdm;
       { const bdt = e.bleedDps*dt*dotPctMult(null); e.hp -= bdt; dotAdd(e, bdt, '#e0566b'); }
       if(Math.random()<0.15) g.particles.push({type:'burst', x:e.x, y:e.y, t:0.2, max:0.2, color:'#b4293f'});
     }
@@ -3213,7 +3215,7 @@ function updateStep(dt){
             if(pr.isArrow && !pr.isArcaneBolt && !pr.spell && !pr.isDeathBolt) e._arrowT = g.clock||0;   // v456: arrow-hit sound
             e.hp-=applyEnemyArmor(p, e, pr.isArrow ? pr.dmg*longshotMult(p,e) : pr.dmg, rsExtraPen, projElement(pr)); e.hitT=0.15;
             if(pr.isExplosiveShot){ explosiveShotBlast(g, p, pr, e.x, e.y); }   // v455
-            if(pr.isSplinter){ if(Math.random() < splinterBleedChance(p)){ e.bleedDps = Math.max(e.bleedDps||0, pr.dmg*BLEED_DPS_PCT*partBleedMult()); e.bleedT = Math.max(e.bleedT||0, BLEED_DUR); } if(!pr.isSplit) splinterBurst(g, p, pr, e); }   // v454 Splinter Shot
+            if(pr.isSplinter){ if(Math.random() < splinterBleedChance(p)){ addBleed(e, pr.dmg*BLEED_DPS_PCT*partBleedMult(), 'splinter', BLEED_DUR); } if(!pr.isSplit) splinterBurst(g, p, pr, e); }   // v454 Splinter Shot
             if(pr.pierceLeft>0){ pr.pierceLeft--; (pr.pierceHit||(pr.pierceHit=[])).push(e); if(!pr.pierceNoFall) pr.dmg*=AIMED_SHOT_FALLOFF; } else if(quiverPierce(p, pr)){ (pr.pierceHit||(pr.pierceHit=[])).push(e); } else dead=true;   // v499 Phantom Quiver
             lastHitCrit = false;
             if(pr.isRapidShot && pr.rsBurst && pr.rsBurst.target===e) pr.rsBurst.hitsOnTarget = (pr.rsBurst.hitsOnTarget||0)+1;
@@ -3221,7 +3223,7 @@ function updateStep(dt){
             if(pr.spell==='fire'){ e.burnT = Math.max(e.burnT||0, FIRE_DOT_DUR); e.burnDps = Math.max(e.burnDps||0, pr.dmg*FIRE_DOT_PCT); }
             else if(pr.spell==='ice'){ e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR); }
             else if(pr.spell==='lightning'){ /* v456: lightning adds a Charge (via applyEnemyArmor), no stun */ }
-            else if(pr.isCripplingShot){ e.bleedDps = Math.max(e.bleedDps||0, pr.dmg*(pr.bleedPct||0)); e.bleedT = Math.max(e.bleedT||0, CRIPPLING_SHOT_BLEED_DUR); }
+            else if(pr.isCripplingShot){ addBleed(e, pr.dmg*(pr.bleedPct||0), 'crippling', CRIPPLING_SHOT_BLEED_DUR); }
             else if(pr.isStunShot){ if(Math.random() < (pr.stunChance!=null ? pr.stunChance : 1) && !(e.stunT>0)){ e.stunT = Math.max(e.stunT||0, pr.stunDur||0); g.particles.push({type:'ring', x:e.x, y:e.y, t:0.3, max:0.3, r:e.r+16, color:'#f0d078'}); showMsg('Stunned!', 0.4); } }
             else if(pr.isLightningArc){
               // Lightning Chain (Djinn, v75): jump to the nearest enemy
@@ -3778,6 +3780,7 @@ function updateStep(dt){
       for(let i=n0;i<g.loot.length;i++) fixLootSpot(g, g.loot[i]);
       g.particles.push({type:'burst', x:sc.x, y:sc.y, t:0.4, max:0.4, color:'#e8c44a'});
       showMsg('A forgotten chest', 1.8);
+      if(sc.locket){ forceAddToBag(p, makeSilverLocketItem()); silverLocketFound(p); showBigMsg('You found a silver locket!', 'Return it to the woman in Mistfall.', 3.2); bagPulse(); saveGame(); }   // v519
     }
     if(!p.darkCryptChestLooted && g.crypt.chestShown && dist(p, g.crypt.chestSpot) < g.crypt.chestSpot.r + p.r){
       p.darkCryptChestLooted = true;

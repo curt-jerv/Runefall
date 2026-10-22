@@ -179,6 +179,34 @@ function talkScholar(){
   } else showNpcText('Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close');
 }
 // generic townsperson art (graverobbers, scholar): hood or hat, robe, one handheld prop
+// v519: The Silver Locket. Mirelle arrives on the ship (she stands about the dock once the tavern re-opens). State lives in the quest itself:
+// none = not met, active + progress 0 = searching the Dark Crypt, active + progress 1 = locket found, complete = done.
+const LOCKET_QUEST = 'silver_locket';
+function locketWomanMark(p){ const q = getQuest(p, LOCKET_QUEST); return !q || (q.status==='active' && q.progress>=q.total); }
+function silverLocketFound(p){
+  const q = getQuest(p, LOCKET_QUEST); if(!q || q.status!=='active') return;
+  q.progress = q.total; q.desc = 'You found the silver locket in the Dark Crypt. Return to the woman in Mistfall.';
+  updateQuestBadge();
+}
+function talkLocketWoman(){
+  const p = game.player, q = getQuest(p, LOCKET_QUEST);
+  if(!q){
+    showNpcText('Mirelle', '"I came in on the evening ship. My family lies in the Dark Crypt, and my grandmother\'s silver locket was buried with them -- it is all I have left of her. Please, search the crypt\'s side chambers for it."', 'I will look for it', ()=>{
+      addQuestOnce(p, LOCKET_QUEST, 'The Silver Locket', "Search for the woman's silver locket in the Dark Crypt.", 1);
+      npcMark(p, 'mirelle', false);
+      showMsg('New quest: The Silver Locket', 3.0); updateQuestBadge(); saveGame();
+    });
+  } else if(q.status==='active' && q.progress>=q.total){
+    showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. Keep it, adventurer -- it kept my family safe once, and I would rather it kept you safe than sat in a drawer."', 'Thank you', ()=>{
+      q.status = 'complete'; q.rewarded = true; q.desc = 'You returned the silver locket to Mirelle. She let you keep it.';
+      p.gold += 250; showMsg('Quest complete: The Silver Locket (+250 gold)', 3.2); updateQuestBadge(); saveGame();
+    });
+  } else if(q.status==='active'){
+    showNpcText('Mirelle', '"Any sign of the locket? It is in the Dark Crypt, in one of the quiet side chambers. Be careful down there."', 'Close');
+  } else {
+    showNpcText('Mirelle', '"The ship leaves with the tide, but I think I will stay a while. Thank you again."', 'Close');
+  }
+}
 function drawSimpleNpcIso(n, clock, o){
   o = o || {};
   const iso = toIso(n.x, n.y), t = clock||0, bob = Math.sin(t*2+(n.id||0)*1.7)*0.8;

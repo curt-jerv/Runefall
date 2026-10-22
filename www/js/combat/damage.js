@@ -256,8 +256,7 @@ function applyEnemyArmor(p, e, dmg, extraPen, el){
   // see BLEED_DPS_PCT/BLEED_DUR), rather than inventing a second bleed
   // system.
   if(p.bleedChancePct>0 && Math.random()*100 < p.bleedChancePct){
-    e.bleedDps = Math.max(e.bleedDps||0, final*BLEED_DPS_PCT*partBleedMult());
-    e.bleedT = Math.max(e.bleedT||0, BLEED_DUR);
+    addBleed(e, final*BLEED_DPS_PCT*partBleedMult(), 'bloodletting', BLEED_DUR);
   }
   // Assault (Berserker capstone): while its rage buff is active, leech a slice
   // of every point of damage the player deals back as health.

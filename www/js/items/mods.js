@@ -322,6 +322,16 @@ function makeTemplarRunestoneItem(){
     questDesc:'A rune-carved stone marked with a shield, taken from the chest beneath the lake. A scholar may know what it is for. Quest item -- cannot be sold.',
   };
 }
+// v519: the Silver Locket (The Silver Locket quest): a wearable amulet that is also a quest item -- it cannot be sold, dropped or stashed
+function makeSilverLocketItem(){
+  return {
+    id:'it'+Math.random().toString(36).slice(2,9), slotType:'amulet', rarity:'rare', name:'Silver Locket', baseName:'Silver Locket', nameV3:true,
+    affixes:[ {key:'allSkills', label:'All Skills', allSkills:true, value:1, mt:5}, {key:'allResistPct', label:'All Resistances %', value:10, mt:5},
+              {key:'hp', label:'Health', value:25, mt:5}, {key:'lightRadiusPct', label:'Light Radius %', value:25, mt:5} ],
+    color:'#dfe8f2', tier:3, ilvl:1, questId:'silver_locket', unsellable:true,
+    questDesc:'A tarnished silver locket with a pressed flower inside, taken from a side vault of the Dark Crypt. It is a family heirloom -- quest item: it cannot be sold or stored.',
+  };
+}
 // v383: the Recipe Book, found after purging Breach floor 20: read it to learn every cauldron recipe
 function makeRecipeBookItem(){
   return {

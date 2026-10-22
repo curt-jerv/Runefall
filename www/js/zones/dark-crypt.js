@@ -160,6 +160,12 @@ function makeDarkCrypt(){
   // v516: a chest in every dead-end side room (a chamber with a single tunnel that is not on the way to the hall); marked on the map
   const sideChests = [];
   rooms.forEach((r,i)=>{ if(adj[i].length===1 && pathIdx.indexOf(i)<0){ const c = rectCenter(r); sideChests.push({x:Math.round(c.x), y:Math.round(c.y), r:22, opened:false}); } });
+  // v519: The Silver Locket -- while that quest is open, ONE random dead-end chest holds the locket (a different chest each visit until it is found)
+  { const lq = (typeof game!=='undefined' && game && game.player) ? getQuest(game.player, 'silver_locket') : null;
+    if(lq && lq.status==='active' && lq.progress<lq.total){
+      if(!sideChests.length){ const sr = rooms.find((r,i)=>pathIdx.indexOf(i)<0) || rooms[0]; if(sr){ const c = rectCenter(sr); sideChests.push({x:Math.round(c.x), y:Math.round(c.y), r:22, opened:false}); } }
+      if(sideChests.length) sideChests[Math.floor(Math.random()*sideChests.length)].locket = true;
+    } }
   const lights = []; // (v120) no candle/torch lights: the player's own light is the only illumination
   return { w, h, obstacles, floorRects, rooms:rooms, mainPath:mainRooms, tunnels, entranceRoom, exitRoom, tombRoom, hallDoor, tombDoor, bossSpawned:false, bossDone:false,
     cemeteryGate, waypoint, chestSpot, sideChests, lights, tomb, chestShown:false, wraithDone:false, chestDelay:0,

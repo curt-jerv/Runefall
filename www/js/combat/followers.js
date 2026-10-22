@@ -190,8 +190,7 @@ function updateFollowersAI(g, dt){
             // Wolf companion hits apply Bleed unconditionally (this is its
             // signature attack), with the same red-cloud tick visual used
             // for every other Bleed source in the game.
-            nearest.bleedDps = Math.max(nearest.bleedDps||0, dmg*BLEED_DPS_PCT*partBleedMult()*wolfFuryBleed(p));
-            nearest.bleedT = Math.max(nearest.bleedT||0, BLEED_DUR);
+            addBleed(nearest, dmg*BLEED_DPS_PCT*partBleedMult()*wolfFuryBleed(p), 'wolf', BLEED_DUR);
             g.particles.push({type:'burst', x:nearest.x, y:nearest.y, t:0.3, max:0.3, color:'#b4293f'});
             { const wlh = dmg * wolfLeechPct((p.skills && effectiveRank(p,'companionWolf')) || 0);
               if(wlh>0){ f.hp = Math.min(f.maxHp, f.hp + wlh); } }
