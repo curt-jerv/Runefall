@@ -200,9 +200,28 @@ Object.assign(SND_BANK, {"r_metal_small1":"audio/sfx/r_metal_small1.ogg","r_meta
 SND_MAP.arrowHit = {f:['k_chop','k_knifeSlice','k_knifeSlice2'], v:0.7};
 SND_MAP.hurt = {f:['r_metal_small1','r_metal_small2','r_metal_small3'], v:0.75};
 SND_MAP.hurtCloth = {f:['cloth1','cloth2','cloth3','r_cloth_heavy'], v:0.8};   // v492: mystic and ranger wear cloth/leather, not plate
+// v535: "RPG Foley" recordings, cut into single sounds and loudness-matched: weapon swishes, crunchy bone impacts, metal clanks,
+// blade stabs (crits), sword draws, chains, cloth, doors, gurgles, munching (zombies/ghouls), quaff + swallow (potion) and rolls (dodge)
+Object.assign(SND_BANK, {"f_swish1":"audio/sfx/f_swish1.ogg","f_swish2":"audio/sfx/f_swish2.ogg","f_crunch1":"audio/sfx/f_crunch1.ogg","f_crunch2":"audio/sfx/f_crunch2.ogg","f_crunch3":"audio/sfx/f_crunch3.ogg","f_crunch4":"audio/sfx/f_crunch4.ogg","f_crunch5":"audio/sfx/f_crunch5.ogg","f_crunch6":"audio/sfx/f_crunch6.ogg","f_clank1":"audio/sfx/f_clank1.ogg","f_clank2":"audio/sfx/f_clank2.ogg","f_clank3":"audio/sfx/f_clank3.ogg","f_clank4":"audio/sfx/f_clank4.ogg","f_clank5":"audio/sfx/f_clank5.ogg","f_clank6":"audio/sfx/f_clank6.ogg","f_clank7":"audio/sfx/f_clank7.ogg","f_clank8":"audio/sfx/f_clank8.ogg","f_shlunk1":"audio/sfx/f_shlunk1.ogg","f_shlunk2":"audio/sfx/f_shlunk2.ogg","f_shlunk3":"audio/sfx/f_shlunk3.ogg","f_shlunk4":"audio/sfx/f_shlunk4.ogg","f_shlunk5":"audio/sfx/f_shlunk5.ogg","f_shlunk6":"audio/sfx/f_shlunk6.ogg","f_slide1":"audio/sfx/f_slide1.ogg","f_slide2":"audio/sfx/f_slide2.ogg","f_slide3":"audio/sfx/f_slide3.ogg","f_slide4":"audio/sfx/f_slide4.ogg","f_bash":"audio/sfx/f_bash.ogg","f_clankHi":"audio/sfx/f_clankHi.ogg","f_chain1":"audio/sfx/f_chain1.ogg","f_chain2":"audio/sfx/f_chain2.ogg","f_chain3":"audio/sfx/f_chain3.ogg","f_chain4":"audio/sfx/f_chain4.ogg","f_cloth1":"audio/sfx/f_cloth1.ogg","f_cloth2":"audio/sfx/f_cloth2.ogg","f_cloth3":"audio/sfx/f_cloth3.ogg","f_cloth4":"audio/sfx/f_cloth4.ogg","f_cloth5":"audio/sfx/f_cloth5.ogg","f_cloth6":"audio/sfx/f_cloth6.ogg","f_door1":"audio/sfx/f_door1.ogg","f_door2":"audio/sfx/f_door2.ogg","f_door3":"audio/sfx/f_door3.ogg","f_door4":"audio/sfx/f_door4.ogg","f_gurgleLo1":"audio/sfx/f_gurgleLo1.ogg","f_gurgleLo2":"audio/sfx/f_gurgleLo2.ogg","f_gurgle1":"audio/sfx/f_gurgle1.ogg","f_gurgle2":"audio/sfx/f_gurgle2.ogg","f_munch1":"audio/sfx/f_munch1.ogg","f_munch2":"audio/sfx/f_munch2.ogg","f_munch3":"audio/sfx/f_munch3.ogg","f_munch4":"audio/sfx/f_munch4.ogg","f_munch5":"audio/sfx/f_munch5.ogg","f_munch6":"audio/sfx/f_munch6.ogg","f_quaff":"audio/sfx/f_quaff.ogg","f_swallow":"audio/sfx/f_swallow.ogg","f_roll1":"audio/sfx/f_roll1.ogg","f_roll2":"audio/sfx/f_roll2.ogg","f_roll3":"audio/sfx/f_roll3.ogg"});
+SND_MAP.swing.f.push('f_swish1','f_swish2');
+SND_MAP.hitBone = {f:["f_crunch1", "f_crunch2", "f_crunch3", "f_crunch4", "f_crunch5", "f_crunch6"], v:0.55, layer:1};
+SND_MAP.hitMetal.f.push(...["f_clank1", "f_clank2", "f_clank3", "f_clank4", "f_clank5", "f_clank6", "f_clank7", "f_clank8"]);
+SND_MAP.hitCrit = {f:['r_blade_02','r_blade_03',...["f_shlunk1", "f_shlunk2", "f_shlunk3", "f_shlunk4", "f_shlunk5", "f_shlunk6"]], v:0.6, layer:1};
+SND_MAP.deathBone = {f:["f_crunch1", "f_crunch2", "f_crunch3", "f_crunch4", "f_crunch5", "f_crunch6"], v:0.7, layer:1};
+SND_MAP.deathSlime.f.push('f_gurgleLo1','f_gurgleLo2');
+SND_MAP.enemyMunch = {f:["f_munch1", "f_munch2", "f_munch3", "f_munch4", "f_munch5", "f_munch6"], v:0.5};
+SND_MAP.bash = {f:['f_bash'], v:0.7, layer:1};
+SND_MAP.clang = {f:['f_clankHi','f_clank2','f_clank8'], v:0.55, layer:1};
+SND_MAP.poison = {f:['f_gurgle1','f_gurgle2'], v:0.5, layer:1};
+SND_MAP.dodge = {f:['f_roll1','f_roll2','f_roll3'], v:0.55, layer:1};
+SND_MAP.potion = {seq:[['f_quaff',0,0.6],['f_swallow',0.42,0.7]]};
+SND_MAP.door.f.push(...["f_door1", "f_door2", "f_door3", "f_door4"]);
+SND_MAP.equipWeapon.f.push(...["f_slide1", "f_slide2", "f_slide3", "f_slide4"]);
+SND_MAP.equipArmor.f.push('f_chain1','f_chain2');
+SND_MAP.hurtCloth.f.push(...["f_cloth1", "f_cloth2", "f_cloth3", "f_cloth4", "f_cloth5", "f_cloth6"]);
 // v474: damage-over-time is a soft, low seep (a muffled hiss with a faint pulse) instead of a sharp click
 SFX.dotTick = function(t,v,r){ N('lowpass', 760*r, 320*r, 0.7, 0.24, 0.05*v, {att:0.05, brown:true}, t); V('sine', 150*r, 105*r, 0.2, 0.03*v, {att:0.03}, t); };
-const SND_TH = { dotTick:0.75, arrowHit:0.05, equip:0.1, equipWeapon:0.1, equipArmor:0.1, equipJewel:0.1, bagOpen:0.2, bookOpen:0.2, bookClose:0.2, stashOpen:0.3, fire:0.3, portal:0.5, summon:0.5, door:0.4, burp:1, enemyBite:0.09, deathSlime:0.06, deathShade:0.08, potion:0.2 };
+const SND_TH = { dotTick:0.75, arrowHit:0.05, equip:0.1, equipWeapon:0.1, equipArmor:0.1, equipJewel:0.1, bagOpen:0.2, bookOpen:0.2, bookClose:0.2, stashOpen:0.3, fire:0.3, portal:0.5, summon:0.5, door:0.4, burp:1, enemyBite:0.09, enemyMunch:0.12, deathSlime:0.06, deathShade:0.08, potion:0.2 };
 AUD.buf = {};
 function sndLoadBank(){
   if(AUD.bankLoading) return; AUD.bankLoading = true;
@@ -237,7 +256,7 @@ function sndPlayMapped(name, now, v, r){
   sndPlayBuf(ok[Math.floor(Math.random()*ok.length)], now, (m.v||1)*v, r);
   return !m.layer;   // layered sounds also let the synth version play underneath
 }
-SFX.deathSlime = SFX.deathSmall; SFX.deathShade = SFX.deathSmall; SFX.enemyBite = SFX.enemySwing; SFX.equipArmor = SFX.equip || null; SFX.equipJewel = null;
+SFX.deathSlime = SFX.deathSmall; SFX.deathShade = SFX.deathSmall; SFX.enemyBite = SFX.enemySwing; SFX.enemyMunch = SFX.enemySwing; SFX.equipArmor = SFX.equip || null; SFX.equipJewel = null;
 // v523: the voice cap now counts by each voice's scheduled end time. It used to be a counter that went up on start and
 // down in 'onended' -- under a heavy frame load some 'ended' events were lost, the counter crept past the cap and every
 // combat sound stayed silent for the rest of the session.
@@ -305,7 +324,7 @@ function audioFrame(dt){
           }
         }
       } else if(e.hp > e._ah) e._ah = e.hp;
-      if(e.atkAnimT>0 && !(e._aa>0)){ const nr = audNear(e.x,e.y); if(nr>0.1) sfxPlay(/archer|mage|cultist|turret|sentry|bat/.test(e.type)?'enemyShot':/spider|beetle|crawler|wolf|hound|raptor|snake|anaconda|alligator|rat|boar|toad/.test(e.type)?'enemyBite':'enemySwing', nr); }
+      if(e.atkAnimT>0 && !(e._aa>0)){ const nr = audNear(e.x,e.y); if(nr>0.1) sfxPlay(/archer|mage|cultist|turret|sentry|bat/.test(e.type)?'enemyShot':/zombie|ghoul|risendead/.test(e.type)?'enemyMunch':/spider|beetle|crawler|wolf|hound|raptor|snake|anaconda|alligator|rat|boar|toad/.test(e.type)?'enemyBite':'enemySwing', nr); }
       e._aa = e.atkAnimT;
       const d = Math.hypot(e.x-p.x, e.y-p.y);
       if((e.aggroed||e.engaged||d<320) && d<520 && !e.noReward && e.speed!==0) tens += (e.isBoss||e.isLairBoss||e.elite||e.magic) ? 1.5 : 0.5;
