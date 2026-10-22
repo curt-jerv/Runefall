@@ -825,7 +825,7 @@ function render(){
         // reuses the same swirling blue-portal art Town's own permanent
         // waypoint uses once unlocked.
         drawables.push({depth:t.clearPortal.x+t.clearPortal.y-1, draw:()=>drawBluePortalIso(t.clearPortal, g.clock||0)});
-        drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, t.fht ? 'FROSTHOLD KEEP' : (t.ft) ? (t.clearPortal.toTown ? 'MISTFALL' : 'BLACK MARSH') : 'WITHERED CROSSROADS')});
+        drawables.push({depth:t.clearPortal.x+t.clearPortal.y, draw:()=>drawEdgeLabelIso(t.clearPortal, t.fht ? 'FROSTHOLD KEEP' : (t.ft) ? (t.clearPortal.toTown ? 'MISTFALL' : t.clearPortal.toWitch ? "WITCH'S CAMP" : 'BLACK MARSH') : 'WITHERED CROSSROADS')});
       }
     }
     if(g.chest) drawables.push({depth:g.chest.x+g.chest.y, draw:()=>drawChestIso(g.chest)});

@@ -692,7 +692,7 @@ function nodeEffectTextBase(node, rank){
     return 'Damage ~'+Math.round(soulFireDmg(game.player, rank))+' (more with souls held) &middot; Radius '+SOULFIRE_RADIUS+' &middot; Slows '+fmtNum(SOULFIRE_CHILL)+'s &middot; Cooldown '+SOULFIRE_CD+'s &middot; Costs '+SOULFIRE_SOUL_COST+' souls, or '+SOULFIRE_MANA_COST+' mana';
   }
   if(node.id==='fear'){
-    if(rank===0) return 'New FEAR button: make every enemy around you flee in terror. Feared enemies also take +5% damage (up to +10% at Rank 10). Each rank adds fear duration and damage taken, and reduces cooldown. Costs double mana.';
+    if(rank===0) return 'New FEAR button: make every enemy around you flee in terror. Feared enemies also take +'+Math.round(fearVulnPct(1))+'% damage (up to +'+Math.round(fearVulnPct(10))+'% at Rank 10). Each rank adds fear duration and damage taken, and reduces cooldown. Costs double mana.';
     const dur = fearDuration(rank);
     const cd = fearCooldown(rank);
     return 'Fear duration: '+fmtNum(dur)+'s &middot; Feared enemies take +'+fmtNum(fearVulnPct(rank))+'% damage (for '+fmtNum(dur+FEAR_VULN_EXTRA)+'s) &middot; Radius '+FEAR_RADIUS+' &middot; Cooldown '+fmtNum(cd)+'s';

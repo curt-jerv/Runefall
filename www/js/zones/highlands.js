@@ -159,8 +159,10 @@ function makeHighlands(){
   const freeSpot = (x,y,d,trailPad)=> flat(x,y,d) && trailD(x,y) > (trailPad||90) && !keepouts.some(k=>dist({x,y},k)<k.r*0.6) && !deco.some(o=>o.solid && dist(o,{x,y}) < (o.rad||40)+d);
   // troll camps on the plateaus (and a couple in the open)
   const camps = [];
-  for(const q of plateaus){ if(camps.length>=4) break; const x = q.x+rand(-60,60), y = q.y+rand(-60,60); if(flat(x,y,120)) camps.push({x,y}); }
-  for(tries=0; camps.length<5 && tries<3000; tries++){ const x = rand(M+400,w-M-400), y = rand(M+400,h-M-400); if(freeSpot(x,y,140,420) && !camps.some(c=>dist(c,{x,y})<1300)) camps.push({x,y}); }
+  // v516: a camp (fire, logs, tent, bones) needs a wide level patch -- no cliff lip, ridge or boulder band anywhere within ~300 of the fire
+  const campClear = (x,y,R0)=>{ R0 = R0||300; if(!walk(x,y)) return false; const ix0 = Math.max(0,Math.floor((x-R0)/TS)), ix1 = Math.min(cols-1,Math.floor((x+R0)/TS)), iy0 = Math.max(0,Math.floor((y-R0)/TS)), iy1 = Math.min(rows-1,Math.floor((y+R0)/TS)); for(let iy=iy0;iy<=iy1;iy++) for(let ix=ix0;ix<=ix1;ix++){ if(dist({x:(ix+0.5)*TS,y:(iy+0.5)*TS},{x,y})>R0) continue; const i = iy*cols+ix; if(B[i] || K[i]>=3 || Math.abs(E[i]-E[Math.floor(y/TS)*cols+Math.floor(x/TS)])>CR_STEP) return false; } return ridges.every(r=>distToPolyline([{x:r.x0,y:r.y0},{x:r.x1,y:r.y1}],x,y).d > R0+120); };
+  for(const q of plateaus){ if(camps.length>=4) break; for(let k=0;k<12;k++){ const x = q.x+rand(-90,90), y = q.y+rand(-90,90); if(campClear(x,y)){ camps.push({x,y}); break; } } }
+  for(tries=0; camps.length<5 && tries<9000; tries++){ const x = rand(M+400,w-M-400), y = rand(M+400,h-M-400); if(freeSpot(x,y,140,420) && campClear(x,y, tries<6000 ? 300 : 240) && !camps.some(c=>dist(c,{x,y})<1300)) camps.push({x,y}); }
   for(const c of camps){
     deco.push({k:'campfire', x:c.x, y:c.y, s:1, solid:true, rad:70}); solid(c.x, c.y, 40, 40);
     for(let a=0;a<6.28;a+=6.28/3) deco.push({k:'sitlog', x:c.x+Math.cos(a+0.4)*95, y:c.y+Math.sin(a+0.4)*95, r:a+0.4+Math.PI/2, s:1});

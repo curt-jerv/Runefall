@@ -274,6 +274,8 @@ function enterBlackMarsh(opts){
   g.depth = BM_DEPTH;
   if(opts.atWaypoint){
     g.player.x = g.bm.waypoint.x; g.player.y = g.bm.waypoint.y + 40;
+  } else if(opts.atCauldron){   // v517: the portal from the Forgotten Tower opens beside her at the cauldron
+    g.player.x = g.bm.cauldron.x - 52; g.player.y = g.bm.cauldron.y + 54;
   } else if(opts.fromPool){
     g.player.x = g.bm.poolGate.x; g.player.y = g.bm.poolGate.y + 95;   // v490: the gate is on the north edge now
   } else if(opts.fromTower){

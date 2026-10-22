@@ -381,9 +381,9 @@ const BLIZZARD_DUR = 4, BLIZZARD_TICK = 0.25, BLIZZARD_TICK_MULT = 0.45, BLIZZAR
 // one, which `continue`s the same way). Rank scales BOTH the fear duration
 // AND (per the brief, explicitly, unlike most of this tree's other active
 // skills) the skill's OWN cooldown -- see fearCooldown/fearDuration.
-const FEAR_CD_BASE = 8, FEAR_CD_MIN = 8, FEAR_RADIUS = 150, FEAR_CAST_RANGE = 380;   // v489: 8s cooldown, cast onto a group of enemies
+const FEAR_CD_BASE = 8, FEAR_CD_MIN = 8, FEAR_RADIUS = 105, FEAR_CAST_RANGE = 380;   // v517: a smaller ring (was 150)   // v489: 8s cooldown, cast onto a group of enemies
 const FEAR_VULN_BASE = 5, FEAR_VULN_MAX = 10, FEAR_VULN_EXTRA = 3; // % extra damage taken: 5% at rank 1 -> 10% at rank 5, lasting the fear + 3s
-function fearVulnPct(rank){ const r = Math.max(1, rank||1); return rank>0 ? 20 + 30*(Math.min(10,r)-1)/9 + Math.max(0, r-10) : 0; }   // v489: +20% damage taken -> +50% at rank 10
+function fearVulnPct(rank){ const r = Math.max(1, rank||1); return rank>0 ? 15 + 35*(Math.min(10,r)-1)/9 + Math.max(0, r-10) : 0; }   // v517: +15% damage taken at rank 1 -> +50% at rank 10
 const FEAR_DUR_BASE = 1.5, FEAR_DUR_STEP = 0.5; // 1.5s at Rank1 -> 3.5s at Rank5
 function fearCooldown(rank){
   if(rank<=0) return FEAR_CD_BASE;

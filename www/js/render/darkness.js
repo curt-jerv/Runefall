@@ -399,6 +399,7 @@ function skillLights(g, cam){
   }
   return out;
 }
+const LIGHT_SOFT = 1.6;   // v517: how far past the old edge the light fades out
 const LIGHT_X = 1.15, LIGHT_Y = 0.575;   // v511: light shape = isometric ellipse (wider than tall, 2:1)
 const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
 // v515: overworld zones have no dark ring, but your own warm light is still there
@@ -406,7 +407,7 @@ function playerGlowScene(g){ return !!(g && g.started && g.player && g.scene!=='
 // v516: a gentle dark ring at the screen edges for mood (and a sense of line of sight); the lit middle is fully clear
 function drawOverworldRing(g){
   const sc = g.scene, a = sc==='sunlitplains' ? 0.6 : sc==='town' ? 0.42 : 0.52;
-  drawDarkCryptOverlay(g, VEIL_LIGHT_R*1.3*lightRadiusMult(g.player), false, null, a, 0, 1);
+  drawDarkCryptOverlay(g, VEIL_LIGHT_R*1.3*0.72*lightRadiusMult(g.player), false, null, a, 0, 1);
 }
 function drawPlayerGlowOnly(g){
   const LR = VEIL_LIGHT_R*lightRadiusMult(g.player), px = W/2, py = Math.round(camPlayerY()/2)*2, GR = LR*PLAYER_GLOW_FRAC;
@@ -434,16 +435,18 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   const grdStops = [];
   const cl = 1 - (coreDim||0);   // v493: coreDim keeps a faint haze even at the centre of the light
   grdStops.push([0, 'rgba(0,0,0,'+cl+')']);
-  grdStops.push([0.62, 'rgba(0,0,0,'+(0.92*cl)+')']);   // (v515: the lit area inside the light radius is clearer than before)
-  grdStops.push([1, 'rgba(0,0,0,0)']);
+  // v517: the lit area keeps its size (clear to 0.62 of LR, half dark at 0.8 LR) but the fade now runs on out to LIGHT_SOFT x LR in a long, smooth tail instead of cutting to dark
+  const SO = LIGHT_SOFT, LRm = LR*SO;
+  grdStops.push([0, 'rgba(0,0,0,'+cl+')']);
+  for(const [f,al] of [[0.62,0.92],[0.8,0.5],[1.0,0.36],[1.2,0.24],[1.4,0.12],[1.6,0]]) grdStops.push([f/SO, 'rgba(0,0,0,'+(al*cl)+')']);
   // v511: every light is a flattened ellipse (3/4 isometric view, same 2:1 look as the ground tiles); the upper half still stops under the HUD
-  const sy0 = clamp((py - hudBottomPx()) / LR, 0.3, 1);
+  const sy0 = clamp((py - hudBottomPx()) / LRm, 0.3, 1);
   for(const up of [false, true]){
     mctx.save(); mctx.beginPath(); mctx.rect(0, up ? 0 : py, W, up ? py : H); mctx.clip();
     mctx.translate(px, py); mctx.scale(LIGHT_X, up ? Math.min(LIGHT_Y, sy0) : LIGHT_Y);
-    const lg = mctx.createRadialGradient(0, 0, 0, 0, 0, LR);
+    const lg = mctx.createRadialGradient(0, 0, 0, 0, 0, LRm);
     for(const [o,c] of grdStops) lg.addColorStop(o, c);
-    mctx.fillStyle = lg; mctx.beginPath(); mctx.arc(0, 0, LR, 0, Math.PI*2); mctx.fill(); mctx.restore();
+    mctx.fillStyle = lg; mctx.beginPath(); mctx.arc(0, 0, LRm, 0, Math.PI*2); mctx.fill(); mctx.restore();
   }
   if(useLights && g.crypt && g.crypt.lights){
     for(const lt of g.crypt.lights){

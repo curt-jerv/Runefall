@@ -88,6 +88,7 @@ function updateStep(dt){
   if(p.furyQ && p.furyQ.length) processFuryQueue(g, p, dt);
   if(p.cleaveT>0) p.cleaveT-=dt;   // v200: was only ticking in Town, so the swing never ended in the field
   if(p.castAnimT>0) p.castAnimT-=dt;
+  castFxWatch(g, p);   // v517: cast pose for every spell, buff and shout
   if(p.webSlowT>0){ p.webSlowT-=dt; if(p.webSlowT<0) p.webSlowT=0; }
   if(g.levelUpFlash>0) g.levelUpFlash-=dt;
   if(g.msgT>0) g.msgT-=dt;
@@ -3600,7 +3601,7 @@ function updateStep(dt){
     // is cleared) back to Withered Crossroads, at the tower's entrance point --
     // reuses the exact same enterSunlitPlains('lighthouse') landing spot
     // floor 1's own entrance gate already uses.
-    if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) lhKind = (t.ft || t.clearPortal.toTown) ? (t.clearPortal.toTown ? 'toTownFromTower' : 'toMarshFromTower') : 'lighthouseClearPortal';
+    if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) lhKind = (t.ft || t.clearPortal.toTown) ? (t.clearPortal.toTown ? 'toTownFromTower' : t.clearPortal.toWitch ? 'toWitchCamp' : 'toMarshFromTower') : 'lighthouseClearPortal';
     if(t.ft && t.witch && dist(p, t.witch) < t.witch.r + p.r + 34) lhKind = 'talkWitchTower';
     updateInteractPrompt(lhKind);
     // v94: once floor 5 (the rooftop) is fully cleared of bandits, spawn a

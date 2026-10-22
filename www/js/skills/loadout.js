@@ -157,6 +157,31 @@ const ACTIVE_SKILL_REGISTRY = {
   // with no player triggering required, unlike previous versions.
   recall:        { oldBtnId:'btnRecall',      trigger(){ wantRecall=true; },        getCd(p){ return {cur:p.recallCd, max:p.recallCdMax}; } },
 };
+// v517: every spell, buff and shout plays the player's cast pose (staff / arm raised) and a ring of its colour when it goes on cooldown.
+// Watched from the cooldown jump so each skill's own cast code stays untouched. Basic shots and melee skills have their own animations.
+const CAST_FX_SKILLS = {
+  fear:'#c89bff', raiseDead:'#8fe6c8', soulGate:'#8fe6c8', plague:'#8dff6a', soulFire:'#ff9a4a',
+  nova:'#9adfff', tornado:'#cfd8e8', hurricane:'#cfd8e8', iceArmor:'#9adfff', pyroTorrent:'#ff9a4a', blizzard:'#9adfff',
+  immolate:'#ff9a4a', flameVortex:'#ff9a4a', permafrost:'#9adfff', stormcall:'#9adfff', meteor:'#ff9a4a',
+  battlecry:'#ffd070', banner:'#ffd070', commander:'#ffd070', rally:'#ffd070', guardian:'#cfe0ff', bulwark:'#cfe0ff', mirrorSteel:'#cfe0ff',
+  consecrate:'#ffe9a0', judgment:'#ffe9a0', bloodrage:'#ff6a5a', seismicAnchor:'#cfe0ff',
+  packTactics:'#9ad88a', fieldDress:'#9ad88a', survivalFieldDress:'#9ad88a', huntersMark:'#e8c25a', beastFury:'#ffb05a', recall:'#9ad88a', vanish:'#bfc8d8', shadowStep:'#bfc8d8'
+};
+function playerCastFx(g, p, color){
+  p.castAnimT = 0.3;
+  g.particles.push({type:'ring', x:p.x, y:p.y, t:0.4, max:0.4, r:36, color});
+  g.particles.push({type:'burst', x:p.x, y:p.y, t:0.3, max:0.3, color});
+}
+function castFxWatch(g, p){
+  const mem = p._cfx || (p._cfx = {});
+  for(const id in CAST_FX_SKILLS){
+    const def = ACTIVE_SKILL_REGISTRY[id]; if(!def) continue;
+    let cd = 0; try{ cd = +(def.getCd(p).cur)||0; }catch(e){}
+    const prev = mem[id]||0; mem[id] = cd;
+    if(cd > prev + 0.25 && (effectiveRank(p,id)||0)>0 && !(p.castAnimT>0.12)) playerCastFx(g, p, CAST_FX_SKILLS[id]);
+  }
+}
+
 // no other skill or attack can be started while Pyro Torrent is channelling (the aim pad takes Strike's place)
 for(const id in ACTIVE_SKILL_REGISTRY){
   if(id==='pyroTorrent') continue;
