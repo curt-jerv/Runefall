@@ -121,6 +121,7 @@ function talkWayfarer(){
 }
 function talkScholar(){
   const p = game.player;
+  updateQuestBadge();   // v514: keep The Scholar's Theory in step with the runestone you carry
   if(hasInscription(p) && !p.scholarMeet){
     showNpcText('Scholar', '"A Templar crypt inscription... yes! Meet me at the Lakeside Ruins. I will wait at the entrance."', 'Give him the rubbing', ()=>{
       // v410: he only reads it -- you keep the inscription until the ruins are actually open
@@ -154,7 +155,7 @@ function talkScholar(){
   } else if(p.scholarMeet){
     const rs = findRunestone(p);
     if(rs && !p.scholarRead){
-      showNpcText('Scholar', '"It seems there is a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
+      showNpcText('Scholar', '"The runestone has a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
         { const si = classRewardItem(p, Math.max(p.level||1, 23), 'reward'); if(!giveRewardIfRoom(p, [si])) return; p.gold += 300; }   // v492: asks again until there is room
         p.scholarRead = true; bagPulse();
         const q = getQuest(p, 'scholar_ruins'); if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'You found the first runestone below the lake.'; }

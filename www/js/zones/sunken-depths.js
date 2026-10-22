@@ -257,7 +257,7 @@ function openSubChest(g){
   g.chest.opened = true;
   if(t.subzone==='sunken') p.sunkenChestLooted = true; else p.poolChestLooted = true;
   p.gold += 300 + g.depth*10;
-  if(t.subzone==='sunken'){ forceAddToBag(p, makeTemplarRunestoneItem()); showMsg('Chest: Defensive Runestone + gold', 3.2, '#9fe0ff'); npcMark(p, 'scholar', true); }
+  if(t.subzone==='sunken'){ forceAddToBag(p, makeTemplarRunestoneItem()); showMsg('Chest: Defensive Runestone + gold', 3.2, '#9fe0ff'); npcMark(p, 'scholar', true); updateQuestBadge(); }
   else {
     const it = classRewardItem(p, Math.max(p.level, g.depth), 'reward');
     forceAddToBag(p, it);

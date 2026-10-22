@@ -13,11 +13,11 @@ const MOUNTAIN_PASS_PACK_TEMPLATES = [
 // per-tile height field, so ramps, cliffs and elevation-following sprites all just work). A long east-west road
 // climbs from the Dark Forest (west, low) to Frosthold Keep (east, high); a north stem climbs on to the Icy Summit.
 // The Abandoned Mine's adit sits on the south wall of the road.
-const MTN_TS = 50, MTN_W = 9800, MTN_H = 6900, MTN_M = 300;
-const MTN_BAR_Y0 = 2950, MTN_BAR_Y1 = 4100, MTN_JX = 5000, MTN_STEM_HALF = 550;
+const MTN_TS = 50, MTN_W = 13700, MTN_H = 8000, MTN_M = 300;   // v514: the road is ~40% longer and the descent has two more terraces
+const MTN_BAR_Y0 = 2950, MTN_BAR_Y1 = 4100, MTN_JX = 7000, MTN_STEM_HALF = 550;
 // (v263) the Pass is now a cross: a south stem of switchback terraces descends from the road to the Mountain Depths
-const MTN_S_END = 6500, MTN_SLEDGE = [4640, 5140, 5640, 6140], MTN_SS_LV = [120, 90, 60, 30, 0];
-const MTN_BX = [2000, 3600, 5600, 7000, 8300], MTN_BLV = [0, 60, 120, 180, 240, 300];
+const MTN_S_END = 7600, MTN_SLEDGE = [4640, 5140, 5640, 6140, 6640, 7140], MTN_SS_LV = [120, 100, 80, 60, 40, 20, 0];
+const MTN_BX = [2000, 4400, 7800, 9800, 11700], MTN_BLV = [0, 60, 120, 180, 240, 300];
 const MTN_SY = [2300, 1650, 1100, 800],        MTN_SLV = [120, 180, 240, 300, 360];
 function mtnTrailY(x){ return 3550 + 120*Math.sin(x/700); }
 function mtnTrailX(y){ return MTN_JX + 100*Math.sin(y/500); }
@@ -55,9 +55,9 @@ function makeMountainPass(){
   // raised shelves (+55) tucked against the walls, each reached by its own short ramp -- good perches for elite packs
   const shelves = [];
   const shelfSpecs = [
-    {x:2300,y:3010,w:560,h:300, rx:2580, side:'s'}, {x:4000,y:3790,w:560,h:290, rx:4280, side:'n'},
-    {x:6000,y:3010,w:600,h:300, rx:6300, side:'s'}, {x:7400,y:3800,w:600,h:290, rx:7700, side:'n'},
-    {x:4460,y:1900,w:360,h:380, rx:4640, side:'e'}, {x:5320,y:1000,w:230,h:420, rx:5435, side:'w'},
+    {x:2300,y:3010,w:560,h:300, rx:2580, side:'s'}, {x:5200,y:3790,w:560,h:290, rx:5480, side:'n'},
+    {x:8700,y:3010,w:600,h:300, rx:9000, side:'s'}, {x:10700,y:3800,w:600,h:290, rx:11000, side:'n'},
+    {x:6460,y:1900,w:360,h:380, rx:6640, side:'e'}, {x:7320,y:1000,w:230,h:420, rx:7435, side:'w'},
   ];
   for(const s of shelfSpecs){
     const base = mtnBaseElev(s.x+s.w/2, s.y+s.h/2);
@@ -194,7 +194,7 @@ function makeMountainPass(){
       c = SNOW;
       const fw = clamp(1-(x-MTN_M)/2300,0,1);
       if(fw>0 && h2 < fw*1.15) c = mix(c, h2<fw*0.55 ? MOSS : DIRT, 0.55+0.35*hh);
-      const fe = clamp((x-6500)/1700,0,1);
+      const fe = clamp((x-(w-3300))/1700,0,1);
       if(fe>0 && y>=MTN_BAR_Y0) c = mix(c, FLAG, fe*0.8 + ((ix+iy)%2?0.03:-0.03));
       const fi = clamp((2900-y)/1900,0,1);
       if(fi>0 && y<MTN_BAR_Y0+40) c = mix(c, ICE, fi*0.75);
@@ -217,7 +217,7 @@ function makeMountainPass(){
   // pack anchors by district: forest-edge wolves, bears mid-pass, frozen dead toward the summit and the keep
   const gates = [forestGate, frostGate, mineGate, summitGate];
   const packAnchors = []; let tries = 0;
-  while(packAnchors.length<46 && tries<30000){
+  while(packAnchors.length<68 && tries<45000){
     tries++;
     const x = rand(MTN_M+120, w-MTN_M-120), y = rand(MTN_M+120, MTN_S_END-120);
     if(!flat(x,y,70)) continue;
@@ -229,7 +229,7 @@ function makeMountainPass(){
   // scenery by district
   const deco = []; tries = 0;
   const put = (k,x,y,s,extra)=>{ if(dist({x,y},waypoint)<190) return; if(walk(x,y)) deco.push(Object.assign({k,x,y,s:s||1}, extra||{})); };
-  while(deco.length<760 && tries<30000){
+  while(deco.length<1100 && tries<45000){
     tries++;
     const x = rand(MTN_M+40, w-MTN_M-40), y = rand(MTN_M+40, MTN_S_END-40);
     if(!walk(x,y) || nearTrail(x,y,62)) continue;
@@ -245,14 +245,14 @@ function makeMountainPass(){
       put(q<0.38+0.2*hi?'crag':q<0.62?'drift':q<0.85?'rock':'pine', x,y, rand(0.7,1.5), {h:rand(55,120)});
     } else if(x<2500){
       put(q<0.42?'pine':q<0.56?'deadpine':q<0.7?'rock':q<0.9?'drift':q<0.96?'cairn':'wagon', x,y, rand(0.8,1.5));
-    } else if(x>6700){
+    } else if(x>w-3100){
       put(q<0.4?'rock':q<0.65?'drift':q<0.8?'crag':q<0.9?'statue':'pine', x,y, rand(0.8,1.4), {h:rand(50,90)});
     } else {
       put(q<0.34?'rock':q<0.58?'drift':q<0.76?'pine':q<0.88?'cairn':'crag', x,y, rand(0.8,1.5), {h:rand(50,100)});
     }
   }
   // the keep's approach: banners and braziers line the road; ruined watch posts mark the last two terraces
-  for(let x=6500; x<w-MTN_M-120; x+=330){
+  for(let x=w-3300; x<w-MTN_M-120; x+=330){
     const ty = mtnTrailY(x);
     put(((x/330|0)%2)?'banner':'brazier', x, ty-120, 1);
     put(((x/330|0)%2)?'brazier':'banner', x, ty+120, 1);
