@@ -4,8 +4,8 @@
 // ---- v275: Defiler's Tomb, graverobbers, scholar ----
 const QUEST_GRAVEROBBERS = {
   id:'graverobbers_friend', name:"The Missing Graverobber",
-  desc:"Three graverobbers camped beside the Cursed Cemetery road in Withered Crossroads lost a companion in a hidden chamber beyond the Dark Crypt's great hall. Find him.",
-  descDone:"The Defiler is dead. Return to the graverobbers beside the Cursed Cemetery road in Withered Crossroads.",
+  desc:"Three graverobbers camped just inside the Cursed Cemetery gate lost a companion in a hidden chamber beyond the Dark Crypt's great hall. Find him.",
+  descDone:"The Defiler is dead. Return to the graverobbers camped just inside the Cursed Cemetery gate.",
   total:1,
 };
 function makeTemplarInscriptionItem(){
@@ -61,12 +61,11 @@ function inspectSarcophagus(){
   } else showNpcText('The Sarcophagus', 'Empty. The Templar seal is broken outward -- something escaped.', 'Close');
 }
 function graverobbersMark(p){ const q = getQuest(p, QUEST_GRAVEROBBERS.id); return !q ? !p.defilerSlain : (q.status==='active' && !!p.defilerSlain); }
-// v299: the graverobbers now camp in Withered Crossroads, just beside the road to the Cursed Cemetery gate (south exit)
-function makeGraverobbers(sun){
-  const sg = sun.southGate;
-  return [ {x:sg.x+100, y:sg.y-128, id:0, robe:'#4a3a2a', hood:'#2a2018', tool:'shovel'},
-           {x:sg.x+146, y:sg.y-100, id:1, robe:'#34423a', hood:'#1c2a22', tool:'lantern'},
-           {x:sg.x+126, y:sg.y-152, id:2, robe:'#463a52', hood:'#241c2c', tool:'shovel'} ];
+// v532: the graverobbers camp just inside the Cursed Cemetery gate, round a small fire
+function makeGraverobbers(camp){
+  return [ {x:camp.x-60, y:camp.y-34, id:0, robe:'#4a3a2a', hood:'#2a2018', tool:'shovel'},
+           {x:camp.x+52, y:camp.y-48, id:1, robe:'#34423a', hood:'#1c2a22', tool:'lantern'},
+           {x:camp.x-14, y:camp.y+52, id:2, robe:'#463a52', hood:'#241c2c', tool:'shovel'} ];
 }
 function talkGraverobbers(){
   const p = game.player, q = getQuest(p, QUEST_GRAVEROBBERS.id);

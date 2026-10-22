@@ -321,8 +321,13 @@ function updateFollowersAI(g, dt){
         }
       }
     }
-    if(back){ const n0 = g.followers.length; ensureFollowers(g); for(let k=n0;k<g.followers.length;k++){ const nf = g.followers[k]; nf.x = p.x; nf.y = p.y; g.particles.push({type:'burst', x:p.x, y:p.y, t:0.35, max:0.35, color:'#cfe8ff'}); } }
+    if(back){ const n0 = g.followers.length; ensureFollowers(g); for(let k=n0;k<g.followers.length;k++){ const nf = g.followers[k]; nf.x = p.x; nf.y = p.y; if(nf.kind==='skeleton') nf.riseT = 0.7; g.particles.push({type:'burst', x:p.x, y:p.y, t:0.35, max:0.35, color:'#cfe8ff'}); } }
   }
+  // v530: a skeleton left down for want of a soul rises as soon as you hold one again (it used to wait for a recast)
+  if((p.skelDown||0) > 0 && !p.skelHold && (p.souls||0) >= NECRO_RESPAWN_SOULS && !followerPendingCount(g, 'skeleton')){
+    p.skelDown--; (g.followerPending || (g.followerPending = [])).push({kind:'skeleton', t:skelSoulRaiseDelay(), soul:true});
+  }
+  for(const f of g.followers) if(f.riseT>0) f.riseT -= dt;
   if(p.companionRespawnCd>0) p.companionRespawnCd -= dt;
   if(p.companionRespawnCd<=0) ensureFollowers(g);
   {

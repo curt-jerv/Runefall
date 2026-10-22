@@ -174,7 +174,7 @@ function render(){
     drawables.push({depth:(o.x+o.w/2)+(o.y+o.h/2), occluder:!o.bone, wx:o.x+o.w/2, wy:o.y+o.h/2, draw:()=>(
     o.bone ? drawBoneBarricade(o)
     : o.woodBarricade ? drawWoodBarricadeIso(o)
-    : o.mausoleum ? drawOwMausoleum(o) : o.ruin ? drawOwRuin(o)
+    : o.mausoleum ? drawOwMausoleum(o) : o.ruin ? drawOwRuin(o) : o.ironFence ? drawIronFenceIso(o)
     : o.organic ? drawOrganicWall(o)
     : o.mazeWall
       ? (room.wallPal ? drawBlock(o, 52, room.wallPal[0], room.wallPal[1], room.wallPal[2]) : drawBlock(o, 52, '#463c30','#221c14','#302819'))
@@ -467,7 +467,6 @@ function render(){
       // gate (both are "ruined stone" thresholds into a darker zone).
       drawables.push({depth:g.sun.southGate.x+g.sun.southGate.y, draw:()=>drawRuinsGateIso(g.sun.southGate, g.clock||0)});
       drawables.push({depth:g.sun.southGate.x+g.sun.southGate.y+1, draw:()=>drawEdgeLabelIso(g.sun.southGate, 'CURSED CEMETERY')});
-      if(g.sun.graverobbers){ const gm = graverobbersMark(g.player); g.sun.graverobbers.forEach((r,i)=>drawables.push({depth:r.x+r.y, draw:()=>drawSimpleNpcIso(r, g.clock||0, {mark: gm && i===0})})); }
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
     for(const e of g.enemies) pushEnemyDrawables(drawables, e);
@@ -503,8 +502,6 @@ function render(){
       }
       drawables.push({depth:g.lake.sunlitGate.x+g.lake.sunlitGate.y, draw:()=>drawLakesideGateIso(g.lake.sunlitGate, g.clock||0)});
       drawables.push({depth:g.lake.sunlitGate.x+g.lake.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.sunlitGate, 'WITHERED CROSSROADS')});
-      drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y, draw:()=>drawRuinsGateIso(g.lake.marshGate, g.clock||0)});
-      drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.marshGate, 'BLACK MARSH')});
       if(!g.lake.waypoint.off){
         drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y-1, draw:()=>drawWaypointIso(g.lake.waypoint, g.clock||0, waypointLit())});
         drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y, draw:()=>drawEdgeLabelIso(g.lake.waypoint, 'WAYPOINT')});
@@ -525,8 +522,8 @@ function render(){
       drawables.push({depth:bm.house.x+bm.house.y, draw:()=>drawWitchHouseIso(bm.house)});
       drawables.push({depth:bm.cauldron.x+bm.cauldron.y, draw:()=>drawCauldronIso(bm.cauldron)});
       if(g.player.witchRescued){ const wn = {x:bm.cauldron.x+44, y:bm.cauldron.y+18}; drawables.push({depth:wn.x+wn.y, draw:()=>drawWitchIso(wn, g.clock||0, true)}); }
-      drawables.push({depth:bm.westGate.x+bm.westGate.y, draw:()=>drawRuinsGateIso(bm.westGate, g.clock||0)});
-      drawables.push({depth:bm.westGate.x+bm.westGate.y+1, draw:()=>drawEdgeLabelIso(bm.westGate, 'LAKESIDE RUINS')});
+      drawables.push({depth:bm.westGate.x+bm.westGate.y, draw:()=>drawMineEntranceIso(bm.westGate, g.clock||0)});   // v531: the Sunken Depths tunnel comes out here
+      drawables.push({depth:bm.westGate.x+bm.westGate.y+1, draw:()=>drawEdgeLabelIso(bm.westGate, 'COLLAPSED TUNNEL')});
       if(bm.highGate){ drawables.push({depth:bm.highGate.x+bm.highGate.y, draw:()=>drawRuinsGateIso(bm.highGate, g.clock||0)}); drawables.push({depth:bm.highGate.x+bm.highGate.y+1, draw:()=>drawEdgeLabelIso(bm.highGate, 'BARREN HIGHLANDS')}); }
       drawables.push({depth:bm.eastGate.x+bm.eastGate.y, draw:()=>drawTowerDoorIso(bm.eastGate, g.clock||0)});
       drawables.push({depth:bm.eastGate.x+bm.eastGate.y+1, draw:()=>drawEdgeLabelIso(bm.eastGate, 'FORGOTTEN TOWER', 180)});
@@ -543,7 +540,10 @@ function render(){
   } else if(g.scene==='cursedcemetery'){
     if(g.cem){
       if(g.cem.deadTrees) for(const dt of g.cem.deadTrees) drawables.push({depth:dt.x+dt.y, draw:()=>drawDeadTreeIso(dt)});
-      if(g.cem.graves) for(const gr of g.cem.graves) drawables.push({depth:gr.x+gr.y, draw:()=>drawGraveIso(gr)});
+      if(g.cem.graves) for(const gr of g.cem.graves){ const io = toIso(gr.x,gr.y); if(io.x>cam.x-80 && io.x<cam.x+W+80 && io.y>cam.y-120 && io.y<cam.y+H+80) drawables.push({depth:gr.x+gr.y, draw:()=>drawGraveIso(gr)}); }
+      if(g.cem.gatePosts) for(const gp of g.cem.gatePosts) drawables.push({depth:gp.x+gp.y+14, draw:()=>drawCemGatePostIso(gp, g.clock||0)});
+      if(g.cem.camp){ const c = g.cem.camp; drawables.push({depth:c.x+c.y-60, draw:()=>drawGraverobberCampIso(c, g.clock||0)});
+        const gm = graverobbersMark(g.player); (g.cem.graverobbers||[]).forEach((r,i)=>drawables.push({depth:r.x+r.y, draw:()=>drawSimpleNpcIso(r, g.clock||0, {mark: gm && i===0})})); }
       drawables.push({depth:g.cem.sunlitGate.x+g.cem.sunlitGate.y, draw:()=>drawRuinsGateIso(g.cem.sunlitGate, g.clock||0)});
       drawables.push({depth:g.cem.sunlitGate.x+g.cem.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.cem.sunlitGate, 'WITHERED CROSSROADS')});
       if(g.cem.waypoint){ drawables.push({depth:g.cem.waypoint.x+g.cem.waypoint.y-1, draw:()=>drawWaypointIso(g.cem.waypoint, g.clock||0, waypointLit())});
@@ -717,6 +717,7 @@ function render(){
     if(t.trees) for(const tr of t.trees) if(vis(tr.x,tr.y)) drawables.push({depth:tr.x+tr.y, draw:()=>drawSwampTreeIso(tr)});
     const postLos = (g._postLos = []), ePush = (t.subzone==='highward') ? postLos : drawables;   // v425: Highward gates/portals/labels draw in front of the LOS shadow
     ePush.push({depth:t.entrance.x+t.entrance.y, draw:()=>drawSubEntranceIso(t, g.clock||0)});
+    if(t.tunnel){ const tn = t.tunnel; drawables.push({depth:tn.x+tn.y, draw:()=>drawMineEntranceIso(tn, g.clock||0)}); drawables.push({depth:tn.x+tn.y+1, draw:()=>drawEdgeLabelIso(tn, 'TUNNEL')}); }   // v531: the way to the Black Marsh
     ePush.push({depth:t.entrance.x+t.entrance.y+1, draw:()=>drawEdgeLabelIso(t.entrance, t.subzone==='sunken' ? 'FLOODED TEMPLE' : t.subzone==='temple' ? 'ANCIENT RUINS' : t.subzone==='rrtower' ? ((t.rrFloor||1)>1 ? 'STAIRS DOWN' : 'LEAVE TOWER') : t.subzone==='cellar' ? 'CLIMB OUT' : t.subzone==='highward' ? (t.hwFloor===1 ? 'REDRIDGE CANYON' : 'STAIRS DOWN') : t.subzone==='keep' ? (KP_ENT_LBL[t.kpArea]||'BACK') : 'BLACK MARSH', (t.subzone==='highward' && t.hwFloor===1) ? 132 : undefined)});
     if(t.templeDeco){
       for(const st of t.templeDeco.statues) if(vis(st.x,st.y)) drawables.push({depth:st.x+st.y, draw:()=>drawTempleStatueIso(st)});

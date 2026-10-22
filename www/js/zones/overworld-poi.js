@@ -37,7 +37,7 @@ function owSpotOk(g, room, x, y, r){
     for(const c of (room.camps||[]).concat(room.camp ? [room.camp] : [])) if(dist({x,y}, c) < r+500) return false;
     for(const t of (room.towers||[])) if(dist({x,y}, t) < r+300 || dist({x,y}, t.door) < r+200) return false;
   }
-  if(g.scene==='cursedcemetery'){ if(Math.abs(x-CEM_CX) < CEM_ROAD_HALFW + r + 40) return false; if(room.statue && dist({x,y}, room.statue) < r+140) return false; if(room.tomb && dist({x,y}, room.tomb) < r+200) return false; }
+  if(g.scene==='cursedcemetery'){ if(cemRoadDist(x, y) < CEM_ROAD_HALFW + r + 40) return false; if(room.statue && dist({x,y}, room.statue) < r+460) return false; if(room.camp && dist({x,y}, room.camp) < r+500) return false; if(room.tomb && dist({x,y}, room.tomb) < r+200) return false; }
   for(const q of spawnSafePoints(g)) if(Math.hypot(x-q.x, y-q.y) < 380 + r) return false;
   return true;
 }

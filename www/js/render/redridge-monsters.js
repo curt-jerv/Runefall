@@ -216,9 +216,8 @@ function drawEnemyIsoBase(e){
   else if(e.type==='zombie' || e.type==='frozenzombie') drawZombieEnemy(e);
   else drawDemon(e);
 }
-// Leviathan (Lakeside Ruins, v71): a serpent that lives in the water --
-// while inactive (player far away, see the e.type==='leviathan' branch in
-// update()) it's drawn as barely more than a submerged ripple/fin, then
+// Leviathan (v71): a serpent that lives in the water -- while inactive or
+// diving (see updateLeviathanBoss) it's drawn as barely more than a submerged ripple/fin, then
 // rises into a proper coiled sea-serpent silhouette (a humped body arcing
 // out of the water, a snake-like head with glowing eyes) once active. Not
 // built on the humanoid drawDemon rig at all -- like the Spider, it gets

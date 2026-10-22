@@ -1273,7 +1273,15 @@ function drawFloatDemon(iso, s, face, t, kind, o){
 function drawFollowerIso(f){
   if(game && (game.scene==='town' || game.scene==='tavern') && (f.kind||'knight')!=='knight' && f.kind!=='cat') return;   // v402: only Squires (and the cat) show in town
   if(!f._stDraw && (f.chillT>0 || f.poisonT>0 || f.burnT>0) && _statusDepth===0){ f._stDraw = true; try{ drawWithStatus(f, ()=>drawFollowerIso(f), true); } finally { f._stDraw = false; } return; }
-  if(f.kind==='skeleton'){ drawFriendlySkeleton(f); return; }
+  if(f.kind==='skeleton'){
+    if(f.riseT>0){   // v530: clawing up out of the earth
+      const io = toIso(f.x, f.y), k = clamp(f.riseT/0.7, 0, 1);
+      ctx.save(); ctx.fillStyle = 'rgba(60,44,28,0.75)'; ctx.beginPath(); ctx.ellipse(io.x, io.y, 20, 7, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.rect(io.x-70, io.y-220, 140, 222); ctx.clip(); ctx.translate(0, k*50); drawFriendlySkeleton(f); ctx.restore();
+      return;
+    }
+    drawFriendlySkeleton(f); return;
+  }
   if((f.leapZ||0)>0 || f.shieldHp>0){
     const fi = toIso(f.x,f.y);
     if(f.shieldHp>0 && !f._shDraw){

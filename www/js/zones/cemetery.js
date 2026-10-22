@@ -29,115 +29,147 @@
 // and dead trees scattered off the path rather than a crossroad (there's
 // nothing past this zone yet except the Dark Crypt stub the tomb itself
 // leads to, so a crossroad shape isn't needed).
-const CEM_W = 1900, CEM_H = 1350;
+// v532: the cemetery is long now (2600x4200). A winding road leads south from the Crossroads gate, past the
+// graverobbers' camp just inside the gate and skeleton stragglers and crows along the way, to a walled graveyard:
+// wrought-iron fencing with one gate, rows of tombstones, the Grave Statue in the middle (its wave event plays out
+// inside the fence) and the Dark Crypt's tomb at the far end.
+const CEM_W = 2600, CEM_H = 4200;
 const CEM_CX = CEM_W/2;
 const CEM_ROAD_HALFW = 46; // same visual road width as Withered Crossroads' crossroad
 const CEMETERY_ENTRANCE_SPOT = {x:CEM_CX, y:16};
-// The sealed tomb entrance -- a fixed landmark near the zone's south end,
-// present from the very first visit (see the brief: "VISUALLY PRESENT...
-// FROM THE START") but not interactable until p.cemeteryCleared flips true
-// (see enterCursedCemetery's per-frame clear-check and drawTombIso's
-// locked/unlocked visual states). Offset from the south edge halved (220
-// -> 110) along with the zone's own halved dimensions, above.
-const CEM_TOMB_SPOT = {x:CEM_CX, y:CEM_H-110};
-function cemOnRoad(x,y){ return Math.abs(x-CEM_CX) < CEM_ROAD_HALFW; }
-// A quarter of Withered Crossroads' own anchor target/pack count, matching this
-// zone's quartered-area footprint (half x half) -- deliberately NOT the
-// same density as Withered Crossroads (which would badly overcrowd a zone this
-// much smaller); this keeps the same "spread out, not clumped" spacing
-// rule (see the (now-halved) minimum anchor-to-anchor spacing below,
-// proportionally scaled from every other zone's pack-anchor placement)
-// just with proportionally fewer anchors.
-const CEM_PACK_ANCHOR_TARGET = Math.round(SUNLIT_PACK_ANCHOR_TARGET/8);
-const CEM_PACK_COUNT = Math.round(SUNLIT_PACK_COUNT/8);
+const CEM_FENCE = {x0:330, x1:CEM_W-330, y0:2500, y1:4060, gateHalf:85};
+const CEM_STATUE_SPOT = {x:CEM_CX, y:3220};
+const CEM_TOMB_SPOT = {x:CEM_CX, y:3880};
+const CEM_CAMP_SPOT = {x:CEM_CX+300, y:330};
+let CEM_ROADS = [], CEM_ROAD_GRID = null;
+function cemRoadDist(x,y){ return CEM_ROAD_GRID ? sunRoadNear({roads:CEM_ROADS, roadGrid:CEM_ROAD_GRID}, x, y).d : 1e9; }
+function cemOnRoad(x,y){ return cemRoadDist(x,y) < CEM_ROAD_HALFW; }
+function cemInFence(x,y,m){ m = m||0; const F = CEM_FENCE; return x > F.x0+m && x < F.x1-m && y > F.y0+m && y < F.y1-m; }
+const CEM_PACK_ANCHOR_TARGET = 8;    // packs inside the fence (until the crypt is opened)
+const CEM_PACK_COUNT = 8;
+const CEM_STRAGGLERS = 22, CEM_CROW_FLOCKS = 7;
 const CEM_PACK_TEMPLATES = [
-  // Skeleton: the exact reusable base type from Lakeside Ruins (v71),
-  // simply added to this zone's spawn pool -- no changes to the type itself.
   { type:'skeleton', countMin:2, countMax:4 },
   { type:'skeleton', countMin:1, countMax:3 },
-  // Zombie Skeleton Archer (new, v72): ranged skeleton variant -- see
-  // spawnEnemy's 'skeletonarcher' branch.
   { type:'skeletonarcher', countMin:1, countMax:2 },
-  // Spider: the exact existing Forest/Spider-Lair/Lakeside-Ruins 'spider'
-  // type, just added to this zone's spawn pool -- no new type.
   { type:'spider', countMin:1, countMax:2 },
-  // Skeletal Brute (new, v72): heavier skeleton variant -- a single,
-  // smaller-count template (max 1 per pack) so it reads as an occasional
-  // tough encounter rather than a common pack member, mirroring how
-  // Lighthouse Tower only introduces Bandit Brute on its denser boss floor.
   { type:'skeletonbrute', countMin:1, countMax:1 },
 ];
 function makeCursedCemetery(){
-  const w=CEM_W, h=CEM_H;
+  const w=CEM_W, h=CEM_H, F = CEM_FENCE;
   const sunlitGate = {x:CEMETERY_ENTRANCE_SPOT.x, y:CEMETERY_ENTRANCE_SPOT.y, r:34};
   const tomb = {x:CEM_TOMB_SPOT.x, y:CEM_TOMB_SPOT.y, r:40};
-  const statue = {x:CEM_CX, y:CEM_H*0.5, r:34};   // v299: the Grave Statue in the middle of the cemetery
-
-  // Exclusion radii halved (240/260 -> 120/130) along with the zone's own
-  // halved dimensions above, so the gate/tomb keep the same relative
-  // clearance instead of that fixed clearance eating a much bigger share
-  // of the now-smaller map.
-  function offLimits(x,y){
-    return cemOnRoad(x,y) || dist({x,y},sunlitGate) < 120 || dist({x,y},tomb) < 130 || dist({x,y},statue) < 95;
+  const statue = {x:CEM_STATUE_SPOT.x, y:CEM_STATUE_SPOT.y, r:34};   // v299: the Grave Statue in the middle of the graveyard
+  const fenceGate = {x:CEM_CX, y:F.y0};
+  // the road: winding down from the gate to the fence, then a gentler path to the statue and on to the tomb
+  const outer = sunWindingRoad({x:CEM_CX, y:0}, {x:CEM_CX, y:F.y0-160}, 420, w, h); outer.splice(1, 0, {x:CEM_CX, y:200}); outer.push({x:CEM_CX, y:F.y0+40});
+  const inner = sunWindingRoad({x:CEM_CX, y:F.y0+40}, {x:CEM_CX, y:statue.y-70}, 110, w, h);
+  const last = sunWindingRoad({x:CEM_CX, y:statue.y+70}, {x:CEM_CX, y:tomb.y-60}, 90, w, h);
+  CEM_ROADS = [outer, inner, last]; CEM_ROAD_GRID = sunRoadGrid(CEM_ROADS);
+  const camp = {x:CEM_CAMP_SPOT.x, y:CEM_CAMP_SPOT.y, r:30};
+  // wrought-iron fence, in short runs so each draws in the right order; one gate where the road comes in
+  const obstacles = [], T = 14, seg = (x0,y0,x1,y1)=>{ const horiz = y0===y1, L = horiz ? x1-x0 : y1-y0; for(let o=0;o<L;o+=120){ const l = Math.min(120, L-o); obstacles.push(horiz ? {x:x0+o, y:y0-T/2, w:l, h:T, ironFence:true, horiz:true} : {x:x0-T/2, y:y0+o, w:T, h:l, ironFence:true, horiz:false}); } };
+  seg(F.x0, F.y0, fenceGate.x-F.gateHalf, F.y0); seg(fenceGate.x+F.gateHalf, F.y0, F.x1, F.y0);
+  seg(F.x0, F.y1, F.x1, F.y1); seg(F.x0, F.y0, F.x0, F.y1); seg(F.x1, F.y0, F.x1, F.y1);
+  const gatePosts = [{x:fenceGate.x-F.gateHalf, y:F.y0}, {x:fenceGate.x+F.gateHalf, y:F.y0}];
+  const nearFence = (x,y,m)=>(Math.abs(y-F.y0)<m || Math.abs(y-F.y1)<m) && x>F.x0-m && x<F.x1+m || (Math.abs(x-F.x0)<m || Math.abs(x-F.x1)<m) && y>F.y0-m && y<F.y1+m;
+  function offLimits(x,y,m){
+    m = m||0;
+    return cemRoadDist(x,y) < CEM_ROAD_HALFW+30+m || dist({x,y},sunlitGate) < 160 || dist({x,y},tomb) < 190 || dist({x,y},statue) < 200 || dist({x,y},camp) < 230 || nearFence(x,y,40);
   }
-
-  // Dead trees (bare, gnarled -- see drawDeadTreeIso) and tombstones/graves
-  // (see drawGraveIso), scattered at a graveyard-appropriate density: many
-  // more graves than trees, since "filled with old graves and tombstones"
-  // is the zone's defining visual per the brief, with the dead trees as a
-  // sparser atmospheric accent (roughly Withered Crossroads' own rock-scatter
-  // density, scaled to this zone's smaller footprint). Margins halved and
-  // counts cut to a quarter, matching the zone's halved dimensions/
-  // quartered area, so density-per-area stays the same as before the resize.
   const deadTrees = [];
-  for(let i=0;i<10;i++){
-    const x = rand(35, w-35), y = rand(35, h-35);
-    if(offLimits(x,y)) continue;
-    deadTrees.push({x, y, s:rand(0.75,1.3)});
+  for(let i=0;i<220 && deadTrees.length<44;i++){
+    const x = rand(60, w-60), y = rand(60, h-60), inF = cemInFence(x,y);
+    if(offLimits(x,y,20) || (inF && Math.random()<0.75)) continue;
+    if(deadTrees.some(t=>dist(t,{x,y})<140)) continue;
+    deadTrees.push({x, y, s:rand(0.8,1.4)});
   }
+  // tombstones: rows of them inside the fence, a scatter of older ones along the way down
   const graves = [];
-  for(let i=0;i<33;i++){
-    const x = rand(25, w-25), y = rand(25, h-25);
-    if(offLimits(x,y)) continue;
-    graves.push({x, y, s:rand(0.75,1.15), rot:rand(-0.12,0.12), cross:Math.random()<0.5});
+  for(let row=F.y0+110; row<F.y1-80; row+=95){
+    for(let col=F.x0+90; col<F.x1-60; col+=78){
+      const x = col+rand(-14,14), y = row+rand(-12,12);
+      if(Math.random()<0.18 || offLimits(x,y) || dist({x,y},statue) < 260) continue;
+      graves.push({x, y, s:rand(0.8,1.2), rot:rand(-0.15,0.15), cross:Math.random()<0.45});
+    }
   }
-
-  // A dedicated permanent waypoint, same shared mechanism/art as every
-  // other zone's -- nudged off the road, roughly midway between the
-  // entrance and the tomb. Offset from the road halved (260 -> 130) along
-  // with the zone's own halved width.
-  const waypoint = {x:CEM_CX+130, y:h*0.5, r:22};
-
+  for(let i=0;i<400 && graves.filter(g=>!cemInFence(g.x,g.y)).length<60;i++){
+    const x = rand(60, w-60), y = rand(250, F.y0-80);
+    if(offLimits(x,y) || graves.some(g=>dist(g,{x,y})<60)) continue;
+    graves.push({x, y, s:rand(0.7,1.1), rot:rand(-0.25,0.25), cross:Math.random()<0.5, old:true});
+  }
+  // packs inside the fence (they stay away from the statue so its event has room), stragglers outside
   const packAnchors = [];
-  let tries=0;
-  while(packAnchors.length < CEM_PACK_ANCHOR_TARGET && tries<6000){
-    tries++;
-    // Margin/exclusion/spacing all halved (110/200/280 -> 55/100/140)
-    // along with the zone's own halved dimensions above.
-    const x = rand(55, w-55), y = rand(55, h-55);
-    if(offLimits(x,y)) continue;
-    if(dist({x,y},waypoint) < 100) continue;
-    if(packAnchors.some(a=>dist(a,{x,y}) < 140)) continue;
+  for(let t=0;t<4000 && packAnchors.length<CEM_PACK_ANCHOR_TARGET;t++){
+    const x = rand(F.x0+120, F.x1-120), y = rand(F.y0+150, F.y1-120);
+    if(offLimits(x,y) || dist({x,y},statue) < 480 || dist({x,y},fenceGate) < 260 || packAnchors.some(a=>dist(a,{x,y})<260)) continue;
     packAnchors.push({x,y});
   }
-
-  // Zone-edge boundary markers (Sept 2026 patch): a ring of tombstones
-  // (drawGraveIso, the exact same prop as the interior grave scatter
-  // above) walking this zone's outer edge, so the shrunken playable
-  // area's border reads clearly. Pushed into the same `graves` array/
-  // render pass as the interior scatter, so no new drawing code is
-  // needed. Gaps are left at the north entrance gate and around the tomb
-  // (which already sits close to the south edge at this zone's new
-  // smaller size) so neither gets crowded or blocked.
-  for(const bp of zoneBorderPoints(w, h, 25, 110, [
-    {x:sunlitGate.x, y:sunlitGate.y, r:130},
-    {x:tomb.x, y:tomb.y, r:170},
-  ])){
-    graves.push({x:bp.x, y:bp.y, s:rand(0.8,1.1), rot:rand(-0.12,0.12), cross:Math.random()<0.5});
+  const stragglers = [];
+  for(let t=0;t<4000 && stragglers.length<CEM_STRAGGLERS;t++){
+    const x = rand(120, w-120), y = rand(500, F.y0-120);
+    if(offLimits(x,y) || dist({x,y},camp) < 800 || dist({x,y},sunlitGate) < 600 || stragglers.some(a=>dist(a,{x,y})<300)) continue;
+    stragglers.push({x,y});
   }
-
-  return { w, h, obstacles:[], sunlitGate, tomb, statue, deadTrees, graves, waypoint, packAnchors,
-    entranceSpot:CEMETERY_ENTRANCE_SPOT };
+  const crowSpots = [];
+  for(let t=0;t<2000 && crowSpots.length<CEM_CROW_FLOCKS;t++){
+    const x = rand(150, w-150), y = rand(450, h-150);
+    if(offLimits(x,y) || dist({x,y},camp) < 800 || dist({x,y},statue) < 450 || crowSpots.some(a=>dist(a,{x,y})<600)) continue;
+    crowSpots.push({x,y});
+  }
+  // the edge of the map: a ring of old graves and dead trees, gaps at the gate
+  for(const bp of zoneBorderPoints(w, h, 30, 150, [{x:sunlitGate.x, y:sunlitGate.y, r:160}])){
+    if(Math.random()<0.5) graves.push({x:bp.x, y:bp.y, s:rand(0.8,1.1), rot:rand(-0.12,0.12), cross:Math.random()<0.5});
+    else deadTrees.push({x:bp.x, y:bp.y, s:rand(0.8,1.3)});
+  }
+  const graverobbers = makeGraverobbers(camp);
+  return { w, h, obstacles, sunlitGate, tomb, statue, deadTrees, graves, waypoint:null, packAnchors, stragglers, crowSpots, camp, graverobbers, gatePosts, fence:F,
+    roads:CEM_ROADS, roadGrid:CEM_ROAD_GRID, entranceSpot:CEMETERY_ENTRANCE_SPOT };
+}
+// wrought-iron fencing: black posts with spear-tip finials, two rails, the odd bent or missing bar
+function drawIronFenceIso(o){
+  const L = o.horiz ? o.w : o.h, cx = o.x+o.w/2, cy = o.y+o.h/2, H = 38;
+  const at = (k)=> o.horiz ? toIso(o.x+k, cy) : toIso(cx, o.y+k);
+  ctx.save(); ctx.lineCap = 'round';
+  const a = at(0), b = at(L);
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(a.x, a.y+2); ctx.lineTo(b.x, b.y+2); ctx.stroke();
+  ctx.strokeStyle = '#17151b'; ctx.lineWidth = 2.2;
+  for(const hh of [H*0.35, H*0.8]){ ctx.beginPath(); ctx.moveTo(a.x, a.y-hh); ctx.lineTo(b.x, b.y-hh); ctx.stroke(); }
+  for(let k=0;k<=L;k+=15){
+    const q = at(k), big = k%60===0, sd = tileHash(Math.round(o.x+k), Math.round(o.y)), hh = big ? H+8 : H + (sd>0.9 ? -10 : 0);
+    if(!big && sd < 0.06) continue;   // a missing bar
+    ctx.strokeStyle = big ? '#201d24' : '#1a181e'; ctx.lineWidth = big ? 3.4 : 1.6;
+    const lean = !big && sd > 0.94 ? 4 : 0;
+    ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x+lean, q.y-hh); ctx.stroke();
+    ctx.fillStyle = '#2a262e'; ctx.beginPath(); ctx.moveTo(q.x+lean-2.4, q.y-hh+1); ctx.lineTo(q.x+lean, q.y-hh-6); ctx.lineTo(q.x+lean+2.4, q.y-hh+1); ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(150,140,170,0.18)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y-H*0.8-1); ctx.lineTo(b.x, b.y-H*0.8-1); ctx.stroke();   // a dull sheen on the top rail
+  ctx.restore();
+}
+// the two stone gateposts either side of the opening, each topped with a little iron lantern
+function drawCemGatePostIso(gp, clock){
+  drawBlock({x:gp.x-12, y:gp.y-12, w:24, h:24}, 62, '#4a4852', '#1a1920', '#2c2a33');
+  const io = toIso(gp.x, gp.y), fl = 0.7+0.3*Math.sin((clock||0)*5+gp.x);
+  ctx.save(); ctx.fillStyle = 'rgba(160,220,140,'+(0.35*fl)+')'; ctx.beginPath(); ctx.arc(io.x, io.y-74, 14, 0, 7); ctx.fill();
+  ctx.fillStyle = '#1a181e'; ctx.fillRect(io.x-4, io.y-80, 8, 10); ctx.fillStyle = 'rgba(190,240,170,'+(0.8*fl)+')'; ctx.fillRect(io.x-2.5, io.y-78, 5, 6); ctx.restore();
+}
+// the graverobbers' camp: a small fire, bedrolls, a shovel stuck in a heap of dirt and a sack of "finds"
+function drawGraverobberCampIso(c, clock){
+  const t = clock||0, at = (dx,dy)=>toIso(c.x+dx, c.y+dy);
+  ctx.save();
+  for(const [dx,dy,col] of [[-70,-40,'#5a4a3a'],[60,-60,'#4a3e46'],[-30,60,'#3e4a3a']]){ const q = at(dx,dy); ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(q.x, q.y, 22, 8, 0.2, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(q.x+10, q.y-1, 6, 4, 0, 0, 7); ctx.fill(); }
+  const dirt = at(80,40); ctx.fillStyle = '#3a3026'; ctx.beginPath(); ctx.ellipse(dirt.x, dirt.y-4, 18, 9, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(dirt.x+2, dirt.y-6); ctx.lineTo(dirt.x+6, dirt.y-34); ctx.stroke();
+  ctx.fillStyle = '#8a8e96'; ctx.beginPath(); ctx.moveTo(dirt.x-2, dirt.y-4); ctx.lineTo(dirt.x+6, dirt.y-4); ctx.lineTo(dirt.x+4, dirt.y+4); ctx.lineTo(dirt.x, dirt.y+4); ctx.closePath(); ctx.fill();
+  const sack = at(-80,30); ctx.fillStyle = '#7a6a48'; ctx.beginPath(); ctx.ellipse(sack.x, sack.y-8, 10, 12, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#e8c44a'; ctx.beginPath(); ctx.arc(sack.x+3, sack.y-19, 2.4, 0, 7); ctx.fill();
+  const f = at(0,0); drawShadow(f.x, f.y, 14, 5);
+  ctx.fillStyle = '#4a4038'; for(let i=0;i<7;i++){ const a = i*0.9; ctx.beginPath(); ctx.arc(f.x+Math.cos(a)*11, f.y+Math.sin(a)*5, 3, 0, 7); ctx.fill(); }
+  const fl = 0.8+0.2*Math.sin(t*9);
+  const gl = ctx.createRadialGradient(f.x, f.y-8, 2, f.x, f.y-8, 60); gl.addColorStop(0,'rgba(255,170,70,'+(0.35*fl)+')'); gl.addColorStop(1,'rgba(255,120,40,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(f.x, f.y-8, 60, 0, 7); ctx.fill();
+  ctx.fillStyle = '#ff9a2a'; ctx.beginPath(); ctx.moveTo(f.x-6, f.y); ctx.quadraticCurveTo(f.x, f.y-26*fl, f.x+6, f.y); ctx.fill();
+  ctx.fillStyle = '#ffe07a'; ctx.beginPath(); ctx.moveTo(f.x-3, f.y); ctx.quadraticCurveTo(f.x, f.y-14*fl, f.x+3, f.y); ctx.fill();
+  ctx.restore();
 }
 // ---------- Grave Statue event (v299) ----------
 // Touch the statue: "None shall pass". Three waves of skeletons claw out of the graves, then a final pack of 5 Skeletal Brutes; clear them and the Dark Crypt opens.
@@ -182,7 +214,7 @@ function updateCemeteryEvent(g, p, dt){
     ev.brutes = true;
     const tb = g.cem.tomb;
     for(let i=0;i<CEM_BRUTES;i++){
-      const a = Math.PI*0.5 + (i-1)*0.7, sp = {x:clamp(tb.x+Math.cos(a)*150, 40, g.cem.w-40), y:clamp(tb.y+Math.sin(a)*150, 40, g.cem.h-40)};
+      const a = -Math.PI*0.5 + (i-1)*0.7, sp = {x:clamp(tb.x+Math.cos(a)*170, 40, g.cem.w-40), y:clamp(tb.y+Math.sin(a)*170, 40, g.cem.h-40)};
       const e = spawnEnemy(g, 'skeletonbrute', sp); if(!e) continue;
       e.engaged = true; e.aggroed = true; e.cemEvt = true; e.aggroRange = 2000; e.leashRange = 99999; e.stunT = Math.max(e.stunT||0, 0.6);
       g.particles.push({type:'burst', x:sp.x, y:sp.y, t:0.6, max:0.6, color:'#9a8a78'});
@@ -251,8 +283,7 @@ function enterCursedCemetery(from){
   // entry -- it's now set when the player walks up to this zone's own
   // waypoint marker (see the nearCemWaypoint proximity check in update(),
   // which calls discoverWaypoint).
-  g.cem = makeCursedCemetery();
-  g.cem.waypoint = null;   // v453: the Cursed Cemetery has no waypoint any more
+  g.cem = makeCursedCemetery();   // (no waypoint since v453)
   g.room = g.cem;
   // Fixed area level (static difficulty)
   g.depth = 17;
@@ -287,6 +318,12 @@ function enterCursedCemetery(from){
       spawnCemeteryPack(g, anchors[i]);
     }
   }
+  // v532: stragglers shambling along the way down, and crows on the old graves
+  for(const a of g.cem.stragglers){ const n = 1 + Math.floor(Math.random()*3); for(let i=0;i<n;i++){ const e = spawnEnemy(g, i===2 || Math.random()<0.2 ? 'skeletonarcher' : 'skeleton', {x:a.x+rand(-70,70), y:a.y+rand(-60,60)}); if(e) e.wanderRadius = 90; } }
+  for(const a of g.cem.crowSpots){ const n = 3 + Math.floor(Math.random()*2); for(let i=0;i<n;i++){ const e = spawnEnemy(g, 'vulture', {x:a.x+rand(-60,60), y:a.y+rand(-50,50)}); if(!e) continue;
+    e.crow = true; e.name = 'Crow'; e.r = 10; e.maxHp = e.hp = Math.round(e.maxHp*0.6); e.dmg *= 0.7; e.aggroRange = 210; e.wanderRadius = 70; } }
+  // nothing starts close to the graverobbers' camp
+  { const c = g.cem.camp; g.enemies = g.enemies.filter(e=>dist(e, c) > 650); }
   owPoiRoll(g);   // v525: caches, a shrine, a guarded hoard
   g.followers = [];
   ensureFollowers(g);

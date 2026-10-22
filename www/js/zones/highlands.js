@@ -4,19 +4,85 @@
 // arches and the odd ruined watchtower. Giants roam, wargs prowl, rams graze in herds, rocs circle overhead and troll
 // tribes huddle round camp fires on the plateaus. Built on the same height-field terrain engine as the Mountain Pass.
 const HL_W = 7600, HL_H = 5400, HL_DEPTH = 32;   // v483: was 30; v516: bigger, a winding route with the Mountain Pass gate in the top-right corner
+// v534: the Highlands are generated fresh every visit. A random route (sideways or north-south switchbacks) winds from
+// the Black Marsh gate (anywhere along the south edge) to the Mountain Pass gate in the snowy top-right corner; jagged
+// cliff walls stand between its legs with a gap only at each turn, and the plateaus (troll camps), outcrops and short
+// ridges are placed clear of the trail and of each other. Each roll is checked: the pass must be reachable and the walk
+// to it must really wind (hlLayoutOk); otherwise it rolls again.
 function makeHighlands(){
+  let R = null;
+  for(let k=0;k<10;k++){ R = hlBuild(); if(hlLayoutOk(R)) return R; }
+  return R;
+}
+function hlLayoutOk(R){
+  const mg = hlGate(R,'marsh'), pg = hlGate(R,'pass');
+  const reach = terrReach(R, mg.x, mg.y-150);
+  if(!terrReachNear(R, reach, pg.x-130, pg.y+40, 80) || !terrReachNear(R, reach, R.waypoint.x, R.waypoint.y+40, 60)) return false;
+  for(const c of R.camps) if(!terrReachNear(R, reach, c.x, c.y+120, 120)) return false;
+  // the walk must follow the switchbacks: flood distance from the marsh gate to the pass at least 70% of the trail
+  const cols = R.cols, rows = R.rows, D = new Int32Array(cols*rows).fill(-1), TS = R.ts;
+  const s0 = Math.floor((mg.y-150)/TS)*cols + Math.floor(mg.x/TS); if(!reach[s0]) return false;
+  const q = [s0]; D[s0] = 0;
+  for(let hd=0; hd<q.length; hd++){ const i = q[hd], ix = i%cols, iy = (i/cols)|0; for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx = ix+dx, ny = iy+dy; if(nx<0||ny<0||nx>=cols||ny>=rows) continue; const j = ny*cols+nx; if(D[j]>=0 || !reach[j]) continue; D[j] = D[i]+1; q.push(j); } }
+  let best = -1; const gx = Math.floor((pg.x-130)/TS), gy = Math.floor((pg.y+40)/TS);
+  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++){ const j = (gy+dy)*cols+gx+dx; if(D[j]>=0 && (best<0 || D[j]<best)) best = D[j]; }
+  let L = 0; for(let i=0;i<R.trail.length-1;i++) L += dist(R.trail[i], R.trail[i+1]);
+  R._walk = best*TS; R._trailLen = L;
+  return best*TS >= L*0.7;
+}
+function hlBuild(){
   const TS = 50, w = HL_W, h = HL_H, cols = w/TS, rows = h/TS, N = cols*rows, M = 300;
+  const style = Math.random()<0.5 ? 'rows' : 'cols';
   const gates = [
-    {id:'marsh', x:5700, y:h-324, r:70, label:'BLACK MARSH', act:'toMarshFromHighlands', art:true, big:1.0, labelH:80},
-    {id:'pass',  x:w-324, y:520,  r:70, label:'MOUNTAIN PASS', act:'toPassFromHighlands', art:true, big:1.0, labelH:80},
+    {id:'marsh', x:Math.round(style==='rows' ? rand(w*0.35, w*0.8) : rand(w*0.12, w*0.3)), y:h-324, r:70, label:'BLACK MARSH', act:'toMarshFromHighlands', art:true, big:1.0, labelH:80},
+    {id:'pass',  x:w-324, y:Math.round(rand(450, 900)),  r:70, label:'MOUNTAIN PASS', act:'toPassFromHighlands', art:true, big:1.0, labelH:80},
   ];
   const marshGate = gates[0], passGate = gates[1];
-  const waypoint = {x:marshGate.x-430, y:marshGate.y-360, r:22};
-  // v516: the trail switches back twice: west along the south, up the west side, east through the middle, then up the east side to the pass in the top-right corner
+  const waypoint = {x:clamp(marshGate.x-430, 700, w-700), y:marshGate.y-360, r:22};
   const j = (a)=>rand(-a,a);
-  const trail = [{x:marshGate.x, y:marshGate.y}, {x:5560+j(60), y:4560}, {x:4700+j(80), y:4250}, {x:3350+j(80), y:4400}, {x:2100+j(80), y:4050},
-                 {x:1450+j(60), y:3500}, {x:1750+j(60), y:2900}, {x:3000+j(80), y:2650}, {x:4400+j(80), y:2850}, {x:5500+j(80), y:2650},
-                 {x:6150+j(60), y:2050}, {x:5500+j(80), y:1450}, {x:6300+j(80), y:1000}, {x:w-760, y:680}, {x:passGate.x, y:passGate.y}];
+  // the route: legs that sweep across the map, joined by turns; cliffs separate the legs except at the turns
+  const trail = [{x:marshGate.x, y:marshGate.y}, {x:marshGate.x+j(80), y:h-760}];
+  const walls = [];   // [{pts, hw}] barrier cliffs between the legs
+  const jag = (x0,y0,x1,y1)=>{ const n = Math.max(3, Math.round(Math.hypot(x1-x0,y1-y0)/450)), out = []; for(let i=0;i<=n;i++){ const t = i/n; out.push({x:x0+(x1-x0)*t + (i>0&&i<n ? j(90) : 0), y:y0+(y1-y0)*t + (i>0&&i<n ? j(90) : 0)}); } return out; };
+  if(style==='rows'){
+    const legs = 2 + Math.floor(Math.random()*3), ys = [];
+    for(let i=0;i<=legs;i++) ys.push(Math.round((h-760) - i*((h-760)-760)/legs + (i>0 && i<legs ? j(120) : 0)));
+    let side = marshGate.x > w/2 ? -1 : 1;   // the first leg heads away from the gate's side
+    for(let i=1;i<=legs;i++){
+      const xEnd = side<0 ? rand(800, 1300) : rand(w-1500, w-1000), yLeg = ys[i-1];
+      // the leg: across the map at yLeg, with a wobble
+      trail.push({x:(trail[trail.length-1].x+xEnd)/2 + j(200), y:yLeg+j(140)}, {x:xEnd, y:yLeg});
+      if(i<legs){
+        trail.push({x:xEnd + side*j(80) + side*120, y:(yLeg+ys[i])/2});   // the turn
+        const yW = (yLeg+ys[i])/2 + j(60), gapX = xEnd;   // cliff wall between this leg and the next, open at the turn
+        walls.push({pts: side<0 ? jag(gapX+420, yW, w-M+80, yW+j(160)) : jag(M-80, yW+j(160), gapX-420, yW), hw:rand(65,85)});
+      }
+      side = -side;
+    }
+    trail.push({x:w-760, y:passGate.y+160}, {x:passGate.x, y:passGate.y});
+  } else {
+    const legs = Math.random()<0.5 ? 3 : 5, xs = [];   // odd, so the last leg climbs straight on to the pass
+    for(let i=0;i<legs;i++) xs.push(Math.round(marshGate.x + i*((w-1000)-marshGate.x)/(legs-1) + (i>0 && i<legs-1 ? j(120) : 0)));
+    let up = true;
+    for(let i=0;i<legs;i++){
+      const x = xs[i], yEnd = up ? rand(800, 1150) : rand(h-1150, h-800);
+      trail.push({x:x+j(120), y:(trail[trail.length-1].y+yEnd)/2}, {x, y:yEnd});
+      if(i<legs-1){
+        const xN = xs[i+1], xW = (x+xN)/2 + j(50);
+        trail.push({x:(x+xN)/2, y:yEnd + (up ? -150 : 150)});   // the turn
+        walls.push({pts: up ? jag(xW+j(120), h-M+80, xW, yEnd+420) : jag(xW, yEnd-420, xW+j(120), M-80), hw:rand(65,85)});
+      }
+      up = !up;
+    }
+    if(up) trail.push({x:xs[legs-1]+j(60), y:900});   // the last leg ended at the bottom: climb to the pass
+    trail.push({x:w-760, y:passGate.y+160}, {x:passGate.x, y:passGate.y});
+  }
+  // smooth the key points into a flowing trail (Catmull-Rom)
+  { const P = trail.slice(); trail.length = 0;
+    for(let i=0;i<P.length-1;i++){ const p0 = P[Math.max(0,i-1)], p1 = P[i], p2 = P[i+1], p3 = P[Math.min(P.length-1,i+2)], n = Math.max(2, Math.ceil(dist(p1,p2)/140));
+      for(let k=0;k<n;k++){ const t = k/n, t2 = t*t, t3 = t2*t, cr = (a,b,c,d)=>0.5*((2*b) + (-a+c)*t + (2*a-5*b+4*c-d)*t2 + (-a+3*b-3*c+d)*t3);
+        trail.push({x:clamp(cr(p0.x,p1.x,p2.x,p3.x), M+60, w-M-60), y:clamp(cr(p0.y,p1.y,p2.y,p3.y), M+60, h-M-60)}); } }
+    trail.push(P[P.length-1]); trail[0] = P[0]; }
   const trailD = (x,y)=>distToPolyline(trail,x,y).d;
   const keepouts = gates.map(gt=>({x:gt.x,y:gt.y,r:380})).concat([{x:waypoint.x,y:waypoint.y,r:260}]);
   // rolling hills + shallow ravines
@@ -24,23 +90,24 @@ function makeHighlands(){
   const ravines = [];
   for(let k=0;k<3;k++){ const y0 = rand(900, h-900), pts = []; for(let x=M; x<=w-M; x+=500) pts.push({x, y:y0+260*Math.sin(x/900+k*2.1)+rand(-60,60)}); ravines.push(pts); }
   const ravD = (x,y)=>{ let d = 1e9; for(const r of ravines) d = Math.min(d, distToPolyline(r,x,y).d); return d; };
-  // broad plateaus: cliff edges, one or two ramps each (troll camps sit on top)
-  const plateaus = []; let tries = 0;
-  while(plateaus.length < 5 && tries < 4000){ tries++;
-    const R = rand(330, 520), x = rand(M+R+300, w-M-R-300), y = rand(M+R+300, h-M-R-300);
-    if(trailD(x,y) < R+380 || keepouts.some(k=>dist({x,y},k)<k.r+R+200) || plateaus.some(q=>dist(q,{x,y})<q.R+R+900)) continue;
+  // cliffs: the barrier walls between the legs, plus a few short ridges kept clear of the trail
+  const ridges = walls.slice();
+  const ridgeD = (x,y)=>{ let d = 1e9; for(const r of ridges) d = Math.min(d, distToPolyline(r.pts,x,y).d - r.hw); return d; };
+  let tries = 0;
+  while(ridges.length < walls.length+4 && tries < 4000){ tries++;
+    const x0 = rand(M+400, w-M-400), y0 = rand(M+400, h-M-400), a = Math.random()*6.28, L = rand(600, 1100), x1 = x0+Math.cos(a)*L, y1 = y0+Math.sin(a)*L;
+    if(x1<M+300 || x1>w-M-300 || y1<M+300 || y1>h-M-300) continue;
+    const pts = jag(x0,y0,x1,y1); let ok = true;
+    for(let t=0;t<=1 && ok;t+=0.1){ const px = x0+(x1-x0)*t, py = y0+(y1-y0)*t; if(trailD(px,py) < 340 || keepouts.some(k=>dist({x:px,y:py},k)<k.r+200) || ridgeD(px,py) < 520) ok = false; }
+    if(ok) ridges.push({pts, hw:rand(55,75)});
+  }
+  // broad plateaus (troll camps sit on top): clear of the trail, the cliffs and each other
+  const plateaus = []; tries = 0;
+  while(plateaus.length < 5 && tries < 6000){ tries++;
+    const R = rand(320, 480), x = rand(M+R+300, w-M-R-300), y = rand(M+R+300, h-M-R-300);
+    if(trailD(x,y) < R+400 || ridgeD(x,y) < R+620 || keepouts.some(k=>dist({x,y},k)<k.r+R+200) || plateaus.some(q=>dist(q,{x,y})<q.R+R+900)) continue;
     const tp = distToPolyline(trail,x,y).p, ra = Math.atan2(tp.y-y, tp.x-x);   // first ramp faces the trail
     plateaus.push({x, y, R, up:rand(70,95), ph:Math.random()*6.28, ramps:[ra].concat(Math.random()<0.6 ? [ra+Math.PI*rand(0.7,1.3)] : [])});
-  }
-  // steep ridgelines: long, narrow, impassable rock spines
-  // two long barrier ridges between the legs of the trail (each reaches one edge of the map, leaving the turn at the other end), so the way really winds
-  const ridges = [{x0:2500, y0:3560, x1:w-250, y1:3500, hw:70}, {x0:800, y0:1880, x1:5000, y1:1920, hw:70}]; tries = 0;
-  while(ridges.length < 6 && tries < 4000){ tries++;
-    const x0 = rand(M+400, w-M-400), y0 = rand(M+400, h-M-400), a = Math.random()*6.28, L = rand(700, 1300), x1 = x0+Math.cos(a)*L, y1 = y0+Math.sin(a)*L;
-    if(x1<M+300 || x1>w-M-300 || y1<M+300 || y1>h-M-300) continue;
-    let ok = true; for(let t=0;t<=1 && ok;t+=0.1){ const px = x0+(x1-x0)*t, py = y0+(y1-y0)*t; if(trailD(px,py) < 330 || keepouts.some(k=>dist({x:px,y:py},k)<k.r+200) || plateaus.some(q=>dist(q,{x:px,y:py})<q.R+420)) ok = false; }
-    if(!ok || ridges.some(r=>distToPolyline([{x:r.x0,y:r.y0},{x:r.x1,y:r.y1}], (x0+x1)/2, (y0+y1)/2).d < 700)) continue;
-    ridges.push({x0,y0,x1,y1, hw:rand(55,80)});
   }
   const plateauAt = (x,y)=>{ for(const q of plateaus){ const d = dist(q,{x,y}); const th = Math.atan2(y-q.y, x-q.x), Rr = q.R*(1+0.14*Math.sin(3*th+q.ph)+0.06*Math.sin(7*th)); if(d < Rr+580) return {q, d, Rr, th}; } return null; };
   const elevAt = (x,y)=>{
@@ -56,7 +123,7 @@ function makeHighlands(){
         if(pl.d < pl.Rr+band){ const t = (pl.d-pl.Rr)/band; e = top + (e-top)*t; }
       }
     }
-    for(const r of ridges){ const dd = distToPolyline([{x:r.x0,y:r.y0},{x:r.x1,y:r.y1}],x,y).d; if(dd < r.hw+30){ const t = dd < r.hw ? 1 : 1-(dd-r.hw)/30; e = Math.max(e, hills(x,y) + 130*t); } }
+    for(const r of ridges){ const dd = distToPolyline(r.pts,x,y).d; if(dd < r.hw+30){ const t = dd < r.hw ? 1 : 1-(dd-r.hw)/30; e = Math.max(e, hills(x,y) + 130*t); } }
     return e;
   };
   // walkable mask: inset rectangle bitten by rock at the edges, jagged outcrops inside
@@ -160,7 +227,7 @@ function makeHighlands(){
   // troll camps on the plateaus (and a couple in the open)
   const camps = [];
   // v516: a camp (fire, logs, tent, bones) needs a wide level patch -- no cliff lip, ridge or boulder band anywhere within ~300 of the fire
-  const campClear = (x,y,R0)=>{ R0 = R0||300; if(!walk(x,y)) return false; const ix0 = Math.max(0,Math.floor((x-R0)/TS)), ix1 = Math.min(cols-1,Math.floor((x+R0)/TS)), iy0 = Math.max(0,Math.floor((y-R0)/TS)), iy1 = Math.min(rows-1,Math.floor((y+R0)/TS)); for(let iy=iy0;iy<=iy1;iy++) for(let ix=ix0;ix<=ix1;ix++){ if(dist({x:(ix+0.5)*TS,y:(iy+0.5)*TS},{x,y})>R0) continue; const i = iy*cols+ix; if(B[i] || K[i]>=3 || Math.abs(E[i]-E[Math.floor(y/TS)*cols+Math.floor(x/TS)])>CR_STEP) return false; } return ridges.every(r=>distToPolyline([{x:r.x0,y:r.y0},{x:r.x1,y:r.y1}],x,y).d > R0+120); };
+  const campClear = (x,y,R0)=>{ R0 = R0||300; if(!walk(x,y)) return false; const ix0 = Math.max(0,Math.floor((x-R0)/TS)), ix1 = Math.min(cols-1,Math.floor((x+R0)/TS)), iy0 = Math.max(0,Math.floor((y-R0)/TS)), iy1 = Math.min(rows-1,Math.floor((y+R0)/TS)); for(let iy=iy0;iy<=iy1;iy++) for(let ix=ix0;ix<=ix1;ix++){ if(dist({x:(ix+0.5)*TS,y:(iy+0.5)*TS},{x,y})>R0) continue; const i = iy*cols+ix; if(B[i] || K[i]>=3 || Math.abs(E[i]-E[Math.floor(y/TS)*cols+Math.floor(x/TS)])>CR_STEP) return false; } return ridges.every(r=>distToPolyline(r.pts,x,y).d > R0+120); };
   for(const q of plateaus){ if(camps.length>=4) break; for(let k=0;k<12;k++){ const x = q.x+rand(-90,90), y = q.y+rand(-90,90); if(campClear(x,y)){ camps.push({x,y}); break; } } }
   for(tries=0; camps.length<5 && tries<9000; tries++){ const x = rand(M+400,w-M-400), y = rand(M+400,h-M-400); if(freeSpot(x,y,140,420) && campClear(x,y, tries<6000 ? 300 : 240) && !camps.some(c=>dist(c,{x,y})<1300)) camps.push({x,y}); }
   for(const c of camps){

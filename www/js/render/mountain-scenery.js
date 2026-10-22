@@ -289,11 +289,18 @@ function lakeShoreDist(wx,wy,TS,maxK){
   }
   return maxK+1;
 }
+// v531: parapet rails along whichever sides of a bridge tile face open water (the bridge can run either way now)
+function lakeBridgeRails(rails, wx, wy, TS){
+  if(lakeWaterAt(wx, wy-TS)) rails.push([wx-TS/2, wy-TS/2, wx+TS/2, wy-TS/2, -1]);
+  if(lakeWaterAt(wx, wy+TS)) rails.push([wx-TS/2, wy+TS/2, wx+TS/2, wy+TS/2, 1]);
+  if(lakeWaterAt(wx-TS, wy)) rails.push([wx-TS/2, wy-TS/2, wx-TS/2, wy+TS/2, -1]);
+  if(lakeWaterAt(wx+TS, wy)) rails.push([wx+TS/2, wy-TS/2, wx+TS/2, wy+TS/2, 1]);
+}
 function drawLakesideRuinsFloor(room, cam){
   const TS = 46, clk = (game&&game.clock)||0;
   const rails = [];
   for(let wx=-GROUND_MARGIN; wx<=room.w+GROUND_MARGIN; wx+=TS){
-    const inWaterX = wx > LAKE_WATER_X && wx < LAKE_WATER_X+LAKE_WATER_W;
+    const inWaterX = wx > LAKE_WATER_X-TS*3 && wx < LAKE_WATER_X+LAKE_WATER_W+TS*3;
     for(let wy=-GROUND_MARGIN; wy<=room.h+GROUND_MARGIN; wy+=TS){
       const iso = toIso(wx,wy);
       const sx = iso.x - cam.x, sy = iso.y - cam.y;
@@ -303,7 +310,7 @@ function drawLakesideRuinsFloor(room, cam){
       const checker = (((ix+iy)%2)+2)%2;
       const hsh = tileHash(ix,iy);
       const onIsland = lakeOnIsland(wx,wy);
-      const onRoad = lakeOnRoad(wx,wy);
+      const onBridge = lakeOnBridge(wx,wy), rdD = onBridge ? 0 : lakeRoadDist(wx,wy), onRoad = onBridge || rdD < SUN_ROAD_HALFW;   // v530: winding land roads
       const inWater = lakeWaterAt(wx,wy);
       let shore = 0;
       const wTile = !onIsland && inWater, fpSkip = FLOOR_PASS===1 ? wTile : FLOOR_PASS===2 ? !wTile : false;
@@ -317,19 +324,20 @@ function drawLakesideRuinsFloor(room, cam){
         ctx.fillStyle = pal[(checker^shimmer)?0:1];
         shore = sd;
       } else if(onRoad){
-        if(inWaterX){
+        if(onBridge){
           // laid stone slabs, alternate courses darker, a faint cracked slab now and then
           const course = (((Math.floor(wx/TS)*1)+iy)%3+3)%3;
           ctx.fillStyle = course===0 ? '#6f6a5e' : course===1 ? '#666157' : '#767064';
-        } else ctx.fillStyle = checker ? '#76664a' : '#6c5d42';
+        } else ctx.fillStyle = hsh < 0.2 ? '#6a5a40' : (checker ? '#76664a' : '#6c5d42');
       } else {
         const nw = lakeNearWater(wx,wy,TS,2);
-        if(nw===1) ctx.fillStyle = checker ? '#5e5442' : '#564d3c';       // wet sand / mud right at the water
+        if(rdD < SUN_ROAD_HALFW+TS && tileHash(iy*3+7, ix*5+1) < 0.55) ctx.fillStyle = checker ? '#5a5038' : '#544a34';   // worn road verge
+        else if(nw===1) ctx.fillStyle = checker ? '#5e5442' : '#564d3c';       // wet sand / mud right at the water
         else if(nw===2) ctx.fillStyle = checker ? '#4a5236' : '#444c32';  // sparse dry-grass fringe
         else ctx.fillStyle = hsh < 0.07 ? '#323f2a' : hsh > 0.94 ? '#454332' : (checker ? '#3b4a2f' : '#3f4f33');   // v456: dark, overgrown grass
       }
       if(fpSkip){
-        if(FLOOR_PASS===2 && onRoad && inWaterX && !onIsland){ if(lakeWaterAt(wx, wy-TS)) rails.push([wx-TS/2, wy-TS/2, wx+TS/2, wy-TS/2, -1]); if(lakeWaterAt(wx, wy+TS)) rails.push([wx-TS/2, wy+TS/2, wx+TS/2, wy+TS/2, 1]); }
+        if(FLOOR_PASS===2 && onBridge && !onIsland){ lakeBridgeRails(rails, wx, wy, TS); }
         continue;
       }
       drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
@@ -345,14 +353,13 @@ function drawLakesideRuinsFloor(room, cam){
           ctx.fillStyle = 'rgba(235,250,255,'+Math.max(0,a)+')';
           ctx.fillRect(iso.x + (hsh*9%1-0.5)*TS*0.6, iso.y + (hsh*17%1-0.5)*TS*0.3, 2, 1.2);
         }
-      } else if(onRoad && inWaterX && !onIsland){
+      } else if(onBridge && !onIsland){
         // slab joints
         ctx.strokeStyle = 'rgba(40,36,28,0.22)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(iso.x-TS*ISO_KX, iso.y); ctx.lineTo(iso.x, iso.y+TS*ISO_KY); ctx.lineTo(iso.x+TS*ISO_KX, iso.y); ctx.stroke();
         if(hsh>0.9){ ctx.fillStyle='rgba(70,110,60,0.35)'; ctx.beginPath(); ctx.ellipse(iso.x+(hsh*7%1-0.5)*18, iso.y+(hsh*13%1-0.5)*8, 4, 1.8, 0, 0, 7); ctx.fill(); }
         // parapet rails on the water-facing sides (queued, drawn after the deck so no tile overwrites them)
-        if(lakeWaterAt(wx, wy-TS)) rails.push([wx-TS/2, wy-TS/2, wx+TS/2, wy-TS/2, -1]);
-        if(lakeWaterAt(wx, wy+TS)) rails.push([wx-TS/2, wy+TS/2, wx+TS/2, wy+TS/2, 1]);
+        lakeBridgeRails(rails, wx, wy, TS);
       } else if(!onRoad && !onIsland){
         // pebbles/reeds on the beach
         const nw = lakeNearWater(wx,wy,TS,1);
@@ -385,15 +392,17 @@ function drawLakesideRuinsFloor(room, cam){
 function drawCemeteryFloor(room, cam){
   const TS = 46;
   for(let wx=-GROUND_MARGIN; wx<=room.w+GROUND_MARGIN; wx+=TS){
-    const onPathX = cemOnRoad(wx, CEM_H/2); // cemOnRoad only depends on x
     for(let wy=-GROUND_MARGIN; wy<=room.h+GROUND_MARGIN; wy+=TS){
       const iso = toIso(wx,wy);
       const sx = iso.x - cam.x, sy = iso.y - cam.y;
       if(sx < -80 || sx > W+80 || sy < -80 || sy > H+80) continue;
       if(wx<0||wy<0||wx>room.w||wy>room.h){ const ef = edgeFill(room, wx, wy); if(ef){ if(FLOOR_PASS!==2){ ctx.fillStyle = ef; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY); } continue; } }
-      const checker = (((Math.floor(wx/TS)+Math.floor(wy/TS))%2)+2)%2;
-      if(onPathX) ctx.fillStyle = checker ? '#3a3448' : '#332e40';
-      else ctx.fillStyle = checker ? '#20233a' : '#262a42';
+      const ix = Math.floor(wx/TS), iy = Math.floor(wy/TS), checker = ((ix+iy)%2+2)%2, hs = tileHash(ix, iy);
+      const rd = cemRoadDist(wx, wy), inF = cemInFence(wx, wy);   // v532: winding road, walled graveyard
+      if(rd < CEM_ROAD_HALFW) ctx.fillStyle = hs < 0.2 ? '#2e2a3a' : (checker ? '#3a3448' : '#332e40');
+      else if(rd < CEM_ROAD_HALFW+TS && tileHash(iy*3+7, ix*5+1) < 0.5) ctx.fillStyle = checker ? '#2a2a3c' : '#262638';
+      else if(inF) ctx.fillStyle = hs < 0.12 ? '#1a1c2c' : (checker ? '#1c1f33' : '#21243a');
+      else ctx.fillStyle = hs < 0.1 ? '#1e2334' : (checker ? '#20233a' : '#262a42');
       drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
     }
   }

@@ -2041,15 +2041,19 @@ function updateStep(dt){
     const rdR = effectiveRank(p,'raiseDead')||0;
     if(rdR>0 && !(p.raiseDeadCd>0)){
       // v489: recasting blows up every skeleton still standing (a Sacrifice burst) and raises a full fresh set
-      for(let k=g.followers.length-1;k>=0;k--){ const f = g.followers[k]; if(f.kind!=='skeleton') continue; g.followers.splice(k,1); necroSkeletonDeath(g, f, true); }
+      let blown = 0;
+      for(let k=g.followers.length-1;k>=0;k--){ const f = g.followers[k]; if(f.kind!=='skeleton') continue; g.followers.splice(k,1); necroSkeletonDeath(g, f, true); blown++; }
       p.skelDown = 0; if(g.followerPending) g.followerPending = g.followerPending.filter(x=>x.kind!=='skeleton');
-      const n0 = g.followers.length; ensureFollowers(g);
-      for(let k=n0;k<g.followers.length;k++){ const nf = g.followers[k]; if(nf.kind!=='skeleton') continue; const an = Math.random()*6.283; nf.x = p.x+Math.cos(an)*30; nf.y = p.y+Math.sin(an)*30; g.particles.push({type:'burst', x:nf.x, y:nf.y, t:0.45, max:0.45, color:'#a08ad0'}); }
+      // v530: after the Sacrifice blast the new set claws out of the earth around you 1.5s later
+      if(blown){ p.skelHold = 1; g.skelRaiseT = SKEL_RECAST_DELAY; for(let k=0;k<6;k++){ const an = k*1.05; g.particles.push({type:'burst', x:p.x+Math.cos(an)*70, y:p.y+Math.sin(an)*55, t:0.5, max:0.5, color:'#5a4630'}); } }
+      else necroRaiseNow(g, p);
       p.raiseDeadCdMax = applyCdr(p, RAISE_DEAD_CD); p.raiseDeadCd = p.raiseDeadCdMax;
       g.particles.push({type:'ring', x:p.x, y:p.y, t:0.4, max:0.4, r:70, color:'#a08ad0'});
       showMsg('Rise!', 0.7);
     }
   }
+  if(g.skelRaiseT>0){ g.skelRaiseT -= dt; if(g.skelRaiseT<=0){ p.skelHold = 0; necroRaiseNow(g, p); } }
+  else if(p.skelHold) p.skelHold = 0;   // (a reload mid-wait never leaves them held)
 
   // v460 Meteor: lands on the thickest group in range after a moment, then leaves burning ground
   if(p.meteorCd>0) p.meteorCd -= dt;
@@ -2390,37 +2394,8 @@ function updateStep(dt){
     e.facing = {x:Math.cos(fAng), y:Math.sin(fAng)};
     e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
 
-    // Leviathan (Lakeside Ruins, v71): fixed in place in the water --
-    // "active" (visible, popped up, and able to fire) only once the
-    // target is within oneScreenDist() of it, the same "roughly one
-    // viewport away" world-distance threshold the follower teleport-back
-    // failsafe uses (see oneScreenDist() above) rather than the isOnScreen
-    // camera-space check every other enemy type is gated on, so it can
-    // pop up the instant the player is in range even before the camera
-    // has actually panned to show it. Never moves (speed:0) and is
-    // handled in its own branch that `continue`s before the shared
-    // clamp+pushOutOfRect tail below -- so it's never shoved out of the
-    // water obstacle it deliberately sits inside.
-    if(e.type==='leviathan'){
-      if(e.lvBoss){ updateLeviathanBoss(g, e, dt, target, d, room); continue; }
-      e.active = d < oneScreenDist();
-      e.moving = false;
-      if(e.active && e.atkCd<=0){
-        e.atkCd = e.atkCdMax;
-        e.atkAnimT = 0.3;
-        const ang = Math.atan2(target.y-e.y, target.x-e.x);
-        // A slow, lobbed "poison ball" -- visually distinct (bigger,
-        // slower, green) from the Bandit Archer's arrow/Spider's web bolt,
-        // reusing the same enemy-projectile mechanism (see the projectile-
-        // update loop's pr.from!=='player' branch) as a plain direct-damage
-        // hit; there's no existing player-facing poison-DoT status to hook
-        // into (poisonT/poisonDps only exist on enemies, from the Rogue's
-        // own Poison Knives), so introducing one is left out of scope --
-        // the "poison" is a visual/thematic flourish here, not a new DoT.
-        g.projectiles.push({x:e.x,y:e.y,vx:Math.cos(ang)*170,vy:Math.sin(ang)*170,r:9,dmg:e.dmg,from:'enemy',life:2.6,color:'#7dd45a',srcEnemy:e,targetRef:target,isPoisonBall:true});
-      }
-      continue;
-    }
+    // Leviathans (Kraken, Marsh/Pool Leviathans, Breach pools): every one runs its own boss state machine
+    if(e.type==='leviathan'){ updateLeviathanBoss(g, e, dt, target, d, room); continue; }
 
     // Boss slam: an independent, ground-targeted AoE on its own cooldown --
     // telegraphed half a second early with a red ring, then it hits anyone
@@ -3558,8 +3533,7 @@ function updateStep(dt){
     const nearWestGate = dist(p, g.sun.westGate) < g.sun.westGate.r + p.r + 22;
     const nearEastGate = dist(p, g.sun.eastGate) < g.sun.eastGate.r + p.r + 22;
     const nearSouthGate = dist(p, g.sun.southGate) < g.sun.southGate.r + p.r + 22;
-    const nearRobber = (g.sun.graverobbers||[]).some(r=>dist(p,r) < 70);
-    updateInteractPrompt(nearForestGate ? 'toForestFromSunlit' : nearSunWaypoint ? 'waypointSun' : nearWestGate ? 'toLighthouseTower' : nearEastGate ? 'toLakesideRuins' : nearSouthGate ? 'toCursedCemetery' : nearRobber ? 'talkGraverobbers' : null);
+    updateInteractPrompt(nearForestGate ? 'toForestFromSunlit' : nearSunWaypoint ? 'waypointSun' : nearWestGate ? 'toLighthouseTower' : nearEastGate ? 'toLakesideRuins' : nearSouthGate ? 'toCursedCemetery' : null);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.deep){
     updateDeep(g, dt);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='highward'){
@@ -3673,11 +3647,10 @@ function updateStep(dt){
     const nearLakeWaypoint = !g.lake.waypoint.off && dist(p, g.lake.waypoint) < g.lake.waypoint.r + p.r + 24;
     const nearRuinsSpot = dist(p, g.lake.ruinsSpot) < g.lake.ruinsSpot.r + p.r + 22;
     const ruinsKind = nearRuinsSpot ? (p.ruinsEntranceOpen ? 'toAncientRuins' : (canStudyRuins(p) ? 'studyRuins' : null)) : null;
-    const nearMarshGate = dist(p, g.lake.marshGate) < g.lake.marshGate.r + p.r + 22;
     const ev = g.lake.event, evActive = !!(ev && ev.active);
     const nearScholarR = !!p.scholarMeet && !p.ruinsEntranceOpen && !evActive && dist(p, g.lake.scholarSpot) < 70;
     updateRuinsEvent(g, dt);
-    updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromLakeside' : nearMarshGate ? 'toBlackMarsh' : nearScholarR ? 'scholarRuins' : nearLakeWaypoint ? 'waypointLakeside' : ruinsKind);
+    updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromLakeside' : nearScholarR ? 'scholarRuins' : nearLakeWaypoint ? 'waypointLakeside' : ruinsKind);
     if(g.chest && !g.chest.opened && dist(g.chest,p) < g.chest.r+p.r){
       g.chest.opened = true;
       if(Math.random() < 0.7){
@@ -3704,7 +3677,7 @@ function updateStep(dt){
     const cauldronUsable = p.witchRescued || (cq && cq.status==='active');
     const nearP = dist(p, bm.poolGate) < bm.poolGate.r + p.r + 22;
     const nearH = bm.highGate && dist(p, bm.highGate) < bm.highGate.r + p.r + 22;
-    updateInteractPrompt(nearH ? 'toHighlands' : nearW ? 'toLakesideFromMarsh' : nearE ? 'toForgottenTower' : nearP ? 'toMarshPool' : nearC ? 'marshCauldron' : nearWp ? 'waypointMarsh' : null);
+    updateInteractPrompt(nearH ? 'toHighlands' : nearW ? 'marshCaveBlocked' : nearE ? 'toForgottenTower' : nearP ? 'toMarshPool' : nearC ? 'marshCauldron' : nearWp ? 'waypointMarsh' : null);
   } else if(g.scene==='cursedcemetery'){
     // Cursed Cemetery (v72): same open-zone shape as every other
     // overworld zone -- no genRoom() portal/chest, one edge gate back to
@@ -3715,7 +3688,8 @@ function updateStep(dt){
     const nearCemWaypoint = !!g.cem.waypoint && dist(p, g.cem.waypoint) < g.cem.waypoint.r + p.r + 24;
     const nearTomb = dist(p, g.cem.tomb) < g.cem.tomb.r + p.r + 26;
     const nearStatue = !p.cemeteryCleared && !(g.cem.evt && g.cem.evt.stage>0) && dist(p, g.cem.statue) < g.cem.statue.r + p.r + 30;
-    updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromCemetery' : nearCemWaypoint ? 'waypointCemetery' : nearTomb ? (p.cemeteryCleared ? 'toDarkCrypt' : 'tombSealed') : nearStatue ? 'cemStatue' : null);
+    const nearRobber = (g.cem.graverobbers||[]).some(r=>dist(p,r) < 70);   // v532: their camp is just inside the gate
+    updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromCemetery' : nearCemWaypoint ? 'waypointCemetery' : nearTomb ? (p.cemeteryCleared ? 'toDarkCrypt' : 'tombSealed') : nearStatue ? 'cemStatue' : nearRobber ? 'talkGraverobbers' : null);
     // v299: the crypt no longer opens by clearing the whole graveyard -- touch the Grave Statue, survive its waves, and the way opens.
     { const st = g.cem.statue; pushOutOfRect(p, {x:st.x-st.r*0.6, y:st.y-st.r*0.6, w:st.r*1.2, h:st.r*1.2}); }
     updateCemeteryEvent(g, p, dt);

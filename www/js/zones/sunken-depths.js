@@ -97,8 +97,11 @@ function makeSunkenDepths(){
     for(let i=0;i<9;i++){ const a = i/9*6.28 + rnd()*0.4, rr = 70 + rnd()*70; horde.push({x:ch.x+Math.cos(a)*rr*1.2, y:ch.y+Math.sin(a)*rr*0.75, s:0.7+rnd()*0.6, gems:rnd()<0.5}); }
     const ent = chs[0];
     const entrance = {x:ent.x-ent.rx*0.6, y:ent.y, r:34};
+    // v531: the back of the hoard cavern, where a tunnel to the Black Marsh opens once the Kraken is dead
+    let tunnelSpot = {x:ch.x+ch.rx*0.55, y:ch.y-ch.ry*0.3, r:34};
+    for(let k=0;k<12 && !mineOpenAt(R, tunnelSpot.x, tunnelSpot.y+40);k++){ tunnelSpot.x -= 18; tunnelSpot.y += 12; }
     Object.assign(R, {subzone:'sunken', entrance, entranceSide:'left', entranceSpot:{x:entrance.x+90, y:entrance.y},
-      chestSpot:{x:ch.x, y:ch.y, r:24}, extraChestSpot:{x:ch.x+125, y:ch.y+38, r:24}, portalSpot:{x:ch.x-150, y:ch.y+70},
+      chestSpot:{x:ch.x, y:ch.y, r:24}, extraChestSpot:{x:ch.x+125, y:ch.y+38, r:24}, portalSpot:{x:ch.x-150, y:ch.y+70}, tunnelSpot,
       pools, rocks, crystals, horde, woodBridge:{x0:SKP.brX0, x1:SKP.isx-SKP.isr+20, y:SKP.brY, half:SKP.brHalf}, island:{x:SKP.isx, y:SKP.isy, r:SKP.isr}, name:'Sunken Depths'});
   } finally { Math.random = saveRand; }
   return subFinish(R);
@@ -259,8 +262,8 @@ function enterMarshPool(opts){ enterSubZone('pool', opts); }
 // after the boss: a reward chest (once per character) and a portal home to Mistfall
 function subBossDown(g){
   const t = g.tower, p = g.player;
-  if(!t || !t.chestSpot || t.clearPortal) return;
-  if(t.subzone==='sunken') t.portalPending = true;   // v507: the Kraken's portal (to the Lakeside Ruins) opens only after the chests are emptied
+  if(!t || !t.chestSpot || t.clearPortal || t.tunnel) return;
+  if(t.subzone==='sunken'){ t.tunnel = t.tunnelSpot; }   // v531: no portal -- a one-way tunnel to the Black Marsh opens behind the hoard
   else if(t.subzone==='pool' && g.lastKillPos){   // v521: the way home opens where the Leviathan fell (pulled out of the water toward the shore)
     let x = g.lastKillPos.x, y = g.lastKillPos.y, n = 0;
     const cs = t.chestSpot, rm = g.room, d0 = Math.max(1, Math.hypot(cs.x-x, cs.y-y)), ux = (cs.x-x)/d0, uy = (cs.y-y)/d0;
@@ -295,9 +298,10 @@ function updateSubZone(g, dt){
   if(dist(p, t.entrance) < t.entrance.r + p.r + 22) skind = t.subzone==='sunken' ? 'sunkenToTemple' : t.subzone==='temple' ? 'templeToRuins' : 'poolToMarsh';
   else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ skind = 'waypointAncientRuins'; }
   else if(t.stairsDown && dist(p, t.stairsDown) < t.stairsDown.r + p.r + 22) skind = 'toSunkenDepths';
-  else if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) skind = t.clearPortal.toLake ? 'toLakeFromSunken' : 'toTownFromTower';
+  else if(t.tunnel && dist(p, t.tunnel) < t.tunnel.r + p.r + 24) skind = 'sunkenTunnel';
+  else if(t.clearPortal && dist(p, t.clearPortal) < t.clearPortal.r + p.r + 22) skind = 'toTownFromTower';
   updateInteractPrompt(skind);
-  if(g.bossKilled && !t.clearPortal && !t.portalPending){ subBossDown(g); showMsg(t.subzone==='sunken' ? 'Explore the area for any lost treasures.' : 'The Leviathan sinks into the pool.', 3.0, undefined, true); }
+  if(g.bossKilled && !t.clearPortal && !t.portalPending && !t.tunnel){ subBossDown(g); if(t.subzone==='sunken'){ shakeScreen(g, 10, 1.1); showMsg('The way opens', 2.4, '#9fd8ff'); t.exploreMsgT = 2.6; } else showMsg('The Leviathan sinks into the pool.', 3.0, undefined, true); }
   if(t.extraChest && !t.extraChest.opened && dist(t.extraChest,p) < t.extraChest.r+p.r){
     t.extraChest.opened = true; p.sunkenChest2Looted = true;
     const it = classRewardItem(p, Math.max(p.level, g.depth), 'rare'), it2 = classRewardItem(p, Math.max(p.level, g.depth), 'reward');
@@ -307,11 +311,7 @@ function updateSubZone(g, dt){
     bagPulse(); saveGame();
   }
   if(g.chest && !g.chest.opened && g.chest.subBoss && dist(g.chest,p) < g.chest.r+p.r) openSubChest(g);
-  if(t.portalPending && !t.clearPortal && (!g.chest || g.chest.opened) && (!t.extraChest || t.extraChest.opened)){   // v507: all chests emptied -> the way back opens
-    const sp = t.portalSpot || {x:t.chestSpot.x-40, y:t.chestSpot.y+140};
-    t.clearPortal = {x:sp.x, y:sp.y, r:24, toLake:true}; t.portalPending = false;
-    showMsg('A portal opens, back to the Lakeside Ruins.', 3.0, '#9fd8ff'); g.particles.push({type:'ring', x:sp.x, y:sp.y, t:0.6, max:0.6, r:70, color:'#9fd8ff'});
-  }
+  if(t.exploreMsgT>0){ t.exploreMsgT -= dt; if(t.exploreMsgT<=0) showMsg('Explore the depths', 2.6, '#9fd8ff'); }
   // v491: the Sunken Depths are charged with static -- two stacks of a lightning debuff while you are down here
   if(t.subzone==='sunken' && !g.over && p.hp>0){
     const rate = p.maxHp*SUNKEN_STATIC_PCT*SUNKEN_STATIC_STACKS*(1-elementResist(p,'lightning')/100);

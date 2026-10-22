@@ -35,7 +35,8 @@ const SUNLIT_PACK_COUNT = 70;
 // v527: the Lighthouse (west), Lakeside Ruins (east) and Cemetery (south) gates sit at a random spot along their
 // edge every visit; a winding old road runs from each gate (and from the Forest gate) into the crossroad centre
 // beside the waypoint. room.roads = the smoothed polylines, room.roadGrid = buckets for sunRoadNear().
-function sunWindingRoad(a, b, wob){
+function sunWindingRoad(a, b, wob, bw, bh){
+  bw = bw || SUN_W; bh = bh || SUN_H;
   const dx = b.x-a.x, dy = b.y-a.y, L = Math.hypot(dx,dy)||1, nx = -dy/L, ny = dx/L;
   const key = [a];
   const mids = L > 1400 ? 3 : 2;
@@ -47,7 +48,7 @@ function sunWindingRoad(a, b, wob){
     const n = Math.max(2, Math.ceil(Math.hypot(p2.x-p1.x, p2.y-p1.y)/60));
     for(let k=0;k<n;k++){ const t = k/n, t2 = t*t, t3 = t2*t;
       const cr = (q0,q1,q2,q3)=>0.5*((2*q1) + (-q0+q2)*t + (2*q0-5*q1+4*q2-q3)*t2 + (-q0+3*q1-3*q2+q3)*t3);
-      out.push({x:clamp(cr(p0.x,p1.x,p2.x,p3.x), 60, SUN_W-60), y:clamp(cr(p0.y,p1.y,p2.y,p3.y), 60, SUN_H-60)}); }
+      out.push({x:clamp(cr(p0.x,p1.x,p2.x,p3.x), 60, bw-60), y:clamp(cr(p0.y,p1.y,p2.y,p3.y), 60, bh-60)}); }
   }
   out.push({x:b.x, y:b.y});
   return out;

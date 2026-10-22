@@ -451,7 +451,6 @@ function enterSunlitPlains(from){
   // waypoint marker (see the nearSunWaypoint proximity check in update(),
   // which calls discoverWaypoint).
   g.sun = makeSunlitPlains();
-  g.sun.graverobbers = makeGraverobbers(g.sun);
   g.room = g.sun;
   // Fixed area level (static difficulty)
   g.depth = 10;   // v529: Lv 10 (v230: 8)
