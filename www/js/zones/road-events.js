@@ -70,10 +70,13 @@ function roadEvClearAround(g, s, R){ g.enemies = g.enemies.filter(e=>e.roadEv ||
 function roadEvRoll(g){
   g.roadEv = null; g.roadEvRoom = g.room;
   const cfg = ROAD_EV_ZONES[g.scene]; if(!cfg || !g.room) return;
+  // v532: each encounter happens at most once per play session (since the character was loaded), so the peddler
+  // or a caravan never turns up again in the next zone
+  const seen = g.roadEvSeen || (g.roadEvSeen = {});
   let kind = null;
-  if(Math.random() < ROAD_MERCHANT_CHANCE) kind = 'merchant';
+  if(!seen.merchant && Math.random() < ROAD_MERCHANT_CHANCE) kind = 'merchant';
   else if(Math.random() < cfg.chance){
-    const ks = Object.keys(cfg.kinds), tot = ks.reduce((a,k)=>a+cfg.kinds[k], 0);
+    const ks = Object.keys(cfg.kinds).filter(k=>!seen[k]), tot = ks.reduce((a,k)=>a+cfg.kinds[k], 0);
     let r = Math.random()*tot; for(const k of ks){ r -= cfg.kinds[k]; if(r <= 0){ kind = k; break; } }
   }
   if(window.__roadEvForce) kind = window.__roadEvForce;
@@ -81,6 +84,7 @@ function roadEvRoll(g){
   const field = kind==='scarecrow' || kind==='herd' || kind==='cellar';
   const s = field ? roadEvFieldSpot(g, kind==='cellar' ? 130 : 90) : roadEvRoadSpot(g, kind==='merchant' ? 70 : 80);
   if(!s) return;
+  seen[kind] = true;
   const ev = {kind, x:s.x, y:s.y, road:s.road||null, state:'idle', mobs:[], seed:Math.random()};
   if(s.road){ ev.flip = s.x < s.road.x; }
   roadEvClearAround(g, ev, kind==='herd' ? 700 : 520);
@@ -193,7 +197,7 @@ function roadScarecrowTick(g, e, dt){
     const live = g.enemies.filter(x=>x.scareCrow && x.hp>0).length;
     for(let i=0;i<Math.min(2, 4-live);i++){
       const c = spawnEnemy(g, 'vulture', {x:e.x+rand(-40,40), y:e.y+rand(-40,40)}); if(!c) continue;
-      c.scareCrow = true; c.roadEv = true; c.r = 10; c.maxHp = c.hp = Math.round(c.maxHp*0.55); c.dmg *= 0.6; c.aggroed = true; c.aggroRange = 900; c.noReward = true; c.name = 'Crow';
+      c.scareCrow = true; c.crow = true; c.roadEv = true; c.r = 10; c.maxHp = c.hp = Math.round(c.maxHp*0.55); c.dmg *= 0.6; c.aggroed = true; c.aggroRange = 900; c.noReward = true; c.name = 'Crow';
     }
     showMsg('Crows burst from the scarecrow\'s coat!', 1.6, '#c9a050');
   }

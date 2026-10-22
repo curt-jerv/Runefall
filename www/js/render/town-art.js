@@ -609,6 +609,7 @@ function drawWaypointIso(pr, clock, unlocked){
 // portal's color) instead of a flat swirling disc.
 // v169: the Abandoned Mine's real entrance -- a timber-framed tunnel mouth cut into a rock face, with
 // rails running out of the dark, hanging lanterns, rubble and a pickaxe.
+// (named for its old mine look; since v532 it is a natural cave mouth, used for every cave entrance)
 function drawMineEntranceIso(pos, clock){
   const iso = toIso(pos.x, pos.y), t = clock||0;
   drawShadow(iso.x, iso.y+6, 70, 14);
@@ -625,42 +626,27 @@ function drawMineEntranceIso(pos, clock){
   ctx.beginPath(); ctx.moveTo(38,-84); ctx.lineTo(62,-56); ctx.lineTo(76,6); ctx.lineTo(44,6); ctx.lineTo(36,-40); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(20,16,14,0.7)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(-56,-20); ctx.lineTo(-44,-44); ctx.moveTo(48,-30); ctx.lineTo(56,-12); ctx.moveTo(-14,-86); ctx.lineTo(-6,-66); ctx.stroke();
-  // tunnel mouth
-  const tg = ctx.createRadialGradient(0,-26,4,0,-26,40); tg.addColorStop(0,'#000'); tg.addColorStop(1,'#0c0a0c');
+  // v532: a natural cave mouth -- a ragged dark opening in the rock, no timbers, lamps or rails
+  const tg = ctx.createRadialGradient(0,-22,4,0,-22,46); tg.addColorStop(0,'#000'); tg.addColorStop(0.7,'#07060a'); tg.addColorStop(1,'#16131a');
   ctx.fillStyle = tg;
-  ctx.beginPath(); ctx.moveTo(-30,4); ctx.lineTo(-30,-42); ctx.quadraticCurveTo(0,-66,30,-42); ctx.lineTo(30,4); ctx.closePath(); ctx.fill();
-  // distant faint glow inside
-  const gl = 0.10 + 0.05*Math.sin(t*2.2);
-  ctx.fillStyle = 'rgba(255,150,60,'+gl+')'; ctx.beginPath(); ctx.ellipse(0,-14,9,6,0,0,7); ctx.fill();
-  // timber frame: posts, lintel, braces
-  const wood = '#7a5230', woodD = '#4a3019';
-  ctx.fillStyle = wood; ctx.strokeStyle = woodD; ctx.lineWidth = 1.3;
-  for(const sx of [-1,1]){ ctx.beginPath(); ctx.rect(sx*30-4.5,-50,9,56); ctx.fill(); ctx.stroke(); }
-  ctx.beginPath(); ctx.rect(-42,-60,84,10); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = woodD;
-  for(const sx of [-1,1]){ ctx.beginPath(); ctx.moveTo(sx*26,-50); ctx.lineTo(sx*26,-38); ctx.lineTo(sx*14,-50); ctx.closePath(); ctx.fill(); }
-  ctx.fillStyle = '#a4703f'; ctx.fillRect(-40,-59,80,2);
-  // hanging lanterns
-  for(const sx of [-1,1]){
-    const lx = sx*40, fl = 0.75+0.25*Math.sin(t*6+sx*2);
-    ctx.strokeStyle = '#2a2018'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(lx,-50); ctx.lineTo(lx,-40); ctx.stroke();
-    const lg = ctx.createRadialGradient(lx,-34,1,lx,-34,26); lg.addColorStop(0,'rgba(255,190,90,'+(0.55*fl)+')'); lg.addColorStop(1,'rgba(255,150,50,0)');
-    ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(lx,-34,26,0,7); ctx.fill();
-    ctx.fillStyle = '#ffcf7a'; ctx.strokeStyle = '#3a2a18'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.rect(lx-3.5,-40,7,9); ctx.fill(); ctx.stroke();
-  }
-  // rails and ties leading out of the tunnel
-  ctx.strokeStyle = '#3c3630'; ctx.lineWidth = 1.6;
-  for(let i=0;i<5;i++){ const y = 2+i*5, w = 15+i*2.2; ctx.beginPath(); ctx.moveTo(-w,y); ctx.lineTo(w,y); ctx.stroke(); }
-  ctx.strokeStyle = '#8b8378'; ctx.lineWidth = 1.8;
-  ctx.beginPath(); ctx.moveTo(-9,-4); ctx.lineTo(-17,28); ctx.moveTo(9,-4); ctx.lineTo(17,28); ctx.stroke();
-  // rubble
+  ctx.beginPath(); ctx.moveTo(-36,5); ctx.lineTo(-38,-14); ctx.quadraticCurveTo(-40,-36,-26,-50); ctx.lineTo(-14,-58); ctx.quadraticCurveTo(-2,-66,10,-60);
+  ctx.lineTo(24,-52); ctx.quadraticCurveTo(38,-40,36,-18); ctx.lineTo(39,5); ctx.closePath(); ctx.fill();
+  // rock lip round the opening, lit along the top edge
+  ctx.strokeStyle = 'rgba(160,150,138,0.45)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-38,-14); ctx.quadraticCurveTo(-40,-36,-26,-50); ctx.lineTo(-14,-58); ctx.quadraticCurveTo(-2,-66,10,-60); ctx.lineTo(24,-52); ctx.quadraticCurveTo(38,-40,36,-18); ctx.stroke();
+  // teeth of rock hanging over the mouth
+  ctx.fillStyle = '#4a443f';
+  for(const [sx,sw,sl] of [[-22,7,13],[-8,5,9],[6,8,15],[20,6,10]]){ ctx.beginPath(); ctx.moveTo(sx-sw,-54+Math.abs(sx)*0.12); ctx.lineTo(sx+sw,-54+Math.abs(sx)*0.12); ctx.lineTo(sx+1,-54+sl+Math.abs(sx)*0.12); ctx.closePath(); ctx.fill(); }
+  // moss and roots trailing over the lip
+  ctx.strokeStyle = 'rgba(70,96,52,0.8)'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+  for(const [mx,ml] of [[-30,16],[-16,10],[14,18],[28,12]]){ ctx.beginPath(); ctx.moveTo(mx,-50); ctx.quadraticCurveTo(mx+3,-50+ml*0.5,mx-1,-50+ml); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(70,96,52,0.6)'; ctx.beginPath(); ctx.ellipse(-44,-58,14,6,-0.5,0,7); ctx.fill(); ctx.beginPath(); ctx.ellipse(40,-50,12,5,0.6,0,7); ctx.fill();
+  // a cold draught: a faint drift of mist at the threshold
+  const mist = 0.10 + 0.05*Math.sin(t*1.6);
+  ctx.fillStyle = 'rgba(190,200,210,'+mist+')'; ctx.beginPath(); ctx.ellipse(0,0,30,6,0,0,7); ctx.fill();
+  // fallen rocks and scree spilling out of the cave
   ctx.fillStyle = '#58524b'; ctx.strokeStyle = '#1d1a18'; ctx.lineWidth = 1;
-  for(const [rx,ry,rr] of [[-56,8,8],[-46,12,5],[52,10,9],[62,6,5],[-34,16,4]]){ ctx.beginPath(); ctx.ellipse(rx,ry,rr,rr*0.65,0,0,7); ctx.fill(); ctx.stroke(); }
-  // pickaxe leaning on the frame
-  ctx.save(); ctx.translate(-46,4); ctx.rotate(-0.3);
-  ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-34); ctx.stroke();
-  ctx.strokeStyle = '#9aa2ac'; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(-9,-31); ctx.quadraticCurveTo(0,-38,9,-31); ctx.stroke();
-  ctx.restore();
+  for(const [rx,ry,rr] of [[-56,8,8],[-46,12,5],[52,10,9],[62,6,5],[-34,16,4],[28,14,5],[40,18,3],[-20,20,3]]){ ctx.beginPath(); ctx.ellipse(rx,ry,rr,rr*0.65,0,0,7); ctx.fill(); ctx.stroke(); }
   ctx.restore();
 }
 function drawBlacksmithIso(b, clock){

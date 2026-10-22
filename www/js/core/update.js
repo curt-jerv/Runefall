@@ -3533,8 +3533,7 @@ function updateStep(dt){
     const nearWestGate = dist(p, g.sun.westGate) < g.sun.westGate.r + p.r + 22;
     const nearEastGate = dist(p, g.sun.eastGate) < g.sun.eastGate.r + p.r + 22;
     const nearSouthGate = dist(p, g.sun.southGate) < g.sun.southGate.r + p.r + 22;
-    const nearRobber = (g.sun.graverobbers||[]).some(r=>dist(p,r) < 70);
-    updateInteractPrompt(nearForestGate ? 'toForestFromSunlit' : nearSunWaypoint ? 'waypointSun' : nearWestGate ? 'toLighthouseTower' : nearEastGate ? 'toLakesideRuins' : nearSouthGate ? 'toCursedCemetery' : nearRobber ? 'talkGraverobbers' : null);
+    updateInteractPrompt(nearForestGate ? 'toForestFromSunlit' : nearSunWaypoint ? 'waypointSun' : nearWestGate ? 'toLighthouseTower' : nearEastGate ? 'toLakesideRuins' : nearSouthGate ? 'toCursedCemetery' : null);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.deep){
     updateDeep(g, dt);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='highward'){
@@ -3689,7 +3688,8 @@ function updateStep(dt){
     const nearCemWaypoint = !!g.cem.waypoint && dist(p, g.cem.waypoint) < g.cem.waypoint.r + p.r + 24;
     const nearTomb = dist(p, g.cem.tomb) < g.cem.tomb.r + p.r + 26;
     const nearStatue = !p.cemeteryCleared && !(g.cem.evt && g.cem.evt.stage>0) && dist(p, g.cem.statue) < g.cem.statue.r + p.r + 30;
-    updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromCemetery' : nearCemWaypoint ? 'waypointCemetery' : nearTomb ? (p.cemeteryCleared ? 'toDarkCrypt' : 'tombSealed') : nearStatue ? 'cemStatue' : null);
+    const nearRobber = (g.cem.graverobbers||[]).some(r=>dist(p,r) < 70);   // v532: their camp is just inside the gate
+    updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromCemetery' : nearCemWaypoint ? 'waypointCemetery' : nearTomb ? (p.cemeteryCleared ? 'toDarkCrypt' : 'tombSealed') : nearStatue ? 'cemStatue' : nearRobber ? 'talkGraverobbers' : null);
     // v299: the crypt no longer opens by clearing the whole graveyard -- touch the Grave Statue, survive its waves, and the way opens.
     { const st = g.cem.statue; pushOutOfRect(p, {x:st.x-st.r*0.6, y:st.y-st.r*0.6, w:st.r*1.2, h:st.r*1.2}); }
     updateCemeteryEvent(g, p, dt);

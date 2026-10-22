@@ -174,7 +174,7 @@ function render(){
     drawables.push({depth:(o.x+o.w/2)+(o.y+o.h/2), occluder:!o.bone, wx:o.x+o.w/2, wy:o.y+o.h/2, draw:()=>(
     o.bone ? drawBoneBarricade(o)
     : o.woodBarricade ? drawWoodBarricadeIso(o)
-    : o.mausoleum ? drawOwMausoleum(o) : o.ruin ? drawOwRuin(o)
+    : o.mausoleum ? drawOwMausoleum(o) : o.ruin ? drawOwRuin(o) : o.ironFence ? drawIronFenceIso(o)
     : o.organic ? drawOrganicWall(o)
     : o.mazeWall
       ? (room.wallPal ? drawBlock(o, 52, room.wallPal[0], room.wallPal[1], room.wallPal[2]) : drawBlock(o, 52, '#463c30','#221c14','#302819'))
@@ -467,7 +467,6 @@ function render(){
       // gate (both are "ruined stone" thresholds into a darker zone).
       drawables.push({depth:g.sun.southGate.x+g.sun.southGate.y, draw:()=>drawRuinsGateIso(g.sun.southGate, g.clock||0)});
       drawables.push({depth:g.sun.southGate.x+g.sun.southGate.y+1, draw:()=>drawEdgeLabelIso(g.sun.southGate, 'CURSED CEMETERY')});
-      if(g.sun.graverobbers){ const gm = graverobbersMark(g.player); g.sun.graverobbers.forEach((r,i)=>drawables.push({depth:r.x+r.y, draw:()=>drawSimpleNpcIso(r, g.clock||0, {mark: gm && i===0})})); }
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
     for(const e of g.enemies) pushEnemyDrawables(drawables, e);
@@ -541,7 +540,10 @@ function render(){
   } else if(g.scene==='cursedcemetery'){
     if(g.cem){
       if(g.cem.deadTrees) for(const dt of g.cem.deadTrees) drawables.push({depth:dt.x+dt.y, draw:()=>drawDeadTreeIso(dt)});
-      if(g.cem.graves) for(const gr of g.cem.graves) drawables.push({depth:gr.x+gr.y, draw:()=>drawGraveIso(gr)});
+      if(g.cem.graves) for(const gr of g.cem.graves){ const io = toIso(gr.x,gr.y); if(io.x>cam.x-80 && io.x<cam.x+W+80 && io.y>cam.y-120 && io.y<cam.y+H+80) drawables.push({depth:gr.x+gr.y, draw:()=>drawGraveIso(gr)}); }
+      if(g.cem.gatePosts) for(const gp of g.cem.gatePosts) drawables.push({depth:gp.x+gp.y+14, draw:()=>drawCemGatePostIso(gp, g.clock||0)});
+      if(g.cem.camp){ const c = g.cem.camp; drawables.push({depth:c.x+c.y-60, draw:()=>drawGraverobberCampIso(c, g.clock||0)});
+        const gm = graverobbersMark(g.player); (g.cem.graverobbers||[]).forEach((r,i)=>drawables.push({depth:r.x+r.y, draw:()=>drawSimpleNpcIso(r, g.clock||0, {mark: gm && i===0})})); }
       drawables.push({depth:g.cem.sunlitGate.x+g.cem.sunlitGate.y, draw:()=>drawRuinsGateIso(g.cem.sunlitGate, g.clock||0)});
       drawables.push({depth:g.cem.sunlitGate.x+g.cem.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.cem.sunlitGate, 'WITHERED CROSSROADS')});
       if(g.cem.waypoint){ drawables.push({depth:g.cem.waypoint.x+g.cem.waypoint.y-1, draw:()=>drawWaypointIso(g.cem.waypoint, g.clock||0, waypointLit())});

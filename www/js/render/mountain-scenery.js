@@ -392,15 +392,17 @@ function drawLakesideRuinsFloor(room, cam){
 function drawCemeteryFloor(room, cam){
   const TS = 46;
   for(let wx=-GROUND_MARGIN; wx<=room.w+GROUND_MARGIN; wx+=TS){
-    const onPathX = cemOnRoad(wx, CEM_H/2); // cemOnRoad only depends on x
     for(let wy=-GROUND_MARGIN; wy<=room.h+GROUND_MARGIN; wy+=TS){
       const iso = toIso(wx,wy);
       const sx = iso.x - cam.x, sy = iso.y - cam.y;
       if(sx < -80 || sx > W+80 || sy < -80 || sy > H+80) continue;
       if(wx<0||wy<0||wx>room.w||wy>room.h){ const ef = edgeFill(room, wx, wy); if(ef){ if(FLOOR_PASS!==2){ ctx.fillStyle = ef; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY); } continue; } }
-      const checker = (((Math.floor(wx/TS)+Math.floor(wy/TS))%2)+2)%2;
-      if(onPathX) ctx.fillStyle = checker ? '#3a3448' : '#332e40';
-      else ctx.fillStyle = checker ? '#20233a' : '#262a42';
+      const ix = Math.floor(wx/TS), iy = Math.floor(wy/TS), checker = ((ix+iy)%2+2)%2, hs = tileHash(ix, iy);
+      const rd = cemRoadDist(wx, wy), inF = cemInFence(wx, wy);   // v532: winding road, walled graveyard
+      if(rd < CEM_ROAD_HALFW) ctx.fillStyle = hs < 0.2 ? '#2e2a3a' : (checker ? '#3a3448' : '#332e40');
+      else if(rd < CEM_ROAD_HALFW+TS && tileHash(iy*3+7, ix*5+1) < 0.5) ctx.fillStyle = checker ? '#2a2a3c' : '#262638';
+      else if(inF) ctx.fillStyle = hs < 0.12 ? '#1a1c2c' : (checker ? '#1c1f33' : '#21243a');
+      else ctx.fillStyle = hs < 0.1 ? '#1e2334' : (checker ? '#20233a' : '#262a42');
       drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
     }
   }

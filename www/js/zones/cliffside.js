@@ -408,7 +408,7 @@ function drawCliffMonsterIso(e){
     return;
   }
   if(tp==='vulture'){
-    const hop = e.hop||16, tele = e.fState==='tele', dive = e.fState==='dive', s = 1.265;
+    const hop = e.hop||16, tele = e.fState==='tele', dive = e.fState==='dive', crow = !!e.crow, s = crow ? 0.8 : 1.265;   // v532: crows are small and all black
     const flap = dive ? 0.15 : Math.sin(t*(tele?22:12));
     drawShadow(iso.x, iso.y, 11*s, 4*s);
     ctx.save(); ctx.translate(iso.x, iso.y-hop-8); ctx.scale(face*s, s); ctx.lineJoin='round';
@@ -419,9 +419,9 @@ function drawCliffMonsterIso(e){
       ctx.beginPath(); ctx.moveTo(0,-3); ctx.quadraticCurveTo(sx*12,-14+lift*0.5,sx*30,-9+lift); ctx.lineTo(sx*27,-4+lift*0.8); ctx.lineTo(sx*23,-6+lift*0.6); ctx.lineTo(sx*19,0+lift*0.3); ctx.lineTo(sx*14,-1); ctx.lineTo(sx*9,3); ctx.lineTo(sx*4,3); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
     ctx.fillStyle = body; ctx.strokeStyle='#100d14'; ctx.beginPath(); ctx.ellipse(0,0,6,7.5,0,0,7); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = flash?'#fff':'#5a4a58'; ctx.beginPath(); ctx.ellipse(-1,-5,5.5,3,0,0,7); ctx.fill();   // ruff
-    ctx.fillStyle = flash?'#fff':'#b8808a'; ctx.beginPath(); ctx.ellipse(4,-9,2.8,3.6,0,0,7); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#d8c070'; ctx.beginPath(); ctx.moveTo(6.5,-9.5); ctx.lineTo(11,-7.5); ctx.lineTo(6.5,-7); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = flash?'#fff':(crow?'#1a171e':'#5a4a58'); ctx.beginPath(); ctx.ellipse(-1,-5,5.5,3,0,0,7); ctx.fill();   // ruff
+    ctx.fillStyle = flash?'#fff':(crow?'#17141b':'#b8808a'); ctx.beginPath(); ctx.ellipse(4,-9,2.8,3.6,0,0,7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = crow ? '#3a3630' : '#d8c070'; ctx.beginPath(); ctx.moveTo(6.5,-9.5); ctx.lineTo(11,-7.5); ctx.lineTo(6.5,-7); ctx.closePath(); ctx.fill();
     ctx.fillStyle = tele||dive ? '#ff3a20' : '#ffcf5a'; ctx.beginPath(); ctx.arc(5,-10,1,0,7); ctx.fill();
     ctx.strokeStyle='#d8d0b8'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(-2,6); ctx.lineTo(-3,11); ctx.moveTo(2,6); ctx.lineTo(3,11); ctx.stroke();
     ctx.restore();
