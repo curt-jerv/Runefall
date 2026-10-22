@@ -481,7 +481,7 @@ function drawParticlesIso(list, pass){
     if(pt.type==='bannerFx' || pt.type==='consecrateFx'){
       if(pass==='ground' || pass==='pole'){} else continue;
       if(pass==='pole' && pt.type!=='bannerFx') continue;
-    } else if(pt.type==='frostzone' || pt.type==='vortex' || pt.type==='zone' || pt.type==='tsRing' || pt.type==='trapmark' || pt.type==='meteorMark' || pt.type==='burnzone' || pt.type==='stormMark'){   // v441: ground effects draw on the floor, under every character
+    } else if(pt.type==='frostzone' || pt.type==='vortex' || pt.type==='zone' || pt.type==='tsRing' || pt.type==='trapmark' || pt.type==='meteorMark' || pt.type==='burnzone' || pt.type==='stormMark' || (pt.type==='gasCloud' && pt.thin)){   // v441: ground effects draw on the floor, under every character
       if(pass!=='ground') continue;
     } else if(pass) continue;
     const a = pt.t/pt.max;
@@ -872,6 +872,22 @@ function drawParticlesIso(list, pass){
     } else if(pt.type==='burst'){
       ctx.beginPath(); ctx.fillStyle=(pt.color||'#fff'); ctx.globalAlpha=a;
       ctx.arc(iso.x, iso.y-16, Math.max(1, 16*(1-Math.min(1,a))+5), 0,7); ctx.fill(); ctx.globalAlpha=1;   // v497: never a negative radius (an over-long burst used to throw and skip the frame)
+    } else if(pt.type==='gasCloud' && pt.thin){
+      // v523: Plague lies on the ground (drawn in the ground pass, under everyone): a faint flat haze with a few slow
+      // drifting blotches and a barely-there rim -- plain alpha fills only (no per-frame gradients), so it is cheap
+      const T = game.clock||0, f = Math.max(0, Math.min(1, pt.f==null?1:pt.f)), R = pt.r||90, c0 = toIso(pt.x, pt.y);
+      ctx.save();
+      ctx.fillStyle = 'rgba(60,120,36,'+(0.08*f)+')';
+      ctx.beginPath(); ctx.ellipse(c0.x, c0.y, R*ISO_KX*0.95, R*ISO_KY*0.95, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(120,200,70,'+(0.07*f)+')';
+      for(let i=0;i<7;i++){
+        const a0 = i*2.399+(pt.seed||0)+T*0.15*(i%2?1:-1), rr = Math.sqrt((i+0.5)/7)*R*0.75;
+        const q = toIso(pt.x+Math.cos(a0)*rr, pt.y+Math.sin(a0)*rr), sz = R*ISO_KX*0.2*(0.9+0.1*Math.sin(T*1.6+i));
+        ctx.beginPath(); ctx.ellipse(q.x, q.y, sz, sz*0.5, 0, 0, 7); ctx.fill();
+      }
+      ctx.strokeStyle = 'rgba(140,210,90,'+(0.16*f)+')'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(c0.x, c0.y, R*ISO_KX*0.97, R*ISO_KY*0.97, 0, 0, 7); ctx.stroke();
+      ctx.restore();
     } else if(pt.type==='gasCloud'){
       // v237: billowing green poison cloud (poison trap + plague): soft overlapping puffs that drift, rise and swirl
       const T = game.clock||0, f = Math.max(0, Math.min(1, pt.f==null?1:pt.f)), R = pt.r||90;

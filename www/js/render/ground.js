@@ -101,6 +101,7 @@ const ORGANIC_PAL = {
   ember:{a:'#2c2428', b:'#262024', c:'#33292c', wt:'#4a3230', wr:'#1a1012', wf:'#2c1a1a'},
   heart:{a:'#2c2428', b:'#262024', c:'#33292c', wt:'#46282a', wr:'#160c0e', wf:'#281416'},
   temple:{a:'#3e4a46', b:'#36423e', c:'#47554f', wt:'#5f6e68', wr:'#26302d', wf:'#3a4743'},   // v490: the drowned temple's mossy stone
+  ice:{a:'#93a7b8', b:'#8a9eb0', c:'#a0b3c3', wt:'#d8e6f0', wr:'#4a5d70', wf:'#6b8296'},   // v523: the Icy Cellar -- packed snow and blue ice, snow-capped rock
 };
 function drawOrganicFloor(room, cam){
   const TS = 46, P = ORGANIC_PAL[room.organic] || ORGANIC_PAL.bear, m = room.floorMask, kind = room.organic;
@@ -117,7 +118,8 @@ function drawOrganicFloor(room, cam){
       if(h2<0.18){ ctx.fillStyle='rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(iso.x+(h-0.5)*20, iso.y+(h2-0.1)*30, 9+h*8, 4+h*3, 0.2, 0, 7); ctx.fill(); }
       else if(h2>0.86){
         ctx.save();
-        if(kind==='raptor'){ ctx.strokeStyle='rgba(230,200,150,0.35)'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(iso.x-8,iso.y+1); ctx.lineTo(iso.x+7,iso.y-2); ctx.moveTo(iso.x-5,iso.y+4); ctx.lineTo(iso.x+9,iso.y+3); ctx.stroke(); }
+        if(kind==='ice'){ ctx.strokeStyle='rgba(235,248,255,0.55)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(iso.x-12,iso.y); ctx.lineTo(iso.x-3,iso.y-3); ctx.lineTo(iso.x+4,iso.y+1); ctx.lineTo(iso.x+12,iso.y-2); ctx.moveTo(iso.x-3,iso.y-3); ctx.lineTo(iso.x-1,iso.y-7); ctx.stroke(); }
+        else if(kind==='raptor'){ ctx.strokeStyle='rgba(230,200,150,0.35)'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(iso.x-8,iso.y+1); ctx.lineTo(iso.x+7,iso.y-2); ctx.moveTo(iso.x-5,iso.y+4); ctx.lineTo(iso.x+9,iso.y+3); ctx.stroke(); }
         else if(kind==='spider'){ ctx.strokeStyle='rgba(210,210,230,0.28)'; ctx.lineWidth=1; ctx.beginPath(); for(let k=0;k<4;k++){ const a=k*0.8+h*3; ctx.moveTo(iso.x,iso.y); ctx.lineTo(iso.x+Math.cos(a)*14, iso.y+Math.sin(a)*6); } ctx.stroke(); ctx.beginPath(); ctx.ellipse(iso.x,iso.y,7,3,0,0,7); ctx.stroke(); }
         else { ctx.fillStyle = h<0.5 ? 'rgba(96,130,60,0.6)' : 'rgba(168,120,50,0.55)'; ctx.beginPath(); ctx.ellipse(iso.x-4,iso.y,4,2,0.3,0,7); ctx.ellipse(iso.x+5,iso.y+3,3.5,1.8,-0.4,0,7); ctx.fill(); }
         ctx.restore();
@@ -135,7 +137,11 @@ function drawOrganicWall(o){
   ctx.fillStyle = P.wt; ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.ellipse(c.x, c.y-hz-2, 36+hh*8, 19+hh*4, 0, 0, 7); ctx.fill(); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.ellipse(c.x-8, c.y-hz-6, 16, 7, 0, 0, 7); ctx.fill();
-  if(o.organic==='bear'){ ctx.fillStyle='rgba(90,130,60,0.55)'; ctx.beginPath(); ctx.ellipse(c.x+10, c.y-hz-1, 14, 6, 0, 0, 7); ctx.fill(); }
+  if(o.organic==='ice'){   // snow cap and a few hanging icicles
+    ctx.fillStyle='rgba(248,252,255,0.85)'; ctx.beginPath(); ctx.ellipse(c.x-2, c.y-hz-5, 26+hh*6, 11+hh*3, 0, 0, 7); ctx.fill();
+    ctx.fillStyle='rgba(190,225,250,0.75)'; for(let k=0;k<3;k++){ const ix = c.x-18+k*14+hh*6, iy = c.y-hz+8+k%2*3; ctx.beginPath(); ctx.moveTo(ix-3, iy); ctx.lineTo(ix+3, iy); ctx.lineTo(ix, iy+9+hh*6); ctx.closePath(); ctx.fill(); }
+  }
+  else if(o.organic==='bear'){ ctx.fillStyle='rgba(90,130,60,0.55)'; ctx.beginPath(); ctx.ellipse(c.x+10, c.y-hz-1, 14, 6, 0, 0, 7); ctx.fill(); }
   else if(o.organic==='temple'){ ctx.fillStyle='rgba(80,140,90,0.45)'; ctx.beginPath(); ctx.ellipse(c.x-6, c.y-hz, 15, 6, 0, 0, 7); ctx.fill(); }   // v490: moss on the temple stone
   else if(o.organic==='spider'){ ctx.strokeStyle='rgba(220,220,240,0.35)'; ctx.beginPath(); ctx.moveTo(c.x-20,c.y-hz-4); ctx.lineTo(c.x+4,c.y-hz+14); ctx.lineTo(c.x+22,c.y-hz-2); ctx.moveTo(c.x-8,c.y-hz+2); ctx.lineTo(c.x+12,c.y-hz+6); ctx.stroke(); }
   else { ctx.fillStyle='rgba(220,110,40,0.16)'; ctx.beginPath(); ctx.ellipse(c.x+6, c.y-hz, 18, 7, 0, 0, 7); ctx.fill(); }

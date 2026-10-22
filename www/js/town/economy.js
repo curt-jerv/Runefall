@@ -369,7 +369,7 @@ function updateBuffBar(p){
   // v491: the beast lairs' zone hazards show in the buff row too
   { const g = game, st = g && g.tower && g.scene==='lighthouse' ? g.tower : null;
     if(st && st.subzone==='sunken') items.push({k:'zstatic', icon:'\u26A1', label:'\u00d7'+SUNKEN_STATIC_STACKS, t:0, tip:'Static \u00d7'+SUNKEN_STATIC_STACKS+': the depths crackle -- you take lightning damage over time (lightning resistance helps)'});
-    if(st && st.subzone==='pool') items.push({k:'zpoison', icon:'\u2620\uFE0F', label:'', t:0, tip:'Toxic water: poison damage over time (poison resistance helps)'});
+    if(st && st.subzone==='pool') items.push({k:'zpoison', icon:'\u2620\uFE0F', label:'', t:0, tip:'Toxic water: you lose '+(POOL_POISON_TICK_PCT*100*(1-elementResist(p,'poison')/100)).toFixed(1).replace(/\.0$/,'')+'% of your life every '+POOL_POISON_TICK_S+'s as poison (poison resistance helps)'});
     if(st && st.deep && st.bossFloor) items.push({k:'zheat', icon:'\u{1F525}', label:'', t:0, tip:'Scorching heat: fire damage over time (fire resistance helps)'});
     if(g && g.scene==='icyzone' && g.iz && g.iz.cold) items.push({k:'zcold', icon:'\u2744\uFE0F', label:'', t:0, tip:'Bitter cold: you lose life over time'}); }
   const sig = items.map(i=>i.k).join(',');

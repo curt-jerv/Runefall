@@ -29,7 +29,7 @@ function render(){
     ctx.fillStyle = skyGrad;
   } else if(game && game.started && game.scene==='icyzone'){
     const skyGrad = ctx.createLinearGradient(0,0,0,H);
-    if(game.iz && game.iz.kind==='cellar'){ skyGrad.addColorStop(0,'#05080d'); skyGrad.addColorStop(1,'#12202c'); }
+    if(game.iz && game.iz.kind==='cellar'){ skyGrad.addColorStop(0,'#1a2430'); skyGrad.addColorStop(1,'#2a3846'); }   // v523: dark frozen rock around the caverns
     else if(game.iz && game.iz.kind==='shrine'){ skyGrad.addColorStop(0,'#1c2740'); skyGrad.addColorStop(1,'#a9bdd6'); }
     else { skyGrad.addColorStop(0,'#2d3d4c'); skyGrad.addColorStop(1,'#dbe8f0'); }
     ctx.fillStyle = skyGrad;
@@ -115,7 +115,7 @@ function render(){
   } else if(g.scene==='frosthold'){
     cachedFloor(room, cam, c=>drawFrostholdFloor(room, c));
   } else if(g.scene==='icyzone'){
-    cachedFloor(room, cam, c=>drawIcyZoneFloor(room, c));
+    cachedFloor(room, cam, c=>room.organic ? drawOrganicFloor(room, c) : drawIcyZoneFloor(room, c));   // v523: the Icy Cellar is an organic ice cave
   } else if(g.scene==='mountainpass'){
     if(g.mtn.isCliff && !g.mtn.nest) drawCliffSea(g, cam);
     cachedFloor(g.mtn, cam, c=>drawCraterTerrain(g.mtn, c));

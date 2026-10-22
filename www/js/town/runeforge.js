@@ -398,6 +398,7 @@ function enterIcyZone(kind, from, opts){
   const iz = g.iz, p = g.player;
   const gate = id => iz.gates.find(gt=>gt.id===id);
   if(opts.atWaypoint && iz.waypoint){ p.x = iz.waypoint.x; p.y = iz.waypoint.y + 45; }
+  else if(iz.entranceSpot){ p.x = iz.entranceSpot.x; p.y = iz.entranceSpot.y; iz.entrySpawn = {x:p.x, y:p.y}; }   // v523: the cave cellar
   else {
     const gt = (kind==='summit') ? gate(from==='shrine'?'shrine':from==='cellar'?'cellar':'pass') : iz.gates[0];
     const dx = gt.x < 100 ? 130 : gt.x > iz.w-100 ? -130 : 0;
@@ -423,8 +424,7 @@ function enterIcyZone(kind, from, opts){
     boss.dmg = boss.dmg*MASTODON_DMG_MULT*0.8;   // v333: -20% across the board
     boss.armor = (boss.armor||0) + 6;
     boss.isLairBoss = true; boss.bossName = 'Woolly Mastodon'; boss.mastodon = true; boss.dmgType = 'normal'; boss.dmgSplit = 'cold'; boss.dmg *= 1.1;   /* v484: half cold, +10% */
-    boss.aggroRange = 340; boss.leashRange = 900; boss.wanderRadius = 20;
-    for(let i=0;i<4;i++) spawnEnemy(g, 'frozenzombie', {x:iz.bossSpot.x+rand(-170,170), y:iz.bossSpot.y+rand(-170,170)});
+    boss.aggroRange = 520; boss.leashRange = (iz.bossHall ? iz.bossHall.rx+200 : 900); boss.wanderRadius = 20;   // v523: it stays in its hall
   }
   if(kind==='summit'){ showMsg('Icy Summit — the freezing wind bites (1 cold/sec)', 2.4); }
   else if(kind==='cellar') showMsg('Icy Cellar — something huge stirs...', 2.2);

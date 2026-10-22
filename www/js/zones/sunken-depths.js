@@ -318,12 +318,7 @@ function drawPoolOverlay(g){
   ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
   ctx.fillStyle = 'rgba(170,255,120,0.55)';
   for(let i=0;i<34;i++){ const x = ((i*211.7)%W), y = H - (((i*97.3) + t*(18+(i%4)*8)) % (H+30)); ctx.beginPath(); ctx.arc(x, y, 1.6+(i%3)*0.7, 0, 7); ctx.fill(); }
-  ctx.save();
-  ctx.font = "bold 12px Cinzel, Georgia, serif"; ctx.textAlign='center';
-  ctx.fillStyle = '#c8ff9a'; ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=4;
-  const pct = POOL_POISON_TICK_PCT*100*(1-elementResist(g.player,'poison')/100);
-  ctx.fillText('☠ POISONED  −'+pct.toFixed(1).replace(/\.0$/,'')+'% max life every '+POOL_POISON_TICK_S+'s', W/2, Math.max(hudBottomPx(), window.__bossBarBottom||0)+16);
-  ctx.restore();
+  // v523: the poison is shown as a buff-row icon (like the Icy Cellar's cold), not as text across the screen
 }
 // ---- painting ----
 function drawKpFloors(room, cam){
