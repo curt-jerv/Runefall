@@ -271,6 +271,7 @@ function enterCursedCemetery(from){
     // Arrives just south of the north entrance gate, same convention.
     g.player.x = g.cem.sunlitGate.x; g.player.y = g.cem.sunlitGate.y + 120;
   }
+  owFeatures(g);   // v525: random mausoleums and broken plot walls
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null;
   showMsg('Cursed Cemetery', 1.4);
   // Same pack-anchor/pool-density approach as every other overworld zone,
@@ -286,6 +287,7 @@ function enterCursedCemetery(from){
       spawnCemeteryPack(g, anchors[i]);
     }
   }
+  owPoiRoll(g);   // v525: caches, a shrine, a guarded hoard
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = g.player.x; f.y = g.player.y; }

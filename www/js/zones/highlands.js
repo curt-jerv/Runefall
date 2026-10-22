@@ -241,6 +241,7 @@ function enterHighlands(opts){
     const el = spawnEnemy(g, 'trollelder', {x:c.x+rand(-30,30), y:c.y-110}); if(el){ el.packId = id; el.wanderRadius = 14; el.campFire = c; }
   });
   { const ob = R.obstacles; g.enemies = g.enemies.filter(e=>e.flying || !ob.some(o=>e.x>o.x-e.r && e.x<o.x+o.w+e.r && e.y>o.y-e.r && e.y<o.y+o.h+e.r)); }
+  owPoiRoll(g);   // v527: caches, a shrine, a guarded hoard
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = p.x; f.y = p.y; }

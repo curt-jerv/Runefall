@@ -111,7 +111,7 @@ function makeBlackMarsh(){
   const eastGate = {x:w-16, y:bmTrailPt(w-16).y, r:34};
   const highGate = {x:16, y:bmUpTrailY(16), r:34};   // v459: the north arm's far end -- the road up into the Barren Highlands
   // (v262) the Marsh Pool: a sinkhole gate. v490: moved to the north edge of the north arm, east beyond the tower bridge
-  const pgx = w-850;
+  const pgx = Math.round(w*0.5);   // v521: halfway along the north edge between the Forgotten Tower and the Barren Highlands road
   const poolGate = {x:pgx, y:bmTopY(pgx)+16, r:34};
   // the dead-bog outside the two arms: impassable slices (80px) along the outer edges (v490: the middle is the river now)
   for(let sx=0; sx<w; sx+=80){
@@ -285,6 +285,7 @@ function enterBlackMarsh(opts){
   } else {
     g.player.x = g.bm.westGate.x + 90; g.player.y = g.bm.westGate.y;
   }
+  owFeatures(g);   // v525: random sunken ruins
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null;
   showMsg('Black Marsh', 1.6);
   const room = g.bm;
@@ -296,6 +297,7 @@ function enterBlackMarsh(opts){
   for(let k=0;k<6;k++){ const a = Math.PI*0.68 + k*0.13; let x = room.eastGate.x + Math.cos(a)*215, y = room.eastGate.y + Math.sin(a)*215; if(!room.dryOK(x,y,24)){ const d = bmNearestDry(room, x, y); x = d.x; y = d.y; } if(!room.dryOK(x,y,20)) continue; const e = spawnEnemy(g, 'goblinarcher', {x, y}); if(e){ e.wanderRadius = 0; e.leashRange = 260; } }   // v490: never in the river
   for(let k=0;k<2;k++){ const e = spawnEnemy(g, 'goblin', {x:room.eastGate.x-170, y:room.eastGate.y+(k?60:-60)}); if(e) e.wanderRadius = 20; }
   // (v262) the Leviathan now lives in the Marsh Pool (see enterMarshPool)
+  owPoiRoll(g);   // v525: caches, a shrine, a guarded hoard
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = g.player.x; f.y = g.player.y; }

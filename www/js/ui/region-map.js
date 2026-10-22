@@ -406,7 +406,7 @@ function renderRegionMap0(){
       {pos:t.waypoint, label:'Waypoint', icon:'W'},
       {pos:t.blacksmith, label:'Brom', icon:'B'},
       {pos:t.stashChest, label:'Stash', icon:'S'},
-      {pos:t.questGiver, label:'Aldric', icon:'!'},
+      {pos:t.questGiver, label:'Aldric the Elder', icon:'!'},
       {pos:t.well, label:'Well', icon:'O'},
       {pos:t.gate, label:'Forest Gate', icon:'G'},
     ];

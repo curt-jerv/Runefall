@@ -44,7 +44,7 @@ function makeForgottenTowerFloor(floor){
   const entrance = {x: entranceSide==='right' ? w-70 : 70, y: h/2, r:34};
   let stairs = null;
   if(!top){ const ss = lighthouseStairsSide(floor); stairs = {x: ss==='right' ? w-70 : 70, y: h/2, r:30}; }
-  const rnd = subSeeded(4400 + floor*131);
+  const rnd = subSeeded(tripSeed('ft') + floor*131);   // v525: new rooms every trip
   const obstacles = [], T = 34, D = 170;
   const wall = (x,y,ww,hh)=>{ if(ww>4 && hh>4) obstacles.push({x:Math.round(x), y:Math.round(y), w:Math.round(ww), h:Math.round(hh), mazeWall:true}); };
   const vWall = (x, y0, y1, doors)=>{ let cur = y0; for(const d of doors.sort((a,b)=>a-b)){ wall(x-T/2, cur, T, d-D/2-cur); cur = d+D/2; } wall(x-T/2, cur, T, y1-cur); };
@@ -163,6 +163,7 @@ function enterForgottenTower(floor, opts){
   updateInteractPrompt(null);
 }
 function makeLighthouseFloor(floor){
+  tripSeed('lh');   // v525: part of the same trip as the maze floors
   const rooftop = floor===LIGHTHOUSE_FLOOR_COUNT;
   const w = rooftop ? LIGHTHOUSE_ROOFTOP_W : LIGHTHOUSE_W;
   const h = rooftop ? LIGHTHOUSE_ROOFTOP_H : LIGHTHOUSE_H;
@@ -195,9 +196,8 @@ function makeLighthouseFloor(floor){
 // and the stairs up wait in the room furthest away, so every floor is a short crawl. Each floor keeps its layout until you reload.
 const LH_MAZE_W = 2000, LH_MAZE_H = 1500;
 function makeLighthouseMazeFloor(floor){
-  const g = game; g.lhSeeds = g.lhSeeds || {};
-  if(!g.lhSeeds[floor]) g.lhSeeds[floor] = 1 + Math.floor(Math.random()*1e9);
-  const rnd = subSeeded(g.lhSeeds[floor]);
+  const g = game;
+  const rnd = subSeeded(tripSeed('lh') + floor*977);   // v525: a fresh maze every trip (was: once per play session)
   const w = LH_MAZE_W, h = LH_MAZE_H, C = 3, R = 3, cw = w/C, ch = h/R, T = 34, D = 150;
   const obstacles = [];
   const wall = (x,y,ww,hh)=>{ if(ww>4 && hh>4) obstacles.push({x:Math.round(x), y:Math.round(y), w:Math.round(ww), h:Math.round(hh), mazeWall:true}); };
@@ -318,7 +318,7 @@ function enterLighthouseTower(floor, opts){
   // formulas (see spawnEnemy) -- the exact same "g.depth stands in for how
   // far along this dungeon you are" convention the Mine/Spider Lair/Bear
   // Cave already use (g.depth = g.player.checkpointDepth or a fixed 5).
-  g.depth = [9,10,10,13,15][Math.max(0,Math.min(4,(g.lighthouseFloor||1)-1))]; // v237: floors 1-3 = 9/10/10, floor 4 = 13, rooftop = 15
+  g.depth = [11,12,13,14,16][Math.max(0,Math.min(4,(g.lighthouseFloor||1)-1))]; // v529: climbs from the Crossroads' Lv 10 -- floors 11/12/13/14, rooftop 16
   // Waypoint rework: teleporting in via the Teleport menu (opts.atWaypoint,
   // only ever passed for floor 1, the only floor with a waypoint) lands the
   // player AT that waypoint marker, not the generic floor entrance.

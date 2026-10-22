@@ -35,48 +35,53 @@ function makeFhdFloor(floor){
     add(bx-hw, Math.min(ay,by)-hw, wid, Math.abs(by-ay)+wid);
   };
   const prop = (x,y,w,h,col,hz)=>props.push({x:snap(x), y:snap(y), w:snap(w), h:snap(h), col, hz});
-  let W, H, entrance, stairsDown = null, exitRoom, entranceRoom, spawnRects = [], decorBg = [], bossArena = null;
-  if(floor===1){
-    W = 3200; H = 2400;
-    const c0 = chamber(150,1650,600,500), c1 = chamber(1050,1650,700,500), c2 = chamber(2050,1650,800,500), c3 = chamber(2150,850,700,600), c4 = chamber(1050,850,800,600), c5 = chamber(150,150,900,500);
-    corridor(c0,c1,150); corridor(c1,c2,150); corridor(c2,c3,150); corridor(c3,c4,150); corridor(c4,c5,150);
-    for(const c of [c1,c2,c3,c4]){
-      add(c.x+100, c.y-150, 100, 150); add(c.x+c.w-200, c.y+c.h, 100, 150);   // alcoves
-      for(const [px,py] of [[c.x+130,c.y+110],[c.x+c.w-230,c.y+110],[c.x+130,c.y+c.h-210],[c.x+c.w-230,c.y+c.h-210]]) prop(px,py,100,100,FHD_ICE,42);
+  let W, H, entrance, stairsDown = null, exitRoom, entranceRoom, spawnRects = [], decorBg = [], bossArena = null, fhdWaypoint = null;
+  if(floor<FHD_FLOORS){
+    // v525: floors 1-4 are generated fresh every trip -- a jittered 4x3 grid of chambers joined by a random winding
+    // route (a spanning tree from the west-side entrance plus one or two loops), then dressed in the floor's theme:
+    // 1 ice pillars + alcoves, 2 furnaces + steam vents on narrow catwalks, 3 coil pylons + conveyor belts, 4 pipes + acid pools.
+    const C = 4, Rw = 3, CW = 880, CH = 820, M = 120;
+    W = C*CW + M*2; H = Rw*CH + M*2;
+    const cells = [];
+    for(let r=0;r<Rw;r++) for(let c=0;c<C;c++){
+      const cw = snap(rand(540, 720)), chh = snap(rand(440, 600));
+      const x = M + c*CW + rand(40, CW-cw-40), y = M + r*CH + rand(40, CH-chh-40);
+      cells.push({c, r, room:null, x, y, cw, chh});
     }
-    entranceRoom = c0; exitRoom = c5;
-    entrance = {x:c0.x+90, y:c0.y+c0.h/2, r:30}; stairsDown = {x:c5.x+c5.w-100, y:c5.y+c5.h/2, r:30};
-    spawnRects = [c1,c2,c3,c4,c5];
-  } else if(floor===2){
-    W = 3900; H = 2500;
-    const h1 = chamber(150,1000,1000,900), h2 = chamber(1650,800,1100,1100), h3 = chamber(3150,950,650,800);
-    corridor(h1,h2,100); corridor(h2,h3,100);   // narrow catwalks
-    const s1 = chamber(1900,350,500,450), s2 = chamber(1900,1900,500,450);   // boiler side rooms
-    for(const [x,y] of [[350,1100],[350,1650],[850,1100],[850,1650],[1850,900],[1850,1550],[2500,900],[2500,1550],[2125,950],[2125,1700]]) prop(x,y,150,150,FHD_FURN,46);
-    for(const [x,y,r] of [[650,1200,62],[650,1700,62],[950,1450,62],[1950,1350,62],[2450,1350,62],[2200,1150,62],[2200,1650,62],[1850,1250,62],[2150,550,62],[2150,2100,62]]) haz.push({kind:'vent', x, y, r, t:Math.random()*5});
-    entranceRoom = h1; exitRoom = h3;
-    entrance = {x:h1.x+90, y:1450, r:30}; stairsDown = {x:3700, y:1350, r:30};
-    spawnRects = [h1,h2,s1,s2];
-  } else if(floor===3){
-    W = 3200; H = 2600;
-    const top = chamber(300,300,2600,250), bot = chamber(300,2050,2600,250), left = chamber(300,300,250,2000), right = chamber(2650,300,250,2000);
-    const hall = chamber(1000,800,1200,1000);
-    add(550,1200,450,200); add(2200,1200,450,200); add(1500,550,200,250); add(1500,1800,200,250);   // gates
-    for(const [x,y] of [[1250,1000],[1950,1000],[1250,1500],[1950,1500]]){ prop(x,y,80,80,FHD_PYL,64); haz.push({kind:'coil', x:x+40, y:y+40, cd:2+Math.random()*3, tp:null, tT:0}); }
-    for(const [x,y] of [[1000,380],[2200,380],[1000,2150],[2200,2150]]){ prop(x,y,80,80,FHD_PYL,64); haz.push({kind:'coil', x:x+40, y:y+40, cd:2+Math.random()*3, tp:null, tT:0}); }
-    decor.push({kind:'belt', x:650, y:400, w:1900, h:100, dir:1}, {kind:'belt', x:650, y:2100, w:1900, h:100, dir:-1}, {kind:'belt', x:350, y:650, w:100, h:1300, dir:1}, {kind:'belt', x:2750, y:650, w:100, h:1300, dir:-1});
-    entranceRoom = {x:300,y:2050,w:600,h:250}; exitRoom = {x:2300,y:300,w:600,h:250};
-    entrance = {x:420, y:2175, r:30}; stairsDown = {x:2780, y:430, r:30};
-    spawnRects = [top,bot,left,right,hall];
-  } else if(floor===4){
-    W = 3000; H = 2600;
-    const a = chamber(150,1900,900,600), b = chamber(800,1200,1100,900), c = chamber(1700,1650,1100,800), d = chamber(1300,300,1100,900), e = chamber(2350,500,550,900);
-    add(1400,1100,300,200);
-    for(const [x,y] of [[1000,1330],[1500,1900],[2500,1800],[1650,500],[2050,800],[1100,1650],[2250,2250]]) prop(x,y,50,300,FHD_PIPE,52);
-    for(const [x,y,r] of [[1200,1550,130],[1650,1500,120],[2000,2050,140],[2400,1950,120],[2250,2330,110],[1600,850,140],[2000,1000,120],[1500,550,110],[2500,800,120]]) haz.push({kind:'acid', x, y, r, tick:0});
-    entranceRoom = a; exitRoom = e;
-    entrance = {x:240, y:2200, r:30}; stairsDown = {x:2700, y:950, r:30};
-    spawnRects = [b,c,d,e];
+    for(const ce of cells) ce.room = chamber(ce.x, ce.y, ce.cw, ce.chh);
+    const id = (c,r)=>r*C+c, startI = id(0, Math.floor(Math.random()*Rw)), endI = id(C-1, Math.floor(Math.random()*Rw));
+    const nb = i=>{ const c = i%C, r = Math.floor(i/C), o = []; if(c>0) o.push(i-1); if(c<C-1) o.push(i+1); if(r>0) o.push(i-C); if(r<Rw-1) o.push(i+C); return o; };
+    const seen = new Set([startI]), stack = [startI], links = [];
+    while(stack.length){ const cur = stack[stack.length-1], nx = nb(cur).filter(n=>!seen.has(n)); if(!nx.length){ stack.pop(); continue; } const n = nx[Math.floor(Math.random()*nx.length)]; seen.add(n); links.push([cur,n]); stack.push(n); }
+    const key = (a,b)=>Math.min(a,b)+'-'+Math.max(a,b), have = new Set(links.map(l=>key(l[0],l[1])));
+    for(let k=0, t=0; k<2 && t<40; t++){ const a = Math.floor(Math.random()*C*Rw), ns = nb(a), b = ns[Math.floor(Math.random()*ns.length)]; if(!have.has(key(a,b))){ have.add(key(a,b)); links.push([a,b]); k++; } }
+    const wid = floor===2 ? 110 : 150;
+    for(const [a,b] of links) corridor(cells[a].room, cells[b].room, wid);
+    const st = cells[startI].room, ex = cells[endI].room;
+    entranceRoom = st; exitRoom = ex;
+    entrance = {x:st.x+90, y:st.y+st.h/2, r:30}; stairsDown = {x:ex.x+ex.w-100, y:ex.y+ex.h/2, r:30};
+    spawnRects = cells.filter((ce,i)=>i!==startI).map(ce=>ce.room);
+    const dressed = spawnRects.filter(r=>r!==ex);
+    const corners = r=>[[r.x+110,r.y+100],[r.x+r.w-210,r.y+100],[r.x+110,r.y+r.h-200],[r.x+r.w-210,r.y+r.h-200]];
+    const awayFromDoors = (x,y)=> !rects.some(q=>q.w<=wid+1 || q.h<=wid+1 ? (x>q.x-120 && x<q.x+q.w+120 && y>q.y-120 && y<q.y+q.h+120) : false);
+    if(floor===1){
+      for(const r of dressed){ add(r.x+100, r.y-150, 100, 150); for(const [px,py] of corners(r)) if(awayFromDoors(px+50,py+50)) prop(px,py,100,100,FHD_ICE,42); }
+    } else if(floor===2){
+      for(const r of dressed){ for(const [px,py] of corners(r)) if(Math.random()<0.75 && awayFromDoors(px+60,py+60)) prop(px,py,150,150,FHD_FURN,46);
+        for(let k=0;k<2;k++) haz.push({kind:'vent', x:r.x+r.w*rand(0.3,0.7), y:r.y+r.h*rand(0.3,0.7), r:62, t:Math.random()*5}); }
+    } else if(floor===3){
+      for(const r of dressed){
+        const [px,py] = corners(r)[Math.floor(Math.random()*4)];
+        if(awayFromDoors(px+40,py+40)){ prop(px,py,80,80,FHD_PYL,64); haz.push({kind:'coil', x:snap(px)+40, y:snap(py)+40, cd:2+Math.random()*3, tp:null, tT:0}); }
+        if(Math.random()<0.6) decor.push({kind:'belt', x:snap(r.x+100), y:snap(r.y+r.h/2-50), w:snap(r.w-200), h:100, dir:Math.random()<0.5?1:-1});
+      }
+    } else {
+      for(const r of dressed){
+        for(let k=0;k<2;k++){ const px = r.x+r.w*rand(0.2,0.75), py = r.y+r.h*rand(0.15,0.6); if(awayFromDoors(px+25,py+150)) prop(px,py,50,300,FHD_PIPE,52); }
+        haz.push({kind:'acid', x:r.x+r.w*rand(0.3,0.7), y:r.y+r.h*rand(0.3,0.7), r:rand(100,140), tick:0});
+      }
+    }
+    fhdWaypoint = floor===2 ? {x:st.x+st.w*0.6, y:st.y+st.h/2, r:22} : null;
   } else {
     W = 3700; H = 2000;
     const en = chamber(150,700,500,600), gear = chamber(900,300,1300,1400), arena = chamber(2500,400,1100,1200);
@@ -90,7 +95,7 @@ function makeFhdFloor(floor){
   const walls = darkCryptCarveObstacles(rects, W, H);
   const obstacles = walls.concat(props);
   const rooms = spawnRects.slice();
-  return { w:W, h:H, obstacles, floorRects:rects, rooms, entranceRoom, exitRoom, floor, entrance, waypoint:(floor===2 ? {x:480, y:1450, r:22} : null), stairsDown, chestSpot:null, mazeN:0,
+  return { w:W, h:H, obstacles, floorRects:rects, rooms, entranceRoom, exitRoom, floor, entrance, waypoint:fhdWaypoint, stairsDown, chestSpot:null, mazeN:0,
     fhd:true, pal:FHD_PAL[floor], wallPal:FHD_WALL[floor], haz, decor, spawnRects, bossArena };
 }
 // Floor hazards: steam vents (burst), storm coils (call a lightning circle on you), acid pools (damage over time)
@@ -214,7 +219,7 @@ function spawnFhdPopulation(g, floor){
     for(let k=0;k<60 && placed<kinds.length;k++){
       const a = Math.random()*Math.PI*2, d = 230 + Math.random()*150;
       const q = {x:sd.x - Math.abs(Math.cos(a))*d*0.9, y:sd.y + Math.sin(a)*d};
-      if(q.x < R.spawnRects[2].x+30 || posBlockedByObstacles(q.x, q.y, 36, R.obstacles)) continue;
+      if(!R.floorRects.some(fr=>q.x>fr.x+30 && q.x<fr.x+fr.w-30 && q.y>fr.y+30 && q.y<fr.y+fr.h-30) || posBlockedByObstacles(q.x, q.y, 36, R.obstacles)) continue;   // v525: inside the floor (the layout is random now)
       tint(spawnEnemy(g, kinds[placed], q)); placed++;
     }
   }
@@ -926,6 +931,7 @@ function gainXp(g, amt){
   const p = g.player;
   if(!isFinite(p.xp)) p.xp = 0;   // v441: repair XP broken by the v433 xpLevelMult bug
   if(!isFinite(amt)) amt = 0;
+  amt *= owShrineMult(p, 'wisdom');   // v525 Shrine of Wisdom
   p.xp += amt;
   let leveled = false;
   while(p.level < LEVEL_CAP && p.xp >= p.xpNext){

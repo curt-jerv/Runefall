@@ -26,7 +26,7 @@ const QUEST_HAMMER = {
 const QUEST_LIGHT_THE_WAY = {
   id:'light_the_way', name:'Light the Way',
   desc:"Bandits hold Lighthouse Tower and its beacon is dark -- no ship can dock without it. The tower stands on the west edge of Withered Crossroads (through River Valley). Climb to the rooftop and light the beacon.",
-  descReturn:"The beacon is lit. Return to Hobb the barkeeper in Mistfall.",
+  descReturn:"The beacon is lit. Return to Hobbs the barkeeper in Mistfall.",
   total:1,
 };
 function getQuest(p, id){ return p.quests ? p.quests.find(q=>q.id===id) : null; }
@@ -87,8 +87,8 @@ function claimShrineBlessing(){
 // Crypt chest. Stages: toOldMan -> toRuins -> explore -> complete.
 const QUEST_HIDDEN_SECRETS = { id:'hidden_secrets', name:'Hidden Secrets', total:3 };
 const HIDDEN_SECRETS_DESC = {
-  toOldMan:"You found a Ruins Map in the Dark Crypt. Bring it to Aldric.",
-  toRuins:"Aldric says the map points to the Lakeside Ruins. Take the Ruins Map to the ancient stones on the island at the lake's center.",
+  toOldMan:"You found a Ruins Map in the Dark Crypt. Bring it to Aldric the Elder.",
+  toRuins:"Aldric the Elder says the map points to the Lakeside Ruins. Take the Ruins Map to the ancient stones on the island at the lake's center.",
   explore:"Descend to the bottom (level 5) of the Ancient Ruins beneath Lakeside Ruins and open the chest.",
   complete:"You found the Defensive Runestone. Take it to the sealed gate at the end of the Mountain Pass road (Frosthold Keep).",
 };
@@ -165,7 +165,7 @@ function turnOnBeacon(){
   const p = game.player;
   if(p.lighthouseBeaconOn) return;
   p.lighthouseBeaconOn = true;
-  showMsg('The beacon is lit. Return to Hobb.', 3.0);
+  showMsg('The beacon is lit. Return to Hobbs.', 3.0);
   updateInteractPrompt(null);
   saveGame();
   checkLightTheWayQuest();
@@ -275,19 +275,19 @@ function talkToQuestGiver(){
       if(grantQuestRewardItem(p)) q.rewarded = true;
     } else if(!getQuest(p, QUEST_BRIDGE.id) && !p.bridgeCleared){
       pendingQuestGiver = 'oldmanBridge';
-      questGiverNameEl.textContent = 'Aldric';
+      questGiverNameEl.textContent = 'Aldric the Elder';
       questGiverTextEl.textContent = '"Bandits have seized the old bridge in the River Valley, south of the Dark Forest. It is the only road to the Withered Crossroads. Drive them out of their camp and the way will be safe again. Will you clear it?"';
       openQuestGiverDialogue();
     } else {
       const wq = getQuest(p, QUEST_WRAITH.id);
       if(false && p.witchRescued){   // v234: the mountain shrine legend waits until the witch is rescued
         pendingQuestGiver = 'oldmanLegend';
-        questGiverNameEl.textContent = 'Aldric';
+        questGiverNameEl.textContent = 'Aldric the Elder';
         questGiverTextEl.textContent = '"There is an old legend -- a shrine atop the mountain, north of the Mountain Pass, guarded by three protectors: a shield-bearer, a berserker and a templar. Defeat them and the shrine will grant you a great boon. Will you ascend?"';
         openQuestGiverDialogue();
       } else if(false && !wq && p.witchRescued && p.shrineBlessed && p.ancientRuinsChestLooted){   // v261: offered only after the summit shrine has blessed you AND the Ancient Ruins runestone is collected
         pendingQuestGiver = 'oldmanWraith';
-        questGiverNameEl.textContent = 'Aldric';
+        questGiverNameEl.textContent = 'Aldric the Elder';
         questGiverTextEl.textContent = '"So... you accidentally released the Wraith Lord from its crypt. Foolish, but what is done is done. The Frosthold dwarves keep a special runestone at the top of their tower. Retrieve it, and we can use it against the Wraith Lord. Will you climb Frosthold Tower?"';
         openQuestGiverDialogue();
       } else if(wq && wq.status==='active'){
@@ -302,7 +302,7 @@ function talkToQuestGiver(){
       q.omTalked = true; showMsg('"'+intro+'Check: '+left+'."', 4.4); updateQuestBadge(); saveGame(); }
   } else {
     pendingQuestGiver = 'oldman';
-    questGiverNameEl.textContent = 'Aldric';
+    questGiverNameEl.textContent = 'Aldric the Elder';
     questGiverTextEl.textContent = '"' + QUEST_FIND_HUNTERS.desc + '"';
     openQuestGiverDialogue();
   }
@@ -330,7 +330,7 @@ function talkToBarkeeper(){
     showMsg('"Please -- climb to the top of the Lighthouse and light the beacon."', 2.4);
   } else {
     pendingQuestGiver = 'barkeeper';
-    questGiverNameEl.textContent = 'Hobb';
+    questGiverNameEl.textContent = 'Hobbs the Barkeeper';
     questGiverTextEl.textContent = '"' + QUEST_LIGHT_THE_WAY.desc + '"';
     openQuestGiverDialogue();
   }
@@ -403,7 +403,7 @@ function checkLightTheWayQuest(){
     if(!p.quests) p.quests = [];
     q = {id:QUEST_LIGHT_THE_WAY.id, name:QUEST_LIGHT_THE_WAY.name, desc:QUEST_LIGHT_THE_WAY.descReturn, status:'active', progress:QUEST_LIGHT_THE_WAY.total, total:QUEST_LIGHT_THE_WAY.total, stage:'return'};
     p.quests.push(q);
-    showMsg('The beacon is lit. Return to Hobb.', 3.0);
+    showMsg('The beacon is lit. Return to Hobbs.', 3.0);
     updateQuestBadge(); saveGame();
     return;
   }
@@ -411,7 +411,7 @@ function checkLightTheWayQuest(){
     // beacon lit: the quest now waits for the turn-in
     q.stage = 'return'; q.progress = q.total;
     q.desc = QUEST_LIGHT_THE_WAY.descReturn;
-    showMsg('The beacon is lit. Return to Hobb.', 3.0);
+    showMsg('The beacon is lit. Return to Hobbs.', 3.0);
     updateQuestBadge();
     saveGame();
   }
@@ -427,37 +427,37 @@ const hunterOverlay = document.getElementById('hunterOverlay');
 const QUEST_LEVIATHAN = {
   id:'hunt_leviathan', name:'The Poisoned Pool',
   desc:"Something vast stirs in the poisoned pools of the Black Marsh, creeping ever closer to Mistfall. Hunt it down before it reaches the town. Its venom is deadly -- gear that resists poison will keep you standing.",
-  descDone:"The Leviathan is dead. Return to the Hunter for your reward.",
+  descDone:"The Leviathan is dead. Return to Garrick the Hunter for your reward.",
   total:1,
 };
 const QUEST_MASTODON = {
   id:'hunt_mastodon', name:'The Icy Cellar',
   desc:"Enormous tracks lead into the Icy Cellar, west of the Icy Summit above the Mountain Pass. Follow them.",
-  descDone:"The Woolly Mastodon is dead. Return to the Hunter for your reward.",
+  descDone:"The Woolly Mastodon is dead. Return to Garrick the Hunter for your reward.",
   total:1,
 };
 const QUEST_KRAKEN = {
   id:'hunt_kraken', name:'Hunt the Kraken',
   desc:"Something with crackling tentacles lives in the flooded caves beneath the Lakeside Ruins. Descend through the Ancient Ruins and the Flooded Temple beneath Lakeside Ruins to reach the Sunken Depths. Hunt the Kraken at the far end of its bridge.",
-  descDone:"The Kraken is dead. Return to the Hunter for your reward.",
+  descDone:"The Kraken is dead. Return to Garrick the Hunter for your reward.",
   total:1,
 };
 const QUEST_COLOSSUS = {
   id:'hunt_colossus', name:'The Heart of the Mountain',
   desc:"The ground trembles beneath the Mountain Pass. At its south end a switchback road leads down to the Mountain Depths and the Ember Caverns, and the tremors come from deeper still. Find the source and bring back proof.",
-  descDone:"The Molten Colossus is dead. Return to the Hunter for your reward.",
+  descDone:"The Molten Colossus is dead. Return to Garrick the Hunter for your reward.",
   total:1,
 };
 // v263 chain order: 1) Kraken, 2) Leviathan, 3) Woolly Mastodon, 4) Molten Colossus -- then the Dragon Bolt and Gojira.
 const MINO_NO_HUNTER = 'I hold a unique item. Perhaps I can find someone who knows what to do with it.';
 function huntQuestDesc(p, q){   // v486: until the Hunter is back in Mistfall, a finished hunt doesn't point at him
-  if(q && q.desc===MINO_NO_HUNTER){ const hq = getQuest(p, QUEST_FIND_HUNTERS.id); if(hq && hq.status==='complete') return 'The quarry is dead. Return to the Hunter by the Mistfall bonfire.'; }
+  if(q && q.desc===MINO_NO_HUNTER){ const hq = getQuest(p, QUEST_FIND_HUNTERS.id); if(hq && hq.status==='complete') return 'The quarry is dead. Return to Garrick the Hunter by the Mistfall bonfire.'; }
   return q ? q.desc : '';
 }
 const QUEST_MINOTAUR = {
   id:'hunt_minotaur', name:'Hunt the Minotaur',
   desc:"A minotaur has made its lair in the Minotaur Cave, a maze of bone halls beside the River Valley road. Hunt it down and bring back what you find.",
-  descDone:"The Minotaur is dead. Return to the Hunter.",
+  descDone:"The Minotaur is dead. Return to Garrick the Hunter.",
   total:1,
 };
 const HUNTER_QUESTS = [

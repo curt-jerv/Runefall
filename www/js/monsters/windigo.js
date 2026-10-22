@@ -2,7 +2,7 @@
 // A tall frost-furred beast that stands like a werewolf (1.5x the player). Claws: 50% physical / 50% cold (ENEMY_DMG_SPLIT).
 // Frost Breath: a slow swirling cloud of frost, 100% cold damage -- fired from range after a short rear-back wind-up.
 // Lives in the Icy Summit, Icy Cellar and the north end of the Mountain Pass.
-const WINDIGO_BREATH_WIND = 1.1, WINDIGO_BREATH_T = 1.1, WINDIGO_CONE_LEN = 340, WINDIGO_CONE_HALF = 0.36;   // Frost Breath: aimed cone, wind-up then a sustained blast
+const WINDIGO_BREATH_WIND = 1.6, WINDIGO_BREATH_T = 1.1, WINDIGO_CONE_LEN = 255, WINDIGO_CONE_HALF = 0.306;   // v523: slower wind-up, 25% shorter, 15% narrower   // Frost Breath: aimed cone, wind-up then a sustained blast
 function windigoBreathSrc(e){
   // the breath is pure cold: a stand-in source that reads like the windigo but has no physical share
   if(!e._breathSrc){ e._breathSrc = Object.create(e); e._breathSrc.dmgType = 'cold'; e._breathSrc.dmgSplit = null; }
@@ -42,7 +42,7 @@ function updateWindigo(g, e, dt, target, d, isFollowerTarget, chillMult, room){
   }
 }
 function drawWindigoIso(e){
-  const iso = toIso(e.x,e.y), t = e.animT||0, face = e.faceSign||1, flash = e.hitT>0, s = e.r/24*1.12;
+  const iso = toIso(e.x,e.y), t = e.animT||0, face = e.faceSign||1, flash = e.hitT>0, s = e.r/24*1.12*0.9;   // v523: 10% shorter
   const fb = e.fbT>0 || e.brT>0, fbK = e.brT>0 ? 1 : (e.fbT>0 ? clamp(1-e.fbT/(e.fbMax||1),0,1) : 0), slash = (e.windT>0 || e.atkAnimT>0) && !fb ? 1 : 0;
   const walk = e.moving ? Math.sin(t*8) : 0, bob = e.moving ? Math.abs(Math.sin(t*8))*1.8 : Math.sin(t*1.7)*0.8;
   drawShadow(iso.x, iso.y, 26*s, 8.5*s);
@@ -57,17 +57,19 @@ function drawWindigoIso(e){
     ctx.beginPath(); ctx.moveTo(sd*5, -30+bob); ctx.lineTo(sd*8+sw*3, -17); ctx.lineTo(sd*4+sw*5, -5); ctx.stroke();
     ctx.fillStyle = ink; ctx.beginPath(); ctx.ellipse(sd*4+sw*5+3, -2, 7, 3.2, 0, 0, 7); ctx.fill();
   }
-  // tail of frosted fur
-  ctx.strokeStyle = fur; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-6, -32+bob); ctx.quadraticCurveTo(-24, -30, -26, -16+Math.sin(t*3)*3); ctx.stroke();
   // hunched torso
   const tg = ctx.createLinearGradient(-12, -66, 12, -28); tg.addColorStop(0, furL); tg.addColorStop(1, furD);
   ctx.fillStyle = flash?'#fff':tg; ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
-  ctx.beginPath(); ctx.moveTo(-11, -32+bob); ctx.quadraticCurveTo(-17, -52+bob, -9+lean, -66+bob); ctx.quadraticCurveTo(4+lean, -72+bob, 13+lean, -62+bob); ctx.quadraticCurveTo(15, -44+bob, 10, -32+bob); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // v523: gaunt -- a narrow, starved torso with the ribs showing through the frosted hide
+  ctx.beginPath(); ctx.moveTo(-7, -32+bob); ctx.quadraticCurveTo(-12, -52+bob, -7+lean, -66+bob); ctx.quadraticCurveTo(3+lean, -71+bob, 10+lean, -62+bob); ctx.quadraticCurveTo(9, -46+bob, 6, -32+bob); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = flash ? '#fff' : 'rgba(40,62,78,0.75)'; ctx.lineWidth = 1.3;
+  for(let i=0;i<5;i++){ const ry = -40-i*4.2+bob, rl = lean*(0.4+i*0.12); ctx.beginPath(); ctx.moveTo(-6+rl, ry+1.5); ctx.quadraticCurveTo(1+rl, ry-2.6, 8+rl, ry+0.5); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(40,62,78,0.6)'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(1+lean*0.5, -60+bob); ctx.lineTo(1+lean*0.3, -36+bob); ctx.stroke();   // sternum
   // frosted fur tufts along the back and chest
   ctx.fillStyle = furL;
-  for(let i=0;i<6;i++){ const yy = -34-i*6+bob, xx = -12-i*0.4+lean*(i/6); ctx.beginPath(); ctx.moveTo(xx,yy); ctx.lineTo(xx-6,yy-3); ctx.lineTo(xx+1,yy-5); ctx.closePath(); ctx.fill(); }
+  for(let i=0;i<6;i++){ const yy = -34-i*6+bob, xx = -8-i*0.4+lean*(i/6); ctx.beginPath(); ctx.moveTo(xx,yy); ctx.lineTo(xx-6,yy-3); ctx.lineTo(xx+1,yy-5); ctx.closePath(); ctx.fill(); }
   ctx.strokeStyle = furL; ctx.lineWidth = 1.1;
-  for(let i=0;i<5;i++){ ctx.beginPath(); ctx.moveTo(6+lean*0.5, -36-i*6+bob); ctx.lineTo(10+lean*0.5, -38-i*6+bob); ctx.stroke(); }
+  for(let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(6+lean*0.5, -58-i*4+bob); ctx.lineTo(9+lean*0.5, -60-i*4+bob); ctx.stroke(); }
   // arms with claws: far arm hangs, near arm slashes
   const armY = -60+bob;
   ctx.strokeStyle = furD; ctx.lineWidth = 6;
@@ -111,7 +113,7 @@ function drawWindigoIso(e){
 function drawWindigoCone(e){
   const breathing = e.brT>0; if(!breathing && !(e.fbT>0)) return;
   const a = e.brDir||0, t = (game.clock||0);
-  const bi = toIso(e.x,e.y), bs = e.r/24*1.12, bf = e.faceSign||1, o = {x:bi.x+bf*bs*27, y:bi.y-bs*73};
+  const bi = toIso(e.x,e.y), bs = e.r/24*1.12*0.9, bf = e.faceSign||1, o = {x:bi.x+bf*bs*27, y:bi.y-bs*73};
   ctx.save();
   if(!breathing){
     const frac = clamp(1-e.fbT/(e.fbMax||1),0,1);

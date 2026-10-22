@@ -56,7 +56,7 @@ function V(type, f0, f1, dur, vol, o, t){
   if(o.lp){ const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(o.lp, t); if(o.lpEnd) f.frequency.exponentialRampToValueAtTime(o.lpEnd, t+dur); f.Q.value = o.q||0.7; os.connect(f); node = f; }
   node.connect(g); const bus = o.bus || AUD.sfx; g.connect(bus);
   if(o.send){ const s = c.createGain(); s.gain.value = o.send; g.connect(s); s.connect(o.rev || (bus===AUD.sfx ? AUD.revSIn : AUD.revMIn)); }
-  os.start(t); os.stop(t+dur+0.06); AUD.voices++; os.onended = ()=>{ AUD.voices--; };
+  os.start(t); os.stop(t+dur+0.06); audVoice(t+dur+0.06);
 }
 // noise voice: filter type, start/end freq, q, duration, volume. o: {att, bus, send, brown, t}
 function N(ftype, f0, f1, q, dur, vol, o, t){
@@ -66,7 +66,7 @@ function N(ftype, f0, f1, q, dur, vol, o, t){
   const g = c.createGain(); aEnv(g, t, o.att||0.004, dur, vol);
   s.connect(f); f.connect(g); const bus = o.bus || AUD.sfx; g.connect(bus);
   if(o.send){ const sg = c.createGain(); sg.gain.value = o.send; g.connect(sg); sg.connect(bus===AUD.sfx ? AUD.revSIn : AUD.revMIn); }
-  s.start(t, Math.random()*2); s.stop(t+dur+0.06); AUD.voices++; s.onended = ()=>{ AUD.voices--; };
+  s.start(t, Math.random()*2); s.stop(t+dur+0.06); audVoice(t+dur+0.06);
 }
 
 // ---------- sound effects ----------
@@ -222,7 +222,7 @@ function sndPlayBuf(k, t, vol, rate){
   const b = AUD.buf[k]; if(!b) return false;
   const c = AUD.ctx, src = c.createBufferSource(), g = c.createGain();
   src.buffer = b; src.playbackRate.value = rate||1; g.gain.value = vol;
-  src.connect(g); g.connect(AUD.sfx); src.start(t); AUD.voices++; src.onended = ()=>{ AUD.voices--; };
+  src.connect(g); g.connect(AUD.sfx); src.start(t); audVoice(t + b.duration/(rate||1));
   return true;
 }
 function sndPlayMapped(name, now, v, r){
@@ -238,10 +238,15 @@ function sndPlayMapped(name, now, v, r){
   return !m.layer;   // layered sounds also let the synth version play underneath
 }
 SFX.deathSlime = SFX.deathSmall; SFX.deathShade = SFX.deathSmall; SFX.enemyBite = SFX.enemySwing; SFX.equipArmor = SFX.equip || null; SFX.equipJewel = null;
+// v523: the voice cap now counts by each voice's scheduled end time. It used to be a counter that went up on start and
+// down in 'onended' -- under a heavy frame load some 'ended' events were lost, the counter crept past the cap and every
+// combat sound stayed silent for the rest of the session.
+function audVoice(end){ (AUD.vEnds || (AUD.vEnds = [])).push(end); }
+function audVoiceCount(now){ const v = AUD.vEnds || (AUD.vEnds = []); if(v.length > 24){ let j = 0; for(let i=0;i<v.length;i++) if(v[i] > now) v[j++] = v[i]; v.length = j; } AUD.voices = v.length; return v.length; }
 function sfxPlay(name, vol){
   if(!AUD.ok || AUD.ctx.state!=='running') return; const fn = SFX[name]; if(!fn && !SND_MAP[name]) return;
   const now = AUD.ctx.currentTime; if(now-(AUD.last[name]||-9) < (SFX_TH[name]||SND_TH[name]||0.04)) return;
-  if(AUD.voices>46) return; const v = vol==null ? 1 : vol; if(v<0.03) return;
+  if(audVoiceCount(now)>46) return; const v = vol==null ? 1 : vol; if(v<0.03) return;
   AUD.last[name] = now;
   const r = 0.94+Math.random()*0.12;
   try{ if(!sndPlayMapped(name, now, v, r) && fn) fn(now, v, r); }catch(e){}
@@ -272,6 +277,8 @@ function audCast(id){
 // ---------- the audio director: watches the game each frame ----------
 function audioFrame(dt){
   if(!AUD.ok) return; const g = game; audMoodFor(g);
+  // v523: an audio context the system paused (interrupted / suspended under load) is woken up again while the game is visible
+  if(AUD.ctx.state!=='running' && AUD.ctx.state!=='closed' && !document.hidden){ const tn = performance.now(); if(tn - (AUD.resumeT||0) > 1500){ AUD.resumeT = tn; try{ AUD.ctx.resume().catch(()=>{}); }catch(e){} } }
   if(!g || !g.started || !g.player || AUD.ctx.state!=='running'){ AUD.seen = null; return; }
   const p = g.player, now = performance.now();
   AUD.pos.x = p.x; AUD.pos.y = p.y;

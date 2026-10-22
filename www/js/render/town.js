@@ -150,7 +150,15 @@ function drawIcyZoneFloor(room, cam){
       if(sx < -80 || sx > W+80 || sy < -80 || sy > H+80) continue;
       const checker = (((Math.floor(wx/TS)+Math.floor(wy/TS))%2)+2)%2;
       if(wx<0 || wy<0 || wx>room.w || wy>room.h){ ctx.fillStyle = kind==='cellar' ? (checker?'#0a1219':'#070d13') : (checker?'#3a4756':'#323f4d'); drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY); continue; }
-      if(kind==='summit') ctx.fillStyle = checker ? '#eaf2f8' : '#d9e6ef';
+      if(kind==='summit'){
+        // v523: the old worn path -- packed, dirty snow with bare rock showing through, ragged at the edges
+        const td = room.trail ? icyTrailDist(room, wx, wy) : 1e9, hs = tileHash(Math.floor(wx/TS), Math.floor(wy/TS));
+        if(td < 58 || (td < 92 && hs < 0.45)) ctx.fillStyle = td < 58 ? (hs<0.25 ? '#a39c90' : checker ? '#bdb6aa' : '#b3ac9f') : (checker ? '#d0ccc4' : '#c6c2b9');
+        else ctx.fillStyle = checker ? '#eaf2f8' : '#d9e6ef';
+        drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
+        if(td < 58 && hs > 0.6){ ctx.fillStyle = 'rgba(90,84,76,0.45)'; ctx.beginPath(); ctx.ellipse(iso.x+(hs-0.8)*30, iso.y+1, 6, 2.6, 0, 0, 7); ctx.ellipse(iso.x-6, iso.y-4, 3, 1.4, 0, 0, 7); ctx.fill(); }   // footprints and stones
+        continue;
+      }
       else if(kind==='shrine'){
         const path = Math.abs(wy-room.h/2) < 46 && wx < room.w-220;
         ctx.fillStyle = path ? (checker?'#e4ecf2':'#d5dfe8') : (checker?'#9fb0c1':'#90a2b4');
@@ -171,11 +179,7 @@ function drawIcyOverlay(g){
     const y = ((i*97.7 + t*(30+(i%3)*14)) % (H+20)) - 10;
     ctx.fillRect(x,y,2,2);
   }
-  ctx.save();
-  ctx.font = "bold 12px Cinzel, Georgia, serif"; ctx.textAlign='center';
-  ctx.fillStyle = '#bfe6ff'; ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=4;
-  ctx.fillText('❄ FREEZING  −'+(COLD_DPS*(1-elementResist(g.player,'cold')/100)).toFixed(2).replace(/\.?0+$/,'')+' cold / sec', W/2, 22);
-  ctx.restore();
+  // v523: the cold is shown only by its buff-row icon (the text here sat on top of the zone name)
 }
 function drawShrineAltarIso(a, clock){
   const iso = toIso(a.x,a.y);

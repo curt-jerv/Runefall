@@ -13,7 +13,7 @@ const MOOD_PROFILES = {
   forest:        {desat:0.30, mul:'rgb(208,214,200)', vig:0.48, grime:0.34},
   sunlitplains:  {desat:0.2, mul:'rgb(226,220,200)', vig:0.42, grime:0.32, crush:0.04},   // v507: the evening grade was draining the colour; keep it warm and green
   rivervalley:   {desat:0.40, mul:'rgb(206,204,182)', vig:0.44, grime:0.40, crush:0.08},
-  lakesideruins: {desat:0.36, mul:'rgb(204,206,196)', vig:0.44, grime:0.36},
+  lakesideruins: {desat:0.24, mul:'rgb(224,220,202)', vig:0.40, grime:0.32},   // v522: lit like the Crossroads next door
   blackmarsh:    {desat:0.30, mul:'rgb(196,206,184)', vig:0.50, grime:0.34},
   cursedcemetery:{desat:0.30, mul:'rgb(206,204,220)', vig:0.52, grime:0.34},
   darkcrypt:     {desat:0.22, mul:'rgb(226,214,198)', vig:0.0,  grime:0.30},
@@ -42,7 +42,7 @@ function moodProfile(g){
   return pr;
 }
 const MOOD_DBG = {};
-function moodOn(){ return !settings || settings.atmos!==false; }
+function moodOn(){ return true; }   // v522: the grade is always on (and gentle); players tune it with the Brightness slider
 function grainOn(){ return !settings || settings.grain!==false; }
 function moodLow(){ return !!(settings && settings.atmos==='low'); }
 
@@ -111,20 +111,21 @@ const moodVigEl = document.getElementById('moodVig'), moodGrainEl = document.get
 function moodFilterFor(pr){
   const m = pr._rgb || (pr._rgb = pr.mul.match(/\d+/g).map(Number));
   const lum = (m[0]*0.3 + m[1]*0.59 + m[2]*0.11)/255, warm = Math.max(0, (m[0]-m[2])/255);
-  const sat = Math.max(0.35, 1 - pr.desat*1.15), bri = Math.max(0.55, lum - (pr.crush||0)*0.35);
-  return 'saturate('+sat.toFixed(2)+') sepia('+Math.min(0.45, warm*1.3).toFixed(2)+') brightness('+bri.toFixed(2)+') contrast(1.12)';
+  // v522: a much lighter touch -- a little colour pulled out and a slight warm tint, but no more heavy darkening; the Brightness slider scales it
+  const sat = Math.max(0.7, 1 - pr.desat*0.6), bri = Math.max(0.82, 0.96 - (1-lum)*0.25 - (pr.crush||0)*0.15) * ((settings && settings.bright) || 1);
+  return 'saturate('+sat.toFixed(2)+') sepia('+Math.min(0.22, warm*0.7).toFixed(2)+') brightness('+bri.toFixed(2)+') contrast(1.06)';
 }
 function applyMoodCss(g){
   const on = !!(g && g.started) && moodOn() && !MOOD_DBG.noCss;
   const pr = on ? moodProfile(g) : null;
-  const key = on ? (g.scene+'|'+(g.room&&g.room.subzone||'')+'|'+(pr.mul)+'|'+pr.desat+'|'+pr.vig+'|'+grainOn()) : 'off|'+grainOn()+'|'+!!(g&&g.started);
+  const key = on ? (g.scene+'|'+(g.room&&g.room.subzone||'')+'|'+(pr.mul)+'|'+pr.desat+'|'+pr.vig+'|'+grainOn()+'|'+((settings&&settings.bright)||1)) : 'off|'+grainOn()+'|'+!!(g&&g.started);
   if(key===moodCssKey) return; moodCssKey = key;
   if(!on){ canvas.style.filter = ''; if(moodVigEl) moodVigEl.style.display = 'none'; if(moodGrainEl) moodGrainEl.style.display = (g && g.started && grainOn()) ? 'block' : 'none'; return; }
   canvas.style.filter = moodFilterFor(pr);
   if(moodVigEl){
     if(pr.vig>0){
       const m = pr._rgb, t = 'rgba('+Math.round(m[0]*0.05)+','+Math.round(m[1]*0.04)+','+Math.round(m[2]*0.04)+',';
-      moodVigEl.style.background = 'radial-gradient(ellipse 75% 70% at 50% 47%, '+t+'0) 38%, '+t+(pr.vig*0.5).toFixed(2)+') 72%, '+t+Math.min(0.85,pr.vig*1.15).toFixed(2)+') 100%)';
+      moodVigEl.style.background = 'radial-gradient(ellipse 75% 70% at 50% 47%, '+t+'0) 45%, '+t+(pr.vig*0.3).toFixed(2)+') 78%, '+t+Math.min(0.6,pr.vig*0.8).toFixed(2)+') 100%)';   // v522: softer
       moodVigEl.style.display = 'block';
     } else moodVigEl.style.display = 'none';
   }
@@ -184,16 +185,22 @@ function drawRegionDarkening(g){
   const p = g.player;
   let a = 0, col = '8,6,26';
   const sm = (v)=>{ v = clamp(v,0,1); return v*v*(3-2*v); };
-  if(g.scene==='sunlitplains'){ a = 0.04 + sm((p.y-SUN_H*0.42)/(SUN_H*0.5))*0.42; col='64,28,14'; }   // v507: lighter to the north, still dusk toward the Cemetery
-  else if(g.scene==='lakesideruins'){ a = 0.30 + sm((p.x-LAKE_W*0.6)/(LAKE_W*0.38))*0.26; col='10,12,8'; drawGrittyGrade(g); }
-  else if(g.scene==='blackmarsh'){ a = 0.44 + 0.14*clamp(p.x/BM_W,0,1); col='4,22,12'; }
+  // v522: one lighting ladder for the west: Crossroads (open, brightest) = Lakeside's west shore > River Valley > Forest;
+  // the Crossroads darken toward the Cursed Cemetery (south), the Lakeside toward the Black Marsh (east)
+  if(g.scene==='sunlitplains'){ a = 0.02 + sm((p.y-SUN_H*0.5)/(SUN_H*0.48))*0.28; col='22,14,24'; }
+  else if(g.scene==='lakesideruins'){ const k = sm((p.x-LAKE_W*0.45)/(LAKE_W*0.5)); a = 0.03 + k*0.36; col='8,14,10'; }
+  else if(g.scene==='blackmarsh'){   // v524: murky but not black; the north arm brightens toward the Barren Highlands road (west), the far east stays gloomiest
+    const north = p.y < bmMidY(p.x) ? 1 : 0, toHigh = north * sm(1 - p.x/(BM_W*0.7));
+    a = Math.max(0, 0.2 + 0.12*clamp(p.x/BM_W,0,1) - 0.24*toHigh); col='4,22,12';
+    if(toHigh > 0.03){ ctx.save(); ctx.fillStyle = 'rgba(150,156,140,'+(0.26*toHigh).toFixed(3)+')'; ctx.fillRect(0,0,W,H); ctx.restore(); }   // the open highland air leaking in: a pale haze
+  }
   else if(g.scene==='highlands'){ a = 0.2; col='26,34,48'; }
   else if(g.scene==='lighthouse' && g.room && g.room.subzone==='pool'){ a = 0.52; col='4,22,12'; }
   else if(g.scene==='forest'){   // v229: a little lighter, and brighter again toward the Withered Crossroads exit (south)
     const fh = (g.forest && g.forest.h) || 3800;
-    a = 0.32 * (1 - 0.8*sm((p.y - fh*0.5)/(fh*0.46))); col='2,8,14';
+    a = 0.2 * (1 - 0.6*sm((p.y - fh*0.5)/(fh*0.46))); col='2,8,14';   // v522: the forest's gloom comes mostly from its own dark colours now
   }
-  else if(g.scene==='rivervalley'){ a = 0.07*(1 - sm((p.y-150)/1100)); col='2,8,14'; }   // v233: continues the Forest's brightening south gate into open daylight
+  else if(g.scene==='rivervalley'){ a = 0.42 - 0.06*sm((p.y-300)/2200); col='2,8,14'; }   // v522: a shade lighter than the Forest, darker than the open Crossroads   // v233: continues the Forest's brightening south gate into open daylight
   else if(g.scene==='town'){ a = 0.32; col='12,10,34'; }      // v193: Mistfall's dusk
   if(a < 0.005) return;
   ctx.save();

@@ -11,7 +11,7 @@ const RRT_FLOORS = 3;   // v461: every watchtower has three floors; the beacon b
 function makeRRTower(id, floor){
   floor = floor || 1;
   const top = floor===RRT_FLOORS;
-  const w = RRT_W, h = RRT_H, cy = h/2, rnd = subSeeded(7100+id*37+(floor-1)*911);
+  const w = RRT_W, h = RRT_H, cy = h/2, rnd = subSeeded(tripSeed('rrt'+id)+id*37+(floor-1)*911);   // v525: new rooms every trip
   const entrance = {x:70, y:cy, r:34};
   const rrBeacon = top ? {x:w-230, y:cy, r:30, id} : null;
   const rrUp = top ? null : {x:w-210, y:cy, r:32};
@@ -22,10 +22,11 @@ function makeRRTower(id, floor){
     for(let i=0;i<14;i++){ const x = 360+rnd()*(w-760), y = 120+rnd()*(h-240), sz = 54+Math.floor(rnd()*30); if(!farFrom(x,y,260)) continue; obstacles.push({x:Math.round(x-sz/2), y:Math.round(y-sz/2), w:sz, h:sz}); }
     if(top) props.push({k:'scout', x:goal.x-120, y:goal.y+70});
   } else if(id===2){
-    const wallXs = [[820, 1380, 1900],[700, 1260, 1820],[900, 1440, 1960]][floor-1];
+    const wallXs = [[820, 1380, 1900],[700, 1260, 1820],[900, 1440, 1960]][floor-1].map(x=>Math.round(x + (rnd()-0.5)*160));   // v525: walls shift every trip
+    const flip = rnd()<0.5;
     wallXs.forEach((wx,i)=>{
-      const gapTop = ((i+floor+1)%2===0);                       // alternate which end the gap is on
-      const gy0 = gapTop ? 70 : h-70-200, gy1 = gy0+200;
+      const gapTop = (((i+floor+1)%2===0) !== flip);                       // alternate which end the gap is on
+      const gy0 = gapTop ? 70 + Math.round(rnd()*120) : h-70-200-Math.round(rnd()*120), gy1 = gy0+200;
       if(gy0>0) obstacles.push({x:wx, y:0, w:46, h:gy0});
       obstacles.push({x:wx, y:gy1, w:46, h:h-gy1});
       ladders.push({x:wx+23, y:gapTop?gy1+10:gy0-10, up:!gapTop});      // a broken ladder beside the gap
@@ -33,7 +34,7 @@ function makeRRTower(id, floor){
     });
     for(let i=0;i<7;i++){ const x = 300+rnd()*(w-700), y = 140+rnd()*(h-280); if(!farFrom(x,y,300)) continue; if(wallXs.some(wx=>Math.abs(x-wx)<130)) continue; vents.push({x, y, r:50, ph:rnd()*3.6}); }
   } else {
-    for(let px=520; px<w-380; px+=300) for(const py of [cy-250, cy+250]){ if(!farFrom(px,py,200)) continue; obstacles.push({x:px-30, y:py-30, w:60, h:60}); }
+    for(let px=520; px<w-380; px+=300) for(const py0 of [cy-250, cy+250]){ if(rnd()<0.25) continue; const px1 = px + (rnd()-0.5)*120, py = py0 + (rnd()-0.5)*160, sz = 50+Math.round(rnd()*30); if(!farFrom(px1,py,200)) continue; obstacles.push({x:Math.round(px1-sz/2), y:Math.round(py-sz/2), w:sz, h:sz}); }   // v525: the pillars move every trip
     if(top) props.push({k:'standard', x:goal.x-150, y:goal.y-110});
   }
   const room = { w, h, obstacles, subzone:'rrtower', rrId:id, rrFloor:floor, rrUp, entrance, entranceSide:'left', entranceSpot:{x:entrance.x+90, y:cy}, rrBeacon, ladders, vents, props, rocks:[], name:RRT_NAMES[id]+(top ? ' (Beacon)' : ' — Floor '+floor),

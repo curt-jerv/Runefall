@@ -58,7 +58,7 @@ const DARKCRYPT_TORCH_LIGHT_R = 70;
 const UNDERGROUND_LIGHT_R = DARKCRYPT_PLAYER_LIGHT_R*2;
 function isUndergroundScene(g){
   const sc = g.scene;
-  return sc==='dungeon'||sc==='spiderlair'||sc==='bearcave'||sc==='minotaurcave'||sc==='ancientruins'||sc==='raptorlair'||(sc==='lighthouse' && !!(g.room && (g.room.subzone==='sunken' || g.room.subzone==='temple' || g.room.subzone==='rrtower' || g.room.subzone==='highward' || g.room.deep===1 || g.room.deep===3)));
+  return sc==='dungeon'||sc==='spiderlair'||sc==='bearcave'||sc==='minotaurcave'||sc==='ancientruins'||sc==='raptorlair'||(sc==='lighthouse' && !!(g.room && (g.room.subzone==='sunken' || g.room.subzone==='temple' || g.room.subzone==='rrtower' || g.room.subzone==='cellar' || g.room.subzone==='highward' || g.room.deep===1 || g.room.deep===3)));
 }
 const DARKCRYPT_EYE_DOT_R = 6;
 // Lazily-created offscreen mask canvas, reused every frame (recreated only
@@ -357,6 +357,7 @@ function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
   // v515: the dark ring is for towers and dungeons only (every overworld zone, town included, is plainly lit); the player's warm glow still shows (drawPlayerGlowOnly)
   if(g.scene!=='lighthouse' || isUndergroundScene(g) || kpOutdoor(g)) return false;
+  if(g.room && g.room.subzone==='pool') return false;   // v521: the Marsh Pool is open ground, not underground -- plain lit with the edge ring
   if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
   return true;
 }
@@ -407,7 +408,7 @@ function playerGlowScene(g){ return !!(g && g.started && g.player && g.scene!=='
 // v516/v517: overworld mood -- black fading in only at the screen edges (soft, strongest in the corners), like the Spider Lair's dark but much further out.
 // A screen-sized elliptical vignette (nothing is cut around the player); the warm ground glow is set up for drawPlayerGroundGlow.
 function drawOverworldRing(g){
-  const sc = g.scene, mA = sc==='sunlitplains' ? 0.66 : sc==='town' ? 0.42 : 0.6;
+  const sc = g.scene, mA = sc==='sunlitplains' || sc==='lakesideruins' ? 0.42 : sc==='town' ? 0.42 : 0.55;   // v522: the open Crossroads/Lakeside get only a light edge
   g._glowLR = VEIL_LIGHT_R*1.3*0.72*lightRadiusMult(g.player); g._glowK = 1;
   const cx = W/2, cy = H/2, rx = W*0.6, ry = H*0.8;
   ctx.save(); ctx.translate(cx, cy); ctx.scale(rx, ry);

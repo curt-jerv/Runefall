@@ -190,24 +190,74 @@ function drawMountainPassFloor(room, cam){
 // shaped road test (see makeSunlitPlains' onRoad()) instead of a single
 // winding trail, since this zone's road is a straight north-south/east-west
 // crossroad rather than a point-to-point trail.
+// v522: the Crossroads are weathered -- rough old rutted roads with ragged verges, broken cobbles and potholes,
+// and dead, sun-bleached grass in patches of straw, brown earth and faded olive. The south still fades into the
+// Cemetery's blighted ground. Everything here is static, so it is baked into the cached floor chunks.
 function drawSunlitPlainsFloor(room, cam){
   const TS = 46;
+  const o0 = toIso(0,0), oN = toIso(0,1), oE = toIso(1,0);
+  const dNS = {x:oN.x-o0.x, y:oN.y-o0.y}, dEW = {x:oE.x-o0.x, y:oE.y-o0.y};
   if(FLOOR_PASS!==2) for(let wx=-GROUND_MARGIN; wx<=room.w+GROUND_MARGIN; wx+=TS){
-    const onRoadX = Math.abs(wx-SUN_CX) < SUN_ROAD_HALFW;
     for(let wy=-GROUND_MARGIN; wy<=room.h+GROUND_MARGIN; wy+=TS){
       const iso = toIso(wx,wy);
       const sx = iso.x - cam.x, sy = iso.y - cam.y;
       if(sx < -80 || sx > W+80 || sy < -80 || sy > H+80) continue;
-      if(wx<0||wy<0||wx>room.w||wy>room.h){ const ef = edgeFill(room, wx, wy); if(ef){ if(FLOOR_PASS!==2){ ctx.fillStyle = ef; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY); } continue; } }
-      const checker = (((Math.floor(wx/TS)+Math.floor(wy/TS))%2)+2)%2;
-      const onPath = onRoadX || Math.abs(wy-SUN_CY) < SUN_ROAD_HALFW;
-      // v456: evening palette; the south fades into the Cemetery's blighted ground
-      const hs = tileHash(Math.floor(wx/TS), Math.floor(wy/TS));
-      const blight = clamp((wy-(room.h-900))/900,0,1) * clamp(1-(Math.abs(wx-SUN_CX)-500)/900,0,1);
+      if(wx<0||wy<0||wx>room.w||wy>room.h){ const ef = edgeFill(room, wx, wy); if(ef){ ctx.fillStyle = ef; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY); } continue; }
+      const ix = Math.floor(wx/TS), iy = Math.floor(wy/TS);
+      const checker = ((ix+iy)%2+2)%2, hs = tileHash(ix, iy), h2 = tileHash(iy*3+7, ix*5+1);
+      const rn = sunRoadNear(room, wx, wy);   // v527: winding roads to gates that move every visit
+      const onPath = rn.d < SUN_ROAD_HALFW;
+      const verge = !onPath && rn.d < SUN_ROAD_HALFW+TS && h2 < 0.55;   // ragged, worn road edges
+      const blight = clamp((wy-(room.h-900))/900,0,1) * clamp(1-(Math.abs(wx-(room.southGate ? room.southGate.x : SUN_CX))-500)/900,0,1);
       const bl = blight*blight*(3-2*blight);
-      if(onPath) ctx.fillStyle = mixRGB(checker ? [168,147,94] : [156,136,86], checker ? [74,68,80] : [67,62,74], bl);
-      else ctx.fillStyle = mixRGB(hs < 0.1 ? [58,70,40] : (checker ? [68,84,46] : [74,90,50]), checker ? [42,45,62] : [48,52,74], bl);
+      let base;
+      if(onPath) base = hs < 0.15 ? [128,112,84] : hs < 0.55 ? [146,128,94] : [138,121,88];
+      else if(verge) base = h2 < 0.25 ? [116,102,72] : [106,94,64];
+      else base = hs < 0.18 ? [78,66,46] : hs < 0.30 ? [70,76,46] : hs < 0.62 ? [90,82,52] : [84,77,49];
+      const sh = checker ? -3 : 0; base = [base[0]+sh, base[1]+sh, base[2]+sh];
+      ctx.fillStyle = mixRGB(base, onPath ? [74,68,80] : [46,48,64], bl);
       drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
+      if(bl > 0.85) continue;
+      const ix0 = iso.x, iy0 = iso.y;
+      if(onPath){
+        const d = {x:dEW.x*rn.ux + dNS.x*rn.uy, y:dEW.y*rn.ux + dNS.y*rn.uy}, n = {x:-dEW.x*rn.uy + dNS.x*rn.ux, y:-dEW.y*rn.uy + dNS.y*rn.ux};
+        // two wheel ruts running along the road
+        const off = rn.off;
+        for(const rr of [-18, 18]){
+          const k = rr - off; if(Math.abs(k) > TS*0.5) continue;
+          const cx = ix0 + n.x*k, cy = iy0 + n.y*k;
+          ctx.strokeStyle = 'rgba(52,40,26,0.42)'; ctx.lineWidth = 2.6;
+          ctx.beginPath(); ctx.moveTo(cx - d.x*TS*0.55, cy - d.y*TS*0.55); ctx.lineTo(cx + d.x*TS*0.55, cy + d.y*TS*0.55); ctx.stroke();
+          ctx.strokeStyle = 'rgba(160,142,106,0.25)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(cx - d.x*TS*0.55 + 1, cy - d.y*TS*0.55 - 1.5); ctx.lineTo(cx + d.x*TS*0.55 + 1, cy + d.y*TS*0.55 - 1.5); ctx.stroke();
+        }
+        // a few surviving cobbles, cracked and sunken
+        if(hs > 0.45){
+          for(let c=0;c<3;c++){
+            const u = tileHash(ix*7+c, iy*11-c), v = tileHash(ix*13-c, iy*3+c*5);
+            const px = ix0 + (u-0.5)*TS*0.75, py = iy0 + (v-0.5)*TS*0.36, r = 3 + u*2.5;
+            ctx.fillStyle = 'rgba(96,90,82,0.85)'; ctx.beginPath(); ctx.moveTo(px-r, py); ctx.lineTo(px-r*0.3, py-r*0.5); ctx.lineTo(px+r, py-r*0.25); ctx.lineTo(px+r*0.6, py+r*0.45); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'rgba(150,142,126,0.5)'; ctx.fillRect(px-r*0.5, py-r*0.4, r*0.9, 1);
+          }
+        }
+        // potholes with puddle-dark centres
+        if(h2 < 0.12){ ctx.fillStyle = 'rgba(46,36,24,0.55)'; ctx.beginPath(); ctx.ellipse(ix0+(hs-0.5)*14, iy0+2, 7, 3.2, 0, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(150,130,96,0.35)'; ctx.lineWidth = 1; ctx.stroke(); }
+        // hairline cracks in the packed earth
+        if(h2 > 0.7){ ctx.strokeStyle = 'rgba(48,36,22,0.35)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(ix0-10, iy0-2); ctx.lineTo(ix0-3, iy0+1); ctx.lineTo(ix0+2, iy0-3); ctx.lineTo(ix0+9, iy0); ctx.stroke(); }
+      } else {
+        // dead grass: short straw strokes, bare earth patches and the odd pebble
+        if(hs > 0.3){
+          ctx.lineWidth = 1; ctx.lineCap = 'round';
+          for(let k=0;k<4;k++){
+            const u = tileHash(ix*5+k, iy*9-k), v = tileHash(ix*2-k, iy*7+k*3);
+            const px = ix0 + (u-0.5)*TS*0.8, py = iy0 + (v-0.5)*TS*0.38, lean = (u-0.5)*4;
+            ctx.strokeStyle = k%2 ? 'rgba(170,150,96,0.55)' : 'rgba(118,100,62,0.6)';
+            ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px+lean, py-4-v*3); ctx.moveTo(px+2, py); ctx.lineTo(px+2+lean*1.4, py-3-u*3); ctx.stroke();
+          }
+        }
+        if(h2 < 0.14){ ctx.fillStyle = 'rgba(92,74,50,0.5)'; ctx.beginPath(); ctx.ellipse(ix0+(hs-0.5)*16, iy0, 10+hs*6, 4+hs*2, 0, 0, 7); ctx.fill(); }
+        if(h2 > 0.9){ ctx.fillStyle = 'rgba(120,114,100,0.8)'; ctx.beginPath(); ctx.ellipse(ix0+(hs-0.5)*20, iy0+(h2-0.95)*40, 2.2, 1.3, 0, 0, 7); ctx.fill(); }
+      }
     }
   }
   for(const o of (room.obstacles||[])){ if(o.kind==='pond'){ const io = toIso(o.x+o.w/2,o.y+o.h/2); const sx=io.x-cam.x, sy=io.y-cam.y; if(sx>-300 && sx<W+300 && sy>-260 && sy<H+260) drawPondIso(o, (game&&game.clock)||0); } }

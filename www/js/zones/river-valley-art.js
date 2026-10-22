@@ -53,7 +53,13 @@ function drawRiverValleyFloor(room, cam){
         continue;
       }
       if(FLOOR_PASS===2) continue;
-      const road = rvOnRoad(wx,wy,0);
+      const road = rvRoadDist(wx,wy) < RV_ROAD_HW;
+      if(!road && rvTrailDist(wx,wy) < RV_TRAIL_HW){   // v527: the dirt trail to the Minotaur Cave -- paler, patchy, with grass breaking through
+        ctx.fillStyle = rvCol(hsh<0.4?[60,50,34]:[70,58,40], hsh<0.4?[150,132,96]:[160,142,104], bl);
+        drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
+        if(hsh>0.6){ ctx.strokeStyle = 'rgba(70,110,50,0.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(iso.x-6,iso.y+2); ctx.lineTo(iso.x-5,iso.y-4); ctx.moveTo(iso.x+5,iso.y+1); ctx.lineTo(iso.x+6,iso.y-5); ctx.stroke(); }
+        continue;
+      }
       if(road){
         ctx.fillStyle = rvCol(hsh<0.5?RV_RF[0]:RV_RF[1], hsh<0.5?RV_RP[0]:RV_RP[1], bl);
         drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
@@ -191,6 +197,8 @@ function drawRvBarricade(o){
   ctx.stroke();
 }
 function drawRvProp(o, clk){
+  if(o.kind==='rvwall') return;   // v527: the invisible switchback wall (dressed with real props)
+  if(o.kind==='rvwagon'){ drawRvWagon(o); return; }
   if(o.kind==='rvtent') drawRvTent(o);
   else if(o.kind==='rvbarricade') drawRvBarricade(o);
   else drawPropIso(o, clk);
@@ -226,5 +234,28 @@ function drawRvDecor(d, clk){
     ctx.strokeStyle='#241008'; ctx.lineWidth=1; ctx.stroke();
     ctx.fillStyle='#e8d8b0'; ctx.beginPath(); ctx.arc(11+sw*0.5,-47,4.2,0,7); ctx.fill(); ctx.fillStyle='#9a2a30'; ctx.fillRect(8.4+sw*0.5,-48.4,1.6,1.8); ctx.fillRect(11.6+sw*0.5,-48.4,1.6,1.8);
   }
+  ctx.restore();
+}
+// v527: a broken-down brown wagon (bed, two big wheels, a torn canvas cover) used to wall off the switchbacks
+function drawRvWagon(o){
+  const c = toIso(o.x+o.w/2, o.y+o.h/2), f = o.flip ? -1 : 1, sd = o.seed||0.5;
+  drawShadow(c.x, c.y, 62, 20);
+  ctx.save(); ctx.translate(c.x, c.y); ctx.scale(f, 1); ctx.lineJoin = 'round';
+  // far wheel
+  ctx.strokeStyle = '#3a2716'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(18, -12, 13, 15, 0, 0, 7); ctx.stroke();
+  // wagon bed
+  ctx.fillStyle = '#6b4a2c'; ctx.strokeStyle = '#2a1a0c'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(-44,-14); ctx.lineTo(30,-34); ctx.lineTo(46,-26); ctx.lineTo(-28,-6); ctx.closePath(); ctx.fill(); ctx.stroke();   // top of the bed
+  ctx.fillStyle = '#5a3c22'; ctx.beginPath(); ctx.moveTo(-28,-6); ctx.lineTo(46,-26); ctx.lineTo(46,-12); ctx.lineTo(-28,8); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(30,18,8,0.6)'; ctx.lineWidth = 1; for(let k=1;k<4;k++){ ctx.beginPath(); ctx.moveTo(-28+k*18, -6-k*5); ctx.lineTo(-28+k*18, 8-k*5); ctx.stroke(); }
+  // torn canvas hoops
+  ctx.fillStyle = 'rgba(206,190,150,0.95)'; ctx.strokeStyle = '#6a5a3a'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(-36,-16); ctx.quadraticCurveTo(-30,-58,0,-60); ctx.quadraticCurveTo(26,-62,34,-32); ctx.lineTo(10,-28); ctx.quadraticCurveTo(4,-40,-8,-34); ctx.lineTo(-20,-24); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#5a3c22'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-36,-16); ctx.quadraticCurveTo(-30,-58,0,-60); ctx.stroke(); ctx.beginPath(); ctx.moveTo(34,-32); ctx.quadraticCurveTo(26,-62,0,-60); ctx.stroke();
+  // near wheel (one wheel broken, tipped)
+  ctx.strokeStyle = '#3a2716'; ctx.lineWidth = 4.5; ctx.beginPath(); ctx.ellipse(-16, 0, 14, 16, 0, 0, 7); ctx.stroke();
+  ctx.lineWidth = 2; for(let k=0;k<4;k++){ const a = k*Math.PI/4+sd; ctx.beginPath(); ctx.moveTo(-16-Math.cos(a)*13, -Math.sin(a)*15); ctx.lineTo(-16+Math.cos(a)*13, Math.sin(a)*15); ctx.stroke(); }
+  // a crate spilled beside it
+  ctx.fillStyle = '#7a5a34'; ctx.strokeStyle = '#2a1a0c'; ctx.lineWidth = 1; ctx.fillRect(40, -6, 14, 11); ctx.strokeRect(40, -6, 14, 11);
   ctx.restore();
 }

@@ -33,7 +33,7 @@ function claimGojiraChain(p, stage){
     p.hunterRuneRewarded = true;
     p.skillPoints = (p.skillPoints||0) + 2;
     const q = getQuest(p, 'slay_gojira');
-    if(q && q.status==='active') q.desc = 'The Hunter thanks you. Someone in town could use the Obsidian Obelisk.';
+    if(q && q.status==='active') q.desc = 'Garrick the Hunter thanks you. Someone in town could use the Obsidian Obelisk.';
     showMsg('+2 Skill Points', 3.0);
     try{ if(typeof updateSkillPointsUi==='function') updateSkillPointsUi(); }catch(e){}
     updateQuestBadge(); saveGame();
@@ -398,6 +398,7 @@ function enterIcyZone(kind, from, opts){
   const iz = g.iz, p = g.player;
   const gate = id => iz.gates.find(gt=>gt.id===id);
   if(opts.atWaypoint && iz.waypoint){ p.x = iz.waypoint.x; p.y = iz.waypoint.y + 45; }
+  else if(iz.entranceSpot){ p.x = iz.entranceSpot.x; p.y = iz.entranceSpot.y; iz.entrySpawn = {x:p.x, y:p.y}; }   // v523: the cave cellar
   else {
     const gt = (kind==='summit') ? gate(from==='shrine'?'shrine':from==='cellar'?'cellar':'pass') : iz.gates[0];
     const dx = gt.x < 100 ? 130 : gt.x > iz.w-100 ? -130 : 0;
@@ -423,8 +424,7 @@ function enterIcyZone(kind, from, opts){
     boss.dmg = boss.dmg*MASTODON_DMG_MULT*0.8;   // v333: -20% across the board
     boss.armor = (boss.armor||0) + 6;
     boss.isLairBoss = true; boss.bossName = 'Woolly Mastodon'; boss.mastodon = true; boss.dmgType = 'normal'; boss.dmgSplit = 'cold'; boss.dmg *= 1.1;   /* v484: half cold, +10% */
-    boss.aggroRange = 340; boss.leashRange = 900; boss.wanderRadius = 20;
-    for(let i=0;i<4;i++) spawnEnemy(g, 'frozenzombie', {x:iz.bossSpot.x+rand(-170,170), y:iz.bossSpot.y+rand(-170,170)});
+    boss.aggroRange = 520; boss.leashRange = (iz.bossHall ? iz.bossHall.rx+200 : 900); boss.wanderRadius = 20;   // v523: it stays in its hall
   }
   if(kind==='summit'){ showMsg('Icy Summit — the freezing wind bites (1 cold/sec)', 2.4); }
   else if(kind==='cellar') showMsg('Icy Cellar — something huge stirs...', 2.2);
@@ -454,7 +454,7 @@ function enterSunlitPlains(from){
   g.sun.graverobbers = makeGraverobbers(g.sun);
   g.room = g.sun;
   // Fixed area level (static difficulty)
-  g.depth = 8;   // v230: lowered from 12 so the step up from the Bear Cave is gentle
+  g.depth = 10;   // v529: Lv 10 (v230: 8)
   // v70: arriving back from Lighthouse Tower (via its floor-1 entrance
   // gate, or the Teleport menu landing here) lands the player just east of
   // the west gate, mirroring how every other zone transition lands you
@@ -492,6 +492,7 @@ function enterSunlitPlains(from){
   // v350: hard clearance -- no monster starts within 420 of the entrance gates, the waypoint or where you arrive
   { const keep = [g.sun.forestGate, g.sun.waypoint, g.sun.westGate, g.sun.eastGate, g.sun.southGate, g.player];
     g.enemies = g.enemies.filter(e=>keep.every(k=>dist(e,k) >= 420)); }
+  roadEvRoll(g);   // v529: one random road encounter
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = g.player.x; f.y = g.player.y; }

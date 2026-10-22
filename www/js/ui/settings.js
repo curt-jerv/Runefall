@@ -135,8 +135,7 @@ function syncGraphicsUI(){
   const gq = settings.gfxQ || 'auto';
   document.querySelectorAll('#gfxSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===gq));
   document.querySelectorAll('#fpsSeg button').forEach(b=>b.classList.toggle('on', +b.dataset.v===(+settings.fpsCap===30 ? 30 : 60)));
-  const v = settings.atmos===false ? 'off' : (settings.atmos==='low' ? 'low' : 'high');
-  document.querySelectorAll('#atmosSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  { const bs = document.getElementById('brightSlider'), bv = Math.round((settings.bright||1)*100); if(bs){ bs.value = bv; document.getElementById('brightValueLabel').textContent = bv+'%'; } }
   setToggleUI(document.getElementById('toggleGrain'), settings.grain!==false);
   { const o = settings.orient || 'auto'; document.querySelectorAll('#orientSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===o)); }
 }
@@ -166,7 +165,8 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ goImme
 window.addEventListener('resize', ()=>{ setTimeout(goImmersive, 300); });
 document.querySelectorAll('#gfxSeg button').forEach(b=>b.addEventListener('click', ()=>{ settings.gfxQ = b.dataset.v; saveSettings(settings); gfxInit(); syncGraphicsUI(); }));
 document.querySelectorAll('#fpsSeg button').forEach(b=>b.addEventListener('click', ()=>{ settings.fpsCap = +b.dataset.v; saveSettings(settings); syncGraphicsUI(); }));
-document.querySelectorAll('#atmosSeg button').forEach(b=>b.addEventListener('click', ()=>{ const v = b.dataset.v; settings.atmos = v==='off' ? false : (v==='low' ? 'low' : true); settings.atmosChosen = true; saveSettings(settings); syncGraphicsUI(); }));
+// v522: the old Atmosphere switch is now a plain Brightness slider (70-140%), applied in the canvas CSS filter (render/mood.js)
+document.getElementById('brightSlider').addEventListener('input', e=>{ settings.bright = (+e.target.value)/100; document.getElementById('brightValueLabel').textContent = e.target.value+'%'; try{ moodCssKey = ''; }catch(err){} saveSettings(settings); });
 document.getElementById('toggleGrain').addEventListener('click', ()=>{ settings.grain = (settings.grain===false); settings.atmosChosen = true; saveSettings(settings); syncGraphicsUI(); });
 const combatOverlay = document.getElementById('combatOverlay');
 document.getElementById('settingsCombatBtn').addEventListener('click', ()=>{ try{ refreshDamageNumbersToggle(); }catch(e){} settingsOverlay.style.display='none'; combatOverlay.style.display='flex'; });

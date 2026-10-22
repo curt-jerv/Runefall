@@ -27,8 +27,9 @@ function heartLavaAt(room, x, y){
 // v456: Ember Caverns and the Heart of the Mountain are organic caves now (like the Bear Cave), with lava pools in the caverns
 const deepOrgCache = {};
 function makeDeepOrganicFloor(f){
-  if(deepOrgCache[f]) return deepOrgCache[f];
-  const saveRand = Math.random, rnd = subSeeded(f*9133 + 71);
+  const tb = tripSeed('deep');   // v525: the Ember Caverns change every trip (the Heart's boss bowl stays fixed)
+  if(deepOrgCache[f] && (f===3 || deepOrgCache[f]._trip===tb)) return deepOrgCache[f];
+  const saveRand = Math.random, rnd = subSeeded(f===3 ? f*9133 + 71 : tb + f*9133);   // v525: the Ember Caverns change every trip (the Heart's boss bowl stays fixed)
   Math.random = rnd;
   let R;
   try{
@@ -77,7 +78,7 @@ function makeDeepOrganicFloor(f){
   } finally { Math.random = saveRand; }
   const room = R;
   room.lavaAt = (x,y)=> subWaterAt(room,x,y) || (room.bossFloor && heartLavaAt(room,x,y));
-  deepOrgCache[f] = room;
+  room._trip = tb; deepOrgCache[f] = room;
   return room;
 }
 function makeDeepFloor(f){
@@ -241,8 +242,9 @@ function mineFlowAngle(ent){
   return tg ? Math.atan2(tg.y-ent.y, tg.x-ent.x) : null;
 }
 function makeDeepMineFloor(){
-  if(deepMineCache) return deepMineCache;
-  const w = DEEP_MINE_W, h = DEEP_MINE_H, saveRand = Math.random, rnd = subSeeded(40417);
+  const tb = tripSeed('deep');
+  if(deepMineCache && deepMineCache._trip===tb) return deepMineCache;
+  const w = DEEP_MINE_W, h = DEEP_MINE_H, saveRand = Math.random, rnd = subSeeded(tb + 40417);   // v525: the warren (and the miners' camp) moves every trip
   Math.random = rnd;   // seeded: the warren is the same every visit, so enemies, camp and quest stay put
   let R;
   try{
@@ -309,7 +311,7 @@ function makeDeepMineFloor(){
     // the final approach into the stairwell chamber
     R.ramps.push({x:R.stairs.x-150, y:R.stairs.y, ang:0, len:300, wid:150, grand:true});
   } finally { Math.random = saveRand; }
-  deepMineCache = R;
+  R._trip = tb; deepMineCache = R;
   return R;
 }
 // a random open, unobstructed point on the floor (weighted by area), or null

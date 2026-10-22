@@ -565,15 +565,18 @@ function openShop(vendor){
   game.openVendor = vendor || 'blacksmith';
   if(vendor==='hunter'){
     t.stock = t.hunterStock;
-    document.getElementById('shopTitle').textContent = 'The Hunter \u2014 restocks in '+restockLabel();
+    document.getElementById('shopTitle').textContent = 'Garrick the Hunter \u2014 restocks in '+restockLabel();
   } else if(vendor==='bar'){
     t.stock = refreshBarStock(game.player);
-    document.getElementById('shopTitle').textContent = 'Hobb \u2014 restocks in '+restockLabel();
+    document.getElementById('shopTitle').textContent = 'Hobbs the Barkeeper \u2014 restocks in '+restockLabel();
     saveGame();
   } else if(vendor==='bard' || vendor==='gambler'){
     if(!game.tavernVendors) game.tavernVendors = {bard:genBardShopStock(game.player.level), gambler:genGamblerStock(game.player.level)};
     t.stock = game.tavernVendors[vendor];
     document.getElementById('shopTitle').textContent = (vendor==='bard' ? 'The Bard' : 'The Gambler')+' \u2014 restocks in '+restockLabel();
+  } else if(vendor==='peddler'){
+    t.stock = (game.roadEv && game.roadEv.stock) || [];
+    document.getElementById('shopTitle').textContent = ROAD_MERCHANT_NAME+' \u2014 the Wandering Peddler';
   } else if(vendor==='runeforge'){
     t.stock = t.blacksmithStock;
     document.getElementById('shopTitle').textContent = 'Obsidian Forge';

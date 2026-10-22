@@ -29,7 +29,7 @@ function render(){
     ctx.fillStyle = skyGrad;
   } else if(game && game.started && game.scene==='icyzone'){
     const skyGrad = ctx.createLinearGradient(0,0,0,H);
-    if(game.iz && game.iz.kind==='cellar'){ skyGrad.addColorStop(0,'#05080d'); skyGrad.addColorStop(1,'#12202c'); }
+    if(game.iz && game.iz.kind==='cellar'){ skyGrad.addColorStop(0,'#1a2430'); skyGrad.addColorStop(1,'#2a3846'); }   // v523: dark frozen rock around the caverns
     else if(game.iz && game.iz.kind==='shrine'){ skyGrad.addColorStop(0,'#1c2740'); skyGrad.addColorStop(1,'#a9bdd6'); }
     else { skyGrad.addColorStop(0,'#2d3d4c'); skyGrad.addColorStop(1,'#dbe8f0'); }
     ctx.fillStyle = skyGrad;
@@ -115,7 +115,7 @@ function render(){
   } else if(g.scene==='frosthold'){
     cachedFloor(room, cam, c=>drawFrostholdFloor(room, c));
   } else if(g.scene==='icyzone'){
-    cachedFloor(room, cam, c=>drawIcyZoneFloor(room, c));
+    cachedFloor(room, cam, c=>room.organic ? drawOrganicFloor(room, c) : drawIcyZoneFloor(room, c));   // v523: the Icy Cellar is an organic ice cave
   } else if(g.scene==='mountainpass'){
     if(g.mtn.isCliff && !g.mtn.nest) drawCliffSea(g, cam);
     cachedFloor(g.mtn, cam, c=>drawCraterTerrain(g.mtn, c));
@@ -150,7 +150,7 @@ function render(){
     // calls for.
     if(room.deep){ drawDeepFloor(room, cam); }
     else if(room.subzone==='keep'){ if(room.hell) drawHellFloor(room, cam); else { drawSubFloor(room, cam); drawKeepWalls(room); } }
-    else if(room.subzone){ drawSubFloor(room, cam); if(room.subzone==='sunken' || room.subzone==='temple' || room.subzone==='rrtower') drawWalls(room); }
+    else if(room.subzone){ drawSubFloor(room, cam); if(room.subzone==='sunken' || room.subzone==='temple' || room.subzone==='rrtower' || room.subzone==='cellar') drawWalls(room); }
     else {
     cachedFloor(room, cam, c=>drawFloor(room, c));
     drawWalls(room);
@@ -174,6 +174,7 @@ function render(){
     drawables.push({depth:(o.x+o.w/2)+(o.y+o.h/2), occluder:!o.bone, wx:o.x+o.w/2, wy:o.y+o.h/2, draw:()=>(
     o.bone ? drawBoneBarricade(o)
     : o.woodBarricade ? drawWoodBarricadeIso(o)
+    : o.mausoleum ? drawOwMausoleum(o) : o.ruin ? drawOwRuin(o)
     : o.organic ? drawOrganicWall(o)
     : o.mazeWall
       ? (room.wallPal ? drawBlock(o, 52, room.wallPal[0], room.wallPal[1], room.wallPal[2]) : drawBlock(o, 52, '#463c30','#221c14','#302819'))
@@ -716,7 +717,7 @@ function render(){
     if(t.trees) for(const tr of t.trees) if(vis(tr.x,tr.y)) drawables.push({depth:tr.x+tr.y, draw:()=>drawSwampTreeIso(tr)});
     const postLos = (g._postLos = []), ePush = (t.subzone==='highward') ? postLos : drawables;   // v425: Highward gates/portals/labels draw in front of the LOS shadow
     ePush.push({depth:t.entrance.x+t.entrance.y, draw:()=>drawSubEntranceIso(t, g.clock||0)});
-    ePush.push({depth:t.entrance.x+t.entrance.y+1, draw:()=>drawEdgeLabelIso(t.entrance, t.subzone==='sunken' ? 'FLOODED TEMPLE' : t.subzone==='temple' ? 'ANCIENT RUINS' : t.subzone==='rrtower' ? ((t.rrFloor||1)>1 ? 'STAIRS DOWN' : 'LEAVE TOWER') : t.subzone==='highward' ? (t.hwFloor===1 ? 'REDRIDGE CANYON' : 'STAIRS DOWN') : t.subzone==='keep' ? (KP_ENT_LBL[t.kpArea]||'BACK') : 'BLACK MARSH', (t.subzone==='highward' && t.hwFloor===1) ? 132 : undefined)});
+    ePush.push({depth:t.entrance.x+t.entrance.y+1, draw:()=>drawEdgeLabelIso(t.entrance, t.subzone==='sunken' ? 'FLOODED TEMPLE' : t.subzone==='temple' ? 'ANCIENT RUINS' : t.subzone==='rrtower' ? ((t.rrFloor||1)>1 ? 'STAIRS DOWN' : 'LEAVE TOWER') : t.subzone==='cellar' ? 'CLIMB OUT' : t.subzone==='highward' ? (t.hwFloor===1 ? 'REDRIDGE CANYON' : 'STAIRS DOWN') : t.subzone==='keep' ? (KP_ENT_LBL[t.kpArea]||'BACK') : 'BLACK MARSH', (t.subzone==='highward' && t.hwFloor===1) ? 132 : undefined)});
     if(t.templeDeco){
       for(const st of t.templeDeco.statues) if(vis(st.x,st.y)) drawables.push({depth:st.x+st.y, draw:()=>drawTempleStatueIso(st)});
       for(const b of t.templeDeco.braziers) if(vis(b.x,b.y)) drawables.push({depth:b.x+b.y, draw:()=>drawTempleBrazierIso(b, g.clock||0)});
@@ -971,6 +972,8 @@ function render(){
   drawJuggFx(g.player);
   drawParticlesIso(g.particles, 'ground');   // v323: banner + consecrate sit on the floor, under everyone
   if(g.banner && g.banner.fx) drawables.push({depth:g.banner.x+g.banner.y, draw:()=>drawParticlesIso([g.banner.fx], 'pole')});
+  pushOwPoiDrawables(g, drawables);   // v525
+  pushRoadEvDrawables(g, drawables);   // v529
   drawables.sort((a,b)=>a.depth-b.depth);
   moodSoftStroke = moodOn() && !moodLow() && !MOOD_DBG.noSoft;   // v470: soft outlines while the world and characters are drawn
   try{ for(const d of drawables) d.draw(); } finally { moodSoftStroke = false; }

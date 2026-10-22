@@ -2296,7 +2296,7 @@ function updateStep(dt){
     // screen. A small margin keeps them from freezing dead at the exact edge.
     const onScreen = isOnScreen(g, e, 90);
     // v520: a telegraph / roll / leap that has begun always finishes, even if the player walks away (no frozen circles)
-    const midAct = e.tState==='tele' || e.tState==='swing' || e.tState==='air' || e.tState==='lash' || e.tState==='pull' || e.lungeState==='tele' || e.lungeState==='lunge' || (e.dwc && e.cState && e.cState!=='chase');
+    const midAct = e.tState==='tele' || e.tState==='swing' || e.tState==='air' || e.tState==='lash' || e.tState==='pull' || e.lungeState==='tele' || e.lungeState==='lunge' || (e.dwc && e.cState && e.cState!=='chase') || (e.mastodon && (e.mSt==='avaPhase' || (e.mRocks && e.mRocks.length>0)));
     // Forest (and Mountain Pass) packs hold their ground until the player
     // wanders close, rather than beelining in on sight the way dungeon
     // enemies do -- and give up the chase (going back to idle) if it
@@ -3086,6 +3086,7 @@ function updateStep(dt){
       if(g.enemies[i].prot) protectorKilled();
       try{ achOnKill(g, g.enemies[i]); }catch(err){}
       if(g.enemies[i].campEnemy) bridgeCampKilled(g.enemies[i]);
+      if(g.enemies[i].roadEv) try{ roadEvKilled(g, g.enemies[i]); }catch(err){}
       if(g.enemies[i].fhCmd && !g.enemies[i].brBoss) fhCommanderSlain(g, g.enemies[i]);
       if(g.enemies[i].brBoss && !g.enemies[i].dboss && !g.enemies[i].balrog){ for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; } demonBossSlain(g, g.enemies[i]); }
       if(g.enemies[i].dwc) dwConstructSlain(g, g.enemies[i]);
@@ -3376,6 +3377,8 @@ function updateStep(dt){
     if(dead) g.projectiles.splice(i,1);
   }
 
+  try{ owPoiTick(g, p, dt); }catch(err){}   // v525 overworld caches / shrines / hoards
+  try{ roadEvTick(g, p, dt); }catch(err){}   // v529 road encounters
   // loot pickup
   try{ bossGlobeTick(g); }catch(err){}
   lootHoverName(g, p);
@@ -3516,6 +3519,8 @@ function updateStep(dt){
       g.coldT = (g.coldT||0) + dt;
       if(p.hp<=0){ p.hp=0; endGame(g); }
     }
+    // v523: once you step into the Mastodon's hall, dying brings you back just outside its tunnel
+    if(iz.bossHall && iz.hallDoorOut){ const bh = iz.bossHall, dx = (p.x-bh.x)/bh.rx, dy = (p.y-bh.y)/bh.ry; if(dx*dx+dy*dy < 0.8) iz.entrySpawn = {x:iz.hallDoorOut.x, y:iz.hallDoorOut.y}; }
     // Cellar: once the Mastodon falls, a chest appears where it stood.
     if(iz.kind==='cellar' && g.bossKilled && !iz.chestSpot) iz.chestSpot = {x:iz.bossSpot.x, y:iz.bossSpot.y+60, r:24, opened:false};
     if(iz.chestSpot && !iz.chestSpot.opened && dist(p, iz.chestSpot) < iz.chestSpot.r + p.r){
@@ -3563,6 +3568,8 @@ function updateStep(dt){
     updateKeep(g, dt);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='rrtower'){
     updateRRTower(g, dt);
+  } else if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='cellar'){
+    updatePortalChoice(false); updateInteractPrompt(null); updateRoadCellar(g, dt);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.subzone){
     updateSubZone(g, dt);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.fht){
