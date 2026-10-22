@@ -903,6 +903,28 @@ window.onerror = function(msg, src, line, col, err){
     <p id="continueSub" style="display:none;"></p>
     <button id="continueBtn" style="display:none;">Continue</button>
     <button id="startBtn">New Character</button>
+    <button id="lbBtn">Leaderboard</button>
+    <button id="pgsBtn" class="pgsLink" style="display:none;">Sign in to Google Play Games</button>
+  </div>
+  <div id="lbTop5" class="lbTop5"></div>
+</div>
+
+<div id="lbScreen" class="tsHost">
+  <h1>Leaderboard</h1>
+  <p class="classSub">Deepest Breach first, then highest level</p>
+  <div id="lbList" class="lbList"></div>
+  <div id="lbMe" class="lbMe"></div>
+  <div class="classActions"><button id="lbRefresh" class="tsBackBtn">Refresh</button><button id="lbBack" class="tsBackBtn">Back</button></div>
+</div>
+
+<div id="cloudOverlay" class="modalOverlay" style="z-index:30;">
+  <div class="modalCard plaque invCard" style="text-align:center;">
+    <h2>Cloud Save Found</h2>
+    <p class="modalSub" id="cloudText"></p>
+    <div class="skillChoices">
+      <button id="cloudUse" class="skillChoice" style="justify-content:center;"><div class="schName">Use the cloud save</div></button>
+      <button id="cloudKeep" class="skillChoice" style="justify-content:center;"><div class="schName">Keep this device</div></button>
+    </div>
   </div>
 </div>
 
