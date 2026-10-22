@@ -1,4 +1,4 @@
-// Runefall loader (v512). The game is split into the files below; their ORDER matters (a file may use things
+// Runefall loader (v513). The game is split into the files below; their ORDER matters (a file may use things
 // set up by an earlier one). All files are fetched first and then run back-to-back in one go, exactly like the
 // old single-file game, so no tap or timer can reach a function that hasn't loaded yet.
 // Adding a file: put it in www/js/<folder>/, add its path to this list, run `node scripts/check-js.js`.
@@ -100,6 +100,8 @@ const RUNEFALL_FILES = [
   'render/darkness.js',
   'render/render.js',
   'ui/start-screen.js',
+  'net/pgs-config.js',
+  'net/pgs.js',
   'core/test-hooks.js',
   'core/spawn-safety.js',
   'core/resume.js'

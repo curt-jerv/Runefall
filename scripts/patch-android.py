@@ -35,4 +35,17 @@ m = Path("android/app/src/main/AndroidManifest.xml")
 x = m.read_text()
 x = re.sub(r'\s*android:screenOrientation="[^"]*"', '', x)
 m.write_text(x)
+# 4) Google Play Games Services: project id -> res/values/games-ids.xml + manifest meta-data (ids live in www/js/net/pgs-config.js)
+cfg = Path("www/js/net/pgs-config.js").read_text()
+mm = re.search(r"PGS_PROJECT_ID\s*=\s*'(\d+)'", cfg)
+if mm:
+    ids = Path("android/app/src/main/res/values/games-ids.xml")
+    ids.write_text('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <string name="game_services_project_id" translatable="false">%s</string>\n</resources>\n' % mm.group(1))
+    x = m.read_text()
+    if "com.google.android.gms.games.APP_ID" not in x:
+        x = re.sub(r"(<application\b[^>]*>)", r'\1\n        <meta-data android:name="com.google.android.gms.games.APP_ID" android:value="@string/game_services_project_id" />', x, count=1)
+        m.write_text(x)
+    print("Play Games project id set:", mm.group(1))
+else:
+    print("Play Games project id not set (PGS_PROJECT_ID empty) - sign-in will be unavailable in this build")
 print(f"Patched: versionCode {run}, versionName {version_name}.{run}")

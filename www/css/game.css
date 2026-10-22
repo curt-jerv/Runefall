@@ -447,6 +447,36 @@
   #continueSub{ font-family:Alegreya,Georgia,serif; font-size:12px; letter-spacing:.06em; color:#b79a5e; margin:0 0 -4px; text-shadow:0 1px 2px #000; }
   #continueBtn{ border-color:#8a6a24 !important; }
 
+  /* v513: leaderboard button, top-5 strip, full-screen leaderboard, Google Play sign-in link */
+  #start .tsMenu button.pgsLink{ width:auto; min-width:0; padding:4px 12px; font-size:11px; letter-spacing:.08em; text-transform:none; font-weight:700; background:none; border:none; box-shadow:none; color:#9a8456; }
+  #start .tsMenu button.pgsLink::before, #start .tsMenu button.pgsLink::after{ display:none; }
+  #start .tsMenu button.pgsLink.on{ color:#7fb88a; }
+  .lbTop5{ position:relative; z-index:2; margin:auto 0 14px; width:min(94vw,560px); display:flex; flex-direction:column; gap:3px; }
+  .lbRow{ display:grid; grid-template-columns:26px minmax(0,1fr) minmax(0,1.3fr) minmax(104px,auto); align-items:center; gap:6px; padding:5px 9px; text-align:left;
+    background:rgba(18,14,12,.78); border:1px solid #3d3016; border-radius:2px; font-family:Alegreya,Georgia,serif; font-size:12px; color:#d9c79a; }
+  .lbRow.me{ border-color:#c89a3a; background:rgba(60,40,12,.85); }
+  .lbRow span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lbRank{ font-family:'Cinzel',Georgia,serif; font-weight:800; color:#e8c25a; text-align:center; }
+  .lbName{ color:#fff0c0; font-weight:700; } .lbCls{ color:#a8926a; font-size:11px; } .lbStat{ display:flex; justify-content:flex-end; gap:8px; white-space:nowrap; } .lbLv{ color:#e8c25a; } .lbBr{ color:#ff9a5a; }
+  .lbEmpty{ font-family:Alegreya,Georgia,serif; font-size:12px; color:#9a8456; padding:8px; text-shadow:0 1px 2px #000; }
+  #lbScreen{ position:absolute; inset:0; z-index:12; display:none; overflow:hidden; align-items:center; justify-content:flex-start; flex-direction:column; text-align:center; padding:18px 14px 14px; background:#050305; }
+  #lbScreen > :not(.tsScene):not(.tsGlow):not(.tsEmber):not(.tsVig){ position:relative; z-index:2; }
+  #lbScreen h1{ font-family:'Cinzel','Trajan Pro',Georgia,serif; font-weight:900; font-size:min(8.5vw,38px); margin:0; letter-spacing:.1em; padding-left:.1em; line-height:1.1;
+    background:linear-gradient(180deg,#fff2c4 0%,#e8c25a 28%,#9a6a1c 52%,#e8c25a 70%,#6b430f 100%); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; }
+  #lbScreen .classSub{ margin:6px 0 10px; }
+  .lbList{ flex:1 1 auto; min-height:0; width:min(96vw,620px); overflow-y:auto; display:flex; flex-direction:column; gap:3px; -webkit-overflow-scrolling:touch; }
+  .lbList .lbRow, .lbMe .lbRow{ font-size:13px; padding:7px 10px; grid-template-columns:30px minmax(0,1fr) minmax(0,1.3fr) minmax(116px,auto); }
+  .lbMe{ width:min(96vw,620px); margin-top:6px; } .lbMeTitle{ font-family:Alegreya,Georgia,serif; font-size:11px; color:#b79a5e; text-align:left; margin-bottom:2px; }
+  #lbScreen .classActions{ margin-top:10px; } #lbScreen .tsBackBtn{ margin-top:0; width:min(38vw,160px); padding:9px 12px; }
+  @media (max-height:520px){
+    #start .tsTitleWrap{ margin-top:2.5vh; } #start h1{ font-size:min(12.5vw,54px); } #start .tsRule{ margin-top:6px; }
+    #start .tsMenu{ margin-top:2.5vh; gap:7px; } #start .tsMenu button{ padding:8px 20px; font-size:14px; } #continueSub{ margin-bottom:-2px; }
+    .lbTop5{ flex-direction:row; gap:4px; width:96vw; margin:auto 0 8px; }
+    .lbTop5 .lbRow{ flex:1 1 0; min-width:0; grid-template-columns:16px minmax(0,1fr); grid-template-rows:auto auto auto; gap:0 5px; padding:4px 6px; font-size:11px; }
+    .lbTop5 .lbRank{ grid-row:1 / span 3; } .lbTop5 .lbCls, .lbTop5 .lbStat{ grid-column:2; font-size:10px; justify-content:flex-start; gap:6px; }
+    .lbTop5 .lbEmpty{ width:100%; text-align:center; }
+    #lbScreen{ padding:8px 12px 8px; } #lbScreen h1{ font-size:28px; } #lbScreen .classSub{ margin:3px 0 6px; }
+  }
   /* v244: character / class select share the D2 title-screen scene (cloned in by JS) and its stone plaques */
   #classSelect, #charSelect{
     position:absolute; inset:0; z-index:11; display:none; overflow:hidden;
