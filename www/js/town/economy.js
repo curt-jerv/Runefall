@@ -366,6 +366,7 @@ function updateBuffBar(p){
   if(ironStillMult(p)>1) items.push({k:'ironstill', icon:'\u{1F6E1}\uFE0F', label:'+'+Math.round((ironStillMult(p)-1)*100)+'%', t:0, tip:'Iron Skin: standing your ground, +'+Math.round((ironStillMult(p)-1)*100)+'% Defence (up to +50%)'});
   if(p.bhPool>1) items.push({k:'bharvest', icon:'\u{1FA78}', label:'regen', t:0, tip:'Blood Harvest: faded Rage returning as life'});
   if(p.assaultT>0) items.push({k:'assault', icon:'\u{1F525}', t:p.assaultT, tip:'Assault: bonus damage and life leech, but you take more damage as it ramps'});
+  if(p.owShrine && p.owShrine.t>0){ const S = OW_SHRINES[p.owShrine.kind]; items.push({k:'owshrine', icon:S.icon, t:p.owShrine.t, tip:S.name+': '+S.desc}); }   // v525
   // v491: the beast lairs' zone hazards show in the buff row too
   { const g = game, st = g && g.tower && g.scene==='lighthouse' ? g.tower : null;
     if(st && st.subzone==='sunken') items.push({k:'zstatic', icon:'\u26A1', label:'\u00d7'+SUNKEN_STATIC_STACKS, t:0, tip:'Static \u00d7'+SUNKEN_STATIC_STACKS+': the depths crackle -- you take lightning damage over time (lightning resistance helps)'});

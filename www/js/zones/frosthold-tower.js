@@ -21,7 +21,7 @@ function makeFhtFloor(f){
   const es = (f%2===1) ? 'left' : 'right', ss = (f%2===1) ? 'right' : 'left';
   const entrance = {x: es==='left' ? 70 : w-70, y:h/2, r:34};
   const stairs = cmd ? null : {x: ss==='left' ? 70 : w-70, y:h/2, r:30};
-  let seed = f*6151 + 77;
+  let seed = (tripSeed('fht') + f*6151) & 0x7fffffff;   // v525: new rooms every trip
   const rnd = ()=>{ seed = (seed*1103515245 + 12345) & 0x7fffffff; return seed/0x7fffffff; };
   const obstacles = [];
   let bossRoom = null, turretSpots = null;

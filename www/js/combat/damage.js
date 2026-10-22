@@ -179,6 +179,7 @@ function applyEnemyArmor(p, e, dmg, extraPen, el){
   if(el==='fire') e.coldHits = 0;   // a fire hit breaks a cold streak
   dmg *= dmgVar();
   dmg *= typedPctMult(p, el);   // v457: +% Physical / +% <Element> / +% Elemental
+  dmg *= owShrineMult(p, 'fury');   // v525 Shrine of Fury
   if(el==='cold' && e.permaT>0) dmg *= 1 + (e.permaAmp||0);   // v489: Permafrost cold vulnerability
   if(e.shieldUp>0) dmg *= 0.3;   // v420: Highward shield wall
   if(e.hw || e.wardUntil) dmg *= hwGuardMult(p, e, dmg);   // v461 Bulwark: frontal block + ward

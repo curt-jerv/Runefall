@@ -9,7 +9,7 @@ function makeHighwardRunestoneItem(){
     questDesc:'A rune-carved stone marked with a Templar crown, taken from the guardian of Highward. Quest item -- cannot be sold.' };
 }
 function makeHighward(f){
-  const w = HW_W[f-1], h = HW_H[f-1], rnd = subSeeded(9100+f*53);
+  const w = HW_W[f-1], h = HW_H[f-1], rnd = subSeeded(tripSeed('hw')+f*53);   // v525: new rooms every trip
   const Ri = (lo,hi)=> Math.round((lo+rnd()*(hi-lo))/50)*50;
   const M = 200, GAP = 260, CW = 200;
   const rooms = [];

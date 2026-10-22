@@ -174,6 +174,7 @@ function render(){
     drawables.push({depth:(o.x+o.w/2)+(o.y+o.h/2), occluder:!o.bone, wx:o.x+o.w/2, wy:o.y+o.h/2, draw:()=>(
     o.bone ? drawBoneBarricade(o)
     : o.woodBarricade ? drawWoodBarricadeIso(o)
+    : o.mausoleum ? drawOwMausoleum(o) : o.ruin ? drawOwRuin(o)
     : o.organic ? drawOrganicWall(o)
     : o.mazeWall
       ? (room.wallPal ? drawBlock(o, 52, room.wallPal[0], room.wallPal[1], room.wallPal[2]) : drawBlock(o, 52, '#463c30','#221c14','#302819'))
@@ -971,6 +972,7 @@ function render(){
   drawJuggFx(g.player);
   drawParticlesIso(g.particles, 'ground');   // v323: banner + consecrate sit on the floor, under everyone
   if(g.banner && g.banner.fx) drawables.push({depth:g.banner.x+g.banner.y, draw:()=>drawParticlesIso([g.banner.fx], 'pole')});
+  pushOwPoiDrawables(g, drawables);   // v525
   drawables.sort((a,b)=>a.depth-b.depth);
   moodSoftStroke = moodOn() && !moodLow() && !MOOD_DBG.noSoft;   // v470: soft outlines while the world and characters are drawn
   try{ for(const d of drawables) d.draw(); } finally { moodSoftStroke = false; }

@@ -1,4 +1,4 @@
-// Runefall loader (v524). The game is split into the files below; their ORDER matters (a file may use things
+// Runefall loader (v525). The game is split into the files below; their ORDER matters (a file may use things
 // set up by an earlier one). All files are fetched first and then run back-to-back in one go, exactly like the
 // old single-file game, so no tap or timer can reach a function that hasn't loaded yet.
 // Adding a file: put it in www/js/<folder>/, add its path to this list, run `node scripts/check-js.js`.
@@ -65,6 +65,7 @@ const RUNEFALL_FILES = [
   'zones/lakeside.js',
   'monsters/leviathan.js',
   'zones/sunken-depths.js',
+  'zones/overworld-poi.js',
   'zones/mountain-depths.js',
   'monsters/fire-and-colossus.js',
   'monsters/windigo.js',

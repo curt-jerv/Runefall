@@ -3376,6 +3376,7 @@ function updateStep(dt){
     if(dead) g.projectiles.splice(i,1);
   }
 
+  try{ owPoiTick(g, p, dt); }catch(err){}   // v525 overworld caches / shrines / hoards
   // loot pickup
   try{ bossGlobeTick(g); }catch(err){}
   lootHoverName(g, p);

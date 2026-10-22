@@ -285,6 +285,7 @@ function enterBlackMarsh(opts){
   } else {
     g.player.x = g.bm.westGate.x + 90; g.player.y = g.bm.westGate.y;
   }
+  owFeatures(g);   // v525: random sunken ruins
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null;
   showMsg('Black Marsh', 1.6);
   const room = g.bm;
@@ -296,6 +297,7 @@ function enterBlackMarsh(opts){
   for(let k=0;k<6;k++){ const a = Math.PI*0.68 + k*0.13; let x = room.eastGate.x + Math.cos(a)*215, y = room.eastGate.y + Math.sin(a)*215; if(!room.dryOK(x,y,24)){ const d = bmNearestDry(room, x, y); x = d.x; y = d.y; } if(!room.dryOK(x,y,20)) continue; const e = spawnEnemy(g, 'goblinarcher', {x, y}); if(e){ e.wanderRadius = 0; e.leashRange = 260; } }   // v490: never in the river
   for(let k=0;k<2;k++){ const e = spawnEnemy(g, 'goblin', {x:room.eastGate.x-170, y:room.eastGate.y+(k?60:-60)}); if(e) e.wanderRadius = 20; }
   // (v262) the Leviathan now lives in the Marsh Pool (see enterMarshPool)
+  owPoiRoll(g);   // v525: caches, a shrine, a guarded hoard
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = g.player.x; f.y = g.player.y; }

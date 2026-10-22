@@ -318,7 +318,8 @@ function drawHellPortal(pos, clock, big){
   ctx.restore();
 }
 function makeKeep(a, kopts){
-  const rnd = subSeeded(9300+a*71+((kopts&&kopts.bf)||0)*131+((kopts&&kopts.seed)||0));
+  if(!(kopts&&kopts.seed)){ const tb = tripSeed('keep'); if(game._kpTrip!==tb){ game._kpTrip = tb; game.kpStore = {}; } }   // a new trip: the remembered monsters belong to the old halls
+  const rnd = subSeeded(9300+a*71+((kopts&&kopts.bf)||0)*131+((kopts&&kopts.seed)||tripSeed('keep')));   // v525: the Keep's halls change every trip
   let w = KP_W[a-1], h = KP_H[a-1];
   if(a===9 && !brBossKind((kopts&&kopts.bf)||0)){ w = 4400 + 100*Math.floor(rnd()*9); h = 2600 + 100*Math.floor(rnd()*6); }   // v398: generated floors vary in size (v506: about the size of the Keep's entrance hall)
   else if(a===9 && BR_THEME_KINDS[brBossKind((kopts&&kopts.bf)||0)]){ w = 4900 + 100*Math.floor(rnd()*3); h = 3000 + 100*Math.floor(rnd()*2); }   // v505: themed boss floors are about the size of the Keep's entrance hall

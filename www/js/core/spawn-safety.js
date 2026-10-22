@@ -30,9 +30,14 @@ function clearSpawnArea(g){
   }
 }
 (function wrapEnterForSpawnSafety(){
-  const names = Object.keys(window).filter(n=>/^enter[A-Z]\w*$/.test(n) && typeof window[n]==='function');
+  const names = Object.keys(window).filter(n=>(/^enter[A-Z]\w*$/.test(n) || n==='goToTown') && typeof window[n]==='function');
   for(const n of names){
     const orig = window[n];
-    window[n] = function(...args){ const r = orig.apply(this, args); try{ clearSpawnArea(game); }catch(e){} return r; };
+    window[n] = function(...args){
+      // v525: a zone change that never asked for a dungeon trip seed ends the current trip (see tripSeed)
+      const outer = !game._enterDepth; game._enterDepth = (game._enterDepth||0)+1; if(outer) game._famCalled = false;
+      let r; try{ r = orig.apply(this, args); } finally { game._enterDepth--; }
+      if(outer && !game._famCalled){ game._tripFam = null; game._tripBase = 0; }
+      try{ clearSpawnArea(game); }catch(e){} return r; };
   }
 })();

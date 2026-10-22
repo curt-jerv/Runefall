@@ -575,8 +575,8 @@ function recalcStats(p){
   // v83 Luck/Lucky (+Magic Find %) and Riches/Rich (+Gold Find %): hook
   // into pickRarity (via generateItem's optional player arg) and dropLoot's
   // gold amounts respectively.
-  p.magicFindPct = clamp(addMagicFindPct + pb.mf + (p.wellRestedT>0 ? 5 : 0), 0, 100);   // v399: Well Rested +5% Magic Find
-  p.goldFindPct = clamp(addGoldFindPct + pb.gold, 0, 100);
+  p.magicFindPct = clamp(addMagicFindPct + pb.mf + (p.wellRestedT>0 ? 5 : 0) + owShrineFortune(p), 0, 140);   // v399: Well Rested +5% Magic Find
+  p.goldFindPct = clamp(addGoldFindPct + pb.gold + owShrineFortune(p), 0, 140);   // v525 Shrine of Fortune
   // v83 Commanding (+Follower Damage %): hooks into followerDmg().
   p.followerDmgPct = (clamp(addFollowerDmgPct, 0, 60) + pb.minion)/100;
   p.statusDurPct = (clamp(addStatusDur, 0, 75) + pb.ailment)/100; p.skillDurPct = clamp(addSkillDur, 0, 50)/100; p.lightRadiusPct = clamp(addLightRad, 0, 60)/100;   // v489 / v492

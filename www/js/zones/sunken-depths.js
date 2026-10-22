@@ -37,11 +37,24 @@ function subFinish(room){
   return room;
 }
 function subSeeded(seed){ let s = seed; return ()=>{ s = (s*1103515245 + 12345) & 0x7fffffff; return s/0x7fffffff; }; }
+// v525: a new layout every trip. A dungeon family ('ft', 'hw', 'fht', ...) keeps one base seed while you move between
+// its floors (so going up and back down finds the same rooms); leaving for anywhere else ends the trip, and the next
+// visit rolls a fresh seed. The trip bookkeeping lives in the enter*/goToTown wrapper in core/spawn-safety.js.
+function tripSeed(fam){
+  const g = game; g._famCalled = true;
+  if(g._tripFam !== fam || !g._tripBase){
+    g._tripFam = fam; g._tripBase = 1 + Math.floor(Math.random()*1e8);
+    // monsters remembered per floor belong to the old layout -- forget them
+    const st = {ft:'ftStore', lh:'lhStore', hw:'hwStore', fht:'fhtStore', deep:'deepStore', keep:'kpStore'}[fam]; if(st) g[st] = {};
+    if(/^rrt/.test(fam) && g.rrStore){ const id = fam.slice(3); for(const k of Object.keys(g.rrStore)) if(k.split('_')[0]===id) delete g.rrStore[k]; }
+  }
+  return g._tripBase;
+}
 // v456: Sunken Depths is an organic grotto (like the Bear Cave): winding flooded caverns, then a great pool where the
 // Kraken lives, crossed by a narrow wooden walkway to a small island, and a treasure alcove beside it.
 const SKP = {cx:4300, cy:1330, rx:540, ry:420, isx:4075, isy:1330, isr:125, brY:1330, brHalf:48, brX0:3640};
 function makeSunkenDepths(){
-  const w = 5400, h = 2400, saveRand = Math.random, rnd = subSeeded(8821);
+  const w = 5400, h = 2400, saveRand = Math.random, rnd = subSeeded(tripSeed('sunken') + 8821);   // v525: new grotto every trip
   Math.random = rnd;
   let R;
   try{
@@ -220,6 +233,7 @@ function enterSubZone(kind, opts){
   opts = opts || {};
   const g = game, p = g.player;
   g.scene = 'lighthouse'; g.lighthouseFloor = 1;
+  if(kind==='temple') tripSeed('sunken');   // v525: the temple is part of the Sunken Depths trip
   g.tower = kind==='sunken' ? makeSunkenDepths() : kind==='temple' ? makeFloodedTemple() : kind==='rrtower' ? makeRRTower(opts.id, opts.floor) : makeMarshPool();
   g.room = g.tower;
   g.depth = kind==='sunken' ? SUNKEN_DEPTH : kind==='temple' ? TEMPLE_DEPTH : kind==='rrtower' ? RR_DEPTH + (opts.floor||1) : poolDepth();
