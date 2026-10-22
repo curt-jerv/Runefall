@@ -27,23 +27,30 @@
 // BOTH the bridge/causeway across the lake AND the ground the island
 // itself sits on, so no separate bridge geometry is needed beyond where
 // the two lake rects stop and start again.
-const LAKE_W = SUN_W, LAKE_H = SUN_H;
-const LAKE_CX = LAKE_W/2, LAKE_CY = LAKE_H/2;
-const LAKE_ROAD_HALFW = 120; // (v147: doubled) width either side of the road/bridge centerline
-const LAKESIDE_ENTRANCE_SPOT = {x:16, y:LAKE_CY};
-// The lake footprint -- big and centered, spanning nearly half the zone's
-// width -- with the road-width gap cut out of its vertical middle.
-const LAKE_WATER_X = LAKE_CX - 1200, LAKE_WATER_W = 2400;
-const LAKE_WATER_Y0 = LAKE_CY - 800, LAKE_WATER_Y1 = LAKE_CY + 800;
-// (v121) The island is now a big walkable landmass: 800x600, carved out of
-// the lake with real collision (before, only the visual paving was round --
-// the walkable part was just the 120px bridge band).
+// v530: the Lakeside Ruins are bigger (7600x5400), forested, and re-rolled every trip: the whole lake complex (lake,
+// bridge, island Stonehenge with the Ancient Ruins and the Sunken Depths mouth) sits somewhere random, the west
+// (Crossroads) and east (Black Marsh) gates slide along their edges, and winding Crossroads-width roads join each gate
+// to the bridge. The LAKE_* globals below are reset by lakeSetCenter() on every build, so everything that reads them
+// (the Leviathan lanes, the ruins event, the floor painter) follows the lake. One seed per trip (g._lakeSeed), kept
+// while you stay in the lake country (lakeKeepsSeed: the Ruins, Ancient Ruins, Sunken Depths, Flooded Temple).
+let LAKE_W = 7600, LAKE_H = 5400;
+let LAKE_CX = LAKE_W/2, LAKE_CY = LAKE_H/2;
+const LAKE_ROAD_HALFW = 120; // the stone bridge/causeway across the lake (the land roads are SUN_ROAD_HALFW, like the Crossroads)
+let LAKESIDE_ENTRANCE_SPOT = {x:16, y:LAKE_CY};
+const LAKE_WATER_W = 2400;
+let LAKE_WATER_X = LAKE_CX - 1200, LAKE_WATER_Y0 = LAKE_CY - 800, LAKE_WATER_Y1 = LAKE_CY + 800;
+// (v121) The island is a big walkable landmass: 800x600, carved out of the lake with real collision.
 const LAKE_ISLAND_HX = 400, LAKE_ISLAND_HY = 300;
 const LAKE_ISLAND_R = LAKE_ISLAND_HX; // kept for the test export
-function lakeOnRoad(x,y){ return Math.abs(y-LAKE_CY) < LAKE_ROAD_HALFW; }
+let LAKE_ROADS = [], LAKE_ROAD_GRID = null;
+function lakeSetCenter(cx, cy){ LAKE_CX = cx; LAKE_CY = cy; LAKE_WATER_X = cx-1200; LAKE_WATER_Y0 = cy-800; LAKE_WATER_Y1 = cy+800; }
+function lakeKeepsSeed(g){ return g.scene==='lakesideruins' || g.scene==='ancientruins' || (g.scene==='lighthouse' && g.tower && (g.tower.subzone==='sunken' || g.tower.subzone==='temple')); }
+function lakeRoadDist(x,y){ return LAKE_ROAD_GRID ? sunRoadNear({roads:LAKE_ROADS, roadGrid:LAKE_ROAD_GRID}, x, y).d : 1e9; }
+function lakeOnBridge(x,y){ return x > LAKE_WATER_X-10 && x < LAKE_WATER_X+LAKE_WATER_W+10 && Math.abs(y-LAKE_CY) < LAKE_ROAD_HALFW; }
+function lakeOnRoad(x,y){ return lakeOnBridge(x,y) || lakeRoadDist(x,y) < SUN_ROAD_HALFW; }
 function lakeOnIsland(x,y){ return Math.abs(x-LAKE_CX) < LAKE_ISLAND_HX && Math.abs(y-LAKE_CY) < LAKE_ISLAND_HY; }
 function lakeWaterAt(x,y){
-  return x>LAKE_WATER_X && x<LAKE_WATER_X+LAKE_WATER_W && y>LAKE_WATER_Y0 && y<LAKE_WATER_Y1 && !lakeOnRoad(x,y) && !lakeOnIsland(x,y);
+  return x>LAKE_WATER_X && x<LAKE_WATER_X+LAKE_WATER_W && y>LAKE_WATER_Y0 && y<LAKE_WATER_Y1 && !lakeOnBridge(x,y) && !lakeOnIsland(x,y);
 }
 function lakeWaterRects(){
   const X0=LAKE_WATER_X, X1=LAKE_WATER_X+LAKE_WATER_W, IL=LAKE_CX-LAKE_ISLAND_HX, IR=LAKE_CX+LAKE_ISLAND_HX;
@@ -54,11 +61,20 @@ function lakeWaterRects(){
     R(X0,LAKE_CY+rh,IL-X0,LAKE_WATER_Y1-LAKE_CY-rh), R(IL,LAKE_CY+ih,IR-IL,LAKE_WATER_Y1-LAKE_CY-ih), R(IR,LAKE_CY+rh,X1-IR,LAKE_WATER_Y1-LAKE_CY-rh),
   ];
 }
-const LAKE_PACK_ANCHOR_TARGET = SUNLIT_PACK_ANCHOR_TARGET;
+// the two winding land roads: west gate -> west end of the bridge, east end of the bridge -> east gate
+function lakeBuildRoads(gW, gE){
+  const w = LAKE_W, h = LAKE_H, X1 = LAKE_WATER_X+LAKE_WATER_W;
+  const wet = (rd)=>rd.some(q=>q.x > LAKE_WATER_X-90 && q.x < X1+90 && q.y > LAKE_WATER_Y0-90 && q.y < LAKE_WATER_Y1+90 && Math.abs(q.y-LAKE_CY) > 30);
+  let west = null, east = null;
+  for(let k=0;k<20 && !west;k++){ const r = sunWindingRoad({x:0, y:gW.y}, {x:LAKE_WATER_X-320, y:LAKE_CY}, 420*(1-k/22), w, h); r.splice(1, 0, {x:200, y:gW.y}); r.push({x:LAKE_WATER_X-140, y:LAKE_CY}, {x:LAKE_WATER_X+20, y:LAKE_CY}); if(!wet(r.slice(0, -2)) || k===19) west = r; }
+  for(let k=0;k<20 && !east;k++){ const r = sunWindingRoad({x:X1+320, y:LAKE_CY}, {x:w, y:gE.y}, 420*(1-k/22), w, h); r.splice(r.length-1, 0, {x:w-200, y:gE.y}); r.unshift({x:X1-20, y:LAKE_CY}, {x:X1+140, y:LAKE_CY}); if(!wet(r.slice(2)) || k===19) east = r; }
+  LAKE_ROADS = [west, east]; LAKE_ROAD_GRID = sunRoadGrid(LAKE_ROADS);
+}
+const LAKE_PACK_ANCHOR_TARGET = 300;   // v530: twice the ground (was the Crossroads' 140)
 // Fewer standing packs than Withered Crossroads' 70 -- the lake itself eats a
 // large, uninhabitable chunk of this same-sized footprint, so the walkable
 // shoreline area is smaller even though the zone's outer bounds match.
-const LAKE_PACK_COUNT = 55;
+const LAKE_PACK_COUNT = 110;   // v530: was 55 on half the area
 const LAKE_PACK_TEMPLATES = [
   { type:'bandit', countMin:2, countMax:4 },
   // Skeleton (first appearance, see spawnEnemy's 'skeleton' branch): two
@@ -78,9 +94,18 @@ const LAKE_PACK_TEMPLATES = [
 const LAKE_LEVIATHAN_COUNT = 3;
 function lakeNearWaterAt(x,y,m){ for(const d of [[0,0],[m,0],[-m,0],[0,m],[0,-m],[m*0.7,m*0.7],[-m*0.7,-m*0.7],[m*0.7,-m*0.7],[-m*0.7,m*0.7]]) if(lakeWaterAt(x+d[0],y+d[1])) return true; return false; }
 function makeLakesideRuins(){
+  const g = game, saveRand = Math.random;
+  if(g && !g._lakeSeed) g._lakeSeed = 1 + Math.floor(Math.random()*1e8);
+  if(g) Math.random = subSeeded(g._lakeSeed);
+  try{ return lakeBuild(); } finally { Math.random = saveRand; }
+}
+function lakeBuild(){
   const w=LAKE_W, h=LAKE_H;
-  const sunlitGate = {x:LAKESIDE_ENTRANCE_SPOT.x, y:LAKESIDE_ENTRANCE_SPOT.y, r:34};
-  const marshGate = {x:w-16, y:LAKE_CY, r:34}; // v144: east exit to the Black Marsh
+  lakeSetCenter(Math.round(rand(2350, w-2350)), Math.round(rand(1450, h-1450)));
+  const sunlitGate = {x:16, y:Math.round(rand(h*0.2, h*0.8)), r:34};
+  const marshGate = {x:w-16, y:Math.round(rand(h*0.2, h*0.8)), r:34}; // v144: east exit to the Black Marsh
+  LAKESIDE_ENTRANCE_SPOT = {x:sunlitGate.x, y:sunlitGate.y};
+  lakeBuildRoads(sunlitGate, marshGate);
   const obstacles = lakeWaterRects();
   const waterNorth = obstacles[0], waterSouth = obstacles[3];
   function inWater(x,y){ return lakeWaterAt(x,y); }
@@ -90,13 +115,13 @@ function makeLakesideRuins(){
   // Withered Crossroads, kept off the road/bridge, the water, and the island
   // (which gets its own dedicated stone-ring landmark instead).
   const rocks = [];
-  for(let i=0;i<50;i++){
+  for(let i=0;i<100;i++){
     const x = rand(70, w-70), y = rand(70, h-70);
     if(offLimits(x,y)) continue;
     rocks.push({x, y, s:rand(0.6,1.3)});
   }
   const grassTufts = [];
-  for(let i=0;i<900;i++){   // v456: long grass all over the land around the lake
+  for(let i=0;i<1800;i++){   // v456: long grass all over the land around the lake
     const x = rand(50, w-50), y = rand(50, h-50);
     if(offLimits(x,y)) continue;
     grassTufts.push({x, y, s:rand(0.8,1.6), c: Math.random()<0.5 ? '#4a6230' : '#56683a'});
@@ -104,7 +129,7 @@ function makeLakesideRuins(){
 
   // A dedicated permanent waypoint, same shared mechanism/art as every
   // other zone's -- nudged onto the near (west) shoreline, off the road.
-  const waypoint = {x:sunlitGate.x+300, y:LAKE_CY-260, r:22, off:true};   // v489: no waypoint here any more (spot kept as a landing point)
+  const waypoint = {x:sunlitGate.x+300, y:clamp(sunlitGate.y-260, 300, h-300), r:22, off:true};   // v489: no waypoint here any more (spot kept as a landing point)
 
   // The island's Stonehenge -- a fixed ring of 9 standing stones around
   // dead center, purely decorative/atmospheric (see drawLakesideStoneIso).
@@ -117,7 +142,7 @@ function makeLakesideRuins(){
 
   const packAnchors = [];
   let tries=0;
-  while(packAnchors.length < LAKE_PACK_ANCHOR_TARGET && tries<6000){
+  while(packAnchors.length < LAKE_PACK_ANCHOR_TARGET && tries<20000){
     tries++;
     const x = rand(140, w-140), y = rand(140, h-140);
     if(offLimits(x,y)) continue;
@@ -155,9 +180,9 @@ function makeLakesideRuins(){
 
   // v456: groves of old trees on the dry land around the lake (the Treants' home)
   const groves = [], groveObs = [];
-  for(let i=0;i<900 && groves.length<14;i++){
+  for(let i=0;i<3000 && groves.length<34;i++){   // v530: a forested shore (was 14 groves)
     const x = rand(320, w-320), y = rand(260, h-260);
-    if(offLimits(x,y) || lakeNearWaterAt(x,y,230)) continue;
+    if(offLimits(x,y) || lakeNearWaterAt(x,y,230) || lakeRoadDist(x,y) < 200) continue;
     if(dist({x,y},sunlitGate)<520 || dist({x,y},marshGate)<520 || dist({x,y},waypoint)<360) continue;
     if(groves.some(gv=>dist(gv,{x,y})<560)) continue;
     groves.push({x,y});
@@ -166,11 +191,21 @@ function makeLakesideRuins(){
     const n = 16 + Math.floor(Math.random()*10);
     for(let k=0;k<n;k++){
       const a = Math.random()*Math.PI*2, d = 30 + Math.random()*240, x = gv.x+Math.cos(a)*d, y = gv.y+Math.sin(a)*d*0.85;
-      if(offLimits(x,y) || lakeNearWaterAt(x,y,90)) continue;
+      if(offLimits(x,y) || lakeNearWaterAt(x,y,90) || lakeRoadDist(x,y) < 80) continue;
       if(trees.some(tr=>Math.abs(tr.x-x)<44 && Math.abs(tr.y-y)<44)) continue;
       trees.push({x, y, s:rand(1.6,2.7), dark:Math.random()<0.6, dead:Math.random()<0.14});
       groveObs.push({x:x-9, y:y-9, w:18, h:18, isProp:true, noDraw:true});
     }
+  }
+  // v530: lone trees and small stands between the groves, so the whole shore reads as old woodland
+  for(let i=0;i<1400;i++){
+    const x = rand(200, w-200), y = rand(200, h-200);
+    if(offLimits(x,y) || lakeNearWaterAt(x,y,120) || lakeRoadDist(x,y) < 90) continue;
+    if(dist({x,y},sunlitGate)<380 || dist({x,y},marshGate)<380 || dist({x,y},waypoint)<240) continue;
+    if(packAnchors.some(a=>dist(a,{x,y}) < 120)) continue;
+    if(trees.some(tr=>Math.abs(tr.x-x)<70 && Math.abs(tr.y-y)<70)) continue;
+    trees.push({x, y, s:rand(1.3,2.3), dark:Math.random()<0.5, dead:Math.random()<0.1});
+    groveObs.push({x:x-9, y:y-9, w:18, h:18, isProp:true, noDraw:true});
   }
   const ruinsSpot = {x:LAKE_CX, y:LAKE_CY-45, r:40};
   const sunkenGate = {x:LAKE_CX+330, y:LAKE_CY-250, r:34};   // (v262) the Sunken Depths cave mouth, just outside the Stonehenge ring
@@ -179,8 +214,8 @@ function makeLakesideRuins(){
   const lFree = (x,y,ww,hh,m)=>{ for(const [px,py] of [[x,y],[x+ww,y],[x,y+hh],[x+ww,y+hh],[x+ww/2,y+hh/2]]) if(offLimits(px,py)) return false;
     return x>150 && y>150 && x+ww<w-150 && y+hh<h-150 && dist({x:x+ww/2,y:y+hh/2},sunlitGate)>260 && dist({x:x+ww/2,y:y+hh/2},marshGate)>260 && dist({x:x+ww/2,y:y+hh/2},waypoint)>200
       && !lakeProps.some(o=>x<o.x+o.w+m && x+ww>o.x-m && y<o.y+o.h+m && y+hh>o.y-m); };
-  for(let i=0;i<700 && lakeProps.filter(o=>o.kind==='column').length<32;i++){ const x=rand(160,w-200), y=rand(160,h-200); if(lFree(x,y,26,26,50)) lakeProps.push({x,y,w:26,h:26,isProp:true,kind:'column',broken:Math.random()<0.5,tall:rand(48,78)}); }
-  for(let i=0;i<500 && lakeProps.filter(o=>o.kind==='wallruin').length<16;i++){ const horiz=Math.random()<0.5, len=rand(90,170), x=rand(160,w-340), y=rand(160,h-340), ww=horiz?len:18, hh=horiz?18:len; if(lFree(x,y,ww,hh,60)) lakeProps.push({x,y,w:ww,h:hh,isProp:true,kind:'wallruin',tall:rand(26,44)}); }
+  for(let i=0;i<1400 && lakeProps.filter(o=>o.kind==='column').length<56;i++){ const x=rand(160,w-200), y=rand(160,h-200); if(lFree(x,y,26,26,50)) lakeProps.push({x,y,w:26,h:26,isProp:true,kind:'column',broken:Math.random()<0.5,tall:rand(48,78)}); }
+  for(let i=0;i<1000 && lakeProps.filter(o=>o.kind==='wallruin').length<28;i++){ const horiz=Math.random()<0.5, len=rand(90,170), x=rand(160,w-340), y=rand(160,h-340), ww=horiz?len:18, hh=horiz?18:len; if(lFree(x,y,ww,hh,60)) lakeProps.push({x,y,w:ww,h:hh,isProp:true,kind:'wallruin',tall:rand(26,44)}); }
   const lOk = (x,y)=>!offLimits(x,y) && !lakeProps.some(o=>x>o.x-10 && x<o.x+o.w+10 && y>o.y-10 && y<o.y+o.h+10);
   for(let i=0;i<24;i++){ const x=rand(120,w-120), y=rand(120,h-120); if(lOk(x,y)) lakeDecor.push({k:'columnfall',x,y,r:rand(0,3.1)}); }
   for(let i=0;i<9;i++){ const x=rand(120,w-120), y=rand(120,h-120); if(lOk(x,y)) lakeDecor.push({k:'statue',x,y,broken:Math.random()<0.5}); }
@@ -188,7 +223,7 @@ function makeLakesideRuins(){
   for(let i=0;i<24;i++){ const x=rand(120,w-120), y=rand(120,h-120); if(lOk(x,y) && (lakeWaterAt(x+70,y)||lakeWaterAt(x-70,y)||lakeWaterAt(x,y+70)||lakeWaterAt(x,y-70))) lakeDecor.push({k:'driftwood',x,y,r:rand(-0.4,0.4)}); }
   for(let i=0;i<220;i++){ const x=rand(120,w-120), y=rand(120,h-120); if(lOk(x,y) && (lakeWaterAt(x+50,y)||lakeWaterAt(x-50,y)||lakeWaterAt(x,y+50)||lakeWaterAt(x,y-50))) lakeDecor.push({k:'reed',x,y,s:rand(0.8,1.4),c:'#5f7f3a'}); }
   for(let i=0;i<320;i++){ const x=rand(LAKE_WATER_X,LAKE_WATER_X+LAKE_WATER_W), y=rand(LAKE_WATER_Y0,LAKE_WATER_Y1); if(lakeWaterAt(x,y)) lakeDecor.push({k:'lily',x,y,s:rand(0.7,1.3),f:Math.random()<0.25}); }
-  for(let i=0;i<50;i++){ const x=rand(120,w-120), y=rand(300,h-300); lakeDecor.push({k:'mistpatch',x,y,r:rand(120,240)}); }
+  for(let i=0;i<90;i++){ const x=rand(120,w-120), y=rand(300,h-300); lakeDecor.push({k:'mistpatch',x,y,r:rand(120,240)}); }
   for(let i=0;i<70;i++){ const x=rand(120,w-120), y=rand(120,h-120); if(lOk(x,y)) lakeDecor.push({k:'bush',x,y,s:rand(0.8,1.3),berries:false}); }
   for(let i=0;i<70;i++){ const x=rand(120,w-120), y=rand(120,h-120); if(lOk(x,y)) lakeDecor.push({k:'flowers',x,y,n:9,r:rand(26,50),cols:['#8ab4ff','#ffffff','#c8a8ff']}); }
   lakeDecor.push({k:'dock',x:LAKE_WATER_X-34,y:LAKE_CY+LAKE_ROAD_HALFW+240});
@@ -197,5 +232,5 @@ function makeLakesideRuins(){
   return { w, h, obstacles, dryObstacles:obstacles.filter(o=>!o.isWater), decor:lakeDecor, sunlitGate, marshGate, rocks, grassTufts, trees, groves, waypoint, packAnchors,
     ruinsSpot, sunkenGate, islandStones, leviathanSpots, waterNorth, waterSouth,
     scholarSpot:{x:ruinsSpot.x-58, y:ruinsSpot.y+34, id:7, robe:'#2c4a78', long:true, tool:'book'},
-    entranceSpot:LAKESIDE_ENTRANCE_SPOT };
+    entranceSpot:LAKESIDE_ENTRANCE_SPOT, roads:LAKE_ROADS, roadGrid:LAKE_ROAD_GRID };
 }

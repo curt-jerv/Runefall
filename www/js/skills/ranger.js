@@ -826,7 +826,7 @@ function ensureFollowers(g){
   // curve (1 at Rank1/2, 2 at Rank3/4, 3 at Rank5) already matches "up to
   // 3 minions at max rank" exactly, so it's reused verbatim.
   const raiseDeadRank = (p.skills && effectiveRank(p,'raiseDead')) || 0;
-  syncFollowerKind(g, 'skeleton', Math.max(0, necroSkeletonCount(raiseDeadRank) + (raiseDeadRank>0 && uq(p,'uq_necromancer') ? 2 : 0) - followerPendingCount(g,'skeleton') - (p.skelDown||0)));
+  syncFollowerKind(g, 'skeleton', Math.max(0, necroSkeletonCount(raiseDeadRank) + (raiseDeadRank>0 && uq(p,'uq_necromancer') ? 2 : 0) - followerPendingCount(g,'skeleton') - (p.skelDown||0) - (p.skelHold ? 999 : 0)));
   // Cat Companion (v81): NOT a skill -- purely the account-wide Support
   // submenu toggle (settings.catCompanion), so unlike every other kind
   // above this doesn't read p.skills at all. Synced here the same way so

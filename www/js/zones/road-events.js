@@ -14,7 +14,7 @@ const ROAD_EV_ZONES = {
   rivervalley:  { chance:0.6,  kinds:{caravan:3, carrion:2} },
   lakesideruins:{ chance:0.4,  kinds:{carrion:1} },
 };
-const ROAD_MERCHANT_CHANCE = 0.035;
+const ROAD_MERCHANT_CHANCE = 0.10;   // v530: 1 in 10 visits
 const ROAD_MERCHANT_NAME = 'Orrin Thistlewick';
 const ROAD_EV_LABELS = {roadCaravan:'Search the Caravan', roadScarecrow:'Touch the Scarecrow', roadMerchant:'Talk to '+ROAD_MERCHANT_NAME, roadCellar:'Open the Cellar Door', cellarExit:'Climb Out'};
 const ROAD_EV_ICONS = {roadCaravan:'\u{1F50D}', roadScarecrow:'✋', roadMerchant:'\u{1F4B0}', roadCellar:'\u{1F6AA}', cellarExit:'\u{1FA9C}'};
@@ -24,7 +24,7 @@ function roadEvLabels(){ if(typeof INTERACT_LABELS!=='undefined' && !INTERACT_LA
 function roadEvRoadDist(g, x, y){
   if(g.scene==='sunlitplains') return sunRoadNear(g.room, x, y).d;
   if(g.scene==='rivervalley') return rvRoadDist(x, y);
-  if(g.scene==='lakesideruins') return Math.abs(y-LAKE_CY);
+  if(g.scene==='lakesideruins') return lakeRoadDist(x, y);
   return 1e9;
 }
 function roadEvSpotOk(g, x, y, r){
@@ -43,7 +43,7 @@ function roadEvRoadSpot(g, r){
     let q = null;
     if(g.scene==='sunlitplains'){ const rd = g.room.roads[Math.floor(Math.random()*g.room.roads.length)]; q = rd[Math.floor(rand(0.3, 0.85)*rd.length)]; }
     else if(g.scene==='rivervalley'){ q = rvRoadPt(rand(0.06, 0.94)); if(Math.abs(q.y-RV_CY) < 800) continue; }
-    else if(g.scene==='lakesideruins'){ const west = Math.random()<0.6; q = {x: west ? rand(500, LAKE_WATER_X-250) : rand(LAKE_WATER_X+LAKE_WATER_W+250, LAKE_W-500), y:LAKE_CY}; }
+    else if(g.scene==='lakesideruins'){ const rd = LAKE_ROADS[Math.floor(Math.random()*LAKE_ROADS.length)]; q = rd[Math.floor(rand(0.15, 0.8)*rd.length)]; }
     if(!q) return null;
     const a = Math.random()*Math.PI*2, off = 60 + r + rand(10, 50);
     const x = q.x + Math.cos(a)*off, y = q.y + Math.sin(a)*off;
@@ -109,7 +109,7 @@ function roadEvRoll(g){
       // the best of three rolls, so his wares are reliably good
       let best = null;
       for(let k=0;k<3;k++){ const it = generateItem(lvl, 'rare', i<2 ? null : cats[Math.floor(Math.random()*cats.length)], null, g.player); if(!best || (it.affixes||[]).length > (best.affixes||[]).length) best = it; }
-      best.fixedPrice = Math.round((1200 + lvl*60)*rand(0.9, 1.2)/10)*10;   // dearer than the smith, cheaper than gambling blind
+      best.fixedPrice = Math.round((600 + lvl*30)*rand(0.9, 1.15)/10)*10;   // v530: about half the old price -- a fair deal for a known rare
       ev.stock.push(best);
     }
     ev.npc = {x:ev.x, y:ev.y, id:31, robe:'#5a4a7a', hood:'#3a2e52', long:true, tool:'lantern'};

@@ -505,6 +505,21 @@ const NECRO_RESPAWN_SOULS = 1;
 const RAISE_DEAD_CD = 6;   // v489
 function skelSoulRaiseDelay(rank){ return 0.5; }   // v515: a held soul raises a fallen skeleton after 0.5s (v507: 1s, was 3s)
 const RAISE_DEAD_MANA_PER_SKEL = 12;
+const SKEL_RECAST_DELAY = 1.5;   // v530: Sacrifice blast -> the fresh set rises 1.5s later
+// raise every skeleton that is missing, crawling up out of the ground in a ring around you
+function necroRaiseNow(g, p){
+  const n0 = g.followers.length; ensureFollowers(g);
+  const fresh = g.followers.slice(n0).filter(f=>f.kind==='skeleton');
+  fresh.forEach((nf,i)=>{
+    const an = i/Math.max(1,fresh.length)*6.283 + Math.random()*0.4, r = rand(55, 85);
+    let x = p.x+Math.cos(an)*r, y = p.y+Math.sin(an)*r*0.8;
+    if(posBlockedByObstacles(x, y, 12, g.room.obstacles)){ x = p.x; y = p.y; }
+    nf.x = x; nf.y = y; nf.riseT = 0.7;
+    g.particles.push({type:'burst', x, y, t:0.5, max:0.5, color:'#5a4630'});
+    g.particles.push({type:'burst', x, y, t:0.4, max:0.4, color:'#a08ad0'});
+  });
+  if(fresh.length) try{ sfxPlay('summon', 0.8); }catch(e){}
+}
 function necroSkeletonLimit(p){ const r = (p && p.skills && effectiveRank(p,'raiseDead'))||0; return r>0 ? necroSkeletonCount(r) + (uq(p,'uq_necromancer') ? 2 : 0) : 0; }
 function sacrificeLifePct(r){ r = Math.max(1, r||1); return 0.25 + 0.20*(Math.min(10,r)-1)/9 + 0.01*Math.max(0, r-10); }   // v489: blast = 25% -> 45% of the skeleton's max life
 // v460 Meteor (Elementalist fire capstone)

@@ -2041,15 +2041,19 @@ function updateStep(dt){
     const rdR = effectiveRank(p,'raiseDead')||0;
     if(rdR>0 && !(p.raiseDeadCd>0)){
       // v489: recasting blows up every skeleton still standing (a Sacrifice burst) and raises a full fresh set
-      for(let k=g.followers.length-1;k>=0;k--){ const f = g.followers[k]; if(f.kind!=='skeleton') continue; g.followers.splice(k,1); necroSkeletonDeath(g, f, true); }
+      let blown = 0;
+      for(let k=g.followers.length-1;k>=0;k--){ const f = g.followers[k]; if(f.kind!=='skeleton') continue; g.followers.splice(k,1); necroSkeletonDeath(g, f, true); blown++; }
       p.skelDown = 0; if(g.followerPending) g.followerPending = g.followerPending.filter(x=>x.kind!=='skeleton');
-      const n0 = g.followers.length; ensureFollowers(g);
-      for(let k=n0;k<g.followers.length;k++){ const nf = g.followers[k]; if(nf.kind!=='skeleton') continue; const an = Math.random()*6.283; nf.x = p.x+Math.cos(an)*30; nf.y = p.y+Math.sin(an)*30; g.particles.push({type:'burst', x:nf.x, y:nf.y, t:0.45, max:0.45, color:'#a08ad0'}); }
+      // v530: after the Sacrifice blast the new set claws out of the earth around you 1.5s later
+      if(blown){ p.skelHold = 1; g.skelRaiseT = SKEL_RECAST_DELAY; for(let k=0;k<6;k++){ const an = k*1.05; g.particles.push({type:'burst', x:p.x+Math.cos(an)*70, y:p.y+Math.sin(an)*55, t:0.5, max:0.5, color:'#5a4630'}); } }
+      else necroRaiseNow(g, p);
       p.raiseDeadCdMax = applyCdr(p, RAISE_DEAD_CD); p.raiseDeadCd = p.raiseDeadCdMax;
       g.particles.push({type:'ring', x:p.x, y:p.y, t:0.4, max:0.4, r:70, color:'#a08ad0'});
       showMsg('Rise!', 0.7);
     }
   }
+  if(g.skelRaiseT>0){ g.skelRaiseT -= dt; if(g.skelRaiseT<=0){ p.skelHold = 0; necroRaiseNow(g, p); } }
+  else if(p.skelHold) p.skelHold = 0;   // (a reload mid-wait never leaves them held)
 
   // v460 Meteor: lands on the thickest group in range after a moment, then leaves burning ground
   if(p.meteorCd>0) p.meteorCd -= dt;
