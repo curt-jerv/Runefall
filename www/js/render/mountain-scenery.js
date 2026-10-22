@@ -205,10 +205,10 @@ function drawSunlitPlainsFloor(room, cam){
       if(wx<0||wy<0||wx>room.w||wy>room.h){ const ef = edgeFill(room, wx, wy); if(ef){ ctx.fillStyle = ef; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY); } continue; }
       const ix = Math.floor(wx/TS), iy = Math.floor(wy/TS);
       const checker = ((ix+iy)%2+2)%2, hs = tileHash(ix, iy), h2 = tileHash(iy*3+7, ix*5+1);
-      const dX = Math.abs(wx-SUN_CX), dY = Math.abs(wy-SUN_CY);
-      const onNS = dX < SUN_ROAD_HALFW, onEW = dY < SUN_ROAD_HALFW, onPath = onNS || onEW;
-      const verge = !onPath && ((dX < SUN_ROAD_HALFW+TS && h2 < 0.55) || (dY < SUN_ROAD_HALFW+TS && h2 < 0.55));   // ragged, worn road edges
-      const blight = clamp((wy-(room.h-900))/900,0,1) * clamp(1-(Math.abs(wx-SUN_CX)-500)/900,0,1);
+      const rn = sunRoadNear(room, wx, wy);   // v527: winding roads to gates that move every visit
+      const onPath = rn.d < SUN_ROAD_HALFW;
+      const verge = !onPath && rn.d < SUN_ROAD_HALFW+TS && h2 < 0.55;   // ragged, worn road edges
+      const blight = clamp((wy-(room.h-900))/900,0,1) * clamp(1-(Math.abs(wx-(room.southGate ? room.southGate.x : SUN_CX))-500)/900,0,1);
       const bl = blight*blight*(3-2*blight);
       let base;
       if(onPath) base = hs < 0.15 ? [128,112,84] : hs < 0.55 ? [146,128,94] : [138,121,88];
@@ -220,9 +220,9 @@ function drawSunlitPlainsFloor(room, cam){
       if(bl > 0.85) continue;
       const ix0 = iso.x, iy0 = iso.y;
       if(onPath){
-        const d = onNS ? dNS : dEW, n = onNS ? dEW : dNS;
+        const d = {x:dEW.x*rn.ux + dNS.x*rn.uy, y:dEW.y*rn.ux + dNS.y*rn.uy}, n = {x:-dEW.x*rn.uy + dNS.x*rn.ux, y:-dEW.y*rn.uy + dNS.y*rn.ux};
         // two wheel ruts running along the road
-        const off = onNS ? (wx-SUN_CX) : (wy-SUN_CY);
+        const off = rn.off;
         for(const rr of [-18, 18]){
           const k = rr - off; if(Math.abs(k) > TS*0.5) continue;
           const cx = ix0 + n.x*k, cy = iy0 + n.y*k;

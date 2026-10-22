@@ -55,8 +55,18 @@ function rvRoadDist(x,y){
   for(const i of L){ const a = RV_ROAD[i], b = RV_ROAD[i+1], vx = b.x-a.x, vy = b.y-a.y, t = clamp(((x-a.x)*vx+(y-a.y)*vy)/(vx*vx+vy*vy||1),0,1); const d = Math.hypot(x-(a.x+vx*t), y-(a.y+vy*t)); if(d<best) best = d; }
   return best;
 }
+// v527: the Minotaur Cave moves every visit; a narrow dirt trail (RV_TRAIL, rebuilt in makeRiverValley) leads to it off the road
+let RV_TRAIL = [];
+const RV_TRAIL_HW = 30;
+function rvTrailDist(x,y){
+  let best = 1e9; const T = RV_TRAIL;
+  for(let i=0;i<T.length-1;i++){ const a = T[i], b = T[i+1]; if(Math.abs(x-a.x) > 400 && Math.abs(x-b.x) > 400) continue; const vx = b.x-a.x, vy = b.y-a.y, t = clamp(((x-a.x)*vx+(y-a.y)*vy)/(vx*vx+vy*vy||1),0,1); const d = Math.hypot(x-(a.x+vx*t), y-(a.y+vy*t)); if(d<best) best = d; }
+  return best;
+}
+// the switchbacks are walled off by rows of wagons, fallen trees and boulders, so you follow the road down (gaps only where a road/trail passes)
+const RV_BARRIERS = [{y:1350, x0:1900, x1:RV_W-40}, {y:2450, x0:RV_CLIFF_W, x1:6700}, {y:5350, x0:RV_CLIFF_W, x1:6700}, {y:6400, x0:2400, x1:RV_W-40}];
 function rvRoadX(y){ return RV_BX; }   // the road runs straight north-south through the bridge camp (the only place this is used)
-function rvOnRoad(x,y,m){ return rvRoadDist(x,y) < RV_ROAD_HW+(m||0); }
+function rvOnRoad(x,y,m){ return rvRoadDist(x,y) < RV_ROAD_HW+(m||0) || rvTrailDist(x,y) < RV_TRAIL_HW+(m||0); }
 function rvRoadPt(frac){ return RV_ROAD[Math.max(0, Math.min(RV_ROAD.length-1, Math.round(frac*(RV_ROAD.length-1))))]; }
 function rvBlend(y){ const t = clamp((y-(RV_CY-1800))/3400,0,1); return t*t*(3-2*t); }   // 0 = forest floor, 1 = open plains
 function rvWaterNear(x,y,m){
@@ -67,7 +77,27 @@ function rvBridgeRect(){ const c = rvRiverY(RV_BX), hw = rvRiverHW(RV_BX); retur
 function makeRiverValley(){
   const w = RV_W, h = RV_H;
   const northGate = {x:RV_BX, y:16, r:34}, southGate = {x:RV_BX, y:h-16, r:34};
-  const caveGate = {x:w-380, y:440, r:34};
+  // v527: a random Minotaur Cave spot (not near the gates, the bridge camp or the river), joined to the nearest road point by a winding dirt trail
+  let caveGate = null; RV_TRAIL = [];
+  for(let t=0;t<600 && !caveGate;t++){
+    const cx = rand(RV_CLIFF_W+500, w-300), cy = rand(300, h-300);
+    if(Math.abs(cy-RV_CY) < 650 || rvWaterNear(cx,cy,200) || rvRoadDist(cx,cy) < 420 || rvRoadDist(cx,cy) > 1400) continue;
+    if(RV_BARRIERS.some(B=>Math.abs(cy-B.y) < 160)) continue;
+    if(Math.hypot(cx-RV_BX, cy-16) < 900 || Math.hypot(cx-RV_BX, cy-(h-16)) < 900) continue;
+    const band = y=>RV_BARRIERS.filter(B=>y>B.y).length + (y>RV_CY ? 10 : 0);
+    let ri = -1, rd = 1e9; RV_ROAD.forEach((q,i)=>{ if(band(q.y)!==band(cy)) return; const d = Math.hypot(q.x-cx, q.y-cy); if(d<rd){ rd = d; ri = i; } });
+    if(ri<0) continue;
+    const r0 = RV_ROAD[ri], mid = {x:(r0.x+cx)/2 + rand(-200,200), y:(r0.y+cy)/2 + rand(-160,160)};
+    const pts = [r0, {x:r0.x+(mid.x-r0.x)*0.5+rand(-80,80), y:r0.y+(mid.y-r0.y)*0.5+rand(-80,80)}, mid, {x:cx+(mid.x-cx)*0.4, y:cy+(mid.y-cy)*0.4}, {x:cx, y:cy}];
+    const tr = []; for(let i=0;i<pts.length-1;i++){ const a = pts[i], b = pts[i+1], n = Math.max(2, Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/60)); for(let k=0;k<n;k++) tr.push({x:a.x+(b.x-a.x)*k/n, y:a.y+(b.y-a.y)*k/n}); } tr.push({x:cx, y:cy});
+    if(tr.some(q=>rvWaterNear(q.x,q.y,60) || q.x < RV_CLIFF_W+80 || q.y < 80 || q.y > h-80)) continue;
+    // the trail must not slip between switchbacks (it may not cross a barrier row)
+    let crosses = false; for(let i=0;i<tr.length-1 && !crosses;i++) for(const B of RV_BARRIERS){ const a = tr[i], b = tr[i+1]; if((a.y-B.y)*(b.y-B.y) <= 0){ const x = a.x + (b.x-a.x)*((B.y-a.y)/((b.y-a.y)||1)); if(x > B.x0-60 && x < B.x1+60 && rvRoadDist(x, B.y) > RV_ROAD_HW+70){ crosses = true; break; } } }
+    if(crosses) continue;
+    RV_TRAIL = tr; caveGate = {x:cx, y:cy, r:34};
+  }
+  if(!caveGate){ caveGate = {x:w-380, y:440, r:34}; RV_TRAIL = []; }
+  const caveExit = RV_TRAIL.length > 3 ? RV_TRAIL[RV_TRAIL.length-3] : {x:caveGate.x-20, y:caveGate.y+110};
   const wp0 = rvRoadPt(0.1), waypoint = {x:wp0.x+150, y:wp0.y, r:22};   // v526: a short way down the road from the Forest gate
   const bridge = rvBridgeRect();
   const bridgeC = {x:RV_BX, y:rvRiverY(RV_BX)};
@@ -130,6 +160,25 @@ function makeRiverValley(){
     else rocks.push({x:w-44, y, s:rand(0.8,1.3)});
   }
   const gapOk = (x,y,m)=>!rvWaterNear(x,y,m) && !rvOnRoad(x,y,m) && gates.every(gt=>dist({x,y},gt)>(gt===caveGate?330:150)) && !campZone(x,y) && x>RV_CLIFF_W+70 && !nearObs(x,y,30);
+  // v527: the switchback walls -- an invisible solid wall carved open only where a road or the trail passes, dressed with
+  // brown wagons, big trees, fallen logs and boulders so it reads as a natural barrier
+  for(const B of RV_BARRIERS){
+    let run0 = null;
+    const flush = (xEnd)=>{ if(run0!=null && xEnd-run0 > 30) obstacles.push({x:run0, y:B.y-22, w:xEnd-run0, h:44, isProp:true, kind:'rvwall'}); run0 = null; };
+    for(let x=B.x0; x<=B.x1; x+=20){
+      const clear = rvOnRoad(x, B.y, 70) || rvWaterNear(x, B.y, 30);
+      if(clear) flush(x); else if(run0==null) run0 = x;
+    }
+    flush(B.x1);
+    for(let x=B.x0+40; x<B.x1; x+=rand(70,110)){
+      if(rvOnRoad(x, B.y, 110) || rvWaterNear(x, B.y, 60)) continue;
+      const q = Math.random(), y = B.y + rand(-14,14);
+      if(q < 0.22){ if(!rvOnRoad(x+70, B.y, 110)){ obstacles.push({x:x-10, y:y-26, w:120, h:52, isProp:true, kind:'rvwagon', flip:Math.random()<0.5, seed:Math.random()}); x += 80; } }
+      else if(q < 0.6) obstacles.push({x:x-16, y:y-16, w:32, h:32, isProp:true, kind:'bigtree', s:rand(1.0,1.4)});
+      else if(q < 0.8) obstacles.push({x:x-20, y:y-13, w:Math.round(rand(120,170)), h:26, isProp:true, kind:'log', seed:Math.random()});
+      else obstacles.push({x:x-23, y:y-19, w:46, h:38, isProp:true, kind:'boulder', s:rand(0.95,1.3)});
+    }
+  }
   // collidable big props: big trees/logs in the north, boulders scattered
   const boxOk = (x,y,ww,hh,m)=>[[x,y],[x+ww,y],[x,y+hh],[x+ww,y+hh],[x+ww/2,y+hh/2]].every(pt=>gapOk(pt[0],pt[1],m));
   for(let i=0,n=0;i<3600 && n<104;i++){
@@ -185,7 +234,7 @@ function makeRiverValley(){
     if(packAnchors.some(a=>dist(a,{x,y})<300)) continue;
     packAnchors.push({x,y});
   }
-  return { w, h, obstacles, decor, trees, rocks, grassTufts, northGate, southGate, caveGate, waypoint, bridge, bridgeC, waterfall,
+  return { w, h, obstacles, decor, trees, rocks, grassTufts, northGate, southGate, caveGate, caveExit, trail:RV_TRAIL, waypoint, bridge, bridgeC, waterfall,
     campAnchors, packAnchors, waterAt:rvWaterAt };
 }
 const RV_NORTH_PACKS = [ {type:'wolf',countMin:2,countMax:4}, {type:'wolf',countMin:1,countMax:3}, {type:'spider',countMin:1,countMax:3}, {type:'boar',countMin:1,countMax:2} ];
@@ -284,7 +333,7 @@ function enterRiverValley(from){
   g.depth = 6;   // v483: was 5
   const rv = g.rv;
   if(from==='sunlitplains'){ g.player.x = rv.southGate.x; g.player.y = rv.southGate.y - 120; }
-  else if(from==='minotaurcave'){ g.player.x = rv.caveGate.x - 20; g.player.y = rv.caveGate.y + 110; }
+  else if(from==='minotaurcave'){ g.player.x = rv.caveExit.x; g.player.y = rv.caveExit.y; }
   else if(from==='waypoint'){ g.player.x = rv.waypoint.x; g.player.y = rv.waypoint.y + 40; }
   else { g.player.x = rv.northGate.x; g.player.y = rv.northGate.y + 120; }
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null;
