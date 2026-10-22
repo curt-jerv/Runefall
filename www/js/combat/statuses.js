@@ -108,7 +108,7 @@ function drawWithStatus(ent, drawFn, allowTint){
   if(ent.charges>0) drawChargeFx(ent, iso);
 }
 const RANGED_AIM_DELAY = 0.9, RANGED_STILL_T = 0.55;   // v490: RANGED_STILL_T = seconds stood still before a shot   // seconds of clear line of sight before an archer/spider may fire
-const ENEMY_DMG_SPLIT = { fhdwarf:'cold', fhbrute:'cold', fhaxe:'cold', fhcleric:'cold', fhtemplar:'cold', raptor:'fire', firebat:'fire' };   // v484
+const ENEMY_DMG_SPLIT = { fhdwarf:'cold', fhbrute:'cold', fhaxe:'cold', fhcleric:'cold', fhtemplar:'cold', raptor:'fire', firebat:'fire', windigo:'cold' };   // v484
 const ENEMY_DMG_TYPE = { shadowghoul:'lightning', zombie:'poison', leviathan:'poison', anaconda:'poison', stormsnake:'lightning', giantoad:'poison', poisonplant:'poison', sandsnake:'poison', lightningraptor:'fire', balrog:'fire', gojira:'fire', lavabeetle:'fire', firebat:'fire', magmacrawler:'fire', colossus:'fire' };
 // XP curve: gentler than before, and a kill's XP is a fixed slice of the ML's level-up cost.
 function xpForLevel(L){ const base = L<=28 ? 92*Math.pow(1.20, L-1) : 92*Math.pow(1.20, 27)*Math.pow(1.09, L-28); return Math.floor(base * (L>=3 && L<=14 ? 1.1 : 1) * (L>=10 ? 1.11 : 1)); }   // v514: levels 10+ need 11% more xp   // v492: levels 3-14 need 10% more xp   // v433: Diablo 2 shape -- ~20%/level early, then ~9%/level from level 28 on

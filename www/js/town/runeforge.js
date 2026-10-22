@@ -58,9 +58,9 @@ function giveRuneToSmith(){
   p.inventory = p.inventory.filter(it=>!(it && it.questId==='obsidian_runestone'));
   p.runeforgeUnlocked = true;
   const q = getQuest(p, 'slay_gojira');
-  if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'The Blacksmith set the Obsidian Obelisk into an Obsidian Forge beside his forge.'; }
+  if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'Brom set the Obsidian Obelisk into an Obsidian Forge beside his forge.'; }
   gainXp(game, Math.round(xpForKill(44, true)*3));
-  showMsg('Obsidian Forge unlocked — it now stands by the Blacksmith', 3.2);
+  showMsg('Obsidian Forge unlocked — it now stands by Brom', 3.2);
   updateQuestBadge(); bagPulse(); saveGame();
 }
 // ---- the Runeforge ----

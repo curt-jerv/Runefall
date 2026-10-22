@@ -298,8 +298,8 @@ function updateStep(dt){
     const twoHM = !!(p.equipment.mainhand && p.equipment.mainhand.twoHanded && !isBow && !staffItem);
     const cleaveNow = twoHM && (effectiveRank(p,'cleave')||0)>0;
     const reachExtra = twoHM ? TWOHAND_REACH_BONUS + (cleaveNow ? CLEAVE_RANGE_BONUS : 0) : 0;   // every two-hander out-reaches a one-hander; Cleave adds on top
-    const reach = 67 + (twoHM ? TWOHAND_REACH_BONUS : 0) + (p.weaponReachBonus||0);   // v193: -10%
-    const target = (isBow||staffItem||p.cls==='mystic') ? nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0)) : nearestEnemy(g, p, 76+reachExtra*0.9+(p.weaponReachBonus||0));
+    const reach = 58 + (twoHM ? TWOHAND_REACH_BONUS : 0) + (p.weaponReachBonus||0);   // v193: -10%; v520: another -13% (base Strike AoE was too big)
+    const target = (isBow||staffItem||p.cls==='mystic') ? nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0)) : nearestEnemy(g, p, 68+reachExtra*0.9+(p.weaponReachBonus||0));
     let ang;
     if(target){ ang = Math.atan2(target.y-p.y, target.x-p.x); }
     else { ang = Math.atan2(p.facing.y,p.facing.x); const pcc = (PC.lmb||PC.strikeKey) ? pcCursorWorld() : null; if(pcc && (Math.abs(pcc.x-p.x)>3 || Math.abs(pcc.y-p.y)>3)) ang = Math.atan2(pcc.y-p.y, pcc.x-p.x); }
@@ -409,7 +409,7 @@ function updateStep(dt){
               const eang = Math.atan2(e.y-p.y, e.x-p.x);
               let diff = Math.abs(eang-hitAng);
               if(diff>Math.PI) diff = 2*Math.PI-diff;
-              if(diff < 0.95){
+              if(diff < 0.7){   // v520: narrower swing (was 0.95)
                 e.hp -= applyEnemyArmor(p, e, hitDmg); e.hitT = 0.15;
                 staggerEnemy(e, STAGGER_DUR);
                 if(isCrit) hitStop(g, 0.04);
@@ -2295,6 +2295,8 @@ function updateStep(dt){
     // a new boss-slam telegraph -- while they're actually within the visible
     // screen. A small margin keeps them from freezing dead at the exact edge.
     const onScreen = isOnScreen(g, e, 90);
+    // v520: a telegraph / roll / leap that has begun always finishes, even if the player walks away (no frozen circles)
+    const midAct = e.tState==='tele' || e.tState==='swing' || e.tState==='air' || e.tState==='lash' || e.tState==='pull' || e.lungeState==='tele' || e.lungeState==='lunge' || (e.dwc && e.cState && e.cState!=='chase');
     // Forest (and Mountain Pass) packs hold their ground until the player
     // wanders close, rather than beelining in on sight the way dungeon
     // enemies do -- and give up the chase (going back to idle) if it
@@ -2330,7 +2332,7 @@ function updateStep(dt){
       } else {
         // lost sight of the player behind walls for a while (or strayed too far): give up
         if(enemyLOS(g,e,p)) e._noLosT = 0; else e._noLosT = (e._noLosT||0)+dt;
-        if(e._noLosT>4 || dist(e,{x:e.homeX,y:e.homeY}) > (e.leashRange||400)){
+        if(!midAct && (e._noLosT>4 || dist(e,{x:e.homeX,y:e.homeY}) > (e.leashRange||400))){
           e.aggroed = false; e.wanderTarget = null; e._noLosT = 0;
         }
       }
@@ -2381,7 +2383,7 @@ function updateStep(dt){
         else { e.moving = false; continue; }
       } else {
         if(enemyLOS(g,e,target)) e._noLosT = 0; else e._noLosT = (e._noLosT||0)+dt;
-        if(e._noLosT>(navRoomOn(room) ? 9 : 4)){ e.engaged = false; e._noLosT = 0; e.moving = false; continue; }
+        if(!midAct && e._noLosT>(navRoomOn(room) ? 9 : 4)){ e.engaged = false; e._noLosT = 0; e.moving = false; continue; }
       }
     }
     const fAng = Math.atan2(target.y-e.y, target.x-e.x);
@@ -2450,7 +2452,7 @@ function updateStep(dt){
       }
     }
     e.moving = false;
-    if(!onScreen && !e.minerSwarm){
+    if(!onScreen && !e.minerSwarm && !midAct){
       // Off-screen: don't chase or attack. Wait until back in view.
       continue;
     }
@@ -2616,6 +2618,8 @@ function updateStep(dt){
       updateFhCommander(g, e, dt*(e.cEnraged ? 2 : 1), target, d, isFollowerTarget, chillMult, room);   // v456: enraged = moves and attacks twice as fast
     } else if(e.type==='fhturret'){
       updateFhTurret(g, e, dt, target, d);
+    } else if(e.type==='windigo'){
+      updateWindigo(g, e, dt, target, d, isFollowerTarget, chillMult, room);
     } else if(e.type==='lavabeetle'){
       updateLavaBeetle(g, e, dt, target, d, isFollowerTarget, chillMult, room);
     } else if(e.type==='vulture'){
@@ -2653,12 +2657,14 @@ function updateStep(dt){
           g.particles.push({type:'ring', x:e.tPt.x, y:e.tPt.y, t:0.45, max:0.45, r:R, color:'#d9a066'});
           g.particles.push({type:'burst', x:e.tPt.x, y:e.tPt.y, t:0.4, max:0.4, color:'#b8a078'});
           shakeScreen(g, 4, 0.15);
-          e.tState='idle'; e.atkCd = e.atkCdMax*0.7;
+          e.tState='idle'; e.atkCd = e.atkCdMax*0.7; e.tSwingT = 0.3;
         }
       } else {
-        e.tCd -= dt;
+        e.tCd -= dt; if(e.tSwingT>0) e.tSwingT -= dt;
         if(e.tCd<=0 && d < (e.slamR ? e.slamR+120 : TROLL_SLAM_TRIGGER) && enemyLOS(g,e,target)){
-          e.tState='tele'; e.tT=TROLL_SLAM_TELE; e.tCd=4+Math.random()*2; e.tPt={x:target.x,y:target.y}; e.windT=0;
+          // v520: the smash lands close to the troll (club reach), not wherever the player happens to stand
+          const reachD = e.r + (e.slamR||TROLL_SLAM_R) * 0.6 + 8, k = d>reachD ? reachD/d : 1;
+          e.tState='tele'; e.tT=TROLL_SLAM_TELE; e.tCd=4+Math.random()*2; e.tPt={x:e.x+(target.x-e.x)*k,y:e.y+(target.y-e.y)*k}; e.windT=0;
         } else if(tickEnemyWindup(g, e, target, isFollowerTarget, reach, dt)){
           // mid club swing
         } else if(d>reach){

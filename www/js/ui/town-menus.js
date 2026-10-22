@@ -364,7 +364,7 @@ document.getElementById('smithQuestBtn').addEventListener('click', ()=>{
     if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = QUEST_HAMMER.descDone; }
     p.smithSockets = true;
     gainXp(game, Math.round(xpForKill(44, true)*3));
-    showMsg('Socketing unlocked — the Blacksmith can now socket your gear', 3.0);
+    showMsg('Socketing unlocked — Brom can now socket your gear', 3.0);
     updateQuestBadge(); bagPulse(); saveGame();
     openBlacksmithMenu();
   }
@@ -568,7 +568,7 @@ function openShop(vendor){
     document.getElementById('shopTitle').textContent = 'The Hunter \u2014 restocks in '+restockLabel();
   } else if(vendor==='bar'){
     t.stock = refreshBarStock(game.player);
-    document.getElementById('shopTitle').textContent = 'Bartender \u2014 restocks in '+restockLabel();
+    document.getElementById('shopTitle').textContent = 'Hobb \u2014 restocks in '+restockLabel();
     saveGame();
   } else if(vendor==='bard' || vendor==='gambler'){
     if(!game.tavernVendors) game.tavernVendors = {bard:genBardShopStock(game.player.level), gambler:genGamblerStock(game.player.level)};
@@ -579,10 +579,10 @@ function openShop(vendor){
     document.getElementById('shopTitle').textContent = 'Obsidian Forge';
   } else if(vendor==='socket'){
     t.stock = t.blacksmithStock;
-    document.getElementById('shopTitle').textContent = 'Blacksmith \u2014 Socketing';
+    document.getElementById('shopTitle').textContent = 'Brom \u2014 Socketing';
   } else {
     t.stock = t.blacksmithStock;
-    document.getElementById('shopTitle').textContent = 'Blacksmith \u2014 restocks in '+restockLabel();
+    document.getElementById('shopTitle').textContent = 'Brom \u2014 restocks in '+restockLabel();
   }
   game.socketItem = null; game.forgeMsg = null; game.forgeArm = null;
   const sockOn = vendor==='socket' || vendor==='runeforge';

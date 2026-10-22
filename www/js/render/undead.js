@@ -471,10 +471,13 @@ function drawCaveTrollEnemy(e){
   ctx.strokeStyle = F(skinD); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-headR*0.85, headY-headR*0.5); ctx.lineTo(-headR*0.1, headY-headR*0.25); ctx.moveTo(headR*0.85, headY-headR*0.5); ctx.lineTo(headR*0.1, headY-headR*0.25); ctx.stroke();
   ctx.fillStyle = F(skinD); for(const sd of [-1,1]){ ctx.beginPath(); ctx.moveTo(sd*headR*0.95, headY-headR*0.1); ctx.lineTo(sd*headR*1.6, headY-headR*0.4); ctx.lineTo(sd*headR*0.98, headY+headR*0.3); ctx.closePath(); ctx.fill(); }   // ears
   // near arm + spiked club (lifts on the smash telegraph)
-  const hx = torsoW*0.5+8+reach, hy = armY+15;
+  // v520: smash swing -- club winds back overhead during the telegraph, then slams down toward the marked spot just before impact
+  let raise = atk>0 ? -8 : 0;
+  if(tele){ const f = clamp(1-e.tT/TROLL_SLAM_TELE,0,1); raise = f<0.72 ? -18-(f/0.72)*100 : -118+Math.pow((f-0.72)/0.28,2)*168; }
+  else if(e.tSwingT>0) raise = 50*clamp(e.tSwingT/0.3,0,1)-4;
+  const hx = torsoW*0.5+8+reach+(tele||e.tSwingT>0 ? 4 : 0), hy = armY+15+raise*0.13;
   ctx.fillStyle = F(skin); ctx.beginPath(); ctx.moveTo(torsoW*0.5, armY); ctx.lineTo(hx+3, hy-6); ctx.lineTo(hx-2, hy+1); ctx.lineTo(torsoW*0.5-3.6, armY+7); ctx.closePath(); ctx.fill(); ctx.strokeStyle=skinD; ctx.lineWidth=1; ctx.stroke();
   ctx.save(); ctx.translate(hx, hy);
-  const raise = tele ? -18 : (atk>0 ? -8 : 0);
   ctx.rotate((raise*Math.PI)/180-0.3);
   ctx.fillStyle = F('#5a4028'); ctx.beginPath(); ctx.moveTo(-2.2,5); ctx.lineTo(2.2,5); ctx.lineTo(4.4,-26); ctx.lineTo(-3.4,-26); ctx.closePath(); ctx.fill(); ctx.strokeStyle='#221608'; ctx.lineWidth=0.9; ctx.stroke();
   ctx.fillStyle = F('#4a3420'); ctx.beginPath(); ctx.ellipse(0,-31,7.6,11,0,0,7); ctx.fill(); ctx.stroke();

@@ -188,6 +188,14 @@ function silverLocketFound(p){
   q.progress = q.total; q.desc = 'You found the silver locket in the Dark Crypt. Return to the woman in Mistfall.';
   updateQuestBadge();
 }
+// v520: Mirelle keeps the locket -- take it from the body, the bag or the stash
+function takeSilverLocket(p){
+  const isL = it=>it && it.questId==='silver_locket';
+  for(const k of Object.keys(p.equipment||{})) if(isL(p.equipment[k])) p.equipment[k] = null;
+  if(p.inventory) for(let i=p.inventory.length-1;i>=0;i--) if(isL(p.inventory[i])) p.inventory.splice(i,1);
+  try{ if(typeof recalcStats==='function') recalcStats(p); }catch(e){}
+  try{ renderInventory(); }catch(e){}
+}
 function talkLocketWoman(){
   const p = game.player, q = getQuest(p, LOCKET_QUEST);
   if(!q){
@@ -197,10 +205,11 @@ function talkLocketWoman(){
       showMsg('New quest: The Silver Locket', 3.0); updateQuestBadge(); saveGame();
     });
   } else if(q.status==='active' && q.progress>=q.total){
-    showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. Keep it, adventurer -- it kept my family safe once. And here: my grandfather had this old tome, I can\'t learn anything from it. Please, take it."', 'Thank you', ()=>{
+    showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. I will keep it close to my heart. And here: my grandfather had this old tome, I can\'t learn anything from it. Please, take it."', 'Thank you', ()=>{
       const tome = makeSkillTomeItem(); tome.questDesc = "Mirelle's grandfather's old tome. Read it (Use, or right-click) to gain +1 skill point.";
       if(!giveRewardIfRoom(p, [tome])) return;
-      q.status = 'complete'; q.rewarded = true; q.desc = 'You returned the silver locket to Mirelle. She let you keep it and gave you her grandfather\'s tome.';
+      takeSilverLocket(p);
+      q.status = 'complete'; q.rewarded = true; q.desc = 'You returned the silver locket to Mirelle. She gave you her grandfather\'s tome.';
       p.gold += 250; showMsg('Quest complete: The Silver Locket (+250 gold, Tome of Skill)', 3.4); try{ bagPulse(); }catch(e){} updateQuestBadge(); saveGame();
     });
   } else if(q.status==='active'){

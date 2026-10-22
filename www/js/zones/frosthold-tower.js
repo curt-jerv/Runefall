@@ -496,7 +496,7 @@ function drawTemplarIso(e){
 function makeAncientHammerItem(){
   return { id:'it'+Math.random().toString(36).slice(2,9), slotType:'questitem', rarity:'rare', shape:[1,3],
     name:'Ancient Smithing Hammer', affixes:[], color:'#ffb060', questId:'ancient_hammer', unsellable:true,
-    questDesc:'A huge rune-etched hammer of the first dwarven smiths, taken from the Frosthold Commander. Bring it to the Blacksmith. Quest item -- cannot be sold.' };
+    questDesc:'A huge rune-etched hammer of the first dwarven smiths, taken from the Frosthold Commander. Bring it to Brom the Blacksmith. Quest item -- cannot be sold.' };
 }
 // ---- The Balrog (floor 10 boss, fire) ----
 //   * Flame Lash  -- telegraphed long lane; the whip cracks along it and leaves embers.
@@ -854,7 +854,7 @@ function drawBalrogIso(e){
 }
 // Cave troll telegraph: club smash circle where you were standing.
 // v217: smaller slam, longer warning; ring is drawn at TRUE world radius (x sqrt2 for the iso projection) so it matches the hit area
-const TROLL_SLAM_R = 49, TROLL_SLAM_TELE = 1.35, TROLL_SLAM_TRIGGER = 140;
+const TROLL_SLAM_R = 49, TROLL_SLAM_TELE = 1.35, TROLL_SLAM_TRIGGER = 105;
 function drawTrollTelegraph(e){
   if(!(e.tState==='tele' && e.tPt)) return;
   ctx.save();
@@ -1113,11 +1113,11 @@ function enterMountainPass(opts){
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null;
   showMsg('Mountain Pass', 1.4);
   // district mix: wolves and bears at the forest edge, bears mid-pass, the frozen dead up the stem and toward the keep
-  const GOB = {type:'goblin', countMin:4, countMax:5}, TRL = {type:'cavetroll', count:2}, WOLF = {type:'warg', countMin:4, countMax:5, variant:'white'}, ZOM = {type:'frozenzombie', count:5}, BEAR = {type:'bear', countMin:2, countMax:3, variant:'polar'};
+  const GOB = {type:'goblin', countMin:4, countMax:5}, TRL = {type:'cavetroll', count:2}, WOLF = {type:'warg', countMin:4, countMax:5, variant:'white'}, ZOM = {type:'frozenzombie', count:5}, BEAR = {type:'bear', countMin:2, countMax:3, variant:'polar'}, WND = {type:'windigo', countMin:1, countMax:2};
   for(const a of breatheAnchors(g.mtn.packAnchors, {gap:460, cell:1400})){
     const r = Math.random();
     const t = a.y > MTN_BAR_Y1 ? (r<0.55 ? GOB : r<0.8 ? TRL : WOLF)
-            : a.y < MTN_BAR_Y0 ? (r<0.55 ? ZOM : r<0.8 ? WOLF : BEAR)
+            : a.y < MTN_BAR_Y0 ? (r<0.4 ? ZOM : r<0.62 ? WOLF : r<0.8 ? BEAR : WND)   // v520: Ice Windigos on the north stem
             : a.x < 3000 ? (r<0.5 ? WOLF : r<0.8 ? BEAR : ZOM)
             : a.x > 6600 ? (r<0.6 ? ZOM : BEAR)
             : (r<0.45 ? BEAR : r<0.8 ? ZOM : WOLF);

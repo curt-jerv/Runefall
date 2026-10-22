@@ -12,9 +12,9 @@ const ICY_ZONE_DEFS = {
   cellar:{ name:'Icy Cellar',          w:2700, h:1900, depth:36 },
 };
 const ICY_PACKS = {
-  summit:[ {type:'frozenzombie',count:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'wolf',countMin:4,countMax:5} ],
-  shrine:[ {type:'frozenzombie',count:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'wolf',countMin:4,countMax:5} ],
-  cellar:[ {type:'frozenzombie',count:6}, {type:'wolf',countMin:4,countMax:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'} ],
+  summit:[ {type:'frozenzombie',count:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'warg',countMin:4,countMax:5,variant:'white'}, {type:'windigo',countMin:1,countMax:2} ],
+  shrine:[ {type:'frozenzombie',count:5}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'warg',countMin:4,countMax:5,variant:'white'} ],
+  cellar:[ {type:'frozenzombie',count:6}, {type:'warg',countMin:4,countMax:5,variant:'white'}, {type:'bear',countMin:2,countMax:3,variant:'polar'}, {type:'windigo',countMin:1,countMax:2} ],
 };
 function makeIcyZone(kind){
   const def = ICY_ZONE_DEFS[kind];

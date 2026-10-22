@@ -178,6 +178,19 @@ function drawProjectilesIso(list){
   for(const pr of list){
     const iso = toIso(pr.x,pr.y);
     if(pr.isSoulFire){ drawSoulFireIso(pr, iso); continue; }   // v489
+    if(pr.isFrostCloud){   // v520 Ice Windigo's Frost Breath: a slow swirl of drifting frost puffs
+      const ck = (game.clock||0), R = pr.r*ISO_KX*0.9;
+      ctx.save(); ctx.translate(iso.x, iso.y-10);
+      for(let k=0;k<9;k++){
+        const an = ck*3.2+k*0.7, rr = R*(0.25+0.75*((k*0.37)%1)), px = Math.cos(an)*rr, py = Math.sin(an)*rr*0.5-((k*13)%7);
+        ctx.globalAlpha = 0.45+0.15*Math.sin(ck*5+k); ctx.fillStyle = k%2 ? '#dff6ff' : '#9fdcf2';
+        ctx.beginPath(); ctx.arc(px, py, 5+((k*5)%6), 0, 7); ctx.fill();
+      }
+      ctx.globalAlpha = 0.5; ctx.fillStyle = '#f2fbff'; ctx.beginPath(); ctx.arc(0, 0, R*0.35, 0, 7); ctx.fill();
+      ctx.globalAlpha = 0.85; ctx.fillStyle = '#ffffff';
+      for(let j=0;j<5;j++){ const an = -ck*4+j*1.26; ctx.beginPath(); ctx.arc(Math.cos(an)*R*0.8, Math.sin(an)*R*0.4, 1.4, 0, 7); ctx.fill(); }
+      ctx.restore(); continue;
+    }
     if(pr.isTornado){
       // v269: pseudo-3D funnel -- stacked, widening ellipses spinning at different speeds, ground dust and flying debris
       const ck = game.clock||0, spin = (pr.life||0)*7, H = 60, baseRx = pr.r*ISO_KX*ISO_SQ2*1.15*0.85;   // v311: shorter and 15% smaller
@@ -849,7 +862,7 @@ function drawParticlesIso(list, pass){
       if(pt.color){ ctx.globalAlpha = a; ctx.strokeStyle = pt.color; }
       else { ctx.strokeStyle = pt.crit ? ('rgba(255,226,122,'+a+')') : ('rgba(255,220,180,'+a+')'); }
       ctx.lineWidth = pt.crit ? 6 : 4;
-      ctx.beginPath(); ctx.arc(0,0,pt.crit?23.5:20,-0.9,0.9); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,0,pt.crit?21:18,-0.7,0.7); ctx.stroke();
       ctx.globalAlpha = 1;
       ctx.restore();
     } else if(pt.type==='arcaneStrike'){

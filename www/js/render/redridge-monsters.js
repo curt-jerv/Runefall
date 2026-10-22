@@ -205,6 +205,7 @@ function drawEnemyIsoBase(e){
   else if(e.type==='buffalo') drawBuffaloIso(e);
   else if(e.type==='stormsnake') (e.squid ? drawSquidIso(e) : e.eel ? drawEelIso(e) : drawStormSnakeIso(e));
   else if(e.type==='lavabeetle') drawLavaBeetleIso(e);
+  else if(e.type==='windigo') drawWindigoIso(e);
   else if(CLF_TYPES[e.type]) drawCliffMonsterIso(e);
   else if(KP_TYPES[e.type]) drawKeepMonsterIso(e);
   else if(e.type==='firebat') drawFireBatIso(e);

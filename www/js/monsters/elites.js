@@ -89,8 +89,8 @@ function dungeonStoreGet(g, key, floor){ return g.dStore && g.dStore[key] && g.d
 // floor's own monster types, away from the entrance and boss rooms (Bear Cave / Forgotten Tower were ~4/Mpx).
 const DUNGEON_DENSITY_TARGET = 20;
 const DENSIFY_SCENES = {lighthouse:1, spiderlair:1, bearcave:1, minotaurcave:1, darkcrypt:1, raptorlair:1};
-// v474: the Bear Cave holds fewer bears, in looser packs of 3-5 that keep well apart from each other
-const DENSIFY_TUNE = {bearcave:{density:7, spread:95, gap:560}, spiderlair:{density:20, spread:60, gap:300, pack:3}, darkcrypt:{density:27, spread:75, gap:330, pack:4}};   // v503: the big crypt tops up in loose packs of 4   // v480: spiders in many packs of exactly 3
+// v474: the Bear Cave holds fewer bears; v520: more, smaller groups of 2-3 (3 with the guardian)
+const DENSIFY_TUNE = {bearcave:{density:9, spread:70, gap:400, packMin:2, packMax:3}, spiderlair:{density:20, spread:60, gap:300, pack:3}, darkcrypt:{density:27, spread:75, gap:330, pack:4}};   // v503: the big crypt tops up in loose packs of 4   // v480: spiders in many packs of exactly 3
 function densifyDungeon(g){
   const room = g.room;
   if(!room || !DENSIFY_SCENES[g.scene] || g.enemies._dense || room.bossFloor) return;
@@ -123,7 +123,7 @@ function densifyDungeon(g){
     } while(tries<30 && (r.w<2*(tune.density ? 45 : 70) || r.h<2*(tune.density ? 45 : 70) || !okPt(cx,cy)));
     if(tries>=30) continue;
     packCenters.push({x:cx, y:cy});
-    const n = tune.pack ? tune.pack : tune.density ? 3 + Math.floor(Math.random()*3) : Math.min(3 + Math.floor(Math.random()*3), target-g.enemies.length + 2);
+    const n = tune.packMin ? tune.packMin + Math.floor(Math.random()*(tune.packMax-tune.packMin+1)) : tune.pack ? tune.pack : tune.density ? 3 + Math.floor(Math.random()*3) : Math.min(3 + Math.floor(Math.random()*3), target-g.enemies.length + 2);
     const sp = tune.spread || 55;
     for(let k=0;k<n;k++){
       const px = clamp(cx+rand(-sp,sp), r.x+30, r.x+r.w-30), py = clamp(cy+rand(-sp,sp), r.y+30, r.y+r.h-30);

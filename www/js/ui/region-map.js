@@ -404,9 +404,9 @@ function renderRegionMap0(){
     const t = g.town;
     const pts = [
       {pos:t.waypoint, label:'Waypoint', icon:'W'},
-      {pos:t.blacksmith, label:'Blacksmith', icon:'B'},
+      {pos:t.blacksmith, label:'Brom', icon:'B'},
       {pos:t.stashChest, label:'Stash', icon:'S'},
-      {pos:t.questGiver, label:'Old Man', icon:'!'},
+      {pos:t.questGiver, label:'Aldric', icon:'!'},
       {pos:t.well, label:'Well', icon:'O'},
       {pos:t.gate, label:'Forest Gate', icon:'G'},
     ];
