@@ -350,12 +350,13 @@ function drawLosMask(g, pts, defer){
 // v492/v493: the character's own circle of light in every zone but town (the Dark Crypt and the caves keep their own, stronger dark).
 // Outside the circle the world is VEIL_MAX_A dark (towers and halls darker still); inside it a light VEIL_CORE_DIM haze stays.
 // +Light Radius gear widens every circle of light except the Dark Crypt's.
-const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.88, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.28, UNDERGROUND_CORE_DIM = 0.12, UNDERGROUND_LIGHT_SCALE = 0.85;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
-const VEIL_THEME_R = 290, VEIL_THEME_A = 0.8, VEIL_THEME_DIM = 0.2;   // v506
+const VEIL_LIGHT_R = 290, VEIL_MAX_A = 0.88, VEIL_INDOOR_R = 235, VEIL_INDOOR_A = 0.92, VEIL_CORE_DIM = 0.15, VEIL_INDOOR_DIM = 0.1, UNDERGROUND_CORE_DIM = 0.05, UNDERGROUND_LIGHT_SCALE = 0.85;   // v498: caves, depths and towers are clearly darker than the Dark Forest (smaller, dimmer circle of light)
+const VEIL_THEME_R = 290, VEIL_THEME_A = 0.8, VEIL_THEME_DIM = 0.08;   // v506
 function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
-  const sc = g.scene; if(sc==='tavern' || sc==='darkcrypt' || isUndergroundScene(g)) return false;   // (v509: town is darkened like every other outdoor zone)
+  // v515: the dark ring is for towers and dungeons only (every overworld zone, town included, is plainly lit); the player's warm glow still shows (drawPlayerGlowOnly)
+  if(g.scene!=='lighthouse' || isUndergroundScene(g) || kpOutdoor(g)) return false;
   if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
   return true;
 }
@@ -400,6 +401,15 @@ function skillLights(g, cam){
 }
 const LIGHT_X = 1.15, LIGHT_Y = 0.575;   // v511: light shape = isometric ellipse (wider than tall, 2:1)
 const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
+// v515: overworld zones have no dark ring, but your own warm light is still there
+function playerGlowScene(g){ return !!(g && g.started && g.player && g.scene!=='tavern'); }
+function drawPlayerGlowOnly(g){
+  const LR = VEIL_LIGHT_R*lightRadiusMult(g.player), px = W/2, py = Math.round(camPlayerY()/2)*2, GR = LR*PLAYER_GLOW_FRAC;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(px, py-26); ctx.scale(LIGHT_X, LIGHT_Y);
+  const gg = ctx.createRadialGradient(0,0,0, 0,0,GR);
+  gg.addColorStop(0,'rgba(255,206,116,0.3)'); gg.addColorStop(0.5,'rgba(255,176,76,0.16)'); gg.addColorStop(1,'rgba(255,150,50,0)');
+  ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,0,GR,0,7); ctx.fill(); ctx.restore();
+}
 function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   LR = LR || DARKCRYPT_PLAYER_LIGHT_R;
   const cam = g.camera;
@@ -419,7 +429,7 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   const grdStops = [];
   const cl = 1 - (coreDim||0);   // v493: coreDim keeps a faint haze even at the centre of the light
   grdStops.push([0, 'rgba(0,0,0,'+cl+')']);
-  grdStops.push([0.62, 'rgba(0,0,0,'+(0.83*cl)+')']);   // (v245) ~10% darker falloff
+  grdStops.push([0.62, 'rgba(0,0,0,'+(0.92*cl)+')']);   // (v515: the lit area inside the light radius is clearer than before)
   grdStops.push([1, 'rgba(0,0,0,0)']);
   // v511: every light is a flattened ellipse (3/4 isometric view, same 2:1 look as the ground tiles); the upper half still stops under the HUD
   const sy0 = clamp((py - hudBottomPx()) / LR, 0.3, 1);

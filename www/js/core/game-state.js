@@ -1047,7 +1047,7 @@ function spawnEnemy(g, type, pos){
   // v228: Dark Forest / Bear Cave bears are softer (smaller life bonus, thinner hide)
   if(type==='bear' && (g.scene==='forest' || g.scene==='bearcave')){ e.hp = Math.round(e.hp*0.65); e.maxHp = e.hp; e.armor = Math.min(e.armor||0, 5); }
   e.dmg = e.dmg*ENEMY_DMG_MULT*mlDmgMult(e.ml);
-  { const gap = Math.min(10, Math.max(0, e.ml - ((g.player&&g.player.level)||1))); if(gap>0){ e.hp = Math.round(e.hp*(1+0.05*gap)); e.maxHp = e.hp; e.dmg *= 1+0.06*gap; } }   // v514: unforgiving -- an under-levelled character now faces tougher monsters (+5% life, +6% damage per level below the zone, max 10 levels); it used to soften them 1%/level
+  // v515: no under-level softening at all -- a zone's monsters keep their full strength (v490 had 1%/level, v237 4%/level); the over-level taper in monsterLevel() is unchanged
   if(type==='colossus'){   // v354: no over-level scaling for the Colossus (monster level pinned to the area), and its base damage is cut ~40%
     const mlc = Math.min(e.ml, g.depth||e.ml);
     e.hp = Math.round(e.hp*mlEnemyHpMult(mlc)/mlEnemyHpMult(e.ml)); e.maxHp = e.hp;

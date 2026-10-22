@@ -503,7 +503,7 @@ const NECRO_RESPAWN_SOULS = 1;
 // v460 Raise Skeletons: passive + active. A fallen skeleton stays down until you press Raise Skeletons --
 // unless you hold a soul: then one soul is spent automatically to raise it after a short delay.
 const RAISE_DEAD_CD = 6;   // v489
-function skelSoulRaiseDelay(rank){ return 1; }   // v507: a held soul raises a fallen skeleton after 1s (was 3s)
+function skelSoulRaiseDelay(rank){ return 0.5; }   // v515: a held soul raises a fallen skeleton after 0.5s (v507: 1s, was 3s)
 const RAISE_DEAD_MANA_PER_SKEL = 12;
 function necroSkeletonLimit(p){ const r = (p && p.skills && effectiveRank(p,'raiseDead'))||0; return r>0 ? necroSkeletonCount(r) + (uq(p,'uq_necromancer') ? 2 : 0) : 0; }
 function sacrificeLifePct(r){ r = Math.max(1, r||1); return 0.25 + 0.20*(Math.min(10,r)-1)/9 + 0.01*Math.max(0, r-10); }   // v489: blast = 25% -> 45% of the skeleton's max life
