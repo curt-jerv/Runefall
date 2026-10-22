@@ -454,7 +454,7 @@ function enterSunlitPlains(from){
   g.sun.graverobbers = makeGraverobbers(g.sun);
   g.room = g.sun;
   // Fixed area level (static difficulty)
-  g.depth = 8;   // v230: lowered from 12 so the step up from the Bear Cave is gentle
+  g.depth = 10;   // v529: Lv 10 (v230: 8)
   // v70: arriving back from Lighthouse Tower (via its floor-1 entrance
   // gate, or the Teleport menu landing here) lands the player just east of
   // the west gate, mirroring how every other zone transition lands you
@@ -492,6 +492,7 @@ function enterSunlitPlains(from){
   // v350: hard clearance -- no monster starts within 420 of the entrance gates, the waypoint or where you arrive
   { const keep = [g.sun.forestGate, g.sun.waypoint, g.sun.westGate, g.sun.eastGate, g.sun.southGate, g.player];
     g.enemies = g.enemies.filter(e=>keep.every(k=>dist(e,k) >= 420)); }
+  roadEvRoll(g);   // v529: one random road encounter
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = g.player.x; f.y = g.player.y; }

@@ -324,6 +324,7 @@ function enterLakesideRuins(opts){
   // chest in the game already uses (see this scene's own inline chest-open
   // check in the main update loop).
   g.chest = null; // (v147) island chest removed
+  roadEvRoll(g);   // v529: one random road encounter
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = g.player.x; f.y = g.player.y; }

@@ -318,7 +318,7 @@ function enterLighthouseTower(floor, opts){
   // formulas (see spawnEnemy) -- the exact same "g.depth stands in for how
   // far along this dungeon you are" convention the Mine/Spider Lair/Bear
   // Cave already use (g.depth = g.player.checkpointDepth or a fixed 5).
-  g.depth = [9,10,10,13,15][Math.max(0,Math.min(4,(g.lighthouseFloor||1)-1))]; // v237: floors 1-3 = 9/10/10, floor 4 = 13, rooftop = 15
+  g.depth = [11,12,13,14,16][Math.max(0,Math.min(4,(g.lighthouseFloor||1)-1))]; // v529: climbs from the Crossroads' Lv 10 -- floors 11/12/13/14, rooftop 16
   // Waypoint rework: teleporting in via the Teleport menu (opts.atWaypoint,
   // only ever passed for floor 1, the only floor with a waypoint) lands the
   // player AT that waypoint marker, not the generic floor entrance.

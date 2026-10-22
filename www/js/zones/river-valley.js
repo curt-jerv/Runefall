@@ -341,6 +341,7 @@ function enterRiverValley(from){
   const anchors = shuffle(breatheAnchors(rv.packAnchors, {gap:380}));
   for(let i=0;i<Math.min(RV_PACK_COUNT, anchors.length);i++) spawnRiverValleyPack(g, anchors[i]);
   spawnRiverValleyCamp(g);
+  roadEvRoll(g);   // v529: one random road encounter
   g.followers = [];
   ensureFollowers(g);
   for(const f of g.followers){ f.x = g.player.x; f.y = g.player.y; }

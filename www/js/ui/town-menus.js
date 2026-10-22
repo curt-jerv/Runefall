@@ -574,6 +574,9 @@ function openShop(vendor){
     if(!game.tavernVendors) game.tavernVendors = {bard:genBardShopStock(game.player.level), gambler:genGamblerStock(game.player.level)};
     t.stock = game.tavernVendors[vendor];
     document.getElementById('shopTitle').textContent = (vendor==='bard' ? 'The Bard' : 'The Gambler')+' \u2014 restocks in '+restockLabel();
+  } else if(vendor==='peddler'){
+    t.stock = (game.roadEv && game.roadEv.stock) || [];
+    document.getElementById('shopTitle').textContent = ROAD_MERCHANT_NAME+' \u2014 the Wandering Peddler';
   } else if(vendor==='runeforge'){
     t.stock = t.blacksmithStock;
     document.getElementById('shopTitle').textContent = 'Obsidian Forge';

@@ -155,7 +155,7 @@ function drawRamIso(e){
   const iso = toIso(e.x,e.y), face = e.faceSign||1, t = e.animT||0, flash = e.hitT>0, s = e.r/21;
   const wind = e.chargeState==='wind', charging = e.chargeState==='charging';
   const trot = e.moving ? Math.sin(t*(charging?18:9)) : 0, graze = !e.aggroed && !e.moving && Math.sin(t*0.7+e.x)>0.2;
-  const WO = flash?'#fff':'#cdc4ae', WOD = flash?'#eee':'#9a907a', FACE = flash?'#fff':'#3a302a', HORN = flash?'#fff':'#a8946c', HORND = flash?'#ddd':'#6a5a40';
+  const WO = flash?'#fff':(e.blackRam?'#3a3430':'#cdc4ae'), WOD = flash?'#eee':(e.blackRam?'#201c1a':'#9a907a'), FACE = flash?'#fff':'#3a302a', HORN = flash?'#fff':'#a8946c', HORND = flash?'#ddd':'#6a5a40';
   drawShadow(iso.x, iso.y, 30*s, 10*s);
   ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(face*s, s); ctx.lineJoin='round'; ctx.lineCap='round';
   if(wind){ ctx.translate(Math.sin(t*40)*1.2, 0); }

@@ -234,9 +234,9 @@ function enterSubZone(kind, opts){
   const g = game, p = g.player;
   g.scene = 'lighthouse'; g.lighthouseFloor = 1;
   if(kind==='temple') tripSeed('sunken');   // v525: the temple is part of the Sunken Depths trip
-  g.tower = kind==='sunken' ? makeSunkenDepths() : kind==='temple' ? makeFloodedTemple() : kind==='rrtower' ? makeRRTower(opts.id, opts.floor) : makeMarshPool();
+  g.tower = kind==='sunken' ? makeSunkenDepths() : kind==='temple' ? makeFloodedTemple() : kind==='rrtower' ? makeRRTower(opts.id, opts.floor) : kind==='cellar' ? makeRoadCellar() : makeMarshPool();
   g.room = g.tower;
-  g.depth = kind==='sunken' ? SUNKEN_DEPTH : kind==='temple' ? TEMPLE_DEPTH : kind==='rrtower' ? RR_DEPTH + (opts.floor||1) : poolDepth();
+  g.depth = kind==='sunken' ? SUNKEN_DEPTH : kind==='temple' ? TEMPLE_DEPTH : kind==='rrtower' ? RR_DEPTH + (opts.floor||1) : kind==='cellar' ? 11 : poolDepth();
   g.player.x = g.tower.entrance.x + 90; g.player.y = g.tower.entrance.y;
   if(opts.atWaypoint && g.tower.waypoint){ g.player.x = g.tower.waypoint.x; g.player.y = g.tower.waypoint.y + 40; }
   if(opts.atStairs && g.tower.stairsDown){ g.player.x = g.tower.stairsDown.x - 90; g.player.y = g.tower.stairsDown.y; }
@@ -244,7 +244,7 @@ function enterSubZone(kind, opts){
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null; g.bossKilled=false;
   g.poolT = 0;
   showMsg(g.tower.name+'  (Lv. '+g.depth+')', 1.8);
-  if(kind==='sunken') spawnSunkenDepths(g); else if(kind==='temple') spawnFloodedTemple(g); else if(kind==='rrtower'){ const key = g.tower.rrId+'_'+(g.tower.rrFloor||1); if(g.rrStore && g.rrStore[key]) g.enemies = g.rrStore[key].filter(e=>e.hp>0); else spawnRRTower(g); } else spawnMarshPool(g);
+  if(kind==='sunken') spawnSunkenDepths(g); else if(kind==='temple') spawnFloodedTemple(g); else if(kind==='rrtower'){ const key = g.tower.rrId+'_'+(g.tower.rrFloor||1); if(g.rrStore && g.rrStore[key]) g.enemies = g.rrStore[key].filter(e=>e.hp>0); else spawnRRTower(g); } else if(kind==='cellar') spawnRoadCellar(g); else spawnMarshPool(g);
   // v489: the boss is back each visit, so the chest/portal only appear after this visit's kill
   g.followers = [];
   ensureFollowers(g);
@@ -416,7 +416,7 @@ function drawSubFloor(room, cam){
 function drawSubEntranceIso(room, clock){
   const e = room.entrance;
   if(room.subzone==='keep'){ if(room.hell) drawHellPortal(e, clock); else drawKeepDoor(e, clock); return; }
-  if(room.subzone==='highward'){ if(room.hwFloor===1) drawHwGateIso(e, true, clock); else drawStairsDownIso(e, clock); } else if(room.subzone==='rrtower' && (room.rrFloor||1)>1) drawStairsDownIso(e, clock); else if(room.subzone==='sunken' || room.subzone==='temple' || room.subzone==='rrtower') drawMineEntranceIso(e, clock); else drawSinkholeGateIso(e, clock);
+  if(room.subzone==='highward'){ if(room.hwFloor===1) drawHwGateIso(e, true, clock); else drawStairsDownIso(e, clock); } else if(room.subzone==='rrtower' && (room.rrFloor||1)>1) drawStairsDownIso(e, clock); else if(room.subzone==='cellar') drawStairsUpIso(e, clock); else if(room.subzone==='sunken' || room.subzone==='temple' || room.subzone==='rrtower') drawMineEntranceIso(e, clock); else drawSinkholeGateIso(e, clock);
 }
 // Marsh Pool entrance (v262): a mossy sinkhole rimmed with stakes, glowing toxic green and bubbling.
 function drawSinkholeGateIso(pos, clock){

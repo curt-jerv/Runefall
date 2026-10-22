@@ -162,6 +162,7 @@ function drawMarshTelegraph(e){
 }
 
 function drawEnemyIsoBase(e){
+  if(e.scarecrowBoss){ drawWalkingScarecrowIso(e); return; }   // v529
   if(e.wraith){ drawWraithIso(e); return; }
   if(e.minotaur){ drawMinotaurIso(e); return; }
   if(e.mastodon) drawMastodonIso(e);

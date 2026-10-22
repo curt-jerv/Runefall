@@ -58,7 +58,7 @@ const DARKCRYPT_TORCH_LIGHT_R = 70;
 const UNDERGROUND_LIGHT_R = DARKCRYPT_PLAYER_LIGHT_R*2;
 function isUndergroundScene(g){
   const sc = g.scene;
-  return sc==='dungeon'||sc==='spiderlair'||sc==='bearcave'||sc==='minotaurcave'||sc==='ancientruins'||sc==='raptorlair'||(sc==='lighthouse' && !!(g.room && (g.room.subzone==='sunken' || g.room.subzone==='temple' || g.room.subzone==='rrtower' || g.room.subzone==='highward' || g.room.deep===1 || g.room.deep===3)));
+  return sc==='dungeon'||sc==='spiderlair'||sc==='bearcave'||sc==='minotaurcave'||sc==='ancientruins'||sc==='raptorlair'||(sc==='lighthouse' && !!(g.room && (g.room.subzone==='sunken' || g.room.subzone==='temple' || g.room.subzone==='rrtower' || g.room.subzone==='cellar' || g.room.subzone==='highward' || g.room.deep===1 || g.room.deep===3)));
 }
 const DARKCRYPT_EYE_DOT_R = 6;
 // Lazily-created offscreen mask canvas, reused every frame (recreated only

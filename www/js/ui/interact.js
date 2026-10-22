@@ -114,6 +114,7 @@ function pickupNearbyDropped(){
   else showMsg(fullMsgFor(l.item), 1.0);
 }
 function updateInteractPrompt(kind){
+  if(!kind && game && typeof roadEvKind==='function') kind = roadEvKind(game);   // v529 road encounters
   if(!kind && nearestDroppedItem()) kind = 'pickupItem';
   interactKind = kind;
   if(!kind){ btnInteract.style.display = 'none'; return; }
@@ -129,6 +130,7 @@ function updateInteractPrompt(kind){
 }
 bindBtn(btnInteract, ()=>{
   if(interactKind==='pickupItem') pickupNearbyDropped();
+  else if(/^road[A-Z]|^cellarExit$/.test(interactKind||'')) roadEvInteract(interactKind);   // v529
   else if(interactKind==='rescueHunter') rescueHunterNow();
   else if(interactKind==='shop') openBlacksmithMenu();
   else if(interactKind==='toForest') enterForest();

@@ -3086,6 +3086,7 @@ function updateStep(dt){
       if(g.enemies[i].prot) protectorKilled();
       try{ achOnKill(g, g.enemies[i]); }catch(err){}
       if(g.enemies[i].campEnemy) bridgeCampKilled(g.enemies[i]);
+      if(g.enemies[i].roadEv) try{ roadEvKilled(g, g.enemies[i]); }catch(err){}
       if(g.enemies[i].fhCmd && !g.enemies[i].brBoss) fhCommanderSlain(g, g.enemies[i]);
       if(g.enemies[i].brBoss && !g.enemies[i].dboss && !g.enemies[i].balrog){ for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; } demonBossSlain(g, g.enemies[i]); }
       if(g.enemies[i].dwc) dwConstructSlain(g, g.enemies[i]);
@@ -3377,6 +3378,7 @@ function updateStep(dt){
   }
 
   try{ owPoiTick(g, p, dt); }catch(err){}   // v525 overworld caches / shrines / hoards
+  try{ roadEvTick(g, p, dt); }catch(err){}   // v529 road encounters
   // loot pickup
   try{ bossGlobeTick(g); }catch(err){}
   lootHoverName(g, p);
@@ -3566,6 +3568,8 @@ function updateStep(dt){
     updateKeep(g, dt);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='rrtower'){
     updateRRTower(g, dt);
+  } else if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='cellar'){
+    updatePortalChoice(false); updateInteractPrompt(null); updateRoadCellar(g, dt);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.subzone){
     updateSubZone(g, dt);
   } else if(g.scene==='lighthouse' && g.tower && g.tower.fht){
