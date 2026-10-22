@@ -280,6 +280,9 @@ function enterBlackMarsh(opts){
     g.player.x = g.bm.poolGate.x; g.player.y = g.bm.poolGate.y + 95;   // v490: the gate is on the north edge now
   } else if(opts.fromTower){
     g.player.x = g.bm.eastGate.x - 90; g.player.y = g.bm.eastGate.y;
+  } else if(opts.fromTunnel){   // v531: out of the tunnel behind the Kraken's hoard
+    g.player.x = g.bm.westGate.x + 110; g.player.y = g.bm.westGate.y;
+    showMsg('The tunnel collapses behind you.', 2.4);
   } else if(opts.fromHighlands){
     g.player.x = g.bm.highGate.x + 90; g.player.y = g.bm.highGate.y;
   } else {

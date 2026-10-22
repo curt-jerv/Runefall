@@ -3648,11 +3648,10 @@ function updateStep(dt){
     const nearLakeWaypoint = !g.lake.waypoint.off && dist(p, g.lake.waypoint) < g.lake.waypoint.r + p.r + 24;
     const nearRuinsSpot = dist(p, g.lake.ruinsSpot) < g.lake.ruinsSpot.r + p.r + 22;
     const ruinsKind = nearRuinsSpot ? (p.ruinsEntranceOpen ? 'toAncientRuins' : (canStudyRuins(p) ? 'studyRuins' : null)) : null;
-    const nearMarshGate = dist(p, g.lake.marshGate) < g.lake.marshGate.r + p.r + 22;
     const ev = g.lake.event, evActive = !!(ev && ev.active);
     const nearScholarR = !!p.scholarMeet && !p.ruinsEntranceOpen && !evActive && dist(p, g.lake.scholarSpot) < 70;
     updateRuinsEvent(g, dt);
-    updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromLakeside' : nearMarshGate ? 'toBlackMarsh' : nearScholarR ? 'scholarRuins' : nearLakeWaypoint ? 'waypointLakeside' : ruinsKind);
+    updateInteractPrompt(nearSunlitGate ? 'toSunlitPlainsFromLakeside' : nearScholarR ? 'scholarRuins' : nearLakeWaypoint ? 'waypointLakeside' : ruinsKind);
     if(g.chest && !g.chest.opened && dist(g.chest,p) < g.chest.r+p.r){
       g.chest.opened = true;
       if(Math.random() < 0.7){
@@ -3679,7 +3678,7 @@ function updateStep(dt){
     const cauldronUsable = p.witchRescued || (cq && cq.status==='active');
     const nearP = dist(p, bm.poolGate) < bm.poolGate.r + p.r + 22;
     const nearH = bm.highGate && dist(p, bm.highGate) < bm.highGate.r + p.r + 22;
-    updateInteractPrompt(nearH ? 'toHighlands' : nearW ? 'toLakesideFromMarsh' : nearE ? 'toForgottenTower' : nearP ? 'toMarshPool' : nearC ? 'marshCauldron' : nearWp ? 'waypointMarsh' : null);
+    updateInteractPrompt(nearH ? 'toHighlands' : nearW ? 'marshCaveBlocked' : nearE ? 'toForgottenTower' : nearP ? 'toMarshPool' : nearC ? 'marshCauldron' : nearWp ? 'waypointMarsh' : null);
   } else if(g.scene==='cursedcemetery'){
     // Cursed Cemetery (v72): same open-zone shape as every other
     // overworld zone -- no genRoom() portal/chest, one edge gate back to

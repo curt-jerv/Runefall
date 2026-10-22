@@ -289,11 +289,18 @@ function lakeShoreDist(wx,wy,TS,maxK){
   }
   return maxK+1;
 }
+// v531: parapet rails along whichever sides of a bridge tile face open water (the bridge can run either way now)
+function lakeBridgeRails(rails, wx, wy, TS){
+  if(lakeWaterAt(wx, wy-TS)) rails.push([wx-TS/2, wy-TS/2, wx+TS/2, wy-TS/2, -1]);
+  if(lakeWaterAt(wx, wy+TS)) rails.push([wx-TS/2, wy+TS/2, wx+TS/2, wy+TS/2, 1]);
+  if(lakeWaterAt(wx-TS, wy)) rails.push([wx-TS/2, wy-TS/2, wx-TS/2, wy+TS/2, -1]);
+  if(lakeWaterAt(wx+TS, wy)) rails.push([wx+TS/2, wy-TS/2, wx+TS/2, wy+TS/2, 1]);
+}
 function drawLakesideRuinsFloor(room, cam){
   const TS = 46, clk = (game&&game.clock)||0;
   const rails = [];
   for(let wx=-GROUND_MARGIN; wx<=room.w+GROUND_MARGIN; wx+=TS){
-    const inWaterX = wx > LAKE_WATER_X && wx < LAKE_WATER_X+LAKE_WATER_W;
+    const inWaterX = wx > LAKE_WATER_X-TS*3 && wx < LAKE_WATER_X+LAKE_WATER_W+TS*3;
     for(let wy=-GROUND_MARGIN; wy<=room.h+GROUND_MARGIN; wy+=TS){
       const iso = toIso(wx,wy);
       const sx = iso.x - cam.x, sy = iso.y - cam.y;
@@ -330,7 +337,7 @@ function drawLakesideRuinsFloor(room, cam){
         else ctx.fillStyle = hsh < 0.07 ? '#323f2a' : hsh > 0.94 ? '#454332' : (checker ? '#3b4a2f' : '#3f4f33');   // v456: dark, overgrown grass
       }
       if(fpSkip){
-        if(FLOOR_PASS===2 && onBridge && !onIsland){ if(lakeWaterAt(wx, wy-TS)) rails.push([wx-TS/2, wy-TS/2, wx+TS/2, wy-TS/2, -1]); if(lakeWaterAt(wx, wy+TS)) rails.push([wx-TS/2, wy+TS/2, wx+TS/2, wy+TS/2, 1]); }
+        if(FLOOR_PASS===2 && onBridge && !onIsland){ lakeBridgeRails(rails, wx, wy, TS); }
         continue;
       }
       drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
@@ -352,8 +359,7 @@ function drawLakesideRuinsFloor(room, cam){
         ctx.beginPath(); ctx.moveTo(iso.x-TS*ISO_KX, iso.y); ctx.lineTo(iso.x, iso.y+TS*ISO_KY); ctx.lineTo(iso.x+TS*ISO_KX, iso.y); ctx.stroke();
         if(hsh>0.9){ ctx.fillStyle='rgba(70,110,60,0.35)'; ctx.beginPath(); ctx.ellipse(iso.x+(hsh*7%1-0.5)*18, iso.y+(hsh*13%1-0.5)*8, 4, 1.8, 0, 0, 7); ctx.fill(); }
         // parapet rails on the water-facing sides (queued, drawn after the deck so no tile overwrites them)
-        if(lakeWaterAt(wx, wy-TS)) rails.push([wx-TS/2, wy-TS/2, wx+TS/2, wy-TS/2, -1]);
-        if(lakeWaterAt(wx, wy+TS)) rails.push([wx-TS/2, wy+TS/2, wx+TS/2, wy+TS/2, 1]);
+        lakeBridgeRails(rails, wx, wy, TS);
       } else if(!onRoad && !onIsland){
         // pebbles/reeds on the beach
         const nw = lakeNearWater(wx,wy,TS,1);

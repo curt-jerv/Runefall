@@ -503,8 +503,6 @@ function render(){
       }
       drawables.push({depth:g.lake.sunlitGate.x+g.lake.sunlitGate.y, draw:()=>drawLakesideGateIso(g.lake.sunlitGate, g.clock||0)});
       drawables.push({depth:g.lake.sunlitGate.x+g.lake.sunlitGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.sunlitGate, 'WITHERED CROSSROADS')});
-      drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y, draw:()=>drawRuinsGateIso(g.lake.marshGate, g.clock||0)});
-      drawables.push({depth:g.lake.marshGate.x+g.lake.marshGate.y+1, draw:()=>drawEdgeLabelIso(g.lake.marshGate, 'BLACK MARSH')});
       if(!g.lake.waypoint.off){
         drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y-1, draw:()=>drawWaypointIso(g.lake.waypoint, g.clock||0, waypointLit())});
         drawables.push({depth:g.lake.waypoint.x+g.lake.waypoint.y, draw:()=>drawEdgeLabelIso(g.lake.waypoint, 'WAYPOINT')});
@@ -525,8 +523,8 @@ function render(){
       drawables.push({depth:bm.house.x+bm.house.y, draw:()=>drawWitchHouseIso(bm.house)});
       drawables.push({depth:bm.cauldron.x+bm.cauldron.y, draw:()=>drawCauldronIso(bm.cauldron)});
       if(g.player.witchRescued){ const wn = {x:bm.cauldron.x+44, y:bm.cauldron.y+18}; drawables.push({depth:wn.x+wn.y, draw:()=>drawWitchIso(wn, g.clock||0, true)}); }
-      drawables.push({depth:bm.westGate.x+bm.westGate.y, draw:()=>drawRuinsGateIso(bm.westGate, g.clock||0)});
-      drawables.push({depth:bm.westGate.x+bm.westGate.y+1, draw:()=>drawEdgeLabelIso(bm.westGate, 'LAKESIDE RUINS')});
+      drawables.push({depth:bm.westGate.x+bm.westGate.y, draw:()=>drawMineEntranceIso(bm.westGate, g.clock||0)});   // v531: the Sunken Depths tunnel comes out here
+      drawables.push({depth:bm.westGate.x+bm.westGate.y+1, draw:()=>drawEdgeLabelIso(bm.westGate, 'COLLAPSED TUNNEL')});
       if(bm.highGate){ drawables.push({depth:bm.highGate.x+bm.highGate.y, draw:()=>drawRuinsGateIso(bm.highGate, g.clock||0)}); drawables.push({depth:bm.highGate.x+bm.highGate.y+1, draw:()=>drawEdgeLabelIso(bm.highGate, 'BARREN HIGHLANDS')}); }
       drawables.push({depth:bm.eastGate.x+bm.eastGate.y, draw:()=>drawTowerDoorIso(bm.eastGate, g.clock||0)});
       drawables.push({depth:bm.eastGate.x+bm.eastGate.y+1, draw:()=>drawEdgeLabelIso(bm.eastGate, 'FORGOTTEN TOWER', 180)});
@@ -717,6 +715,7 @@ function render(){
     if(t.trees) for(const tr of t.trees) if(vis(tr.x,tr.y)) drawables.push({depth:tr.x+tr.y, draw:()=>drawSwampTreeIso(tr)});
     const postLos = (g._postLos = []), ePush = (t.subzone==='highward') ? postLos : drawables;   // v425: Highward gates/portals/labels draw in front of the LOS shadow
     ePush.push({depth:t.entrance.x+t.entrance.y, draw:()=>drawSubEntranceIso(t, g.clock||0)});
+    if(t.tunnel){ const tn = t.tunnel; drawables.push({depth:tn.x+tn.y, draw:()=>drawMineEntranceIso(tn, g.clock||0)}); drawables.push({depth:tn.x+tn.y+1, draw:()=>drawEdgeLabelIso(tn, 'TUNNEL')}); }   // v531: the way to the Black Marsh
     ePush.push({depth:t.entrance.x+t.entrance.y+1, draw:()=>drawEdgeLabelIso(t.entrance, t.subzone==='sunken' ? 'FLOODED TEMPLE' : t.subzone==='temple' ? 'ANCIENT RUINS' : t.subzone==='rrtower' ? ((t.rrFloor||1)>1 ? 'STAIRS DOWN' : 'LEAVE TOWER') : t.subzone==='cellar' ? 'CLIMB OUT' : t.subzone==='highward' ? (t.hwFloor===1 ? 'REDRIDGE CANYON' : 'STAIRS DOWN') : t.subzone==='keep' ? (KP_ENT_LBL[t.kpArea]||'BACK') : 'BLACK MARSH', (t.subzone==='highward' && t.hwFloor===1) ? 132 : undefined)});
     if(t.templeDeco){
       for(const st of t.templeDeco.statues) if(vis(st.x,st.y)) drawables.push({depth:st.x+st.y, draw:()=>drawTempleStatueIso(st)});

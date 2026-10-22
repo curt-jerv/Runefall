@@ -90,7 +90,7 @@ const WM_NODES = {
   frosthold:{x:58,y:33,t:'Frosthold Keep',l:'39',f:'frostholdUnlocked',up:1}, redridge:{x:82,y:36,t:'Redridge Canyon',l:'42',f:'reachedRedridge'}, highward:{x:90,y:19,t:'Highward Fortress',l:'46-50',f:'reachedHighwardWp',dir:'l'},
   cliffside:{x:102,y:24,t:'Cliffside Ascent',l:'55',f:'reachedCliffWp'}, keep:{x:117,y:13,t:'Shadow Keep',l:'61-69',f:'reachedKeepWp'},
 };
-const WM_EDGES = [['town','forest'],['forest','river'],['river','sunlit'],['sunlit','lighthouse'],['sunlit','cemetery'],['sunlit','lakeside'],['lakeside','marsh'],['marsh','highlands'],['highlands','pass'],['pass','summit'],['pass','frosthold'],['summit','shrine'],['frosthold','redridge'],['redridge','highward'],['highward','cliffside'],['cliffside','keep']];
+const WM_EDGES = [['town','forest'],['forest','river'],['river','sunlit'],['sunlit','lighthouse'],['sunlit','cemetery'],['sunlit','lakeside'],['marsh','highlands'],['highlands','pass'],['pass','summit'],['pass','frosthold'],['summit','shrine'],['frosthold','redridge'],['redridge','highward'],['highward','cliffside'],['cliffside','keep']];
 function wmCurrent(){
   const g = game; if(!g) return null;
   // dungeons resolve to the overworld zone they are entered from

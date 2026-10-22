@@ -91,9 +91,8 @@ function edgeLinks(room){
   const add = (gt,k)=>{ if(!gt) return; const side = gt.x < room.w*0.08 ? 'w' : gt.x > room.w*0.92 ? 'e' : gt.y < room.h*0.08 ? 'n' : 's'; L.push({x:gt.x, y:gt.y, pal:EDGE_PAL[k], side}); };
   if(sc==='forest'){ add(room.sunGate,'river'); }
   else if(sc==='sunlitplains'){ add(room.forestGate,'river'); add(room.westGate,'coast'); add(room.eastGate,'lake'); add(room.southGate,'cemetery'); }
-  else if(sc==='lakesideruins'){ add(room.sunlitGate,'sunlit'); add(room.marshGate,'marsh'); }
+  else if(sc==='lakesideruins'){ add(room.sunlitGate,'sunlit'); }
   else if(sc==='cursedcemetery'){ add(room.sunlitGate,'sunlit'); }
-  else if(sc==='blackmarsh'){ add(room.westGate,'lake'); }
   return room._edgeL = L;
 }
 function edgeFill(room, wx, wy){

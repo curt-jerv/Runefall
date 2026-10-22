@@ -274,9 +274,7 @@ function enterLakesideRuins(opts){
   // Waypoint rework: teleporting in via the Teleport menu (opts.atWaypoint)
   // lands the player AT this zone's own waypoint marker, not the generic
   // gate entrance -- see openTeleportMenu's teleportLakesideBtn.
-  if(opts.fromMarsh){
-    g.player.x = g.lake.marshGate.x - 90; g.player.y = g.lake.marshGate.y;
-  } else if(opts.fromSunken){
+  if(opts.fromSunken){
     g.player.x = g.lake.sunkenGate.x; g.player.y = g.lake.sunkenGate.y + 90;
   } else if(opts.fromRuins){
     g.player.x = g.lake.ruinsSpot.x; g.player.y = g.lake.ruinsSpot.y + 85;
