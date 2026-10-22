@@ -32,7 +32,15 @@ const BM_RW = 90, BM_SLICE = 40, BM_TRAIL_OFF = 215, BM_TRAIL_HALFW = 46;
 const BM_BRIDGES = [2400, 4720]; // slice boundaries; the two slices touching each are left open (80px plank bridge)
 function bmRiverY(x){ const f = clamp((bmLowHalf(x)-300)/440, 0.15, 1); return bmLowCenter(x) + f*(280*Math.sin(x/650) + 90*Math.sin(x/240+2)); }
 function bmSliceC(x){ return (Math.floor(x/BM_SLICE)+0.5)*BM_SLICE; }
-function bmGap(c){ for(const b of BM_BRIDGES) if(Math.abs(c-b) < BM_SLICE*1.75) return true; /* (v147) 4 open slices = 160px bridge */ return false; }
+// v534: a small plank bridge near the south-west corner joins the Sunken Depths tunnel's cave mouth to the trail
+const BM_CAVE_BRIDGE = 560;
+let BM_CAVE_SPOT = null;
+function bmCaveSpot(){
+  if(BM_CAVE_SPOT) return BM_CAVE_SPOT;
+  for(let x=190; x<800; x+=30) for(let up=150; up<600; up+=40){ const y = bmBotY(x)-up; if(bmOpenAt(x,y,80) && Math.abs(y-bmRiverY(x)) > BM_RW+160 && Math.abs(y-bmMidY(x)) > bmMidHalf(x)+160) return (BM_CAVE_SPOT = {x, y}); }
+  return (BM_CAVE_SPOT = {x:16, y:bmTrailPt(16).y});
+}
+function bmGap(c){ if(Math.abs(c-BM_CAVE_BRIDGE) < BM_SLICE*1.25) return true; for(const b of BM_BRIDGES) if(Math.abs(c-b) < BM_SLICE*1.75) return true; /* (v147) 4 open slices = 160px bridge */ return false; }
 function bmRiverAt(x,y){
   const c = bmSliceC(x);
   if(bmGap(c)) return false;
@@ -55,6 +63,10 @@ function bmTrailDist(x,y){
     const ya = bmRiverY(b)-BM_TRAIL_OFF, yb = bmRiverY(b)+BM_TRAIL_OFF;
     best = Math.min(best, Math.hypot(x-b, y-clamp(y,ya,yb)));
   }
+  // v534: the side path from the trail, over the little bridge, down to the cave in the south-west corner
+  { const cv = bmCaveSpot(), ya = bmRiverY(BM_CAVE_BRIDGE)-BM_TRAIL_OFF, yb = cv.y;
+    best = Math.min(best, Math.hypot(x-BM_CAVE_BRIDGE, y-clamp(y, Math.min(ya,yb), Math.max(ya,yb))));
+    const cx = clamp(x, Math.min(cv.x, BM_CAVE_BRIDGE), Math.max(cv.x, BM_CAVE_BRIDGE)); best = Math.min(best, Math.hypot(x-cx, y-cv.y)); }
   // the north arm's trail, and the climb joining the two arms near the tower
   { const cx = clamp(x, 0, BM_JOIN_X); best = Math.min(best, Math.hypot(x-cx, y-bmUpTrailY(cx))); }
   { const ya = bmUpTrailY(BM_JOIN_X), yb = bmTrailPt(BM_JOIN_X).y; best = Math.min(best, Math.hypot(x-BM_JOIN_X, y-clamp(y, Math.min(ya,yb), Math.max(ya,yb)))); }
@@ -107,7 +119,7 @@ function makeBlackMarsh(){
     const yc = bmMidY(c), hh = bmMidHalf(c);
     obstacles.push({x:sx, y:yc-hh, w:BM_SLICE+1, h:hh*2, isWater:true, bmMid:true});
   }
-  const westGate = {x:16, y:bmTrailPt(16).y, r:34};
+  const westGate = Object.assign({r:34}, bmCaveSpot());   // v534: the one-way tunnel from the Sunken Depths comes out in the far south-west corner
   const eastGate = {x:w-16, y:bmTrailPt(w-16).y, r:34};
   const highGate = {x:16, y:bmUpTrailY(16), r:34};   // v459: the north arm's far end -- the road up into the Barren Highlands
   // (v262) the Marsh Pool: a sinkhole gate. v490: moved to the north edge of the north arm, east beyond the tower bridge
@@ -148,7 +160,7 @@ function makeBlackMarsh(){
     const px = rand(500, w-500), py = rand(80, h-80-ph);
     const cx = px+pw/2, cy = py+ph/2;
     if(!bmOpenAt(px,py,40) || !bmOpenAt(px+pw,py+ph,40) || !bmOpenAt(px+pw,py,40) || !bmOpenAt(px,py+ph,40)) continue;
-    if(dist({x:cx,y:cy}, highGate) < 420) continue;
+    if(dist({x:cx,y:cy}, highGate) < 420 || dist({x:cx,y:cy}, westGate) < 450) continue;
     const rc = bmRiverY(cx);
     if(Math.abs(cy-rc) < BM_RW+ph/2+70) continue;
     if(Math.abs(cy-bmMidY(cx)) < bmMidHalf(cx)+ph/2+90) continue;   // v490: off the great river's banks
