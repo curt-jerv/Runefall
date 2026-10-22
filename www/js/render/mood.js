@@ -200,7 +200,7 @@ function drawRegionDarkening(g){
     const fh = (g.forest && g.forest.h) || 3800;
     a = 0.2 * (1 - 0.6*sm((p.y - fh*0.5)/(fh*0.46))); col='2,8,14';   // v522: the forest's gloom comes mostly from its own dark colours now
   }
-  else if(g.scene==='rivervalley'){ a = 0.42 - 0.06*sm((p.y-150)/1100); col='2,8,14'; }   // v522: a shade lighter than the Forest, darker than the open Crossroads   // v233: continues the Forest's brightening south gate into open daylight
+  else if(g.scene==='rivervalley'){ a = 0.42 - 0.06*sm((p.y-300)/2200); col='2,8,14'; }   // v522: a shade lighter than the Forest, darker than the open Crossroads   // v233: continues the Forest's brightening south gate into open daylight
   else if(g.scene==='town'){ a = 0.32; col='12,10,34'; }      // v193: Mistfall's dusk
   if(a < 0.005) return;
   ctx.save();
