@@ -197,9 +197,11 @@ function talkLocketWoman(){
       showMsg('New quest: The Silver Locket', 3.0); updateQuestBadge(); saveGame();
     });
   } else if(q.status==='active' && q.progress>=q.total){
-    showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. Keep it, adventurer -- it kept my family safe once, and I would rather it kept you safe than sat in a drawer."', 'Thank you', ()=>{
-      q.status = 'complete'; q.rewarded = true; q.desc = 'You returned the silver locket to Mirelle. She let you keep it.';
-      p.gold += 250; showMsg('Quest complete: The Silver Locket (+250 gold)', 3.2); updateQuestBadge(); saveGame();
+    showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. Keep it, adventurer -- it kept my family safe once. And here: my grandfather had this old tome, I can\'t learn anything from it. Please, take it."', 'Thank you', ()=>{
+      const tome = makeSkillTomeItem(); tome.questDesc = "Mirelle's grandfather's old tome. Read it (Use, or right-click) to gain +1 skill point.";
+      if(!giveRewardIfRoom(p, [tome])) return;
+      q.status = 'complete'; q.rewarded = true; q.desc = 'You returned the silver locket to Mirelle. She let you keep it and gave you her grandfather\'s tome.';
+      p.gold += 250; showMsg('Quest complete: The Silver Locket (+250 gold, Tome of Skill)', 3.4); try{ bagPulse(); }catch(e){} updateQuestBadge(); saveGame();
     });
   } else if(q.status==='active'){
     showNpcText('Mirelle', '"Any sign of the locket? It is in the Dark Crypt, in one of the quiet side chambers. Be careful down there."', 'Close');
