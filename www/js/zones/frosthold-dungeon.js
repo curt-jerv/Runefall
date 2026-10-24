@@ -859,13 +859,23 @@ function hudTextAnchor(belowBanner){
 const _bmQueue = [];
 function showBigMsg(title, sub, dur, small, beast, speech){
   const now = Date.now();
-  if(now < (showBigMsg._until||0)){
+  if(now < (showBigMsg._until||0) && !(showBigMsg._hold && dur < 1e4)){   // a held banner gives way to any new one
     if(_bmQueue.length < 5 && !_bmQueue.some(q=>q[0]===title && q[1]===(sub||''))) _bmQueue.push([title, sub||'', dur, small, beast, speech]);
     return;
   }
   showBigMsgNow(title, sub, dur, small, beast, speech);
 }
-function showBigMsgNext(){ const q = _bmQueue.shift(); if(q) showBigMsgNow.apply(null, q); }
+function showBigMsgNext(){ const q = _bmQueue.shift(); if(q) showBigMsgNow.apply(null, q); else if(showBigMsg._hold) showBigMsgNow(showBigMsg._hold[0], showBigMsg._hold[1], 1e5, true); }
+// v536: a banner that stays up until released (e.g. "Inspect the opened tomb"); other banners still show over it and it comes back after them
+function bigMsgHold(title, sub){
+  const h = showBigMsg._hold; if(h && h[0]===title && h[1]===(sub||'')) return;
+  showBigMsg._hold = [title, sub||'']; showBigMsg._until = 0; showBigMsg(title, sub, 1e5, true);
+}
+function bigMsgRelease(){
+  const h = showBigMsg._hold; if(!h) return; showBigMsg._hold = null;
+  const el = document.getElementById('bigMsg');
+  if(el && el.querySelector('.bmTitle').textContent===h[0]){ showBigMsg._until = 0; clearTimeout(showBigMsg._t); clearTimeout(showBigMsg._q); el.style.transition='opacity .8s'; el.style.opacity=0; setTimeout(()=>{ el.style.transition=''; }, 900); setTimeout(showBigMsgNext, 400); }
+}
 function showBigMsgNow(title, sub, dur, small, beast, speech){
   const el = document.getElementById('bigMsg');
   dur = dur || 4.5; showBigMsg._until = Date.now() + dur*1000 + 250;

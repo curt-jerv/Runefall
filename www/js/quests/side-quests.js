@@ -38,7 +38,7 @@ function defilerSlain(g, e){
   for(const x of g.enemies) if(x.noReward) x.hp = 0;
   if(p.defilerSlain && p.inscriptionTaken){ bossMsg('THE GRAVEROBBER FALLS', 'The possession breaks once more', 3.2); return; }   // v489: a re-kill
   p.defilerSlain = true;
-  showBigMsg('Inspect the crypt', 'The possession breaks -- search the sarcophagus', 4.0, true);   // v490: then 'Return to the graverobbers' once it is searched
+  // v536: 'Inspect the opened tomb' stays up until the sarcophagus is searched (bigMsgHold in the crypt branch of update)
   const q = getQuest(p, QUEST_GRAVEROBBERS.id);
   if(q && q.status==='active'){ q.desc = QUEST_GRAVEROBBERS.descDone; q.progress = q.total; }
   npcMark(p, 'graverobbers', true);
