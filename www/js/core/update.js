@@ -3,6 +3,7 @@ function update(dt){ OBS_FRAME++; OBS_IN_UPDATE = true; try{ updateStep(dt); } f
 function updateStep(dt){
   const g = game, p = g.player, room = g.room;
   try{ dungeonPersist(g); }catch(err){}
+  if(showBigMsg._hold && g.scene!=='darkcrypt') bigMsgRelease();   // v536: a held crypt banner goes when you leave
   if(p.wellRestedT>0) wellRestedTick(p, dt);
   try{ wmMark(g, p); }catch(err){}
   try{ achTick(g, dt); }catch(err){}
@@ -3703,6 +3704,7 @@ function updateStep(dt){
     const nearCemeteryGate = dist(p, g.crypt.cemeteryGate) < g.crypt.cemeteryGate.r + p.r + 22;
     const nearCryptWaypoint = dist(p, g.crypt.waypoint) < g.crypt.waypoint.r + p.r + 24;
     // (v120) once the chest is looted a portal appears beside it, leading back to the cemetery
+    if(g.crypt.bossDone && p.defilerSlain && !p.inscriptionTaken) bigMsgHold('Inspect the opened tomb', ''); else bigMsgRelease();   // v536
     if(g.crypt.bossDone && p.inscriptionTaken && !g.crypt.returnPortal){   // v326: the portal only opens once the sarcophagus has been searched for the Templar Inscription
       g.crypt.returnPortal = {x:g.crypt.chestSpot.x+70, y:g.crypt.chestSpot.y, r:26};
     }

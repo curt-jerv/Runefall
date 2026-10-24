@@ -590,7 +590,6 @@ function render(){
         drawables.push({depth:rp.x+rp.y, draw:()=>drawEdgeLabelIso(rp, 'CURSED CEMETERY')});
       }
       for(const sc of (g.crypt.sideChests||[])) drawables.push({depth:sc.x+sc.y, draw:()=>drawChestIso(sc)});   // v516: dead-end chests
-      if(g.crypt.bossDone && !g.player.inscriptionTaken && g.crypt.tomb) drawables.push({depth:g.crypt.tomb.x+g.crypt.tomb.y+400, draw:()=>drawInteractHintIso(g.crypt.tomb, 72, g.clock||0, '#d8c0ff')});   // v536: search the sarcophagus
       if(!g.player.darkCryptChestLooted && g.crypt.chestShown){
         drawables.push({depth:g.crypt.chestSpot.x+g.crypt.chestSpot.y, draw:()=>drawChestIso(g.crypt.chestSpot)});
       }
