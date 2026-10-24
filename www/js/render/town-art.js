@@ -256,7 +256,7 @@ function drawTownBuildingDetails(b){
   const R=(u,h)=>({x:c2.x+(c1.x-c2.x)*u, y:c2.y+(c1.y-c2.y)*u-h});
   const quad=(a,bb,c,d)=>{ ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(bb.x,bb.y); ctx.lineTo(c.x,c.y); ctx.lineTo(d.x,d.y); ctx.closePath(); };
   const line=(a,bb)=>{ ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(bb.x,bb.y); ctx.stroke(); };
-  const baseH = hz*0.24;
+  const baseH = hz*0.24, frontDoor = b.door && !b.backDoor;   // v536: backDoor = the door is on the far (north) wall, out of sight
   ctx.save(); ctx.lineJoin='round'; ctx.lineCap='round';
   // plaster between the timbers, stone footing below
   ctx.fillStyle='rgba(222,206,176,0.19)'; quad(F(0,baseH),F(1,baseH),F(1,hz),F(0,hz)); ctx.fill();
@@ -283,7 +283,7 @@ function drawTownBuildingDetails(b){
     if(lit){ ctx.fillStyle='rgba(255,190,100,0.12)'; const g=face(u,hz*0.4); ctx.beginPath(); ctx.ellipse(g.x,g.y+6,16,6,0,0,7); ctx.fill(); }
   };
   if(b.window!==false){
-    if(b.door){ win(F,0.19,0.07); win(F,0.81,0.07); if(b.w>150){ win(F,0.075,0.04); win(F,0.925,0.04); } } else { win(F,0.3,0.08); win(F,0.7,0.08); }
+    if(frontDoor){ win(F,0.19,0.07); win(F,0.81,0.07); if(b.w>150){ win(F,0.075,0.04); win(F,0.925,0.04); } } else { win(F,0.3,0.08); win(F,0.7,0.08); }
     win(R,0.5,0.08); if(b.h>130){ win(R,0.2,0.06); win(R,0.8,0.06); }
   }
   // furnace mouth glowing on the right wall (the forge)
@@ -297,7 +297,7 @@ function drawTownBuildingDetails(b){
     ctx.fillStyle='rgba(255,140,50,0.14)'; const g0=R(0.5,baseH); ctx.beginPath(); ctx.ellipse(g0.x+8,g0.y+10,34,12,0,0,7); ctx.fill();
   }
   // door with frame, planks and a lantern beside it
-  if(b.door){
+  if(frontDoor){
     const dw = b.w>200 ? 0.07 : 0.1, dh = hz*0.64;
     ctx.fillStyle='#4a4a54'; quad(F(0.5-dw-0.02,0),F(0.5+dw+0.02,0),F(0.5+dw+0.02,dh+3),F(0.5-dw-0.02,dh+3)); ctx.fill();
     ctx.fillStyle='#3a2414'; quad(F(0.5-dw,0),F(0.5+dw,0),F(0.5+dw,dh),F(0.5-dw,dh)); ctx.fill();

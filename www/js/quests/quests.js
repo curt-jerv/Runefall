@@ -26,7 +26,7 @@ const QUEST_HAMMER = {
 const QUEST_LIGHT_THE_WAY = {
   id:'light_the_way', name:'Light the Way',
   desc:"Bandits hold Lighthouse Tower and its beacon is dark -- no ship can dock without it. The tower stands on the west edge of Withered Crossroads (through River Valley). Climb to the rooftop and light the beacon.",
-  descReturn:"The beacon is lit. Return to Hobbs the barkeeper in Mistfall.",
+  descReturn:"The beacon is lit. Return to Hobbs the Barkeeper inside the Tavern in Mistfall.",
   total:1,
 };
 function getQuest(p, id){ return p.quests ? p.quests.find(q=>q.id===id) : null; }
@@ -165,7 +165,7 @@ function turnOnBeacon(){
   const p = game.player;
   if(p.lighthouseBeaconOn) return;
   p.lighthouseBeaconOn = true;
-  showMsg('The beacon is lit. Return to Hobbs.', 3.0);
+  showMsg('The beacon is lit. Return to Hobbs inside the Tavern.', 3.0);
   updateInteractPrompt(null);
   saveGame();
   checkLightTheWayQuest();
@@ -318,12 +318,16 @@ function talkToBarkeeper(){
   checkLightTheWayQuest();
   const q = getQuest(p, QUEST_LIGHT_THE_WAY.id);
   if(q && q.status==='active' && q.stage==='return'){
-    const rk = p.cls==='warrior' ? 'beer' : 'coffee';   // v490: no mana potions; the Mystic gets coffee
-    const li = classRewardItem(p, Math.max(p.level||1, 15), 'reward');   // v483: class gear instead of a Health Potion
-    if(!giveRewardIfRoom(p, [makePotionItem(rk), li])) return;   // v493: the quest stays open until there is room
-    q.status = 'complete'; q.progress = q.total; p.gold += 200;
-    showMsg('Quest complete: '+QUEST_LIGHT_THE_WAY.name+' \u2014 '+li.name+', a free '+POTION_DEFS[rk].name+' and 200 gold!', 3.6);
-    updateQuestBadge(); bagPulse(); saveGame();
+    // v536: Hobbs thanks you in a dialogue box first; the reward is handed over when you close it
+    showNpcText('Hobbs the Barkeeper', '"Thank you so much for relighting the lighthouse beacon! Now ships can safely dock, and since my supplies came, I can open the tavern again. Here, take this as thanks."', 'Accept', ()=>{
+      if(q.status!=='active') return;
+      const rk = p.cls==='warrior' ? 'beer' : 'coffee';   // v490: no mana potions; the Mystic gets coffee
+      const li = classRewardItem(p, Math.max(p.level||1, 15), 'reward');   // v483: class gear instead of a Health Potion
+      if(!giveRewardIfRoom(p, [makePotionItem(rk), li])) return;   // v493: the quest stays open until there is room
+      q.status = 'complete'; q.progress = q.total; p.gold += 200;
+      showMsg('Quest complete: '+QUEST_LIGHT_THE_WAY.name+' \u2014 '+li.name+', a free '+POTION_DEFS[rk].name+' and 200 gold!', 3.6);
+      updateQuestBadge(); bagPulse(); saveGame();
+    });
   } else if(q && q.status==='complete'){
     showMsg('"Thank you, traveler -- the beacon\'s lit and the Tavern is finally open!"', 2.4);
   } else if(q){
@@ -403,15 +407,16 @@ function checkLightTheWayQuest(){
     if(!p.quests) p.quests = [];
     q = {id:QUEST_LIGHT_THE_WAY.id, name:QUEST_LIGHT_THE_WAY.name, desc:QUEST_LIGHT_THE_WAY.descReturn, status:'active', progress:QUEST_LIGHT_THE_WAY.total, total:QUEST_LIGHT_THE_WAY.total, stage:'return'};
     p.quests.push(q);
-    showMsg('The beacon is lit. Return to Hobbs.', 3.0);
+    showMsg('The beacon is lit. Return to Hobbs inside the Tavern.', 3.0);
     updateQuestBadge(); saveGame();
     return;
   }
+  if(q && q.status==='active' && q.stage==='return') q.desc = QUEST_LIGHT_THE_WAY.descReturn;   // v536: older saves get the new wording
   if(q && q.status==='active' && p.lighthouseBeaconOn && q.stage!=='return'){
     // beacon lit: the quest now waits for the turn-in
     q.stage = 'return'; q.progress = q.total;
     q.desc = QUEST_LIGHT_THE_WAY.descReturn;
-    showMsg('The beacon is lit. Return to Hobbs.', 3.0);
+    showMsg('The beacon is lit. Return to Hobbs inside the Tavern.', 3.0);
     updateQuestBadge();
     saveGame();
   }

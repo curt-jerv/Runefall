@@ -195,9 +195,9 @@ function roadScarecrowTick(g, e, dt){
   if(e.crowCd <= 0){
     e.crowCd = 7;
     const live = g.enemies.filter(x=>x.scareCrow && x.hp>0).length;
-    for(let i=0;i<Math.min(2, 4-live);i++){
+    for(let i=0;i<Math.min(5, 7-live);i++){   // v536: bigger flocks of frailer crows
       const c = spawnEnemy(g, 'vulture', {x:e.x+rand(-40,40), y:e.y+rand(-40,40)}); if(!c) continue;
-      c.scareCrow = true; c.crow = true; c.roadEv = true; c.r = 10; c.maxHp = c.hp = Math.round(c.maxHp*0.55); c.dmg *= 0.6; c.aggroed = true; c.aggroRange = 900; c.noReward = true; c.name = 'Crow';
+      c.scareCrow = true; c.crow = true; c.roadEv = true; c.r = 10; c.maxHp = c.hp = Math.max(1, Math.round(c.maxHp*0.5)); c.dmg *= 0.2; c.aggroed = true; c.aggroRange = 900; c.noReward = true; c.name = 'Crow';
     }
     showMsg('Crows burst from the scarecrow\'s coat!', 1.6, '#c9a050');
   }

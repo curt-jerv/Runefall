@@ -320,8 +320,8 @@ function enterCursedCemetery(from){
   }
   // v532: stragglers shambling along the way down, and crows on the old graves
   for(const a of g.cem.stragglers){ const n = 1 + Math.floor(Math.random()*3); for(let i=0;i<n;i++){ const e = spawnEnemy(g, i===2 || Math.random()<0.2 ? 'skeletonarcher' : 'skeleton', {x:a.x+rand(-70,70), y:a.y+rand(-60,60)}); if(e) e.wanderRadius = 90; } }
-  for(const a of g.cem.crowSpots){ const n = 3 + Math.floor(Math.random()*2); for(let i=0;i<n;i++){ const e = spawnEnemy(g, 'vulture', {x:a.x+rand(-60,60), y:a.y+rand(-50,50)}); if(!e) continue;
-    e.crow = true; e.name = 'Crow'; e.r = 10; e.maxHp = e.hp = Math.round(e.maxHp*0.6); e.dmg *= 0.7; e.aggroRange = 210; e.wanderRadius = 70; } }
+  for(const a of g.cem.crowSpots){ const n = 6 + Math.floor(Math.random()*2); for(let i=0;i<n;i++){ const e = spawnEnemy(g, 'vulture', {x:a.x+rand(-60,60), y:a.y+rand(-50,50)}); if(!e) continue;
+    e.crow = true; e.name = 'Crow'; e.r = 10; e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp*0.5)); e.dmg *= 0.2; /* v536: frail, pecking flocks of 6-7 */ e.aggroRange = 210; e.wanderRadius = 70; } }
   // nothing starts close to the graverobbers' camp
   { const c = g.cem.camp; g.enemies = g.enemies.filter(e=>dist(e, c) > 650); }
   owPoiRoll(g);   // v525: caches, a shrine, a guarded hoard

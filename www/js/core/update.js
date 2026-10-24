@@ -3602,10 +3602,10 @@ function updateStep(dt){
     // -- is exactly what the Barkeeper's Light the Way quest waits on.
     // v237: floors 1-4 never spawn a portal (stairs only). The rooftop's portal appears only once the
     // floor is clear AND the beacon is lit, tucked in the far corner so nobody walks into it by accident.
-    if(!t.clearPortal && g.enemies.length===0 && !t.ft && t.rooftop && t.beacon){   // v486: a portal home as soon as the King and his crew are dead
-      const at = t.bkDeath || {x:t.beacon.x - 30, y:t.beacon.y + 20};
-      t.clearPortal = fixLootSpot(g, {x:clamp(at.x + 110, 60, t.w-60), y:clamp(at.y + 50, 60, t.h-60), r:24, toTown:true});
-      showMsg('A portal to Mistfall opens.', 2.6, '#9fd8ff');
+    if(!t.clearPortal && g.enemies.length===0 && !t.ft && t.rooftop && t.beacon && p.lighthouseBeaconOn){   // v536: only once the beacon is lit, and it leads out to the Crossroads at the tower's door
+      const at = {x:t.beacon.x - 30, y:t.beacon.y + 20};
+      t.clearPortal = fixLootSpot(g, {x:clamp(at.x + 110, 60, t.w-60), y:clamp(at.y + 50, 60, t.h-60), r:24});
+      showMsg('A portal to the Withered Crossroads opens.', 2.6, '#9fd8ff');
     }
     if(t.rooftop && !t.ft && g.enemies.length===0){
       if(!p.lighthouseChestLooted && !g.chest){ const at = t.bkDeath || {x:t.beacon.x + 70, y:t.beacon.y + 60}; g.chest = fixLootSpot(g, {x:clamp(at.x, 60, t.w-60), y:clamp(at.y, 60, t.h-60), r:20, opened:false}); }
@@ -3767,7 +3767,7 @@ function updateStep(dt){
       for(let i=n0;i<g.loot.length;i++) fixLootSpot(g, g.loot[i]);
       g.particles.push({type:'burst', x:sc.x, y:sc.y, t:0.4, max:0.4, color:'#e8c44a'});
       showMsg('A forgotten chest', 1.8);
-      if(sc.locket){ forceAddToBag(p, makeSilverLocketItem()); silverLocketFound(p); showBigMsg('You found a silver locket!', 'Return it to the woman in Mistfall.', 3.2); bagPulse(); saveGame(); }   // v519
+      if(sc.locket){ forceAddToBag(p, makeSilverLocketItem()); silverLocketFound(p); showBigMsg('You found a silver locket!', 'Return it to Mirelle in Mistfall.', 3.2); bagPulse(); saveGame(); }   // v519
     }
     if(!p.darkCryptChestLooted && g.crypt.chestShown && dist(p, g.crypt.chestSpot) < g.crypt.chestSpot.r + p.r){
       p.darkCryptChestLooted = true;
