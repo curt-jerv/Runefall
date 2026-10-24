@@ -184,7 +184,7 @@ const LOCKET_QUEST = 'silver_locket';
 function locketWomanMark(p){ const q = getQuest(p, LOCKET_QUEST); return !q || (q.status==='active' && q.progress>=q.total); }
 function silverLocketFound(p){
   const q = getQuest(p, LOCKET_QUEST); if(!q || q.status!=='active') return;
-  q.progress = q.total; q.desc = 'You found the silver locket in the Dark Crypt. Return to the woman in Mistfall.';
+  q.progress = q.total; q.desc = 'You found the silver locket in the Dark Crypt. Return it to Mirelle in Mistfall.';
   updateQuestBadge();
 }
 // v520: Mirelle keeps the locket -- take it from the body, the bag or the stash
@@ -199,7 +199,7 @@ function talkLocketWoman(){
   const p = game.player, q = getQuest(p, LOCKET_QUEST);
   if(!q){
     showNpcText('Mirelle', '"I came in on the evening ship. My family lies in the Dark Crypt, and my grandmother\'s silver locket was buried with them -- it is all I have left of her. Please, search the crypt\'s side chambers for it."', 'I will look for it', ()=>{
-      addQuestOnce(p, LOCKET_QUEST, 'The Silver Locket', "Search for the woman's silver locket in the Dark Crypt.", 1);
+      addQuestOnce(p, LOCKET_QUEST, 'The Silver Locket', "Search the Dark Crypt for Mirelle's silver locket.", 1);
       npcMark(p, 'mirelle', false);
       showMsg('New quest: The Silver Locket', 3.0); updateQuestBadge(); saveGame();
     });

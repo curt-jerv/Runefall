@@ -181,27 +181,35 @@ function makeDarkCrypt(){
 // Repopulates every visit, same as every other repeatable zone's packs
 // (Cursed Cemetery excepted, which is a one-time-clear checkpoint zone) --
 // only the chest itself (p.darkCryptChestLooted) is a permanent one-shot.
+// v536: crypt bats -- quick little fliers in swarms, half a bat's life and a fifth of its bite, no fire
+function cryptBat(g, x, y){
+  const b = spawnEnemy(g, 'firebat', {x, y}); if(!b) return null;
+  b.reg = true; b.color = '#4a3c56'; b.dmgType = null; b.dmgSplit = null; b.cryptBat = true;
+  b.hp = b.maxHp = Math.max(1, Math.round(b.maxHp*0.5)); b.dmg *= 0.2;
+  return b;
+}
 function spawnDarkCryptPopulation(g){
   // v503: the bigger crypt is stocked in loose packs -- every chamber holds one or two packs, the tunnels have pickets of skeletons,
   // and the vaults off the main path are a little fuller. Packs keep their distance from each other and from the entrance.
   const C = g.crypt, e0 = rectCenter(C.entranceRoom), centers = [];
   const okSpot = (x,y,gap)=> Math.hypot(x-e0.x, y-e0.y) > 520 && !posBlockedByObstacles(x, y, 20, C.obstacles) && centers.every(c=>Math.hypot(c.x-x, c.y-y) > gap);
   const pack = (x, y, type, n, spread)=>{ centers.push({x,y}); for(let k=0;k<n;k++){ const px = x+rand(-spread,spread), py = y+rand(-spread,spread); if(!posBlockedByObstacles(px, py, 18, C.obstacles)) spawnEnemy(g, type, {x:px, y:py}); } };
+  // v536: smaller packs (3-4) spread over more spots instead of big 5-packs plus a density top-up, and bat swarms
   const kinds = ['skeleton','skeleton','zombie','spider'];
+  const packSize = t=> t==='skeleton' ? 3+Math.floor(Math.random()*2) : 3;
+  const roomSpot = (r, gap)=>{ for(let t=0;t<14;t++){ const x = rand(r.x+110, r.x+r.w-110), y = rand(r.y+110, r.y+r.h-110); if(okSpot(x, y, gap)) return {x, y}; } return null; };
   for(const r of C.rooms){
-    const side = !(C.mainPath && C.mainPath.indexOf(r) >= 0), npk = (side || Math.random()<0.7) ? 2 : 1;
+    const side = !(C.mainPath && C.mainPath.indexOf(r) >= 0), npk = 2 + (side && Math.random()<0.4 ? 1 : 0);
     for(let k=0;k<npk;k++){
-      const type = kinds[Math.floor(Math.random()*kinds.length)];
-      for(let t=0;t<12;t++){
-        const x = rand(r.x+110, r.x+r.w-110), y = rand(r.y+110, r.y+r.h-110);
-        if(okSpot(x, y, 230)){ pack(x, y, type, type==='skeleton' ? 5 : type==='zombie' ? 4 : 3, 70); break; }
-      }
+      const type = kinds[Math.floor(Math.random()*kinds.length)], s = roomSpot(r, 260);
+      if(s) pack(s.x, s.y, type, packSize(type), 60);
     }
+    if(Math.random() < 0.5){ const s = roomSpot(r, 200); if(s){ centers.push(s); for(let k=0, n=6+Math.floor(Math.random()*3); k<n; k++) cryptBat(g, s.x+rand(-60,60), s.y+rand(-60,60)); } }
   }
-  // pickets along the tunnels: a pair of skeletons about every 600px of corridor
+  // pickets along the tunnels: a pair of skeletons about every 700px of corridor
   for(const tn of (C.tunnels||[])){
     for(const r of tn.rects){
-      const horiz = r.w >= r.h, L = horiz ? r.w : r.h, n = Math.floor(L/600);
+      const horiz = r.w >= r.h, L = horiz ? r.w : r.h, n = Math.floor(L/700);
       for(let k=0;k<n;k++){
         const t = (k+0.5+rand(-0.25,0.25))/n, x = horiz ? r.x+r.w*t : r.x+r.w/2, y = horiz ? r.y+r.h/2 : r.y+r.h*t;
         if(C.rooms.concat([C.entranceRoom, C.exitRoom]).some(q=> x>q.x-60 && x<q.x+q.w+60 && y>q.y-60 && y<q.y+q.h+60)) continue;
@@ -209,14 +217,21 @@ function spawnDarkCryptPopulation(g){
       }
     }
   }
-  // one big brute in the first corridor so the dungeon map can be found early
-  { const a1 = rectCenter(C.rooms[C.rooms.indexOf(C.mainPath[0])]);
-    const bx = (e0.x+a1.x)/2, by = (e0.y+a1.y)/2;
+  // v536: the first pack on the way in is led by the Map Bearer -- a big skeleton brute ringed in gold with three skeletons
+  { const a1 = rectCenter(C.mainPath[0]), er = C.entranceRoom;
+    let bx = (e0.x+a1.x)/2, by = (e0.y+a1.y)/2;
+    const tn = (C.tunnels||[]).find(q=>Math.abs(q.a.x-e0.x)<1 && Math.abs(q.a.y-e0.y)<1);   // the tunnel out of the entrance room
+    const pts = [];
+    if(tn) for(const r of tn.rects){ const horiz = r.w >= r.h, L = horiz ? r.w : r.h; for(let d=20; d<L; d+=40) pts.push(horiz ? {x:r.x+d, y:r.y+r.h/2} : {x:r.x+r.w/2, y:r.y+d}); }
+    const outside = q=> !(q.x>er.x-180 && q.x<er.x+er.w+180 && q.y>er.y-180 && q.y<er.y+er.h+180);
+    const pick = pts.filter(q=>outside(q) && !posBlockedByObstacles(q.x, q.y, 30, C.obstacles)).sort((u,v)=>Math.hypot(u.x-e0.x,u.y-e0.y)-Math.hypot(v.x-e0.x,v.y-e0.y))[0];
+    if(pick){ bx = pick.x; by = pick.y; }
     const b = spawnEnemy(g, 'skeletonbrute', {x:bx, y:by});
-    if(b){ b.r = Math.round(b.r*1.35); b.maxHp = Math.round(b.maxHp*2.2); b.hp = b.maxHp; b.dmg *= 1.1; } }
+    if(b){ b.r = Math.round(b.r*1.35); b.maxHp = Math.round(b.maxHp*2.2); b.hp = b.maxHp; b.dmg *= 1.1; b.mapCarrier = true; b.mapHolder = true; b.xpMul = Math.max(b.xpMul||1, 2.5); b.cryptBearer = true; }
+    for(let k=0;k<3;k++){ const a = k/3*Math.PI*2, x = bx+Math.cos(a)*55, y = by+Math.sin(a)*55; if(!posBlockedByObstacles(x, y, 18, C.obstacles)) spawnEnemy(g, 'skeleton', {x, y}); } }
   // v490: the entrance / waypoint room is a safe room -- anything that rolled a spot in it goes
   { const er = g.crypt.entranceRoom, m = 140;
-    g.enemies = g.enemies.filter(e=>!(e.x>er.x-m && e.x<er.x+er.w+m && e.y>er.y-m && e.y<er.y+er.h+m)); }
+    g.enemies = g.enemies.filter(e=>e.cryptBearer || !(e.x>er.x-m && e.x<er.x+er.w+m && e.y>er.y-m && e.y<er.y+er.h+m)); }
   // v321: the vampire pack in the chamber before the boss hall is gone
   // v275: elite skeleton wardens guard the hall before the Defiler's Tomb
   { const hr = g.crypt.exitRoom;

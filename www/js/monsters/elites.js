@@ -88,7 +88,7 @@ function dungeonStoreGet(g, key, floor){ return g.dStore && g.dStore[key] && g.d
 // v219: dungeon floors are topped up to ~20 monsters per million px of walkable floor, in packs of 3-5 of the
 // floor's own monster types, away from the entrance and boss rooms (Bear Cave / Forgotten Tower were ~4/Mpx).
 const DUNGEON_DENSITY_TARGET = 20;
-const DENSIFY_SCENES = {lighthouse:1, spiderlair:1, bearcave:1, minotaurcave:1, darkcrypt:1, raptorlair:1};
+const DENSIFY_SCENES = {lighthouse:1, spiderlair:1, bearcave:1, minotaurcave:1, raptorlair:1};   // v536: the Dark Crypt is stocked by its own packs only
 // v474: the Bear Cave holds fewer bears; v520: more, smaller groups of 2-3 (3 with the guardian)
 const DENSIFY_TUNE = {bearcave:{density:9, spread:70, gap:400, packMin:2, packMax:3}, spiderlair:{density:20, spread:60, gap:300, pack:3}, darkcrypt:{density:27, spread:75, gap:330, pack:4}};   // v503: the big crypt tops up in loose packs of 4   // v480: spiders in many packs of exactly 3
 function densifyDungeon(g){

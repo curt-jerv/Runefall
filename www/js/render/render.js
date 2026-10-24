@@ -188,6 +188,7 @@ function render(){
         const tb = g.town.tavern;
         drawables.push({depth:(tb.x+tb.w/2)+(tb.y+tb.h/2), occluder:true, wx:tb.x+tb.w/2, wy:tb.y+tb.h/2, draw:()=>drawBuildingIso(tb)});
         drawables.push({depth:g.town.tavernSign.x+g.town.tavernSign.y, draw:()=>drawSignIso(g.town.tavernSign, tavernSignLines(p))});
+        if(tavernIsOpen(p)) drawables.push({depth:g.town.tavernSign.x+g.town.tavernSign.y+0.5, draw:()=>drawOpenPlaqueIso(g.town.tavernSign, g.clock||0)});   // v536
         // Once the quest is complete he's moved inside to work the bar --
         // see the Tavern-interior draw block's barkeeperSpot -- so his
         // outdoor spot is no longer drawn (one barkeeper, not two).
@@ -553,6 +554,7 @@ function render(){
       // (see drawTombIso).
       drawables.push({depth:g.cem.statue.x+g.cem.statue.y+30, draw:()=>drawGraveStatueIso(g.cem.statue, g.clock||0, !!(g.cem.evt && g.cem.evt.stage>0), !!g.player.cemeteryCleared)});
       drawables.push({depth:g.cem.tomb.x+g.cem.tomb.y, draw:()=>drawTombIso(g.cem.tomb, g.clock||0, !!g.player.cemeteryCleared)});
+      if(!g.player.cemeteryCleared && !(g.cem.evt && g.cem.evt.stage>0)) drawables.push({depth:g.cem.statue.x+g.cem.statue.y+400, draw:()=>drawInteractHintIso(g.cem.statue, 150, g.clock||0)});   // v536
       drawables.push({depth:g.cem.tomb.x+g.cem.tomb.y+1, draw:()=>drawEdgeLabelIso(g.cem.tomb, g.player.cemeteryCleared ? 'DARK CRYPT' : 'SEALED TOMB')});
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -588,6 +590,7 @@ function render(){
         drawables.push({depth:rp.x+rp.y, draw:()=>drawEdgeLabelIso(rp, 'CURSED CEMETERY')});
       }
       for(const sc of (g.crypt.sideChests||[])) drawables.push({depth:sc.x+sc.y, draw:()=>drawChestIso(sc)});   // v516: dead-end chests
+      if(g.crypt.bossDone && !g.player.inscriptionTaken && g.crypt.tomb) drawables.push({depth:g.crypt.tomb.x+g.crypt.tomb.y+400, draw:()=>drawInteractHintIso(g.crypt.tomb, 72, g.clock||0, '#d8c0ff')});   // v536: search the sarcophagus
       if(!g.player.darkCryptChestLooted && g.crypt.chestShown){
         drawables.push({depth:g.crypt.chestSpot.x+g.crypt.chestSpot.y, draw:()=>drawChestIso(g.crypt.chestSpot)});
       }
@@ -1025,3 +1028,20 @@ function render(){
   { const bmEl = document.getElementById('bigMsg'); if(bmEl && parseFloat(bmEl.style.opacity||0) > 0.05) hudTextAnchor(false); }   // v507: a banner already up slides below the boss bar when it appears
 }
 
+// v536: "interact here" marker -- a pulsing gold ring on the ground and a bobbing gold arrow above the object
+function drawInteractHintIso(pt, lift, clock, color){
+  const q = toIso(pt.x, pt.y), col = color || '#ffd25a', pu = 0.5+0.5*Math.sin(clock*4), bob = Math.sin(clock*3.2)*6;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = col; ctx.globalAlpha = 0.35+0.35*pu; ctx.lineWidth = 3;
+  const rr = 46 + 10*pu; ctx.beginPath(); ctx.ellipse(q.x, q.y, rr, rr*0.5, 0, 0, 7); ctx.stroke();
+  ctx.globalAlpha = 0.18+0.15*pu; ctx.lineWidth = 7; ctx.beginPath(); ctx.ellipse(q.x, q.y, rr-6, (rr-6)*0.5, 0, 0, 7); ctx.stroke();
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  const ax = q.x, ay = q.y - lift + bob;
+  const gl = ctx.createRadialGradient(ax, ay-8, 2, ax, ay-8, 30); gl.addColorStop(0, 'rgba(255,220,120,'+(0.45+0.25*pu)+')'); gl.addColorStop(1, 'rgba(255,220,120,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(ax, ay-8, 30, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(ax-13, ay-24); ctx.lineTo(ax+13, ay-24); ctx.lineTo(ax+13, ay-12); ctx.lineTo(ax+22, ay-12); ctx.lineTo(ax, ay+8); ctx.lineTo(ax-22, ay-12); ctx.lineTo(ax-13, ay-12); ctx.closePath();
+  ctx.fillStyle = col; ctx.strokeStyle = '#3a2408'; ctx.lineWidth = 2.5; ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,230,0.7)'; ctx.fillRect(ax-9, ay-21, 4, 9);
+  ctx.restore();
+}

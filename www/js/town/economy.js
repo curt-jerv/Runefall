@@ -508,10 +508,9 @@ function makeTown(charLevel){
     // v490: once the tavern re-opens (tavernIsOpen) two townsfolk stand about the square and the ship's captain
     // waits on the dock; talking to any of them gives a random tip (talkTownTip)
     tipNpcs:[
-      {id:1, x:905, y:332, r:18, kind:'townsfolk', name:'Townswoman', robe:'#5a3a4a', hood:'#3a2a34', long:true},
       {id:2, x:1156, y:272, r:18, kind:'townsfolk', name:'Townsman', robe:'#3e4a3a', tool:'lantern'},   // v507: stands in front of the timber house door (next to the hunter's camp)
       {id:3, x:172, y:1022, r:18, kind:'dockCaptain', name:'Ship Captain', robe:'#26304a', hat:'captain'},
-      {id:4, x:236, y:1080, r:18, kind:'locketWoman', name:'Mirelle', robe:'#6b4a5e', hood:'#44303d', long:true},   // v519: arrives with the ship; The Silver Locket quest
+      {id:4, x:905, y:332, r:18, kind:'locketWoman', name:'Mirelle', robe:'#6b4a5e', hood:'#44303d', long:true},   // v519: arrives with the ship; The Silver Locket quest. v536: stands in the square (the townswoman's old spot)
     ],
     spawn:{x:160, y:TOWN_ROAD_Y},
     // v86: `stock` is now the CURRENTLY OPEN vendor's stock array --
@@ -526,7 +525,7 @@ function makeTown(charLevel){
     // ringing the edges of the much bigger square, plus perimeter trees
     decoBuildings:[
       // deco house (south-east of the well)
-      {x:1000, y:860, w:200, h:140, hz:64, roofH:48,
+      {x:1000, y:860, w:200, h:140, hz:64, roofH:48, backDoor:true,
        wallTop:'#4e4a54', wallRight:'#1e1b24', wallFront:'#2e2a36',
        roofRight:'#231f2c', roofFront:'#342e42', door:true, window:true, style:'town', chimney:true, sign:'book'},
       // chapel (north, east of the tavern)
@@ -536,19 +535,20 @@ function makeTown(charLevel){
       {x:1060, y:90, w:190, h:140, hz:64, roofH:50, wallTop:'#6a5646', wallRight:'#2e2418', wallFront:'#4a3a2a',
        roofRight:'#55291f', roofFront:'#743626', door:true, window:true, style:'town', chimney:true},
       // warehouse (south, below the well)
-      {x:600, y:690, w:200, h:150, hz:62, roofH:44, wallTop:'#5a544a', wallRight:'#24201a', wallFront:'#3e3a32',
+      {x:600, y:690, w:200, h:150, hz:62, roofH:44, backDoor:true, wallTop:'#5a544a', wallRight:'#24201a', wallFront:'#3e3a32',
        roofRight:'#352c22', roofFront:'#4a3e30', door:true, window:true, style:'town', sign:'sack', shutter:'#2a2a2a'},
       // fisherman's cottage by the docks (turf roof)
-      {x:560, y:930, w:180, h:130, hz:60, roofH:48, wallTop:'#58564a', wallRight:'#22221c', wallFront:'#46443a',
+      {x:560, y:930, w:180, h:130, hz:60, roofH:48, backDoor:true, wallTop:'#58564a', wallRight:'#22221c', wallFront:'#46443a',
        roofRight:'#2a382a', roofFront:'#3a4f36', door:true, window:true, style:'town', chimney:true, sign:'fish', shutter:'#2e4a3a'},
       // east houses
-      {x:1100, y:580, w:190, h:150, hz:64, roofH:50, wallTop:'#62564a', wallRight:'#2a2018', wallFront:'#483a2e',
+      {x:1100, y:580, w:190, h:150, hz:64, roofH:50, backDoor:true, wallTop:'#62564a', wallRight:'#2a2018', wallFront:'#483a2e',
        roofRight:'#432a3a', roofFront:'#5c3a50', door:true, window:true, style:'town', chimney:true},
-      {x:1450, y:590, w:190, h:150, hz:64, roofH:50, wallTop:'#5a5448', wallRight:'#26201a', wallFront:'#42382c',
+      {x:1450, y:590, w:190, h:150, hz:64, roofH:50, backDoor:true, wallTop:'#5a5448', wallRight:'#26201a', wallFront:'#42382c',
        roofRight:'#2e3a46', roofFront:'#3e5060', door:true, window:true, style:'town', chimney:true, sign:'mug'},
     ],
+    // v536: the five houses south of the road have their doors on the far (north) wall, so their paths come in from that side
     paths:[ {x:190,y:140,w:60,h:310}, {x:555,y:240,w:50,h:210}, {x:870,y:230,w:50,h:220}, {x:1130,y:230,w:50,h:220}, {x:330,y:510,w:40,h:100}, {x:880,y:510,w:50,h:110},
-            {x:470,y:510,w:60,h:540}, {x:420,y:995,w:110,h:70}, {x:675,y:840,w:50,h:70}, {x:1170,y:730,w:50,h:60}, {x:1525,y:740,w:50,h:60}, {x:560,y:510,w:50,h:140}, {x:1115,y:510,w:50,h:70}, {x:1475,y:510,w:50,h:80} ],
+            {x:470,y:510,w:60,h:540}, {x:420,y:995,w:110,h:70}, {x:560,y:510,w:50,h:140}, {x:1170,y:510,w:50,h:70}, {x:1520,y:510,w:50,h:80}, {x:675,y:630,w:50,h:60}, {x:625,y:870,w:50,h:60}, {x:1075,y:790,w:50,h:70} ],
     boat:{x:190, y:1172, s:3.6},
     props:[],
     trees:[

@@ -948,3 +948,15 @@ function drawLootIso(l, clock){
   }
   ctx.restore();
 }
+// v536: a small "OPEN" board hanging under the tavern sign once the tavern is open again
+function drawOpenPlaqueIso(pos, clock){
+  const iso = toIso(pos.x, pos.y), sw = Math.sin((clock||0)*1.6)*0.05;
+  ctx.save(); ctx.translate(iso.x, iso.y-30); ctx.rotate(sw);
+  ctx.strokeStyle = '#2a2016'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-12, 7); ctx.moveTo(14, 0); ctx.lineTo(12, 7); ctx.stroke();
+  const g = ctx.createLinearGradient(0, 7, 0, 25); g.addColorStop(0, '#7a5634'); g.addColorStop(1, '#4e3420');
+  ctx.fillStyle = g; roundRect(-22, 7, 44, 18, 3); ctx.fill(); ctx.strokeStyle = '#1e150c'; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.font = "bold 11px Cinzel, Georgia, 'Times New Roman', serif"; ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(255,200,90,0.9)'; ctx.shadowBlur = 6; ctx.fillStyle = '#ffd77a'; ctx.fillText('OPEN', 0, 20);
+  ctx.restore();
+}
