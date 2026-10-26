@@ -212,6 +212,9 @@ SND_MAP.deathSlime.f.push('f_gurgleLo1','f_gurgleLo2');
 SND_MAP.enemyMunch = {f:["f_munch1", "f_munch2", "f_munch3", "f_munch4", "f_munch5", "f_munch6"], v:0.5};
 SND_MAP.bash = {f:['f_bash'], v:0.7, layer:1};
 SND_MAP.clang = {f:['f_clankHi','f_clank2','f_clank8'], v:0.55, layer:1};
+// v539: explicit defensive-contact events so successful blocks/parries do not feel silent.
+SND_MAP.shieldBlock = {f:['f_clank1','f_clank2','f_clank3','f_clank4','f_clank5','f_clank6'], v:0.62};
+SND_MAP.parry = {f:['f_clankHi','f_clank1','f_clank2'], v:0.68};
 SND_MAP.poison = {f:['f_gurgle1','f_gurgle2'], v:0.5, layer:1};
 // v539: use a clean airy swish for dodges; the old roll samples ended in a hard, footstep-like clatter.
 SND_MAP.dodge = {f:['f_swish1','f_swish2'], v:0.42};
