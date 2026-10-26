@@ -213,8 +213,12 @@ SND_MAP.enemyMunch = {f:["f_munch1", "f_munch2", "f_munch3", "f_munch4", "f_munc
 SND_MAP.bash = {f:['f_bash'], v:0.7, layer:1};
 SND_MAP.clang = {f:['f_clankHi','f_clank2','f_clank8'], v:0.55, layer:1};
 SND_MAP.poison = {f:['f_gurgle1','f_gurgle2'], v:0.5, layer:1};
-SND_MAP.dodge = {f:['f_roll1','f_roll2','f_roll3'], v:0.55, layer:1};
-SND_MAP.potion = {seq:[['f_quaff',0,0.6],['f_swallow',0.42,0.7]]};
+// v539: use a clean airy swish for dodges; the old roll samples ended in a hard, footstep-like clatter.
+SND_MAP.dodge = {f:['f_swish1','f_swish2'], v:0.42};
+// v539: make potion drinking read as a clear gulp, not just bottle handling.
+SND_MAP.potion = {seq:[['f_quaff',0,0.52],['f_swallow',0.26,0.82],['f_swallow',0.48,0.68]]};
+// Boss health globes are consumed instantly, but get a distinct double-gulp so they feel like a restorative pickup.
+SND_MAP.globeDrink = {seq:[['f_swallow',0,0.82],['f_swallow',0.2,0.7]]};
 SND_MAP.door.f.push(...["f_door1", "f_door2", "f_door3", "f_door4"]);
 SND_MAP.equipWeapon.f.push(...["f_slide1", "f_slide2", "f_slide3", "f_slide4"]);
 SND_MAP.equipArmor.f.push('f_chain1','f_chain2');
@@ -369,7 +373,7 @@ function audioFrame(dt){
   for(let i=0;i<loot.length;i++){ const l = loot[i]; lc.add(l);
     if(!st.lootSeen.has(l)){ st.lootSeen.add(l); if(!l.playerDropped && l.type==='item' && l.item){ const r = l.item.rarity; if(r==='rare'||r==='unique'||r==='set'||r==='reward'||r==='legendary') sfxPlay('lootRare', 0.9); else if(r==='magic') sfxPlay('lootDrop', 0.7); } }
   }
-  for(const l of st.prevLoot){ if(!lc.has(l) && Math.hypot(l.x-p.x,l.y-p.y)<130){ if(l.type==='item') sfxPlay('pickup', 1); } }
+  for(const l of st.prevLoot){ if(!lc.has(l) && Math.hypot(l.x-p.x,l.y-p.y)<130){ if(l.type==='item') sfxPlay('pickup', 1); else if(l.type==='potion') sfxPlay('globeDrink', 0.9); } }
   st.prevLoot = loot.slice();
   if(g.chest){ if(g.chest.opened && !st.chestOpen){ sfxPlay('chest', 1); } st.chestOpen = !!g.chest.opened; } else st.chestOpen = false;
 }
