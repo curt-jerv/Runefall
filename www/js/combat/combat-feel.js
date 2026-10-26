@@ -145,7 +145,7 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
   // Block roll: base (shield equipped) + Riposte + Defensive Stance, all
   // folded into blockChance()'s own overall cap (see its definition).
   if((p.blocking || p.rallyT>0) && Math.random()<blockChance(p)){
-    showMsg('Blocked!', 0.5);
+    showMsg('Blocked!', 0.5); sfxPlay('shieldBlock', 0.85);
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.25, max:0.25, color:'#cdd8e6'});
     // v189 Riposte: a block feeds Rage and counter-strikes the attacker
     const fRank = (p.skills && effectiveRank(p,'riposte')) || 0;
@@ -161,10 +161,10 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
     return;
   }
   { const sb = soulShieldBlock(p);   // v489 Soul Shield: the souls you hold turn blows aside
-    if(sb>0 && Math.random()<sb){ showMsg('Blocked!', 0.5); g.particles.push({type:'burst', x:p.x, y:p.y-18, t:0.25, max:0.25, color:'#f4f0ff'}); return; } }
+    if(sb>0 && Math.random()<sb){ showMsg('Blocked!', 0.5); sfxPlay('holy', 0.65); g.particles.push({type:'burst', x:p.x, y:p.y-18, t:0.25, max:0.25, color:'#f4f0ff'}); return; } }
   { const pc = parryChance(p);
     if(pc>0 && Math.random()<pc){
-      showMsg('Parried!', 0.5);
+      showMsg('Parried!', 0.5); sfxPlay('parry', 0.9);
       p.riposteT = RIPOSTE_DUR;
       g.particles.push({type:'burst', x:p.x, y:p.y, t:0.25, max:0.25, color:'#ffe27a'});
       // v419: Riposte also works with Parry -- a parry counter-strikes and feeds Rage just like a shield block
