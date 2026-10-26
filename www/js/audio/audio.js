@@ -383,11 +383,14 @@ function audHitKind(e, big){
 }
 function audDeathKind(e){
   const t = e.type||'';
-  if(e.isBoss||e.isLairBoss||e.r>=26||/troll|trex|gojira|balrog|colossus|golem|mastodon|leviathan/.test(t)) return 'deathBig';
+  // v538: named bosses keep their heavy death; humanoids must not inherit beast deaths just because their hitbox is large.
+  if(e.isBoss||e.isLairBoss||/troll|trex|gojira|balrog|colossus|golem|mastodon|leviathan/.test(t)) return 'deathBig';
   if(/wraith|ghost|shade|spirit|ghoul|risendead|zombie|vampire|lich/.test(t)) return 'deathShade';
   if(/slime|ooze|toad|leech|plant|bog/.test(t)) return 'deathSlime';
   if(/skeleton|bone/.test(t)) return 'deathBone';
-  if(e.r>=16 || /bear|boar|wolf|alligator|raptor|hound|brute/.test(t)) return 'deathBeast';
+  if(/dwarf|bandit|templar|cultist|shield|human|raider|guard|knight|mercenary|graverobber|archer|warrior|soldier|rogue|assassin|brigand|barbarian|outlaw|hunter|squire|brute/.test(t)) return 'deathSmall';
+  if(e.r>=26 || /bear|boar|wolf|alligator|raptor|hound/.test(t)) return 'deathBig';
+  if(e.r>=16) return 'deathBeast';
   return 'deathSmall';
 }
 // interface clicks
