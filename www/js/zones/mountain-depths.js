@@ -430,16 +430,16 @@ function makeMinerRing(p){
 function talkMiner(){
   const g = game, p = g.player, q = p.minerQ||0;
   if(q===0){
-    showNpcText('Lost Miner', '"Thank the stars, a living face! We came down here looking for gold and got turned around in these tunnels. Something is stirring out there. Help us get out of here!"', 'I’ll help', ()=>{
+    voicePlay('miner_offer'); showNpcText('Lost Miner', '"Thank the stars, a living face! We came down here looking for gold and got turned around in these tunnels. Something is stirring out there. Help us get out of here!"', 'I’ll help', ()=>{
       p.minerQ = 1;
       addQuestOnce(p, 'miners_lost', 'Lost in the Depths', 'Three lost miners are camped in the Mountain Depths. Hold off whatever is coming for them.', 1);
       showMsg('New quest: Lost in the Depths', 3.0); updateQuestBadge(); saveGame();
       startMinerSwarm(g);
     });
   } else if(q===1){
-    showNpcText('Lost Miner', '"Here they come! Don’t let them reach us!"', 'Close');
+    voicePlay('miner_coming', {gap:5}); showNpcText('Lost Miner', '"Here they come! Don’t let them reach us!"', 'Close');
   } else if(q===2){
-    showNpcText('Lost Miner', '"You did it! Thanks. We’re gonna make a break for the exit now. Have this ring we found down here."', 'Take the ring', ()=>{
+    voicePlay('miner_reward'); showNpcText('Lost Miner', '"You did it! Thanks. We’re gonna make a break for the exit now. Have this ring we found down here."', 'Take the ring', ()=>{
       const it = makeMinerRing(p); if(!giveRewardIfRoom(p, [it])) return; bagPulse();   // v493
       p.minerQ = 3;
       const qq = getQuest(p, 'miners_lost'); if(qq){ qq.status = 'complete'; qq.rewarded = true; qq.progress = qq.total; qq.desc = 'The miners made it out. They left you a ring.'; }
@@ -447,7 +447,7 @@ function talkMiner(){
       showMsg('Reward: '+it.name, 3.2); updateQuestBadge(); saveGame();
       g.minerRun = g.miners.slice();
     });
-  } else showNpcText('Lost Miner', '"Go on, we’re heading out."', 'Close');
+  } else { voicePlay('miner_leaving', {gap:5}); showNpcText('Lost Miner', '"Go on, we’re heading out."', 'Close'); }
 }
 function updateDeepMine(g, dt){
   const p = g.player, t = g.tower;

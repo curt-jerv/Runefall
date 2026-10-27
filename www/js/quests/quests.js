@@ -321,7 +321,7 @@ function talkToBarkeeper(){
   const q = getQuest(p, QUEST_LIGHT_THE_WAY.id);
   if(q && q.status==='active' && q.stage==='return'){
     // v536: Hobbs thanks you in a dialogue box first; the reward is handed over when you close it
-    showNpcText('Hobbs the Barkeeper', '"Thank you so much for relighting the lighthouse beacon! Now ships can safely dock, and since my supplies came, I can open the tavern again. Here, take this as thanks."', 'Accept', ()=>{
+    voicePlay('hobbs_ltw_done'); showNpcText('Hobbs the Barkeeper', '"Thank you so much for relighting the lighthouse beacon! Now ships can safely dock, and since my supplies came, I can open the tavern again. Here, take this as thanks."', 'Accept', ()=>{
       if(q.status!=='active') return;
       const rk = p.cls==='warrior' ? 'beer' : 'coffee';   // v490: no mana potions; the Mystic gets coffee
       const li = classRewardItem(p, Math.max(p.level||1, 15), 'reward');   // v483: class gear instead of a Health Potion
@@ -331,7 +331,7 @@ function talkToBarkeeper(){
       updateQuestBadge(); bagPulse(); saveGame();
     });
   } else if(q && q.status==='complete'){
-    showMsg('"Thank you, traveler -- the beacon\'s lit and the Tavern is finally open!"', 2.4);
+    voicePlay('hobbs_tavern_open', {gap:8}); showMsg('"Thank you, traveler -- the beacon\'s lit and the Tavern is finally open!"', 2.4);
   } else if(q){
     showMsg('"Please -- climb to the top of the Lighthouse and light the beacon."', 2.4); voicePlay('hobbs_ltw_ongoing', {gap:6});
   } else {

@@ -167,7 +167,9 @@ Object.assign(MUS_BANK, {"d2tower":"audio/music/d2tower.ogg"});
 Object.assign(MUS_BANK, {"wraithlord":"audio/music/wraithlord.ogg"});
 // v543: two recorded dungeon ambiences ("Dark Dungeon Ambience" by Winger and "dungeonambience2"), levelled and baked to loop; caves, crypts and dungeons pick one of them at random each visit
 Object.assign(MUS_BANK, {"dungeonA":"audio/music/dungeonA.ogg", "dungeonB":"audio/music/dungeonB.ogg"});
-const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, dungeonA:0.52, dungeonB:0.4, d2boss:0.5, d2tower:0.24, wraithlord:0.66 }, MUS_LEN = { dungeonA:8908208/44100, dungeonB:3202736/44100, d2tower:8388608/44100, tavern:1411200/44100, town:2275056/44100, d2world:8388608/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
+// v556: four recorded overworld themes (levelled to the old one); every overworld zone visit picks one of them at random
+Object.assign(MUS_BANK, {"ow1":"audio/music/overworld1.ogg", "ow2":"audio/music/overworld2.ogg", "ow3":"audio/music/overworld3.ogg", "ow4":"audio/music/overworld4.ogg"});
+const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, dungeonA:0.52, dungeonB:0.4, d2boss:0.5, d2tower:0.24, wraithlord:0.66, ow1:0.24, ow2:0.24, ow3:0.24, ow4:0.24 }, MUS_LEN = { ow1:8573040/44100, ow2:8321670/44100, ow3:9208080/44100, ow4:8753850/44100, dungeonA:8908208/44100, dungeonB:3202736/44100, d2tower:8388608/44100, tavern:1411200/44100, town:2275056/44100, d2world:8388608/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
 AUD.mus = {};
 function musLoopMood(name){
   return { stepDur:1, step(){}, start(bus){
@@ -487,6 +489,10 @@ function audDeathKind(e){
 // music dips while someone speaks. opts.gap = seconds before the same line may play again.
 const VOICE_BANK = ['aldric_hunt_offer','aldric_hunt_reward','aldric_bridge_offer','aldric_bridge_reward','aldric_careful',
   'hobbs_ltw_offer','hobbs_ltw_ongoing','brom_shop1','brom_shop2','brom_shop3','brom_socket','brom_forge','brom_hammer','witch_rescued','bk_cut'];
+VOICE_BANK.push('hobbs_shop1','hobbs_shop2','hobbs_shop3','hobbs_tavern_open','hobbs_ltw_done','mirelle_offer','mirelle_waiting','mirelle_done','mirelle_after',
+  'bk_finish','bk_greet','scholar_inscription','scholar_decipher','scholar_center','scholar_opened','scholar_waiting','scholar_meet','scholar_rune1','scholar_activated',
+  'scholar_east','scholar_dwarves','scholar_rune2','scholar_legends','miner_offer','miner_coming','miner_reward','miner_leaving','witch_thanks','witch_heartstone',
+  'defiler_die','wlord_dies','wlord_never');   // v556
 const VOICE_VOL = 1.3, VOICE_DUCK = 0.35;
 AUD.vbuf = {}; AUD.vlast = {}; AUD.vcur = null; AUD.vwant = null;
 function voicePlay(key, opts){

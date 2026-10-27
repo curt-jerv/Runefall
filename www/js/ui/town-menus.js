@@ -568,6 +568,7 @@ function openShop(vendor){
     t.stock = t.hunterStock;
     document.getElementById('shopTitle').textContent = 'Garrick the Hunter \u2014 restocks in '+restockLabel();
   } else if(vendor==='bar'){
+    { AUD.hobbsN = ((AUD.hobbsN==null ? Math.floor(Math.random()*3) : AUD.hobbsN) + 1) % 3; voicePlay('hobbs_shop'+(AUD.hobbsN+1)); }   // v556: Hobbs greets you
     t.stock = refreshBarStock(game.player);
     document.getElementById('shopTitle').textContent = 'Hobbs the Barkeeper \u2014 restocks in '+restockLabel();
     saveGame();

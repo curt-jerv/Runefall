@@ -36,7 +36,7 @@ function spawnDefiler(g){
 // v548: 75% -- his line; 50% -- he swells another 25% and moves/swings 1.3x faster; 25% -- he lifts off the ground and casts Death Bolts
 function defilerPhases(g, df, f, dt){
   const p = g.player;
-  if(f<0.75 && !df.dfSaid){ df.dfSaid = true; showMsg('“You’re all going to die.”', 2.6, '#c8b8ff'); shakeScreen(g, 4, 0.4); }
+  if(f<0.75 && !df.dfSaid){ df.dfSaid = true; voicePlay('defiler_die'); showMsg('“You’re all going to die.”', 2.6, '#c8b8ff'); shakeScreen(g, 4, 0.4); }
   if(f<0.5 && !df.dfGrow){
     df.dfGrow = true; df.r = Math.round(df.r*1.25); df.baseR = df.r; df.speed *= 1.3; df.atkCdMax /= 1.3;
     g.particles.push({type:'ring', x:df.x, y:df.y, t:0.6, max:0.6, r:160, color:'#9a6aff'});
@@ -148,7 +148,7 @@ function talkScholar(){
   const p = game.player;
   updateQuestBadge();   // v514: keep The Scholar's Theory in step with the runestone you carry
   if(hasInscription(p) && !p.scholarMeet){
-    showNpcText('Corwin the Scholar', '"A Templar crypt inscription... yes! Meet me at the Lakeside Ruins. I will wait at the entrance."', 'Give him the rubbing', ()=>{
+    voicePlay('scholar_inscription'); showNpcText('Corwin the Scholar', '"A Templar crypt inscription... yes! Meet me at the Lakeside Ruins. I will wait at the entrance."', 'Give him the rubbing', ()=>{
       // v410: he only reads it -- you keep the inscription until the ruins are actually open
       p.scholarLeft = true; p.scholarMeet = true;
       p.ruinsEvent = 0;
@@ -158,7 +158,7 @@ function talkScholar(){
       showMsg('New quest: The Scholar\'s Theory', 3.0); updateQuestBadge(); saveGame();
     });
   } else if((p.shrineStage||0)>=3 && !p.scholarEast){
-    showNpcText('Corwin the Scholar', '"You did it. The Runestone is activated, and it seems to be pulling east. Perhaps Frosthold can answer some questions. Go and explore the newly revealed keep. Be wary -- the dwarves are friendly to none."', 'To Frosthold', ()=>{
+    voicePlay('scholar_activated'); showNpcText('Corwin the Scholar', '"You did it. The Runestone is activated, and it seems to be pulling east. Perhaps Frosthold can answer some questions. Go and explore the newly revealed keep. Be wary -- the dwarves are friendly to none."', 'To Frosthold', ()=>{
       p.scholarEast = true;
       { const sq = getQuest(p, 'shrine_stone'); if(sq){ sq.status='complete'; sq.rewarded=true; sq.progress=sq.total; sq.desc='The mountain judged you worthy, and Corwin read the awakened runestone.'; } }   // v456: completes here
       if(!getQuest(p, 'frost_east')) p.quests.push({id:'frost_east', name:'The Stone Draws East', desc:'The awakened runestone pulls east. The avalanche revealed the western gate of Frosthold Keep -- climb the Frosthold Tower and see what the dwarves guard.', status:'active', progress:0, total:1});
@@ -166,21 +166,21 @@ function talkScholar(){
       showMsg('New quest: The Stone Draws East', 3.0); updateQuestBadge(); saveGame();
     });
   } else if(p.hwRuneTaken && !p.scholarThirdRead){   // v490: the third runestone
-    showNpcText('Corwin the Scholar', '"So the legends seem true. When the world needs it, these stones come alive, to hold back some unknown evil of the world. If it\'s as you say, that the Shadow Keep is occupied again, that must be the answer. Good luck, adventurer."', 'Close', ()=>{
+    voicePlay('scholar_legends'); showNpcText('Corwin the Scholar', '"So the legends seem true. When the world needs it, these stones come alive, to hold back some unknown evil of the world. If it\'s as you say, that the Shadow Keep is occupied again, that must be the answer. Good luck, adventurer."', 'Close', ()=>{
       p.scholarThirdRead = true; p.scholarWarnedRR = true; npcMark(p, 'scholar', false); saveGame();
     });
   } else if(p.fhDungeonDone && !p.scholarWarnedRR){   // v490: the second runestone
-    showNpcText('Corwin the Scholar', '"Amazing -- it seems the shrine in the mountain activated this runestone as well. The ancient Highward fortress, built into the side of Redridge Canyon, can tell us more about what these runestones are."', 'Close', ()=>{
+    voicePlay('scholar_rune2'); showNpcText('Corwin the Scholar', '"Amazing -- it seems the shrine in the mountain activated this runestone as well. The ancient Highward fortress, built into the side of Redridge Canyon, can tell us more about what these runestones are."', 'Close', ()=>{
       p.scholarWarnedRR = true; npcMark(p, 'scholar', false); saveGame();
     });
   } else if(p.fhDungeonKey && !p.fhDungeonDone && !p.scholarKeyTalk){   // v490: after the Commander's key
-    showNpcText('Corwin the Scholar', '"So it seems the dwarves might have a runestone of their own, locked away in their dungeon. Descend through their fortress and recover it. Perhaps it will reveal more secrets about their purpose."', 'Close', ()=>{
+    voicePlay('scholar_dwarves'); showNpcText('Corwin the Scholar', '"So it seems the dwarves might have a runestone of their own, locked away in their dungeon. Descend through their fortress and recover it. Perhaps it will reveal more secrets about their purpose."', 'Close', ()=>{
       p.scholarKeyTalk = true; npcMark(p, 'scholar', false); saveGame();
     });
   } else if(p.scholarMeet){
     const rs = findRunestone(p);
     if(rs && !p.scholarRead){
-      showNpcText('Corwin the Scholar', '"The runestone has a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
+      voicePlay('scholar_rune1'); showNpcText('Corwin the Scholar', '"The runestone has a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
         { const si = classRewardItem(p, Math.max(p.level||1, 23), 'reward'); if(!giveRewardIfRoom(p, [si])) return; p.gold += 300; }   // v492: asks again until there is room
         p.scholarRead = true; bagPulse();
         const q = getQuest(p, 'scholar_ruins'); if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'You found the first runestone below the lake.'; }
@@ -188,11 +188,11 @@ function talkScholar(){
         npcMark(p, 'scholar', false);
         showMsg('New quest: The Mountain Judges (+ class gear and 300 gold)', 3.0); updateQuestBadge(); saveGame();
       });
-    } else if(p.scholarRead && (p.shrineStage||0)>=3) showNpcText('Corwin the Scholar', '"The stone pulls east. Climb the Frosthold Tower and see what the dwarves guard."', 'Close');
+    } else if(p.scholarRead && (p.shrineStage||0)>=3) { voicePlay('scholar_east', {gap:8}); showNpcText('Corwin the Scholar', '"The stone pulls east. Climb the Frosthold Tower and see what the dwarves guard."', 'Close'); }
     else if(p.scholarRead) showNpcText('Corwin the Scholar', '"There is an ancient altar atop the mountain summit. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way."', 'Close');
-    else showNpcText('Corwin the Scholar', '"Descend through the ancient ruins and share any findings with me."', 'Close');
+    else { voicePlay('scholar_waiting', {gap:8}); showNpcText('Corwin the Scholar', '"Descend through the ancient ruins and share any findings with me."', 'Close'); }
   } else if(!p.scholarMet){
-    showNpcText('Corwin the Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close', ()=>{
+    voicePlay('scholar_meet'); showNpcText('Corwin the Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close', ()=>{
       p.scholarMet = true; saveGame();   // v456: no quest yet -- Templar Research starts when you find the Crypt Inscription
     });
   } else if(false){
@@ -201,7 +201,7 @@ function talkScholar(){
       if(!getQuest(p, 'scholar_templar')) p.quests.push({id:'scholar_templar', name:'Templar Research', desc:'Corwin the Scholar in the Tavern wants an inscription from a Templar crypt. The graverobbers at the Cursed Cemetery speak of a hidden tomb below the Dark Crypt.', status:'active', progress:0, total:1});
       showMsg('New quest: Templar Research', 2.6); updateQuestBadge(); saveGame();
     });
-  } else showNpcText('Corwin the Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close');
+  } else { voicePlay('scholar_meet', {gap:8}); showNpcText('Corwin the Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close'); }
 }
 // generic townsperson art (graverobbers, scholar): hood or hat, robe, one handheld prop
 // v519: The Silver Locket. Mirelle arrives on the ship (she stands about the dock once the tavern re-opens). State lives in the quest itself:
@@ -224,13 +224,13 @@ function takeSilverLocket(p){
 function talkLocketWoman(){
   const p = game.player, q = getQuest(p, LOCKET_QUEST);
   if(!q){
-    showNpcText('Mirelle', '"I came in on the evening ship. My family lies in the Dark Crypt, and my grandmother\'s silver locket was buried with them -- it is all I have left of her. Please, search the crypt\'s side chambers for it."', 'I will look for it', ()=>{
+    voicePlay('mirelle_offer'); showNpcText('Mirelle', '"I came in on the evening ship. My family lies in the Dark Crypt, and my grandmother\'s silver locket was buried with them -- it is all I have left of her. Please, search the crypt\'s side chambers for it."', 'I will look for it', ()=>{
       addQuestOnce(p, LOCKET_QUEST, 'The Silver Locket', "Search the Dark Crypt for Mirelle's silver locket.", 1);
       npcMark(p, 'mirelle', false);
       showMsg('New quest: The Silver Locket', 3.0); updateQuestBadge(); saveGame();
     });
   } else if(q.status==='active' && q.progress>=q.total){
-    showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. I will keep it close to my heart. And here: my grandfather had this old tome, I can\'t learn anything from it. Please, take it."', 'Thank you', ()=>{
+    voicePlay('mirelle_done'); showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. I will keep it close to my heart. And here: my grandfather had this old tome, I can\'t learn anything from it. Please, take it."', 'Thank you', ()=>{
       const tome = makeSkillTomeItem(); tome.questDesc = "Mirelle's grandfather's old tome. Read it (Use, or right-click) to gain +1 skill point.";
       if(!giveRewardIfRoom(p, [tome])) return;
       takeSilverLocket(p);
@@ -238,9 +238,9 @@ function talkLocketWoman(){
       p.gold += 250; showMsg('Quest complete: The Silver Locket (+250 gold, Tome of Skill)', 3.4); try{ bagPulse(); }catch(e){} updateQuestBadge(); saveGame();
     });
   } else if(q.status==='active'){
-    showNpcText('Mirelle', '"Any sign of the locket? It is in the Dark Crypt, in one of the quiet side chambers. Be careful down there."', 'Close');
+    voicePlay('mirelle_waiting', {gap:8}); showNpcText('Mirelle', '"Any sign of the locket? It is in the Dark Crypt, in one of the quiet side chambers. Be careful down there."', 'Close');
   } else {
-    showNpcText('Mirelle', '"The ship leaves with the tide, but I think I will stay a while. Thank you again."', 'Close');
+    voicePlay('mirelle_after', {gap:8}); showNpcText('Mirelle', '"The ship leaves with the tide, but I think I will stay a while. Thank you again."', 'Close');
   }
 }
 function drawSimpleNpcIso(n, clock, o){
@@ -275,10 +275,10 @@ const RUINS_EVENT_T = 60, RUINS_EVENT_MAX_ENEMIES = 30;   // v456: 60s (was 120)
 function talkScholarRuins(){
   const p = game.player;
   if(!p.ruinsEvent){
-    showNpcText('Corwin the Scholar', '"The ring is a lock. Stand at the center stone and I will decipher it -- it will take some time. Stay close."', 'Understood', ()=>{
+    voicePlay('scholar_decipher'); showNpcText('Corwin the Scholar', '"The ring is a lock. Stand at the center stone and I will decipher it -- it will take some time. Stay close."', 'Understood', ()=>{
       p.ruinsEvent = 1; showMsg('Step to the center stone to begin deciphering.', 3.0, '#9fd8ff'); updateQuestBadge(); saveGame();
     });
-  } else showNpcText('Corwin the Scholar', '\"The center stone, whenever you are ready. I will start the moment you do.\"', 'Close');
+  } else { voicePlay('scholar_center', {gap:8}); showNpcText('Corwin the Scholar', '\"The center stone, whenever you are ready. I will start the moment you do.\"', 'Close'); }
 }
 function startRuinsEvent(g){
   const p = g.player;
@@ -335,7 +335,7 @@ function finishRuinsEvent(g){
   g.particles.push({type:'ring', x:g.lake.ruinsSpot.x, y:g.lake.ruinsSpot.y, t:0.8, max:0.8, r:260, color:'#3ad4ff'});
   const q = getQuest(p, 'scholar_ruins'); if(q) q.desc = 'Descend through the ancient ruins and share any findings with Corwin.';
   updateQuestBadge(); saveGame();
-  showNpcText('Corwin the Scholar', '"At last, I\'ve opened it! I\'m only a researcher, but you descend to the bottom of that place and bring me anything of interest."', 'Continue');
+  voicePlay('scholar_opened'); showNpcText('Corwin the Scholar', '"At last, I\'ve opened it! I\'m only a researcher, but you descend to the bottom of that place and bring me anything of interest."', 'Continue');
 }
 function drawRuinsEventHud(g){
   const ev = g.lake.event, frac = clamp(1 - ev.t/RUINS_EVENT_T, 0, 1), bw = Math.min(W-40, 340), x0 = (W-bw)/2, y0 = hudBottomPx()+34;
