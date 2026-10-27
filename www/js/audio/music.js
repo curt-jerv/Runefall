@@ -54,7 +54,7 @@ function mDrone(bus, m, vol, lp, type){
 }
 const pick = a => a[Math.floor(Math.random()*a.length)];
 const MOODS = {
-  d2world(){ return MOODS.forest(); }, d2dungeon(){ return MOODS.cave(); }, d2boss(){ return MOODS.fire(); }, wraithlord(){ return MOODS.fire(); }, d2tower(){ return MOODS.crypt(); },   // v468 fallbacks until the recordings decode
+  d2world(){ return MOODS.forest(); }, d2dungeon(){ return MOODS.cave(); }, dungeonA(){ return MOODS.cave(); }, dungeonB(){ return MOODS.cave(); }, d2boss(){ return MOODS.fire(); }, wraithlord(){ return MOODS.fire(); }, d2tower(){ return MOODS.crypt(); },   // v468 fallbacks until the recordings decode
   // Mistfall: wistful acoustic plucks over a soft minor pad
   town(){
     const chords = [[57,60,64],[53,57,60],[48,55,60],[55,59,62]], arp = [0,1,2,1,2,1,0,2];
@@ -201,6 +201,8 @@ function audMoodFor(g){
     if(SCENE_MOOD_V468[g.scene]) name = SCENE_MOOD_V468[g.scene];
     if(g.scene==='lighthouse' && towerMusicHere(g)) name = 'd2tower';
     if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='keep' && (g.tower.kpArea||1)<7) name = 'keep';   // v492: the Shadow Keep's own dark theme
+    if(name==='d2dungeon'){ if(!AUD.dunPick) AUD.dunPick = Math.random()<0.5 ? 'dungeonA' : 'dungeonB'; name = AUD.dunPick; }   // v543: one of the two dungeon tracks, chosen per visit
+    else if(name!=='d2boss' && name!=='wraithlord') AUD.dunPick = null;
     if(!g.over && window.__bossBarBottom > 0 && g.scene!=='town' && g.scene!=='tavern') name = 'd2boss';
     if(name==='d2boss' && g.scene==='lighthouse' && g.tower && g.tower.subzone==='keep' && g.tower.kpArea===7 && g.enemies.some(e=>e.wlord && e.hp>0)) name = 'wraithlord'; }   // v507: the Demon Hold's Wraith Lord
   if(name!==AUD.moodName) audSetMood(name);

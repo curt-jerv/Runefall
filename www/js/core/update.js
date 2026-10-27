@@ -3365,7 +3365,7 @@ function updateStep(dt){
     if(l.dropGrace>0){ l.dropGrace-=dt; continue; }
     if(lootIsManual(l)) continue;
     if(dist(l,p) < l.r+p.r+6){
-      if(l.type==='potion'){ p.hp = Math.min(p.maxHp, p.hp+p.maxHp*0.3); showMsg('+Health', 0.6); g.loot.splice(i,1); }
+      if(l.type==='potion'){ p.hp = Math.min(p.maxHp, p.hp+p.maxHp*0.3); showMsg('+Health', 0.6); g.loot.splice(i,1); try{ sfxPlay('potion', 1); }catch(err){} }   // v543: a gulp for health globes too
       else if(l.type==='gold'){ p.gold += l.amt; goldPop(g, l.x, l.y, l.amt); g.loot.splice(i,1); }
       else if(l.type==='item'){
         if(addToBag(p, l.item)){

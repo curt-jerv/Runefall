@@ -165,7 +165,9 @@ Object.assign(MUS_BANK, {"d2world":"audio/music/d2world.ogg", "d2dungeon":"audio
 Object.assign(MUS_BANK, {"d2tower":"audio/music/d2tower.ogg"});
 // v507: the Wraith Lord's fight in the Demon Hold has its own recorded theme
 Object.assign(MUS_BANK, {"wraithlord":"audio/music/wraithlord.ogg"});
-const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, d2boss:0.5, d2tower:0.24, wraithlord:0.66 }, MUS_LEN = { d2tower:8388608/44100, tavern:1411200/44100, town:2275056/44100, d2world:8388608/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
+// v543: two recorded dungeon ambiences ("Dark Dungeon Ambience" by Winger and "dungeonambience2"), levelled and baked to loop; caves, crypts and dungeons pick one of them at random each visit
+Object.assign(MUS_BANK, {"dungeonA":"audio/music/dungeonA.ogg", "dungeonB":"audio/music/dungeonB.ogg"});
+const MUS_VOL = { town:1, tavern:1, d2world:0.24, d2dungeon:0.24, dungeonA:0.52, dungeonB:0.4, d2boss:0.5, d2tower:0.24, wraithlord:0.66 }, MUS_LEN = { dungeonA:8908208/44100, dungeonB:3202736/44100, d2tower:8388608/44100, tavern:1411200/44100, town:2275056/44100, d2world:8388608/44100, d2dungeon:3704400/44100, d2boss:3256615/44100 };
 AUD.mus = {};
 function musLoopMood(name){
   return { stepDur:1, step(){}, start(bus){
@@ -257,6 +259,71 @@ function sndPlayMapped(name, now, v, r){
   return !m.layer;   // layered sounds also let the synth version play underneath
 }
 SFX.deathSlime = SFX.deathSmall; SFX.deathShade = SFX.deathSmall; SFX.enemyBite = SFX.enemySwing; SFX.enemyMunch = SFX.enemySwing; SFX.equipArmor = SFX.equip || null; SFX.equipJewel = null;
+// v543: second foley pass -- "Lo-Fi Lo-Fantasy SFX" (oGnomo, CC0) and "RPG Essentials SFX Free", trimmed and loudness-matched,
+// plus a made-for-the-game bow (string thwip + arrow whoosh, bow_*). Sounds are grouped by who makes them: people with
+// weapons, beasts, skeletons, the walking dead, spirits, slimes, stone/metal constructs, brutes, and the bosses.
+Object.assign(SND_BANK, {"bow_heavy1":"audio/sfx/bow_heavy1.ogg","bow_heavy2":"audio/sfx/bow_heavy2.ogg","bow_shot1":"audio/sfx/bow_shot1.ogg","bow_shot2":"audio/sfx/bow_shot2.ogg","bow_shot3":"audio/sfx/bow_shot3.ogg","lf_axe1":"audio/sfx/lf_axe1.ogg","lf_axe2":"audio/sfx/lf_axe2.ogg","lf_axe3":"audio/sfx/lf_axe3.ogg","lf_block1":"audio/sfx/lf_block1.ogg","lf_block2":"audio/sfx/lf_block2.ogg","lf_defeat1":"audio/sfx/lf_defeat1.ogg","lf_defeat2":"audio/sfx/lf_defeat2.ogg","lf_defeat3":"audio/sfx/lf_defeat3.ogg","lf_deflect1":"audio/sfx/lf_deflect1.ogg","lf_deflect2":"audio/sfx/lf_deflect2.ogg","lf_deflect3":"audio/sfx/lf_deflect3.ogg","lf_deflect4":"audio/sfx/lf_deflect4.ogg","lf_dodge":"audio/sfx/lf_dodge.ogg","lf_doorclose":"audio/sfx/lf_doorclose.ogg","lf_doorsqueak":"audio/sfx/lf_doorsqueak.ogg","lf_doorunlock":"audio/sfx/lf_doorunlock.ogg","lf_firecast":"audio/sfx/lf_firecast.ogg","lf_fireimp1":"audio/sfx/lf_fireimp1.ogg","lf_fireimp2":"audio/sfx/lf_fireimp2.ogg","lf_freezebreak":"audio/sfx/lf_freezebreak.ogg","lf_freezecast":"audio/sfx/lf_freezecast.ogg","lf_freezeimp":"audio/sfx/lf_freezeimp.ogg","lf_hit1":"audio/sfx/lf_hit1.ogg","lf_hit2":"audio/sfx/lf_hit2.ogg","lf_hit3":"audio/sfx/lf_hit3.ogg","lf_hit4":"audio/sfx/lf_hit4.ogg","lf_hit5":"audio/sfx/lf_hit5.ogg","lf_hit6":"audio/sfx/lf_hit6.ogg","lf_hit7":"audio/sfx/lf_hit7.ogg","lf_hit8":"audio/sfx/lf_hit8.ogg","lf_keys":"audio/sfx/lf_keys.ogg","lf_parry1":"audio/sfx/lf_parry1.ogg","lf_parry2":"audio/sfx/lf_parry2.ogg","lf_raise":"audio/sfx/lf_raise.ogg","lf_slash1":"audio/sfx/lf_slash1.ogg","lf_slash2":"audio/sfx/lf_slash2.ogg","lf_slash3":"audio/sfx/lf_slash3.ogg","lf_slash4":"audio/sfx/lf_slash4.ogg","lf_summon":"audio/sfx/lf_summon.ogg","lf_vitality":"audio/sfx/lf_vitality.ogg","re_absorb":"audio/sfx/re_absorb.ogg","re_atkbuff":"audio/sfx/re_atkbuff.ogg","re_attack":"audio/sfx/re_attack.ogg","re_bite":"audio/sfx/re_bite.ogg","re_block":"audio/sfx/re_block.ogg","re_buy":"audio/sfx/re_buy.ogg","re_charge":"audio/sfx/re_charge.ogg","re_claw":"audio/sfx/re_claw.ogg","re_death":"audio/sfx/re_death.ogg","re_debuff":"audio/sfx/re_debuff.ogg","re_defbuff":"audio/sfx/re_defbuff.ogg","re_earth":"audio/sfx/re_earth.ogg","re_equip":"audio/sfx/re_equip.ogg","re_fireexp":"audio/sfx/re_fireexp.ogg","re_flesh1":"audio/sfx/re_flesh1.ogg","re_flesh2":"audio/sfx/re_flesh2.ogg","re_heal":"audio/sfx/re_heal.ogg","re_hit":"audio/sfx/re_hit.ogg","re_iceexp":"audio/sfx/re_iceexp.ogg","re_jump":"audio/sfx/re_jump.ogg","re_land":"audio/sfx/re_land.ogg","re_miss":"audio/sfx/re_miss.ogg","re_poison":"audio/sfx/re_poison.ogg","re_revive":"audio/sfx/re_revive.ogg","re_slash":"audio/sfx/re_slash.ogg","re_speed":"audio/sfx/re_speed.ogg","re_teleport":"audio/sfx/re_teleport.ogg","re_thunder":"audio/sfx/re_thunder.ogg","re_wind":"audio/sfx/re_wind.ogg","re_zap":"audio/sfx/re_zap.ogg"});
+Object.assign(SND_MAP, {
+  // --- the player's attacks ---
+  swing:{f:[...["lf_slash1", "lf_slash2", "lf_slash3", "lf_slash4"], ...["lf_axe1", "lf_axe2", "lf_axe3"], 're_slash', 'f_swish1', 'f_swish2'], v:0.5},
+  spin:{f:["lf_axe1", "lf_axe2", "lf_axe3"], v:0.6, layer:1},
+  bow:{f:["bow_shot1", "bow_shot2", "bow_shot3"], v:0.62},
+  bowHeavy:{f:["bow_heavy1", "bow_heavy2"], v:0.72},
+  // --- hitting monsters ---
+  hitFlesh:{f:['r_blade_01','r_blade_02','r_blade_03','re_flesh1','re_flesh2','re_hit'], v:0.5, layer:1},
+  // --- being hit: plate rings, cloth and leather take the blow on the body ---
+  hurt:{f:['r_metal_small1','r_metal_small2','r_metal_small3',...["lf_deflect1", "lf_deflect2", "lf_deflect3", "lf_deflect4"]], v:0.55, layer:1},
+  hurtCloth:{f:[...["lf_hit1", "lf_hit2", "lf_hit3", "lf_hit4", "lf_hit5", "lf_hit6", "lf_hit7", "lf_hit8"], 're_flesh1', 're_flesh2'], v:0.62},
+  block:{f:['lf_block1','lf_block2','re_block'], v:0.7},
+  parry:{f:['lf_parry1','lf_parry2'], v:0.6},
+  miss:{f:['re_miss','lf_dodge'], v:0.45},
+  dodge:{f:['lf_dodge'], v:0.6},
+  potion:{f:['r_bubble','r_bubble2','r_bubble3','r_bottle'], v:0.7},
+  // --- monster attacks, by kind ---
+  enemySwing:{f:[...["lf_slash1", "lf_slash2", "lf_slash3", "lf_slash4"], 'r_swing', 'r_swing2', 'r_swing3', 'f_swish1', 'f_swish2'], v:0.32},
+  enemyHeavy:{f:["lf_axe1", "lf_axe2", "lf_axe3"], v:0.5, layer:1},
+  enemyArrow:{f:["bow_shot1", "bow_shot2", "bow_shot3"], v:0.36},
+  enemyCast:{f:['re_charge','re_debuff'], v:0.32},
+  enemyBite:{f:['r_bite_small','r_bite_small2','r_bite_small3','re_bite','re_claw'], v:0.45},
+  // --- monster deaths, by kind ---
+  deathHuman:{f:['lf_defeat1','lf_defeat2','lf_defeat3','re_death'], v:0.6},
+  deathArmored:{seq:[['lf_defeat2',0,0.6],['f_chain1',0.1,0.5]]},
+  deathBrute:{f:['r_ogre1','r_ogre3','r_ogre5'], v:0.7, layer:1},
+  deathZombie:{f:['r_creature_die_01','r_creature_hurt_01','r_creature_hurt_02','f_gurgleLo1'], v:0.55, layer:1},
+  deathConstruct:{f:['r_stones_04','r_item_stone_02','r_item_stone_03','r_item_stone_04'], v:0.75, layer:1},
+  // --- skills and spells ---
+  wind:{f:['re_wind'], v:0.7, layer:1},
+  arc:{f:['re_zap'], v:0.6, layer:1},
+  bolt:{f:['re_thunder'], v:0.65, layer:1},
+  thunder:{f:['re_thunder'], v:0.7, layer:1},
+  fire:{f:['lf_firecast','r_spell_fire_01','r_spell_fire_07'], v:0.5, layer:1},
+  fireHit:{f:['lf_fireimp1','lf_fireimp2'], v:0.5, layer:1},
+  ice:{f:['lf_freezecast'], v:0.55, layer:1},
+  iceHit:{f:['lf_freezeimp','re_iceexp','lf_freezebreak'], v:0.45, layer:1},
+  explode:{f:['re_fireexp'], v:0.7, layer:1},
+  arcane:{f:['re_charge'], v:0.5, layer:1},
+  curse:{f:['re_debuff'], v:0.55, layer:1},
+  drain:{f:['re_absorb'], v:0.5, layer:1},
+  summon:{f:['re_revive','lf_summon'], v:0.5, layer:1},
+  poison:{f:['re_poison'], v:0.55, layer:1},
+  shout:{f:['re_atkbuff'], v:0.55, layer:1},
+  heal:{f:['re_heal'], v:0.6, layer:1},
+  holy:{f:['re_heal'], v:0.45, layer:1},
+  ward:{f:['re_defbuff','lf_raise'], v:0.6, layer:1},
+  bash:{f:['lf_block1','lf_block2','f_bash'], v:0.7, layer:1},
+  clang:{f:["lf_deflect1", "lf_deflect2", "lf_deflect3", "lf_deflect4"], v:0.6, layer:1},
+  thud:{f:['re_earth'], v:0.7, layer:1},
+  whoosh:{f:['re_teleport'], v:0.5, layer:1},
+  smoke:{f:['re_teleport'], v:0.45, layer:1},
+  portal:{f:['re_teleport'], v:0.5, layer:1},
+  mark:{f:['re_debuff'], v:0.4, layer:1},
+  trap:{f:['lf_keys'], v:0.5, layer:1},
+  respawn:{f:['re_revive'], v:0.5, layer:1},
+  door:{f:['r_door','lf_doorclose','lf_doorsqueak'], v:0.6},
+  equip:{f:['beltHandle1','beltHandle2','clothBelt','clothBelt2','re_equip'], v:0.9}
+});
+Object.assign(SND_TH, { enemyArrow:0.12, enemyCast:0.15, enemyHeavy:0.12, block:0.08, parry:0.1, miss:0.12, deathHuman:0.06, deathArmored:0.08, deathZombie:0.06, deathConstruct:0.08, deathBrute:0.1, arc:0.08, wind:0.4 });
+SFX.enemyArrow = SFX.enemyShot; SFX.enemyCast = SFX.enemyShot; SFX.enemyHeavy = SFX.enemySwing;
 // v523: the voice cap now counts by each voice's scheduled end time. It used to be a counter that went up on start and
 // down in 'onended' -- under a heavy frame load some 'ended' events were lost, the counter crept past the cap and every
 // combat sound stayed silent for the rest of the session.
@@ -282,6 +349,8 @@ const SKILL_SND = {
   nova:'arcane', tornado:'wind', hurricane:'wind', fireball:'fire', iceBolt:'ice', iceArmor:'ice', pyroTorrent:'fire', meteor:'fire', stormcall:'bolt', raiseDead:'summon', blizzard:'ice', immolate:'fire', flameVortex:'fire', permafrost:'ice',
   fear:'curse', soulFire:'curse', soulSap:'drain', lightningArc:'arc', deathBolt:'curse', soulGate:'summon', plague:'poison'
 };
+// v543: defensive skills get their own sounds
+Object.assign(SKILL_SND, { bulwark:'ward', iceArmor:'ward', mirrorSteel:'parry' });
 const SND_ELEM = { drain:'drain', arc:'bolt', fire:'fire', ice:'ice', bolt:'bolt', arcane:'arcane', curse:'arcane', poison:'poison', explode:'fire' };
 const ATK_SHARED = { explosiveShot:1, splinterShot:1, multiShot:1, reave:1, strike:1, shieldBash:1, smite:1, vengeance:1, cripplingShot:1, stunShot:1, fireball:1, iceBolt:1, lightningArc:1, soulSap:1, deathBolt:1 };
 function audWrapTriggers(){
@@ -324,7 +393,7 @@ function audioFrame(dt){
           }
         }
       } else if(e.hp > e._ah) e._ah = e.hp;
-      if(e.atkAnimT>0 && !(e._aa>0)){ const nr = audNear(e.x,e.y); if(nr>0.1) sfxPlay(/archer|mage|cultist|turret|sentry|bat/.test(e.type)?'enemyShot':/zombie|ghoul|risendead/.test(e.type)?'enemyMunch':/spider|beetle|crawler|wolf|hound|raptor|snake|anaconda|alligator|rat|boar|toad/.test(e.type)?'enemyBite':'enemySwing', nr); }
+      if(e.atkAnimT>0 && !(e._aa>0)){ const nr = audNear(e.x,e.y); if(nr>0.1) sfxPlay(audAtkKind(e), nr); }
       e._aa = e.atkAnimT;
       const d = Math.hypot(e.x-p.x, e.y-p.y);
       if((e.aggroed||e.engaged||d<320) && d<520 && !e.noReward && e.speed!==0) tens += (e.isBoss||e.isLairBoss||e.elite||e.magic) ? 1.5 : 0.5;
@@ -373,21 +442,45 @@ function audioFrame(dt){
   st.prevLoot = loot.slice();
   if(g.chest){ if(g.chest.opened && !st.chestOpen){ sfxPlay('chest', 1); } st.chestOpen = !!g.chest.opened; } else st.chestOpen = false;
 }
+// v543: monsters are grouped by what they are, so people, beasts, the dead and the stone things each sound like themselves
+const AUD_ARCHER = /archer/, AUD_CASTER = /cultist|cleric|mendicant|mage|imp\b|^imp/, AUD_SHOOTER = /turret|sentry|bat|coil/;
+const AUD_EATER = /zombie|ghoul|risendead/;
+const AUD_BEAST = /spider|beetle|crawler|wolf|warg|hound|raptor|snake|anaconda|alligator|rat|boar|toad|bear|ram|buffalo|trex|armordon|tortuga|harpy|roc|vulture|leech|gojira|leviathan|windigo|mastodon/;
+const AUD_BIG = /troll|giant|golem|colossus|construct|warden|bulwark|guardian|treant|gearguard/;
+const AUD_ARMORED = /^fh|^hw|templar|knight|banditking|banditbrute|gearguard|guard/;
+const AUD_HUMAN = /bandit|cultist|goblin|grunt|archer|graverob|mage|cleric|^fh|^hw|templar|knight|guard|captain|scarecrow/;
+function audAtkKind(e){
+  const t = e.type||'';
+  if(AUD_SHOOTER.test(t)) return 'enemyShot';
+  if(AUD_ARCHER.test(t)) return 'enemyArrow';
+  if(AUD_CASTER.test(t)) return 'enemyCast';
+  if(AUD_EATER.test(t)) return 'enemyMunch';
+  if(AUD_BEAST.test(t)) return 'enemyBite';
+  if(AUD_BIG.test(t) || /brute/.test(t) || (e.r||0)>=24) return 'enemyHeavy';
+  return 'enemySwing';   // people and skeletons with weapons
+}
 function audHitKind(e, big){
   const t = e.type||'';
   if(big) return 'hitCrit';
   if(/skeleton|bone|wraith|lich/.test(t)) return 'hitBone';
-  if(/golem|colossus|poisonwalker|construct|crawler|beetle|tortuga|armordon/.test(t)) return 'hitStone';
-  if(/bandit|fh|gear|templar|cultist|shield/.test(t)) return 'hitMetal';
+  if(/golem|colossus|poisonwalker|construct|crawler|beetle|tortuga|armordon|gear|cog|coil|turret|sentry/.test(t)) return 'hitStone';
+  if(AUD_ARMORED.test(t) || /shield/.test(t)) return 'hitMetal';
   return 'hitFlesh';
 }
 function audDeathKind(e){
   const t = e.type||'';
-  if(e.isBoss||e.isLairBoss||e.r>=26||/troll|trex|gojira|balrog|colossus|golem|mastodon|leviathan/.test(t)) return 'deathBig';
-  if(/wraith|ghost|shade|spirit|ghoul|risendead|zombie|vampire|lich/.test(t)) return 'deathShade';
-  if(/slime|ooze|toad|leech|plant|bog/.test(t)) return 'deathSlime';
+  if(e.isBoss||e.isLairBoss||/trex|gojira|balrog|colossus|mastodon|leviathan|kraken/.test(t)) return 'deathBig';
   if(/skeleton|bone/.test(t)) return 'deathBone';
-  if(e.r>=16 || /bear|boar|wolf|alligator|raptor|hound|brute/.test(t)) return 'deathBeast';
+  if(/wraith|ghost|shade|spirit|vampire|lich/.test(t)) return 'deathShade';
+  if(AUD_EATER.test(t)) return 'deathZombie';
+  if(/slime|ooze|toad|leech|plant|bog|poisonwalker/.test(t)) return 'deathSlime';
+  if(/golem|construct|gear|cog|coil|turret|sentry/.test(t)) return 'deathConstruct';
+  if(/troll|giant|ogre/.test(t)) return e.r>=26 ? 'deathBig' : 'deathBrute';
+  if(AUD_ARMORED.test(t)) return 'deathArmored';
+  if(AUD_HUMAN.test(t)) return 'deathHuman';
+  if(e.r>=26) return 'deathBig';
+  if(/spider|beetle|crawler|vulture|bat|snake|rat\b|harpy|leech|imp\b|^imp|crow/.test(t) && !(e.r>=20)) return 'deathSmall';   // critters squeal, they don't roar
+  if(e.r>=16 || AUD_BEAST.test(t) || /brute|demon|fiend|hellhound|imp/.test(t)) return 'deathBeast';
   return 'deathSmall';
 }
 // interface clicks
