@@ -75,7 +75,7 @@ const SKILL_R0_TEXT = {
   rally: ()=>'New RALLY button: re-summon your followers beside you, heal them, and raise block chance and defence for you and them. Each rank: bigger heal, stronger defence, longer buff. Cooldown '+RALLY_CD+'s.',
   survivalFieldDress: ()=>'Bandage yourself: heal '+Math.round(SURV_FIELD_DRESS_REGEN_BASE*100)+'% max HP per second for '+SURV_FIELD_DRESS_DUR+'s while still moving; companions heal half. Each rank: +1% per second and the cooldown drops 3s ('+SURV_FIELD_DRESS_CD_BASE+'s at Rank 1, '+SURV_FIELD_DRESS_CD_MIN+'s at Rank 5).',
   evasion: ()=>'Passive: +5% chance to fully dodge a hit at Rank 1, +2% more per rank after Rank 4 (+32% at Rank 10). Stacks with Dexterity from gear (cap 60%). Every dodge also restores '+evasionDodgeStamina({skills:{evasion:1}})+' Stamina (up to '+evasionDodgeStamina({skills:{evasion:10}})+' at Rank 10).',
-  frostTrap: ()=>'Lay a trap that stays where it lands. When an enemy steps near it, it freezes everything in a wide area, then chills them. Up to 3 traps at once. Each rank: +0.1s freeze.',
+  frostTrap: ()=>'Lay a trap that stays where it lands. When an enemy steps near it, it freezes everything in a wide area, then chills them. Up to 3 traps at once. Each rank: +0.2s freeze, +0.5s chill. Elites and brutes are frozen for less; bosses are only chilled.',
   vanish: ()=>'Become untargetable for 1s; dealing damage ends it early. Each rank: +1s duration. Cooldown 30s.',
   stunShot: ()=>'New STUN button (requires Crippling Shot): a heavy shot that stuns on hit. Each rank: +5% damage and +0.075s stun. Cooldown 6s.',
   companionBear: ()=>'Summons a bear companion, your hardest-hitting follower. Each rank after the first: +15% bear damage & HP.',
@@ -594,7 +594,7 @@ function nodeEffectTextBase(node, rank){
   if(node.id==='frostTrap'){
     if(rank===0) return 'Throw a frost trap at an enemy; after .5s it bursts with cold, damaging and freezing all enemies nearby briefly, then slows them.';
     const freezeDur = frostTrapFreezeDuration(rank);
-    return 'Cold burst dmg ~'+Math.round(10*mult)+' &middot; Freeze: '+fmtNum(freezeDur)+'s &middot; Slow (Chill) after: '+ICE_CHILL_DUR+'s &middot; Radius '+SURV_TRAP_RADIUS+' &middot; Fuse '+SURV_TRAP_FUSE+'s &middot; Cooldown '+trapCdText(FROST_TRAP_CD);
+    return 'Cold burst dmg ~'+Math.round(10*mult)+' &middot; Freeze: '+fmtNum(freezeDur)+'s (elites '+fmtNum(freezeDur*FROST_TRAP_TOUGH)+'s) &middot; Slow (Chill) after: '+fmtNum(frostTrapChillDuration(rank))+'s &middot; Radius '+SURV_TRAP_RADIUS+' &middot; Fuse '+SURV_TRAP_FUSE+'s &middot; Cooldown '+trapCdText(FROST_TRAP_CD);
   }
   if(node.id==='finesse'){
     if(rank===0) return 'Passive (requires Evasion): gain a 2nd Dodge charge before its cooldown is triggered. Each rank shortens Dodge\'s cooldown by 0.1s up to Rank 5, then 0.03s per rank (0.40s at Rank 10).';

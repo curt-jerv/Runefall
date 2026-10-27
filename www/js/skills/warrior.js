@@ -622,6 +622,7 @@ necroDemonLeechPct = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(necroDe
 executeThreshold = (f=>(r,...a)=>f((r==null||r!==r)?r:rkSpread5(r),...a))(executeThreshold);
 survFieldDressRegenRate = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(survFieldDressRegenRate);
 frostTrapFreezeDuration = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(frostTrapFreezeDuration);
+frostTrapChillDuration = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(frostTrapChillDuration);
 aimedShotPierce = (f=>(r,...a)=>f((r==null||r!==r)?r:rkTop8(r),...a))(aimedShotPierce);
 rapidShotCooldown = (f=>(r,...a)=>f((r==null||r!==r)?r:rkSpread5(r),...a))(rapidShotCooldown);
 preciseShotCooldownMult = (f=>(r,...a)=>f((r==null||r!==r)?r:rkSpread5(r),...a))(preciseShotCooldownMult);

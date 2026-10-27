@@ -61,7 +61,12 @@ function poisonTrapCooldown(rank){
 // does NOT scale with rank, exactly as the brief specifies ("not the slow
 // duration").
 const FROST_TRAP_CD = 6;
-const FROST_TRAP_FREEZE_BASE = 0.1, FROST_TRAP_FREEZE_STEP = 0.1; // 0.1s at Rank1 -> 0.5s at Rank5
+// v540: a real freeze at every rank -- 1.0s at Rank1 -> 1.8s at Rank5 (elites/brutes 60% of that, bosses and heavy monsters
+// are only chilled), then a chill that also grows with rank: 3s at Rank1 -> 5s at Rank5. A monster just thawed from any
+// freeze can't be frozen again for FREEZE_IMMUNE seconds, so three traps in a row can't lock a pack forever.
+const FROST_TRAP_FREEZE_BASE = 1.0, FROST_TRAP_FREEZE_STEP = 0.2, FROST_TRAP_TOUGH = 0.6;
+const FROST_TRAP_CHILL_BASE = 3, FROST_TRAP_CHILL_STEP = 0.5;
+function frostTrapChillDuration(rank){ return FROST_TRAP_CHILL_BASE + FROST_TRAP_CHILL_STEP*(Math.max(1, rank||1)-1); }
 function frostTrapFreezeDuration(rank){ return rank>0 ? FROST_TRAP_FREEZE_BASE + FROST_TRAP_FREEZE_STEP*(rank-1) : FROST_TRAP_FREEZE_BASE; }
 // Finesse (passive, requires Evasion): a brand-new "extra charge" mechanic
 // for Dodge -- no skill in the game had multiple charges-before-cooldown

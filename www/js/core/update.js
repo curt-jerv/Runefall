@@ -1072,12 +1072,14 @@ function updateStep(dt){
           // the same generic full-immobilize field Blizzard uses) every
           // enemy in radius for a brief rank-scaled duration, then Chill
           // (e.chillT) afterward so they're slowed once the freeze lifts.
-          const freezeDur = skDur(p, frostTrapFreezeDuration(tt.rank));
+          const freezeDur = skDur(p, frostTrapFreezeDuration(tt.rank)), chillDur = skDur(p, frostTrapChillDuration(tt.rank));
           const frDmg = wpnDmg(p) * swd('frostTrap', tt.rank) * trapDmgMult(p);   // v237: the burst of cold also hurts
           for(const e of g.enemies){
             if(dist(tt,e) < tt.r+e.r){
-              if(!freezeImmune(e)) e.frozenT = Math.max(e.frozenT||0, freezeDur);   // v539: bosses are only chilled
-              e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR);
+              // v540: freeze (shorter on elites/brutes, none on bosses/heavy or a monster still immune from its last freeze), then a rank-scaled chill
+              let fz = 0;
+              if(!freezeImmune(e) && !(e.freezeImmT>0)){ fz = freezeDur*(isEliteOrBrute(e) ? FROST_TRAP_TOUGH : 1); e.frozenT = Math.max(e.frozenT||0, fz); e.freezeImmT = fz + FREEZE_IMMUNE; e.coldHits = 0; e.coldHitT = 0; }
+              e.chillT = Math.max(e.chillT||0, fz + chillDur*((e.isBoss || e.isLairBoss) ? 0.5 : 1));
               e.hp -= applyEnemyArmor(p, e, frDmg, 0, 'cold'); e.hitT = 0.15;
               g.particles.push({type:'iceImpact', x:e.x, y:e.y, t:0.42, max:0.42, seed:Math.random()});
               checkExecute(g, e);
