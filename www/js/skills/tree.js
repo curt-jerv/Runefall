@@ -122,17 +122,17 @@ const RANGER_SKILL_TREES = {
       desc:'Move like smoke, slipping past blows meant to end you.'},
     {id:'frostTrap',    name:'Frost Trap',   type:'active', reqLevel:7, row:1, col:0, prereq:['poisonTrap'],
       desc:'Set a trap of biting frost to root and chill your enemies.'},
-    {id:'survivalInstinct', name:"Predator's Instinct", type:'passive', reqLevel:21, row:3, col:1, prereq:['survivalFieldDress'],
-      desc:'Years in the wild have toughened your body, quickened your step and taught you where wounded prey is weakest.'},
+    {id:'survivalInstinct', name:"Predator's Instinct", type:'passive', reqLevel:14, row:2, col:1, prereq:['survivalFieldDress'],   // v545: Lv.14 row
+      desc:'Years in the wild have toughened your body and quickened your step.'},
     {id:'finesse',      name:'Finesse',      type:'passive', reqLevel:7, row:1, col:2, prereq:['evasion'],
       desc:'Refine your reflexes until dodging becomes second nature.'},
-    {id:'explosiveTrap', name:'Explosive Trap', type:'active', reqLevel:28, row:4, col:0, prereq:['frostTrap'],
+    {id:'explosiveTrap', name:'Explosive Trap', type:'active', reqLevel:28, row:4, col:0, prereq:['frostTrap'], capstone:true, capstoneShare:'survivalist',   // v545: a capstone too (shares the slot with Mirage)
       desc:'Bury a charge that detonates in a burst of fire when enemies step close.'},
     {id:'opportunist',  name:'Opportunist',  type:'passive', reqLevel:21, row:3, col:2, prereq:['finesse'],
       desc:'Every dodge opens a window to punish the enemy that missed you.'},
     {id:'trapMastery',  name:'Trap Mastery', type:'passive', reqLevel:28, row:4, col:1, prereq:['explosiveTrap'],
       desc:'Your traps hit harder, reach farther, and you throw them faster.'},
-    {id:'mirage',       name:'Mirage',       type:'passive', reqLevel:28, row:4, col:2, prereq:['opportunist'], capstone:true,
+    {id:'mirage',       name:'Mirage',       type:'passive', reqLevel:28, row:4, col:2, prereq:['opportunist'], capstone:true, capstoneShare:'survivalist',
       desc:'Every dodge leaves a mirage of you behind to draw the enemy away.'},
   ] },
   // Marksman tree (v58, v79 tweak): mostly unchanged this batch. Two

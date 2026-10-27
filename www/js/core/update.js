@@ -243,7 +243,7 @@ function updateStep(dt){
         p.juggPX = p.x; p.juggPY = p.y;
       }
       if(mv.x!==0||mv.y!==0){
-        const webMult = (p.juggT>0 ? JUGG_SPEED*(1 + JUGG_SPEED_PER_SEC*(p.juggClock||0)) : 1) * (p.webSlowT>0 ? 0.45 : 1) * whirlSlowMult(p) * (p.bulwarkT>0 ? BULWARK_SLOW : 1) * iceArmorSlowMult(p) * permafrostSpeedMult(p) * (p.chillT>0 ? PLAYER_CHILL_MULT : 1);
+        const webMult = (p.juggT>0 ? JUGG_SPEED*(1 + JUGG_SPEED_PER_SEC*(p.juggClock||0)) : 1) * (p.webSlowT>0 ? 0.45 : 1) * whirlSlowMult(p) * (p.bulwarkT>0 ? BULWARK_SLOW : 1) * iceArmorSlowMult(p) * permafrostSpeedMult(p) * (p.chillT>0 ? PLAYER_CHILL_MULT : 1) * (p.pyroTorrentT>0 ? PYRO_MOVE_MULT : 1);
         p.x += mv.x*p.speed*webMult*dt;
         p.y += mv.y*p.speed*webMult*dt;
         if(p.juggT>0) p.juggExp = Math.hypot(mv.x,mv.y)*p.speed*webMult*dt;
@@ -738,7 +738,7 @@ function updateStep(dt){
         p.atkAnimT = 0.22; p.atkAnimMax = 0.22; p.atkCd = p.atkCdMax;
         gainResource(p, STAMINA_ON_SHOT);
         const msCrit = Math.random()*100 < (p.critChance||0) + (p.rallyT>0 ? RALLY_CRIT_BONUS : 0) + arrowEyeCritBonus(p);
-        const msDmg = wpnDmg(p) * MARKSMAN_DMG_TUNE * assaultDealtMult(p) * weaponDmgMult(p) * (msCrit ? critMultOf(p) : 1);
+        const msDmg = wpnDmg(p) * MARKSMAN_DMG_TUNE * MULTI_SHOT_DMG_MULT * assaultDealtMult(p) * weaponDmgMult(p) * (msCrit ? critMultOf(p) : 1);   // v545: +5%
         const count = multiShotCount(msRank);
         for(let k=0;k<count;k++){
           const kAng = ang + (k-(count-1)/2) * (MULTI_SHOT_SPREAD/(count-1));
@@ -817,7 +817,7 @@ function updateStep(dt){
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
       p.atkAnimT = 0.25; p.atkAnimMax = 0.25;
       const asFull = aimShotFull; aimShotFull = true;   // v267: held aim = 3x..4x, a quick tap = 1.5x
-      p.aimedShotCdMax = applyCdr(p, AIMED_SHOT_CD); p.aimedShotCd = p.aimedShotCdMax;
+      p.aimedShotCdMax = applyCdr(p, aimedShotCooldown(asRank)); p.aimedShotCd = p.aimedShotCdMax;
       const asCrit = Math.random()*100 < (p.critChance||0) + (p.rallyT>0 ? RALLY_CRIT_BONUS : 0) + arrowEyeCritBonus(p) + (asFull ? AIMED_SHOT_CRIT_BONUS : 0);
       let asDmg = wpnDmg(p) * (asFull ? swd('aimedShot', asRank) : SKILL_WD.aimedShot.tap/100) * assaultDealtMult(p) * weaponDmgMult(p);
       if(asCrit) asDmg *= critMultOf(p);
@@ -1627,6 +1627,7 @@ function updateStep(dt){
       p.fbQueue = p.fbQueue || [];
       for(let k=0;k<n;k++) p.fbQueue.push({t:k*FIREBALL_VOLLEY_GAP, ang, off:(k%2===0?-1:1)*FIREBALL_SIDE_OFFSET, dmg:bdmg});
       p.atkCd = Math.max(p.atkCd, (n-1)*FIREBALL_VOLLEY_GAP + FIREBALL_VOLLEY_PAUSE);   // v310: a short beat after each volley (3 balls, pause, 3 balls)
+      { const cut = FIREBALL_CD_PER_RANK*(Math.min(10, fbRank)-1); p.atkCd = Math.max((n-1)*FIREBALL_VOLLEY_GAP + 0.12, p.atkCd - cut); }   // v545: casts come 0.08s sooner per rank
     }
   }
   if(p.fbQueue && p.fbQueue.length){
@@ -1806,7 +1807,7 @@ function updateStep(dt){
     setAimStickVisible(p.pyroTorrentT>0);
     if(p.dodging){ p.pyroTorrentT = 0; }
     else {
-      p.movementStopT = Math.max(p.movementStopT||0, 0.12); // channelled in place
+      // v545: you can walk while channelling, 40% slower (PYRO_MOVE_MULT in the movement block)
       const ptRank = effectiveRank(p,'pyroTorrent')||0;
       const frac = clamp((p.pyroTorrentElapsed||0)/PYRO_RAMP_TIME, 0, 1);   // v489: ramps over the first 5s of channelling
       let ang = p.pyroTorrentAng!=null ? p.pyroTorrentAng : Math.atan2(p.facing.y,p.facing.x);
@@ -2303,7 +2304,7 @@ function updateStep(dt){
     // screen. A small margin keeps them from freezing dead at the exact edge.
     const onScreen = isOnScreen(g, e, 90);
     // v520: a telegraph / roll / leap that has begun always finishes, even if the player walks away (no frozen circles)
-    const midAct = e.tState==='tele' || e.tState==='swing' || e.tState==='air' || e.tState==='lash' || e.tState==='pull' || e.lungeState==='tele' || e.lungeState==='lunge' || (e.dwc && e.cState && e.cState!=='chase') || (e.mastodon && (e.mSt==='avaPhase' || (e.mRocks && e.mRocks.length>0)));
+    const midAct = e.tState==='tele' || e.tState==='swing' || e.tState==='air' || e.tState==='lash' || e.tState==='pull' || e.lungeState==='tele' || e.lungeState==='lunge' || ((e.dwc || e.fhCmd) && e.cState && e.cState!=='chase') || (e.mastodon && (e.mSt==='avaPhase' || (e.mRocks && e.mRocks.length>0)));
     // Forest (and Mountain Pass) packs hold their ground until the player
     // wanders close, rather than beelining in on sight the way dungeon
     // enemies do -- and give up the chase (going back to idle) if it
@@ -3042,6 +3043,7 @@ function updateStep(dt){
         if(best){ best.markT = Math.max(dead.markT, 4); best.markBonus = dead.markBonus; g.particles.push({type:'ring', x:best.x, y:best.y, t:0.4, max:0.4, r:best.r+22, color:'#ff4a4a'}); }
       }
       if(g.enemies[i].markT>0 && ((g.player.skills && effectiveRank(g.player,'markedPrey'))||0)>0){ g.player.huntersMarkCd = 0; g.particles.push({type:'ring', x:g.enemies[i].x, y:g.enemies[i].y, t:0.35, max:0.35, r:40, color:'#ff5a5a'}); }
+      if(g.enemies[i].cAdd && !g.enemies[i]._cleared && g.enemies[i].type==='fhdwarf' && !g.enemies[i]._globeDead){ g.enemies[i]._globeDead = true; if(Math.random()<0.5) dropGlobes(g, g.enemies[i], 1); }   // v545: the Commander's dwarves drop a health globe half the time
       if(g.enemies[i].noReward){ g.enemies.splice(i,1); continue; }
       try{ moraleBreak(g, g.enemies[i]); }catch(e){}
       // v62: flag a boss/lair-boss death separately from a full floor
@@ -3066,7 +3068,7 @@ function updateStep(dt){
       if(g.enemies[i].campEnemy) bridgeCampKilled(g.enemies[i]);
       if(g.enemies[i].roadEv) try{ roadEvKilled(g, g.enemies[i]); }catch(err){}
       if(g.enemies[i].fhCmd && !g.enemies[i].brBoss) fhCommanderSlain(g, g.enemies[i]);
-      if(g.enemies[i].brBoss && !g.enemies[i].dboss && !g.enemies[i].balrog){ for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; } demonBossSlain(g, g.enemies[i]); }
+      if(g.enemies[i].brBoss && !g.enemies[i].dboss && !g.enemies[i].balrog){ for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; x._cleared = true; } demonBossSlain(g, g.enemies[i]); }
       if(g.enemies[i].dwc) dwConstructSlain(g, g.enemies[i]);
       if(g.enemies[i].colossus) colossusSlain(g.enemies[i]);
       if(g.enemies[i].type==='magmagolem') golemDeath(g, g.enemies[i]);

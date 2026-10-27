@@ -324,6 +324,13 @@ function newGame(saved, cls){
       }
       if(rf495>0){ player.skillPoints = (player.skillPoints||0) + rf495; setTimeout(()=>{ try{ showMsg('Skill trees were rearranged -- '+rf495+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3200); }
     }
+    if(!saved.skillsV545 && (saved.cls||cls)==='ranger'){   // v545: Explosive Trap is now a capstone -- refund it (and Trap Mastery) if another tree's capstone is already ranked
+      const other = ['rainOfArrows','aimedShot'].concat(((RANGER_SKILL_TREES.hunter||{}).nodes||[]).filter(n=>n.capstone).map(n=>n.id)).some(id=>(player.skills[id]||0)>0);
+      if(other && (player.skills.explosiveTrap||0)>0){
+        let rf = 0; for(const id of ['explosiveTrap','trapMastery']){ rf += player.skills[id]||0; player.skills[id] = 0; for(const sk of Object.keys(player.skillSlots||{})) if(player.skillSlots[sk]===id) player.skillSlots[sk] = (sk==='main' ? 'strike' : null); }
+        if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Explosive Trap is now a capstone -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3400); }
+      }
+    }
     if(!saved.skillsV481 && (saved.cls||cls)==='mystic'){   // v481: Windrunner / Tornado / Storm moved
       const ids = DJINN_NODE_IDS; let rf = 0;
       for(const k of ids){ rf += player.skills[k]||0; player.skills[k] = 0; }
@@ -696,7 +703,7 @@ function spawnEnemy(g, type, pos){
     // 13+depth*2.2 dmg, armor 10) so it reads as a tough mid-tier heavy
     // bandit rather than a second boss. Melee-only, no special branch in
     // update() -- same generic chase/attack path as the regular Bandit.
-    e = {type,x,y,r:19,hp:65+depth*7,maxHp:65+depth*7,speed:rand(55,68),dmg:15+depth*2.3,
+    e = {type,x,y,r:17,hp:65+depth*7,maxHp:65+depth*7,speed:rand(55,68),dmg:15+depth*2.3,   /* v545: a little smaller (was 19) */ 
          atkCd:0,atkCdMax:1.15,color:'#6a3424',state:'chase',hitT:0,armor:8};
   } else if(type==='skeleton'){
     // Lakeside Ruins (v71) -- REUSABLE BASE TYPE: the game's first undead
@@ -807,7 +814,7 @@ function spawnEnemy(g, type, pos){
          atkCd:0,atkCdMax:1.0,color:'#6f8fb0',state:'chase',hitT:0,armor:8};
   } else if(type==='fhcleric'){
     // v462 Frosthold Cleric: robed dwarf priest -- mends nearby defenders, lays healing runes, throws frost bolts
-    e = {type,x,y,r:13,hp:26+depth*4.2,maxHp:26+depth*4.2,speed:rand(70,82),dmg:8+depth*1.6,
+    e = {type,x,y,r:14,hp:26+depth*4.2,maxHp:26+depth*4.2,speed:rand(35,41),dmg:8+depth*1.6,   /* v545: dwarf-sized, half the old pace */ 
          atkCd:rand(0.5,1.5),atkCdMax:2.0,color:'#cfe0ee',state:'chase',hitT:0,armor:4};
   } else if(type==='fhaxe'){
     // Frosthold Axe Thrower (v165): lighter-armoured dwarf that kites and hurls axes from range.
@@ -903,7 +910,7 @@ function spawnEnemy(g, type, pos){
          atkCd:rand(0,0.5),atkCdMax:0.42,color:'#c4783a',state:'chase',hitT:0,armor:6,hw:'duelist'};
   } else if(type==='banditking'){
     // v461 The Bandit King: Lighthouse Tower rooftop boss
-    e = {type,x,y,r:30,hp:(65+depth*7)*9,maxHp:(65+depth*7)*9,speed:rand(84,90),dmg:(15+depth*2.3)*1.1,
+    e = {type,x,y,r:27,hp:(65+depth*7)*9,   /* v545: a little smaller (was 30) */ maxHp:(65+depth*7)*9,speed:rand(84,90),dmg:(15+depth*2.3)*1.1,
          atkCd:0,atkCdMax:1.0,color:'#a8282a',state:'chase',hitT:0,armor:14,bkBoss:true,heavy:true,bossName:'The Bandit King',eliteName:'The Bandit King',xpMul:8};
   } else if(type==='hwguardian'){
     // The Highward Ancient Warden: towering gold-rust champion. Slams, raises a shield wall, rains hammers, calls its garrison.
@@ -983,7 +990,7 @@ function spawnEnemy(g, type, pos){
     e = {type,x,y,r:40,hp:260+depth*30,maxHp:260+depth*30,speed:rand(30,36),dmg:(28+depth*3.8)*0.85,
          atkCd:0,atkCdMax:2.2,color:'#8a7a62',state:'chase',hitT:0,armor:20,tState:'idle',tT:0,tCd:rand(2,4),tPt:null,slamR:95,heavy:true};
   } else if(type==='warg'){
-    e = {type,x,y,r:18,hp:34+depth*4.6,maxHp:34+depth*4.6,speed:rand(165,190),dmg:11+depth*2.1,
+    e = {type,x,y,r:18,hp:34+depth*4.6,maxHp:34+depth*4.6,speed:rand(160,170),   /* v545: about the player's pace (170) */ dmg:11+depth*2.1,
          atkCd:0,atkCdMax:0.75,color:'#4a4440',state:'chase',hitT:0,armor:4};
   } else if(type==='roc'){
     e = {type,x,y,r:22,hp:46+depth*5,maxHp:46+depth*5,speed:rand(160,180),dmg:12+depth*2.2,

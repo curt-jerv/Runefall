@@ -135,6 +135,7 @@ function elementalPolarityDmg(p, base, extraRank, skillId){
   return wpnDmg(p) * swd(skillId||'fireball', epRank) * assaultDealtMult(p) * weaponDmgMult(p);
 }
 // ---- v269 Elementalist / Djinn rework ----
+const FIREBALL_CD_PER_RANK = 0.08, PYRO_MOVE_MULT = 0.6;   // v545
 const FIREBALL_ATKCD_MULT = 0.7, FIREBALL_BALL_MULT = 0.7, FIREBALL_VOLLEY_GAP = 0.19, FIREBALL_VOLLEY_PAUSE = 0.45, FIREBALL_SPEED_MULT = 0.8, FIREBALL_SIDE_OFFSET = 9;
 const ICE_BOLT_ATKCD_MULT = 1.686, ICE_BOLT_DMG_MULT = 4.05;   // v442: 1.15s base cast (was 1.23s), damage ~89% of Fireball's DPS
 const PERMAFROST_ICEBOLT_SPEED = 1.25;   // v442: Ice Bolt casts 25% faster while you stand in your Permafrost

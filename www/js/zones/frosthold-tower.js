@@ -159,11 +159,13 @@ function openTemplarChest(g){
 // ---- Frosthold Commander (floor 5 of the Tower) ----
 //   Solo boss, hits ~25% harder than a Templar. Ground slam (ring), charge (lane), summons dwarf adds.
 //   At 50% life the ancient machine awakens: four stationary dwarven turrets throw fireballs for the rest of the fight.
-const FHC_SLAM_R = 215, FHC_CHARGE_HALF = 62, FHC_CHARGE_LEN = 560, FHC_ADD_CAP = 5;
+// v545: the slam is 10% smaller and lands in two rings -- the inner disc first, then the outer band FHC_SLAM_GAP seconds later
+const FHC_SLAM_R = 194, FHC_SLAM_IN = 0.5, FHC_SLAM_GAP = 0.45, FHC_TELE = 1.2, FHC_CHARGE_HALF = 62, FHC_CHARGE_LEN = 560, FHC_ADD_CAP = 5;
 function initFhCommander(e){
   e.fhCmd = true; e.isLairBoss = true; e.bossName = 'Frosthold Commander'; e.engaged = true; e.aggroed = true;
   e.r = 17;   // v456: half the old size (was 33)
-  e.hp = Math.round(e.hp*3.2); e.maxHp = e.hp; e.dmg = e.dmg*1.25; e.armor = (e.armor||0) + 6; e.baseSpeed = e.speed = 62;   // v490: this line used to sit behind the comment above, so none of it applied
+  e.hp = Math.round(e.hp*3.2); e.maxHp = e.hp; e.dmg = e.dmg*1.25; e.dmgType = 'normal'; e.dmgSplit = 'cold';   // v545: every blow is half cold, half physical
+  e.armor = (e.armor||0) + 6; e.baseSpeed = e.speed = 62;   // v490: this line used to sit behind the comment above, so none of it applied
   e.aggroRange = 900; e.leashRange = 99999; e.wanderRadius = 0;
   e.cState = 'chase'; e.cT = 0; e.cTmax = 1; e.cCd = 2.6; e.cPhase = 1; e.cNext = 0; e.cDir = 0; e.cHit = false;
 }
@@ -180,6 +182,11 @@ function fhCmdHit(g, e, tgt, mult){
   if(tgt===g.player) playerDamage(g, dm, e); else applyFollowerDamage(g, tgt, dm, e);
 }
 function fhCmdTargets(g){ return [g.player].concat(g.followers||[]); }
+// v545: ice spikes burst up across the band that was just hit
+function fhSlamSpikes(g, e, r0, r1){
+  const n = Math.round(6 + (r1*r1 - r0*r0)/2600);
+  for(let i=0;i<n;i++){ const a = Math.random()*Math.PI*2, rr = Math.sqrt(r0*r0 + Math.random()*(r1*r1 - r0*r0)); g.particles.push({type:'iceSpike', x:e.x+Math.cos(a)*rr, y:e.y+Math.sin(a)*rr, t:0.9, max:0.9, seed:Math.random(), h:26+Math.random()*18}); }
+}
 // v490: a boss speaks once when you first come close
 function bossGreet(g, e, line, r){ if(e._greeted || !g.player || dist(e, g.player) > (r||420) || !enemyLOS(g, e, g.player)) return; e._greeted = true; showMsg(line, 5); }
 function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, room){
@@ -198,10 +205,23 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
   if(st==='recover'){ e.cT -= dt; e.moving = false; if(e.cT<=0) e.cState='chase'; return; }
   if(st==='slamTele'){
     e.cT -= dt; e.moving = false; e.atkAnimT = 0.1;
+    if(e.cT<=0){   // inner disc
+      const Ri = FHC_SLAM_R*FHC_SLAM_IN;
+      for(const tg of fhCmdTargets(g)) if(dist(tg,e) < Ri + tg.r*0.5) fhCmdHit(g, e, tg, 1.2);
+      fhSlamSpikes(g, e, 0, Ri);
+      g.particles.push({type:'ring', x:e.x, y:e.y, t:0.5, max:0.5, r:Ri, color:'#bfe6ff'});
+      shakeScreen(g, 5, 0.2);
+      e.cState='slamOuter'; e.cT = e.cTmax = FHC_SLAM_GAP;
+    }
+    return;
+  }
+  if(st==='slamOuter'){   // v545: then the outer band
+    e.cT -= dt; e.moving = false; e.atkAnimT = 0.1;
     if(e.cT<=0){
-      for(const tg of fhCmdTargets(g)) if(dist(tg,e) < FHC_SLAM_R + tg.r*0.5) fhCmdHit(g, e, tg, 1.6);
-      g.particles.push({type:'ring', x:e.x, y:e.y, t:0.5, max:0.5, r:FHC_SLAM_R, color:'#d9a066'});
-      g.particles.push({type:'burst', x:e.x, y:e.y, t:0.4, max:0.4, color:'#b8a078'});
+      const Ri = FHC_SLAM_R*FHC_SLAM_IN;
+      for(const tg of fhCmdTargets(g)){ const dd = dist(tg,e); if(dd >= Ri - tg.r*0.5 && dd < FHC_SLAM_R + tg.r*0.5) fhCmdHit(g, e, tg, 1.2); }
+      fhSlamSpikes(g, e, Ri, FHC_SLAM_R);
+      g.particles.push({type:'ring', x:e.x, y:e.y, t:0.5, max:0.5, r:FHC_SLAM_R, color:'#bfe6ff'});
       shakeScreen(g, 6, 0.25);
       e.cState='recover'; e.cT = 0.8*F;
     }
@@ -218,7 +238,7 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
     const blocked = nx<80 || ny<80 || nx>room.w-80 || ny>room.h-80 || room.obstacles.some(o=> nx>o.x-e.r*0.6 && nx<o.x+o.w+e.r*0.6 && ny>o.y-e.r*0.6 && ny<o.y+o.h+e.r*0.6);
     if(blocked){ shakeScreen(g, 5, 0.25); g.particles.push({type:'burst', x:e.x, y:e.y, t:0.4, max:0.4, color:'#b8a078'}); e.cState='recover'; e.cT = 1.3*F; e.moving = false; return; }
     e.x = nx; e.y = ny;
-    fhCmdTargets(g).forEach((tg, i)=>{ if(!e.cHit[i] && dist(tg,e) < e.r+tg.r+8){ e.cHit[i] = true; fhCmdHit(g, e, tg, 1.5); } });
+    fhCmdTargets(g).forEach((tg, i)=>{ if(!e.cHit[i] && dist(tg,e) < e.r+tg.r+8){ e.cHit[i] = true; fhCmdHit(g, e, tg, 1.125); } });
     if(e.cT<=0){ e.cState='recover'; e.cT = 0.9*F; e.moving = false; }
     return;
   }
@@ -229,7 +249,7 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
       for(let i=0;i<3 && alive+i<FHC_ADD_CAP;i++){
         const a = Math.random()*Math.PI*2, rr = e.r+rand(50,150);
         const pos = {x:clamp(e.x+Math.cos(a)*rr, 100, room.w-100), y:clamp(e.y+Math.sin(a)*rr, 100, room.h-100)};
-        const c = spawnEnemy(g, i%2===0 ? 'fhdwarf' : 'fhaxe', pos);
+        const c = spawnEnemy(g, 'fhdwarf', pos);   // v545: melee dwarves only (they drop a health globe half the time)
         if(c){ c.cAdd = true; c.noReward = true; c.engaged = true; c.aggroed = true; }
         g.particles.push({type:'burst', x:pos.x, y:pos.y, t:0.4, max:0.4, color:'#9fd8ff'});
       }
@@ -246,9 +266,9 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
     const seq = e.cPhase===2 ? ['charge','slam','summon','slam','charge'] : ['slam','charge','summon'];
     const mv = seq[e.cNext % seq.length];
     let ok = true;
-    if(mv==='slam'){ if(d < FHC_SLAM_R*0.95 && enemyLOS(g,e,target)){ e.cState='slamTele'; e.cT = e.cTmax = 0.95*F; } else ok = false; }
-    else if(mv==='charge'){ if(d > 130 && d < FHC_CHARGE_LEN && enemyLOS(g,e,target)){ e.cDir = Math.atan2(target.y-e.y, target.x-e.x); e.cState='chargeTele'; e.cT = e.cTmax = 0.8*F; } else ok = false; }
-    else { if(g.enemies.filter(x=>x.cAdd && x.hp>0).length < FHC_ADD_CAP-1){ e.cState='summonTele'; e.cT = e.cTmax = 0.9*F; } else ok = false; }
+    if(mv==='slam'){ if(d < FHC_SLAM_R*0.95 && enemyLOS(g,e,target)){ e.cState='slamTele'; e.cT = e.cTmax = 0.95*F*FHC_TELE; } else ok = false; }
+    else if(mv==='charge'){ if(d > 130 && d < FHC_CHARGE_LEN && enemyLOS(g,e,target)){ e.cDir = Math.atan2(target.y-e.y, target.x-e.x); e.cState='chargeTele'; e.cT = e.cTmax = 0.8*F*FHC_TELE; } else ok = false; }
+    else { if(g.enemies.filter(x=>x.cAdd && x.hp>0).length < FHC_ADD_CAP-1){ e.cState='summonTele'; e.cT = e.cTmax = 0.9*F*FHC_TELE; } else ok = false; }
     if(ok){ e.cNext++; e.cCd = (e.cPhase===2 ? 3.5 : 3.0) + Math.random()*1.0; e.windT = 0; return; }
     e.cCd = 0.45; if(!(mv==='slam' && d>=FHC_SLAM_R*0.95)) e.cNext++;
   }
@@ -277,7 +297,7 @@ function updateFhTurret(g, e, dt, target, d){
 function fhCommanderSlain(g, e){
   const p = g.player;
   p.fhCmdSlain = true;
-  for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; }
+  for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; x._cleared = true; }   /* v545: no globes from the clean-up */
   if(g.tower && g.tower.fht){
     const cx = clamp(e.x,100,g.tower.w-100), cy = clamp(e.y,100,g.tower.h-100);
     if(!p.fhCmdLooted) g.chest = {x:cx, y:cy, r:24, opened:false, cmd:true};   // v489: re-kills drop a rare instead of the chest
@@ -867,7 +887,16 @@ function drawTrollTelegraph(e){
   ctx.restore();
 }
 function drawFhCmdTelegraph(e){
-  const st = e.cState; if(st!=='slamTele' && st!=='chargeTele' && st!=='summonTele') return;
+  const st = e.cState; if(st!=='slamTele' && st!=='chargeTele' && st!=='summonTele' && st!=='slamOuter') return;
+  if(st==='slamTele' || st==='slamOuter'){   // v545: two rings -- the inner disc fills during the wind-up, the outer band right after
+    const frac = clamp(1-e.cT/(e.cTmax||1),0,1), iso = toIso(e.x,e.y), K = ISO_KX*Math.SQRT2, Ri = FHC_SLAM_R*FHC_SLAM_IN*K, Ro = FHC_SLAM_R*K;
+    ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(1, ISO_KY/ISO_KX); ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'rgba(160,215,255,'+(st==='slamTele' ? 0.5+frac*0.5 : 0.35)+')'; ctx.beginPath(); ctx.arc(0,0,Ri,0,7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(160,215,255,'+(st==='slamOuter' ? 0.6+frac*0.4 : 0.45)+')'; ctx.beginPath(); ctx.arc(0,0,Ro,0,7); ctx.stroke();
+    if(st==='slamTele'){ ctx.fillStyle = 'rgba(150,205,255,'+(0.08+frac*0.26)+')'; ctx.beginPath(); ctx.arc(0,0,Ri*frac,0,7); ctx.fill(); }
+    else { ctx.fillStyle = 'rgba(150,205,255,'+(0.1+frac*0.28)+')'; ctx.beginPath(); ctx.arc(0,0,Ri+(Ro-Ri)*frac,0,7); ctx.arc(0,0,Ri,0,7,true); ctx.fill(); }
+    ctx.restore(); return;
+  }
   const frac = clamp(1-e.cT/(e.cTmax||1),0,1);
   ctx.save();
   if(st==='chargeTele'){

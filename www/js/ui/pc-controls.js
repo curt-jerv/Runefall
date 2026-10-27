@@ -39,8 +39,10 @@ function refreshKeyHints(){
   PC.khT = pcNow();
 }
 // Held-to-charge Aimed Shot (same rules as the touch pad: a quick tap = 1.5x, held = full), fired toward the cursor when the mouse is active.
+// v545: show the loading aim line while a key/mouse hold draws the bow
+function pcAimLoad(p){ if(!p) return; p.aimShotHold = true; p.aimLoadT0 = (typeof performance!=='undefined' ? performance.now() : Date.now()); p.aimDir = {x:p.facing.x, y:p.facing.y}; }
 function pcFireAimed(){
-  const h = PC.hold; PC.hold = null; if(!h || !game || !game.player) return;
+  const h = PC.hold; PC.hold = null; if(game && game.player) game.player.aimShotHold = false; if(!h || !game || !game.player) return;
   const p = game.player, c = pcCursorWorld();
   if(c){ const dx=c.x-p.x, dy=c.y-p.y, d=Math.hypot(dx,dy); holdAimShotDir = d>4 ? {x:dx/d, y:dy/d} : null; } else holdAimShotDir = null;
   aimShotFull = (pcNow() - h.t0) >= AIMED_HOLD_MS;
@@ -48,13 +50,13 @@ function pcFireAimed(){
 }
 function pcSlotDown(slotKey){
   const p = game.player; if(!p || !p.skillSlots) return;
-  if(p.skillSlots[slotKey]==='aimedShot' && aimedHoldReady(slotKey)){ PC.hold = {slot:slotKey, t0:pcNow(), via:'key:'+slotKey}; return; }
+  if(p.skillSlots[slotKey]==='aimedShot' && aimedHoldReady(slotKey)){ PC.hold = {slot:slotKey, t0:pcNow(), via:'key:'+slotKey}; pcAimLoad(p); return; }
   triggerSkillSlot(slotKey);
 }
 function pcAttackPress(){
   const p = game.player; if(!p) return;
   const main = p.skillSlots ? p.skillSlots.main : 'strike';
-  if(main==='aimedShot' && aimedHoldReady('main')){ PC.hold = {slot:'main', t0:pcNow(), via:'attack'}; return; }
+  if(main==='aimedShot' && aimedHoldReady('main')){ PC.hold = {slot:'main', t0:pcNow(), via:'attack'}; pcAimLoad(game.player); return; }
   onAttackDown();
 }
 function pcAttackRelease(){
