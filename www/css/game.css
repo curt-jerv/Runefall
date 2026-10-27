@@ -1373,3 +1373,8 @@ body.noPotionBtn #actionCluster .interactBtn{ right:127px !important; bottom:127
 @media (orientation:portrait){ #dockMid{ width:auto; } #dockMid #topBtns{ gap:3px !important; } #dockMid #topBtns > div{ font-size:9.5px !important; padding:0 2px !important; } }
 #dockMid #topBtns #tpBtn{ flex:0 0 34px !important; }
 #tpBtn .tpOrb{ display:block; width:16px; height:16px; border-radius:50%; background:radial-gradient(circle at 40% 38%, #e8f6ff 0, #6ab8ff 35%, #1a4ab8 75%, #0a1a5a 100%); box-shadow:0 0 6px 1px rgba(90,170,255,.85), inset 0 0 3px rgba(255,255,255,.6); }   /* v548: a blue portal orb instead of the word */
+/* v561: skill tooltips -- one layout for every skill (www/js/ui/skill-tips.js) */
+.tipFx{ color:#ddd3bd; margin-bottom:4px; }
+.tipRow{ margin-top:1px; }
+.tipLab{ color:#c9a86a; }
+.tipNext{ color:#8f9aa3; }

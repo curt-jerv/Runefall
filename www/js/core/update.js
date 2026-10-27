@@ -745,7 +745,7 @@ function updateStep(dt){
         p.atkAnimT = 0.22; p.atkAnimMax = 0.22; p.atkCd = p.atkCdMax;
         gainResource(p, STAMINA_ON_SHOT);
         const msCrit = Math.random()*100 < (p.critChance||0) + (p.rallyT>0 ? RALLY_CRIT_BONUS : 0) + arrowEyeCritBonus(p);
-        const msDmg = wpnDmg(p) * MARKSMAN_DMG_TUNE * MULTI_SHOT_DMG_MULT * assaultDealtMult(p) * weaponDmgMult(p) * (msCrit ? critMultOf(p) : 1);   // v545: +5%
+        const msDmg = wpnDmg(p) * swd('multiShot', msRank) * assaultDealtMult(p) * weaponDmgMult(p) * (msCrit ? critMultOf(p) : 1);   // v545: +5%
         const count = multiShotCount(msRank);
         for(let k=0;k<count;k++){
           const kAng = ang + (k-(count-1)/2) * (MULTI_SHOT_SPREAD/(count-1));

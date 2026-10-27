@@ -706,7 +706,7 @@ function followerDmg(p, f){
   // Wolf/Bear -- see this tree's own top comment for why.
   if(f.kind==='skeleton'){
     const rank = (p.skills && effectiveRank(p,'raiseDead')) || 0;
-    return (NECRO_SKELETON_BASE_DMG + p.level*1.0) * hunterFollowerStatMult(rank) * fdMult * (1 + NECRO_SKEL_SOUL_DMG*Math.min(SOUL_CAP,p.souls||0)/SOUL_CAP) * (rank>=BASE_MAX_RANK ? SUMMON_MAX_RANK_DMG : 1);
+    return (NECRO_SKELETON_BASE_DMG + p.level*1.0) * hunterFollowerStatMult(rank) * fdMult * (rank>=BASE_MAX_RANK ? SUMMON_MAX_RANK_DMG : 1);
   }
   if(f.kind==='demon'){
     const rank = (p.skills && effectiveRank(p,'demonBind')) || 0;

@@ -227,6 +227,7 @@ function skillPreviewExtra(node, rank){
   return '';
 }
 function nodeEffectText(node, rank){
+  if(typeof skillTipHtml==='function'){ const h = skillTipHtml(node, rank); if(h) return h; }   // v561: one layout for every skill (ui/skill-tips.js)
   let t = tidySkillText(node, rank, nodeEffectTextBase(node, rank));
   if(SKILL_WD[node.id]) t = wdHeader(node.id, rank) + stripOldDmgText(t);
   else try{

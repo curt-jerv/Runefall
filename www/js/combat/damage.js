@@ -87,6 +87,7 @@ const SKILL_WD = {
   // --- Ranger ---
   trap:         {t:'physical', c:'weapon', r:[43,62],   per:'when sprung'},
   rapidShot:    {t:'physical', c:'weapon', r:[60,85],   per:'per arrow (3 arrows)'},   // v489: free basic shot now
+  multiShot:    {t:'physical', c:'weapon', r:[60,85],   per:'per arrow'},   // v561: was a flat 60% at every rank
   splinterShot: {t:'physical', c:'weapon', r:[94.5,136.5], per:'per arrow (splinters 70%)'},   // v489: free basic shot now. v545: +5%
   cripplingShot:{t:'physical', c:'weapon', r:[180,260], per:'per arrow (plus Bleed)'},   // v489: big boost, costs more + cooldown
   explosiveShot:{t:'physical', c:'weapon', r:[150,215], per:'arrow hit', x:{n:'blast', t:'fire', r:[95,140]}},

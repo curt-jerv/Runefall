@@ -1,4 +1,4 @@
-// Runefall loader (v560). The game is split into the files below; their ORDER matters (a file may use things
+// Runefall loader (v561). The game is split into the files below; their ORDER matters (a file may use things
 // set up by an earlier one). All files are fetched first and then run back-to-back in one go, exactly like the
 // old single-file game, so no tap or timer can reach a function that hasn't loaded yet.
 // Adding a file: put it in www/js/<folder>/, add its path to this list, run `node scripts/check-js.js`.
@@ -47,6 +47,7 @@ const RUNEFALL_FILES = [
   'ui/witch-menu.js',
   'ui/quest-log.js',
   'ui/skill-tree-ui.js',
+  'ui/skill-tips.js',
   'core/game-state.js',
   'zones/frosthold-tower.js',
   'zones/cliffside.js',

@@ -501,7 +501,7 @@ function soulFireExplode(g, p, pr){
 function soulFireDmg(p, rank){ return wpnDmg(p) * swd('soulFire', rank) * soulHungerMult(p); }
 const DEMON_LINK_SHARE = 0.5, DEMON_SIZE_PER_10 = 0.04, DEMON_DMG_PER_10 = 0.10;   // v507: +20% size at 50 souls (4% per 10)
 function demonSoulMult(p, per){ return 1 + per*Math.min(SOUL_CAP,(p.souls||0))/10; }
-function necroSkeletonCount(rank){ return rank>0 ? [0,2,2,3,4,5][Math.min(5,rank)] : 0; }
+function necroSkeletonCount(rank){ return rank>0 ? [0,1,2,3,4,5][Math.min(5,rank)] : 0; }
 const NECRO_RESPAWN_SOULS = 1;
 // v460 Raise Skeletons: passive + active. A fallen skeleton stays down until you press Raise Skeletons --
 // unless you hold a soul: then one soul is spent automatically to raise it after a short delay.
