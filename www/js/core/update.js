@@ -1076,7 +1076,7 @@ function updateStep(dt){
           const frDmg = wpnDmg(p) * swd('frostTrap', tt.rank) * trapDmgMult(p);   // v237: the burst of cold also hurts
           for(const e of g.enemies){
             if(dist(tt,e) < tt.r+e.r){
-              e.frozenT = Math.max(e.frozenT||0, freezeDur);
+              if(!freezeImmune(e)) e.frozenT = Math.max(e.frozenT||0, freezeDur);   // v539: bosses are only chilled
               e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR);
               e.hp -= applyEnemyArmor(p, e, frDmg, 0, 'cold'); e.hitT = 0.15;
               g.particles.push({type:'iceImpact', x:e.x, y:e.y, t:0.42, max:0.42, seed:Math.random()});

@@ -156,21 +156,22 @@ function flatElemActive(p){
   const mh = p.equipment && p.equipment.mainhand;
   return !!(mh && FLAT_ELEM_WEAPON[mh.slotType]) && p.cls!=='mystic' && !p._spellHit;
 }
+// v539: Diablo 2 style -- elemental damage added by gear always applies its ailment on every hit that lands:
+// cold always chills (2s, elites 1.5s, bosses 1s; gear cold never builds toward a freeze -- freezing is for cold spells),
+// fire always burns lightly (20% of the fire dealt over 3s), poison is dealt over 3s instead of up front (stacks as 'gear'),
+// lightning adds a Charge (lightningCharge does that on every lightning hit). All of it after +% element / +% elemental and the monster's resistance.
+const GEAR_CHILL_DUR = 2, GEAR_CHILL_ELITE = 1.5, GEAR_CHILL_BOSS = 1, GEAR_BURN_SHARE = 0.20, GEAR_ELEM_DOT_DUR = 3;
 function gearElemHit(p, e, mainEl){
   let sum = 0;
   if(!flatElemActive(p)) return 0;
   for(const el of ['fire','cold','lightning','poison']){
     const v = p[el+'Dmg'] || 0; if(v<=0) continue;
     let d = Math.max(1, v*typedPctMult(p, el)*dmgVar()*(1-enemyResist(e, el)));
+    if(el==='poison'){ addPoison(e, d/GEAR_ELEM_DOT_DUR, 'gear', GEAR_ELEM_DOT_DUR); continue; }
     if(el==='lightning' && mainEl!=='lightning') d = lightningCharge(game, e, d, 'enemy');
     sum += d;
-    if(Math.random() < Math.min(0.75, 0.05*Math.floor(v/20))){
-      if(el==='fire'){ e.burnT = Math.max(e.burnT||0, FIRE_DOT_DUR); e.burnDps = Math.max(e.burnDps||0, v*BURN_DPS_PCT*2); }
-      else if(el==='cold'){ coldHit(e, 1); }
-      else if(el==='lightning'){ if((e.charges||0) < CHARGE_MAX) e.charges = (e.charges||0)+1; e.chgT = CHARGE_DECAY; }   // v454: Charged replaces the old shock DoT
-      else { addPoison(e, v*POISON_DOT_PCT, 'gear'); }
-      if(game && game.particles) game.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:({fire:'#ff9a4a',cold:'#9fe0ff',lightning:'#f2ee6a',poison:'#8fe05a'})[el]});
-    }
+    if(el==='fire'){ e.burnT = Math.max(e.burnT||0, GEAR_ELEM_DOT_DUR); e.burnDps = Math.max(e.burnDps||0, d*GEAR_BURN_SHARE/GEAR_ELEM_DOT_DUR); }
+    else if(el==='cold'){ const dur = (e.isBoss || e.isLairBoss) ? GEAR_CHILL_BOSS : (e.elite || e.magic) ? GEAR_CHILL_ELITE : GEAR_CHILL_DUR; e.chillT = Math.max(e.chillT||0, dur); }
   }
   return sum;
 }
