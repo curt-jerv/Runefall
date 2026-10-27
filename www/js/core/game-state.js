@@ -1055,7 +1055,7 @@ function spawnEnemy(g, type, pos){
   e.ml = monsterLevel(g);
   { const ref = 55 + depth*7; e.hpXp = clamp(Math.sqrt(e.hp/ref), 1, 3); }   // v490: tougher (bigger-life) monsters give more XP -- brutes, treants, giants, trolls
   // v538: area-level scaling -- the type's own formula only sets its size relative to a standard monster; life comes from monStdLife(ML)
-  e.hp = Math.max(1, Math.round(e.hp/oldStdLife(depth)*monStdLife(e.ml))); e.maxHp = e.hp;
+  e.hp = Math.max(1, Math.round(e.hp/oldStdLife(depth)*monStdLife(e.ml)*(g.scene==='frosthold' ? FROSTHOLD_LIFE_MULT/(e.ml>=LATE_LIFE_LV ? LATE_LIFE_MULT : 1) : 1))); e.maxHp = e.hp;   // v560: Frosthold Keep +15% only (the tower/dungeon beyond get +25% via monStdLife)
   // v228: Dark Forest / Bear Cave bears are softer (smaller life bonus, thinner hide)
   if(type==='bear' && (g.scene==='forest' || g.scene==='bearcave')){ e.hp = Math.round(e.hp*0.65); e.maxHp = e.hp; e.armor = Math.min(e.armor||0, 5); }
   e.dmg = e.dmg/oldStdDmg(depth)*monStdDmg(e.ml);   // v538: damage likewise from monStdDmg(ML)

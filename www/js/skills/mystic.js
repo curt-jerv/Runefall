@@ -461,7 +461,8 @@ function soulHungerInterval(rank){ return (1.6 - 0.2*(Math.max(1,rank)-1))/5; } 
 function soulHungerMult(p){ const r = (p.skills && effectiveRank(p,'soulHunger'))||0; return r>0 ? 1 + SOUL_HUNGER_DMG_PER_SOUL*Math.min(SOUL_CAP,(p.souls||0)) : 1; }
 const SOULSHIELD_PER_SOUL = 0.012;
 // v489 Soul Shield: a chance to block per soul held (0.4% at rank 1 -> 0.7% at rank 10), instead of Defence
-function soulShieldBlockPerSoul(r){ r = Math.max(1, r||1); return 0.004 + 0.003*(Math.min(10,r)-1)/9 + 0.0002*Math.max(0, r-10); }
+const SOUL_SHIELD_K = 1.15;   // v560: Soul Shield turns aside 15% more
+function soulShieldBlockPerSoul(r){ r = Math.max(1, r||1); return SOUL_SHIELD_K*(0.004 + 0.003*(Math.min(10,r)-1)/9 + 0.0002*Math.max(0, r-10)); }
 function soulShieldBlock(p){ const r = (p && p.skills && effectiveRank(p,'soulShield'))||0; return r>0 ? Math.min(0.5, soulShieldBlockPerSoul(r)*Math.min(SOUL_CAP, p.souls||0)) : 0; }
 function soulShieldFrac(rank){ return 0.40 + 0.05*(Math.max(1,rank)-1); }
 // v413: Soul Shield is a free passive defence -- souls held give damage reduction, nothing is drained

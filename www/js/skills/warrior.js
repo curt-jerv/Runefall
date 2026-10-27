@@ -60,7 +60,7 @@ function assaultFinisher(g, p){
 
 // ---------- Defender ----------
 const SLAM_RAGE_PER_TARGET = 3, SLAM_RAGE_STEP = 0.5,  SLAM_RAGE_TARGETS = 3, SLAM_KNOCK = 0.4, SLAM_DMG_MULT = 1.2;
-const UNBREAK_LOW_HP = 0.35, UNBREAK_LOW_DR = 0.12, UNBREAK_LOW_DR_STEP = 0.03, UNBREAK_HURT_RAGE = 0.2, UNBREAK_SAVE_CD = 65, UNBREAK_SAVE_STEP = 6;
+const UNBREAK_LOW_HP = 0.35, UNBREAK_LOW_DR = 0.10, UNBREAK_LOW_DR_STEP = 0.025,   /* v560: was 0.12 / 0.03 */ UNBREAK_HURT_RAGE = 0.2, UNBREAK_SAVE_CD = 65, UNBREAK_SAVE_STEP = 6;
 function unbreakableLowDr(p){
   const r = rk266(p,'unbreakable'); if(r<=0 || !(p.maxHp>0) || p.hp/p.maxHp >= UNBREAK_LOW_HP) return 0;
   return UNBREAK_LOW_DR + UNBREAK_LOW_DR_STEP*(r-1);
@@ -129,7 +129,7 @@ function seismicAnchorResolve(g, p){
   for(let k=0;k<10;k++){ const a = k/10*6.283; g.particles.push({type:'burst', x:p.anchorX+Math.cos(a)*R*0.7, y:p.anchorY+Math.sin(a)*R*0.7, t:0.4, max:0.4, color:'#a88a5a'}); }
   showMsg('Seismic Anchor!', 0.8);
 }
-const BULWARK_DUR = 6, BULWARK_DUR_STEP = 0.5, BULWARK_CD = 18, BULWARK_SLOW = 0.5, BULWARK_ARMOR = 1.75, BULWARK_R = 172.5, BULWARK_REL = 0.8;
+const BULWARK_DUR = 6, BULWARK_DUR_STEP = 0.5, BULWARK_CD = 18, BULWARK_SLOW = 0.5, BULWARK_ARMOR = 1.5,   /* v560: was 1.75 */ BULWARK_R = 172.5, BULWARK_REL = 0.8;
 function bulwarkRelease(g, p){
   const stored = p.bulwarkStore||0;
   p.bulwarkT = 0; p.bulwarkStore = 0; p.unbreakT = 0;

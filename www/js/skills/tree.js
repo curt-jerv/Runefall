@@ -505,7 +505,7 @@ function hasShieldEquipped(p){ return !!(p && p.equipment && p.equipment.offhand
 const BLOCK_CHANCE_BASE = 0.10, BLOCK_CHANCE_CAP = 0.50;
 // Riposte (Defender, requires Iron Skin): passive, adds extra Block Chance
 // per rank on top of the shield-equipped base, capped at BLOCK_CHANCE_CAP overall.
-const RIPOSTE_BLOCK_PER_RANK = 0.05, RIPOSTE_RAGE_BASE = 4, RIPOSTE_RAGE_MAX_BONUS = 14;
+const RIPOSTE_BLOCK_PER_RANK = 0.0425,   /* v560: was 0.05 */ RIPOSTE_RAGE_BASE = 4, RIPOSTE_RAGE_MAX_BONUS = 14;
 // Defensive Stance (Defender): +5% Block Chance per rank, only while a
 // shield is equipped -- folded into the same overall blockChance() total
 // (and its cap) as the base and Riposte, rather than being added on top
@@ -548,9 +548,9 @@ const SHIELD_DMG_BONUS_PCT = 0.10, SHIELD_ATKSPD_BONUS_PCT = 0.08;
 // Stance/Rally/Assault's ramp use (see takenMult in playerDamage). At Rank
 // 5 specifically, Iron Skin ALSO grants a flat +5% Damage Reduction -- a
 // separate stat in that other (takenMult) category, stacking with it.
-const IRON_SKIN_DEFENSE_PCT_BY_RANK = [0, 0.10, 0.16, 0.20, 0.23, 0.25];
+const IRON_SKIN_DEFENSE_PCT_BY_RANK = [0, 0.085, 0.136, 0.17, 0.195, 0.2125];   // v560: x0.85 (was 0.10/0.16/0.20/0.23/0.25)
 const IRON_SKIN_RANK5_DAMAGE_REDUCTION = 0; // v189: replaced by a life bonus
-const IRON_SKIN_DR_BY_RANK = [0, 0.02, 0.03, 0.04, 0.06, 0.08], IRON_SKIN_BLOCK_PER_RANK = 0.02, IRON_SKIN_RANK5_LIFE = 0.04, DMG_REDUCTION_CAP = 0.50;   // v438: total damage reduction cap 20% -> 50%, with much smaller gear rolls
+const IRON_SKIN_DR_BY_RANK = [0, 0.017, 0.0255, 0.034, 0.051, 0.068],   /* v560: x0.85 (was 0.02-0.08) */ IRON_SKIN_BLOCK_PER_RANK = 0.02, IRON_SKIN_RANK5_LIFE = 0.04, DMG_REDUCTION_CAP = 0.50;   // v438: total damage reduction cap 20% -> 50%, with much smaller gear rolls
 function ironSkinDrAt(r){ r = clamp(r||0, 0, MAX_EFF_RANK); return r<=BASE_MAX_RANK ? (IRON_SKIN_DR_BY_RANK[r] || 0) : IRON_SKIN_DR_BY_RANK[BASE_MAX_RANK] + 0.008*(r-BASE_MAX_RANK); }
 function ironSkinDefensePct(p){
   const rank = clamp((p.skills && effectiveRank(p,'ironSkin')) || 0, 0, MAX_EFF_RANK);
@@ -659,7 +659,7 @@ function parLife(l){ return 120 + 15*l; }
 function parHit(l){ return 15 + 3.7*l; }
 const MON_DMG_PAR = 0.1125;                         // standard monster hit = 11.25% of par life (x0.8 for an average normal = 9%)
 function monStdDmg(ml){ return MON_DMG_PAR*parLife(Math.max(1, ml)); }
-const LATE_LIFE_LV = 40, LATE_LIFE_MULT = 1.25;   // v559: from the Frosthold Tower and Dungeon on (monster level 40+), monsters have a quarter more life
+const LATE_LIFE_LV = 40, LATE_LIFE_MULT = 1.25, FROSTHOLD_LIFE_MULT = 1.15;   // v559: from the Frosthold Tower and Dungeon on (monster level 40+), monsters have a quarter more life
 function monStdLife(ml){ const l = Math.max(1, ml); return parHit(l)*(4.5 + 0.1*l)/0.7 * (l >= LATE_LIFE_LV ? LATE_LIFE_MULT : 1); }
 function oldStdLife(d){ return 55 + 7*Math.max(1, d||1); }
 function oldStdDmg(d){ return 13 + 2.2*Math.max(1, d||1); }
