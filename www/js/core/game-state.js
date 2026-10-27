@@ -1044,18 +1044,18 @@ function spawnEnemy(g, type, pos){
     e = {type,x,y,r:21,hp:55+depth*7,maxHp:55+depth*7,speed:rand(48,58),dmg:13+depth*2.2,
          atkCd:0,atkCdMax:1.1,color:'#8a3fae',state:'chase',hitT:0,armor:10};
   }
-  // health doubled, damage +50%, relative to the previous +10%-flat balance
   e.ml = monsterLevel(g);
   { const ref = 55 + depth*7; e.hpXp = clamp(Math.sqrt(e.hp/ref), 1, 3); }   // v490: tougher (bigger-life) monsters give more XP -- brutes, treants, giants, trolls
-  e.hp = Math.round(e.hp*ENEMY_HP_MULT*mlEnemyHpMult(e.ml)); e.maxHp = e.hp;
+  // v538: area-level scaling -- the type's own formula only sets its size relative to a standard monster; life comes from monStdLife(ML)
+  e.hp = Math.max(1, Math.round(e.hp/oldStdLife(depth)*monStdLife(e.ml))); e.maxHp = e.hp;
   // v228: Dark Forest / Bear Cave bears are softer (smaller life bonus, thinner hide)
   if(type==='bear' && (g.scene==='forest' || g.scene==='bearcave')){ e.hp = Math.round(e.hp*0.65); e.maxHp = e.hp; e.armor = Math.min(e.armor||0, 5); }
-  e.dmg = e.dmg*ENEMY_DMG_MULT*mlDmgMult(e.ml);
+  e.dmg = e.dmg/oldStdDmg(depth)*monStdDmg(e.ml);   // v538: damage likewise from monStdDmg(ML)
   // v515: no under-level softening at all -- a zone's monsters keep their full strength (v490 had 1%/level, v237 4%/level); the over-level taper in monsterLevel() is unchanged
   if(type==='colossus'){   // v354: no over-level scaling for the Colossus (monster level pinned to the area), and its base damage is cut ~40%
     const mlc = Math.min(e.ml, g.depth||e.ml);
-    e.hp = Math.round(e.hp*mlEnemyHpMult(mlc)/mlEnemyHpMult(e.ml)); e.maxHp = e.hp;
-    e.dmg *= mlDmgMult(mlc)/mlDmgMult(e.ml)*0.6; e.ml = mlc;
+    e.hp = Math.round(e.hp*monStdLife(mlc)/monStdLife(e.ml)); e.maxHp = e.hp;
+    e.dmg *= monStdDmg(mlc)/monStdDmg(e.ml)*0.6; e.ml = mlc;
   }
   e.dmgType = ENEMY_DMG_TYPE[type] || 'normal';
   // v484: split hits -- half physical, half an element (resists only cut the elemental half)

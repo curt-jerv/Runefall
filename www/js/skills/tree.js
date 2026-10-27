@@ -650,3 +650,17 @@ function mlHpMult(ml){ return 1 + 0.09*ml + 0.0016*ml*ml; }
 // v228: enemy life grows more gently at low monster level (75% at ML1, full by ML13); minions still use mlHpMult
 function mlEnemyHpMult(ml){ const base = mlHpMult(ml); return ml>=13 ? base : base*(0.75 + 0.25*Math.max(0,(ml-1)/12)); }
 function mlDmgMult(ml){ return 1 + 0.012*ml; }
+// v538: area-level scaling. One life curve and one damage curve by monster level, built from what a same-level character
+// is expected to have: PAR_LIFE = typical life (base + a few life rolls), PAR_HIT = a typical weapon hit. Each monster
+// type keeps its own size relative to the old standard formula (life 55+7*lvl, damage 13+2.2*lvl) -- so trolls, golems
+// and brutes still hit harder and soak more -- but the level growth comes only from these curves.
+// An average normal monster (about 0.8 of standard) hits for ~9% of PAR_LIFE and takes ~4-10 par hits to kill.
+function parLife(l){ return 120 + 15*l; }
+function parHit(l){ return 15 + 3.7*l; }
+const MON_DMG_PAR = 0.1125;                         // standard monster hit = 11.25% of par life (x0.8 for an average normal = 9%)
+function monStdDmg(ml){ return MON_DMG_PAR*parLife(Math.max(1, ml)); }
+function monStdLife(ml){ const l = Math.max(1, ml); return parHit(l)*(4.5 + 0.1*l)/0.7; }
+function oldStdLife(d){ return 55 + 7*Math.max(1, d||1); }
+function oldStdDmg(d){ return 13 + 2.2*Math.max(1, d||1); }
+// traps and hazards written in the old numbers keep the same share of a standard monster's hit
+function hazardScale(d){ return monStdDmg(d)/(oldStdDmg(d)*ENEMY_DMG_MULT*mlDmgMult(d)); }

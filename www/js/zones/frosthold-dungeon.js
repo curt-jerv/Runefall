@@ -107,14 +107,14 @@ function updateFhdHazards(g, dt){
       h.t += dt; const ph = h.t % 5;
       if(ph>=4 && !h.fired){
         h.fired = true;
-        if(dist(p,h) < h.r + p.r) playerDamage(g, (18+dep*2.6)*TELE_DMG_MULT, {dmgType:'fire', hp:0, x:h.x, y:h.y, r:0});
+        if(dist(p,h) < h.r + p.r) playerDamage(g, (18+dep*2.6)*TELE_DMG_MULT*hazardScale(dep), {dmgType:'fire', hp:0, x:h.x, y:h.y, r:0});
         g.particles.push({type:'burst', x:h.x, y:h.y, t:0.5, max:0.5, color:'#ffd9a0'});
       } else if(ph<4) h.fired = false;
     } else if(h.kind==='coil'){
       if(h.tT>0){
         h.tT -= dt;
         if(h.tT<=0){
-          if(dist(p,h.tp) < 115 + p.r*0.5) playerDamage(g, (22+dep*2.8)*TELE_DMG_MULT, {dmgType:'lightning', hp:0, x:h.tp.x, y:h.tp.y, r:0});
+          if(dist(p,h.tp) < 115 + p.r*0.5) playerDamage(g, (22+dep*2.8)*TELE_DMG_MULT*hazardScale(dep), {dmgType:'lightning', hp:0, x:h.tp.x, y:h.tp.y, r:0});
           g.particles.push({type:'ring', x:h.tp.x, y:h.tp.y, t:0.4, max:0.4, r:115, color:'#8fd8ff'});
           g.particles.push({type:'burst', x:h.tp.x, y:h.tp.y, t:0.35, max:0.35, color:'#cfeaff'});
           shakeScreen(g, 3, 0.15); h.tp = null;
@@ -126,7 +126,7 @@ function updateFhdHazards(g, dt){
     } else if(h.kind==='acid'){
       if(dist(p,h) < h.r - 10){
         h.tick -= dt;
-        if(h.tick<=0){ h.tick = 0.5; playerDamage(g, (6+dep*1.0)*TELE_DMG_MULT, {dmgType:'poison', hp:0, x:h.x, y:h.y, r:0}); }
+        if(h.tick<=0){ h.tick = 0.5; playerDamage(g, (6+dep*1.0)*TELE_DMG_MULT*hazardScale(dep), {dmgType:'poison', hp:0, x:h.x, y:h.y, r:0}); }
       } else h.tick = 0;
     }
   }

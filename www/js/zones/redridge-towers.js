@@ -141,7 +141,7 @@ function updateRRTower(g, dt){
       v.state = cyc<2.4 ? 0 : cyc<3.0 ? 1 : 2;
       if(v.state===2 && v.hitN!==n){
         v.hitN = n;
-        if(dist(p, v) < v.r + p.r*0.5){ playerDamage(g, (12+g.depth*2.2)*TELE_DMG_MULT, null); g.particles.push({type:'burst', x:p.x, y:p.y, t:0.3, max:0.3, color:'#bfe6ff'}); }
+        if(dist(p, v) < v.r + p.r*0.5){ playerDamage(g, (12+g.depth*2.2)*TELE_DMG_MULT*hazardScale(g.depth), null); g.particles.push({type:'burst', x:p.x, y:p.y, t:0.3, max:0.3, color:'#bfe6ff'}); }
       }
     }
   }

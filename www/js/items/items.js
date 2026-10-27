@@ -46,7 +46,9 @@ function enemyAttackRating(ml){ return DEF_AR_BASE + DEF_AR_PER_ML*Math.max(1, m
 const IRON_STILL_PER_S = 0.10, IRON_STILL_MAX = 5;
 function ironStillMult(p){ return (p && p.cls==='warrior' && p.skills && (p.skills.ironSkin||0)>0 && p.stillT>0) ? 1 + IRON_STILL_PER_S*Math.floor(Math.min(IRON_STILL_MAX, p.stillT)) : 1; }
 function effectiveDefense(p){ return ironStillMult(p)*((p.defense||0) + soulShieldDefense(p))*(p.bulwarkT>0 ? BULWARK_ARMOR : 1)*(p.juggT>0 ? 1+juggDef(p.juggRank||1) : 1); }
-function playerHitChance(p, ml){ const ar = enemyAttackRating(ml), d = effectiveDefense(p); return clamp(ar/(ar+d), DEF_HIT_MIN, DEF_HIT_MAX); }
+// v538: Diablo 2 style level factor -- a monster below your level misses more (2*ML/(ML+your level)), one above you hits more
+function hitLevelFactor(p, ml){ const pl = Math.max(1, (p && p.level) || 1), m = Math.max(1, ml||1); return 2*m/(m+pl); }
+function playerHitChance(p, ml){ const ar = enemyAttackRating(ml), d = effectiveDefense(p); return clamp(clamp(ar/(ar+d), DEF_HIT_MIN, DEF_HIT_MAX)*hitLevelFactor(p, ml), 0.12, 0.95); }
 const RARITY_ARMOR_MULT = {common:1.0, magic:1.2, rare:1.5}, RARITY_RESIST_MULT = {common:1.0, magic:1.0, rare:1.25};
 const MAGIC_SINGLE_MOD_CHANCE = 0.25;
 // (v120) Area-of-Effect % from gear is capped at +30% total; it enlarges every
