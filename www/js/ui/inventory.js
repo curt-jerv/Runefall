@@ -108,7 +108,9 @@ function statInfoText(key, p){
     BLK: 'Block chance: '+Math.round(blockChance(p)*100)+'% (needs a shield, cap 50%). A block stops the whole hit.',
     PARRY: 'Parry chance: '+Math.round(parryChance(p)*100)+'% (two-hander or dual swords with Weapon Specialization). A parry stops the whole hit.',
     EVA: 'Evasion: '+Math.round(evasionChance(p)*100)+'% to dodge a hit completely (cap '+Math.round(EVASION_CAP*100)+'%).',
-    DEX: 'Dexterity '+Math.round(p.dexterity||0)+': each point adds '+DEF_PER_DEX+' Defense.',
+    STR: 'Strength '+Math.round(p.strength||0)+': +'+LIFE_PER_STR+' life per point and +1% physical damage per '+STR_PER_DMG_PCT+' (now +'+Math.round(((p.strength||0)/STR_PER_DMG_PCT)*10)/10+'%). Plate, swords and shields need it. Grows by '+(CLASS_MAIN_ATTR[p.cls]==='strength'?ATTR_MAIN_PER_LV:ATTR_OTHER_PER_LV)+' a level.',
+    DEX: 'Dexterity '+Math.round(p.dexterity||0)+': +'+DEF_PER_DEX+' Defense per point, +1% bow damage per '+DEX_PER_BOW_PCT+', and a small dodge chance (now '+Math.round((p.dexDodge||0)*10)/10+'%, up to '+DEX_DODGE_CAP+'%)'+(p.cls==='ranger' ? ', and Stamina' : '')+'. Leather and bows need it. Grows by '+(CLASS_MAIN_ATTR[p.cls]==='dexterity'?ATTR_MAIN_PER_LV:ATTR_OTHER_PER_LV)+' a level.',
+    INT: 'Intelligence '+Math.round(p.intelligence||0)+': +1% spell damage (fire, cold, lightning, poison) per '+INT_PER_DMG_PCT+' (now +'+Math.round(((p.intelligence||0)/INT_PER_DMG_PCT)*10)/10+'%)'+(p.cls==='mystic' ? ' and '+MANA_PER_INT+' mana per point' : '')+'. Robes and staves need it. Grows by '+(CLASS_MAIN_ATTR[p.cls]==='intelligence'?ATTR_MAIN_PER_LV:ATTR_OTHER_PER_LV)+' a level.',
     'DMG RED': 'Take '+pc((p.itemDmgReductionPct||0)*100)+'% less damage from everything (gear cap 25%).',
     REGEN: 'Regenerate '+pc((p.lifeRegenPct||0)*100)+'% of max life per second'+(p.cls==='warrior' ? ' (Warriors start with '+WARRIOR_BASE_REGEN+'%).' : '.'),
     RESREGEN: p.cls==='mystic' ? 'Mana refills by '+pc(MANA_REGEN_PCT*100)+'% of the bar every second on its own.' : 'Stamina refills by '+pc(STAMINA_REGEN_PCT*100)+'% of the bar every second on its own (more with Predator\'s Instinct).',
@@ -167,6 +169,9 @@ function statSummaryHtml(p){
   return (
     head('Character')+
     cell('LVL','LEVEL',(p.level||1))+
+    cell('STR','STRENGTH',Math.round(p.strength||0))+
+    cell('DEX','DEXTERITY',Math.round(p.dexterity||0))+
+    cell('INT','INTELLIGENCE',Math.round(p.intelligence||0))+
     cell('HP','LIFE',Math.round(p.maxHp))+
     cell('RES',rn,Math.round((p.mpReserved>0 ? p.maxMpFull : p.maxMp)||0))+
     pct('SPD','MOVE SPD',p.gearSpeedPct||0,true)+
@@ -204,7 +209,6 @@ function statSummaryHtml(p){
     cell('HIT','ENEMY HIT',hitNow+'%')+
     (showParry ? cell('PARRY','PARRY',par+'%') : cell('BLK','BLOCK',blk>0?(blk+'%'):'0%', !(blk>0)))+
     pct('EVA','EVASION',evasionChance(p)*100)+
-    num('DEX','DEX',p.dexterity||0)+
     pct('DMG RED','DMG RED',(p.itemDmgReductionPct||0)*100)+
     cell('REGEN','LIFE REGEN',r1((p.lifeRegenPct||0)*100)+'%/s', !((p.lifeRegenPct||0)>0))+
     (p.cls==='mystic' ? cell('RESREGEN','MANA REGEN',r1(MANA_REGEN_PCT*100)+'%/s') : p.cls==='ranger' ? cell('RESREGEN','STAMINA REGEN',r1(STAMINA_REGEN_PCT*100*(1+0.03*((p.skills&&effectiveRank(p,'steadyBreathing'))||0)))+'%/s') : '')+
@@ -532,7 +536,7 @@ function renderPaperdollInto(containerEl, p, idPrefix, interactive){
     const blocked = !it && slot==='offhand' && p.equipment.mainhand && p.equipment.mainhand.twoHanded;
     const label = (slot==='offhand' && it && it.slotType==='weapon1h') ? 'Off-Hand' : SLOT_LABELS[slot];
     const el = document.createElement('div');
-    el.className = 'pdSlot'+(it?' filled':'');
+    el.className = 'pdSlot'+(it?' filled':'')+(it && p.inactiveSlots && p.inactiveSlots[slot] ? ' pdInactive' : '');   // v563: worn without its Strength / Dexterity / Intelligence
     el.id = idPrefix+slot;
     el.dataset.slot = slot;
     const pos = PD_SLOT_POS[slot];

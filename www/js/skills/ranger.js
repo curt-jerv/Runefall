@@ -106,9 +106,10 @@ function bowExpertDmgMult(p){
   const mh = p && p.equipment && p.equipment.mainhand;
   if(!(mh && mh.slotType==='bow')) return 1;
   const rank = (p.skills && effectiveRank(p,'bowExpert')) || 0;
+  const dexK = 1 + (p.dexBowPct||0)/100;   // v563: +1% bow damage per 5 Dexterity
   // v227: the Multi Shot tuning now lives on the basic-attack arrows only (see the multiShot fan below)
-  if(rank<=0) return 1;
-  return 1 + tblAt(BOW_EXPERT_DMG_PCT, rank)/100;
+  if(rank<=0) return dexK;
+  return dexK * (1 + tblAt(BOW_EXPERT_DMG_PCT, rank)/100);
 }
 // ---- v227 Ranger redesign helpers ----
 const AIMED_SHOT_DMG_MULT = 2.2, AIMED_SHOT_CRIT_BONUS = 15, AIMED_SHOT_FALLOFF = 0.8, AIMED_SHOT_CD = 2.5;   // v489: a real cooldown again (was a 0.4s lockout)

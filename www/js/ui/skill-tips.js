@@ -87,7 +87,7 @@ const SKILL_TIPS = {
     stats:[['Radius', ()=>String(SURV_TRAP_RADIUS)]], cd:r=>poisonTrapCooldown(r) },
   survivalFieldDress:{ desc:'Bind your wounds on the move, and patch up your companions too.', fx:'Bandage yourself over '+SURV_FIELD_DRESS_DUR+'s while you keep moving and fighting, cleansing slows and ailments; companions heal half as much. Every dodge also heals you a little over '+SFD_DODGE_DUR+'s.',
     stats:[['Bandage heals (of max life)', r=>Math.round(survFieldDressRegenRate(r)*100*SURV_FIELD_DRESS_DUR)+'%'], ['Each dodge heals (of max life)', r=>fmtNum(Math.round(sfdDodgePct(r)*1000)/10)+'%']], cd:r=>survFieldDressCooldown(r) },
-  evasion:{ desc:'Move like smoke, slipping past blows meant to end you.', fx:'A chance to fully dodge a hit (stacks with Dexterity from gear, cap '+Math.round(EVASION_CAP*100)+'%). Every dodge also restores Stamina.',
+  evasion:{ desc:'Move like smoke, slipping past blows meant to end you.', fx:'A chance to fully dodge a hit (stacks with the dodge from Dexterity, cap '+Math.round(EVASION_CAP*100)+'%). Every dodge also restores Stamina.',
     stats:[['Dodge chance', r=>'+'+Math.round((EVASION_SKILL_PCT[Math.min(r,10)-1]+Math.max(0,r-10)*0.01)*100)+'%'], ['Stamina per dodge', r=>String(evasionDodgeStamina({skills:{evasion:r}}))]] },
   frostTrap:{ desc:'Set a trap of biting frost to lock your enemies in place.', fx:'Lay up to 3 traps. When an enemy steps near one it freezes everything around it, then chills them. Elites and brutes freeze for less; bosses are only chilled.', per:'burst',
     stats:[['Freeze', r=>tipS(frostTrapFreezeDuration(r))], ['Chill after', r=>tipS(frostTrapChillDuration(r))], ['Radius', ()=>String(SURV_TRAP_RADIUS)]], cd:()=>FROST_TRAP_CD },

@@ -264,7 +264,7 @@ const RESOURCE_SKILLS = {
   // (v146) Mystic basic spells now cost more per rank (step); the big Mystic skills cost mana too (no minCd: their own cooldowns stand).
   // (v152) Lightning Arc / Fireball / Ice Bolt / Soul Sap no longer cost mana -- they REWARD it on hit (MANA_ON_HIT_PCT).
   // Everything else costs a lot more, against a much smaller pool.
-  // v562: the four big spells (Hurricane, Meteor, Blizzard, Plague) cost a flat 95 mana; no cost grows with character level any more
+  // v562: the four big spells (Hurricane, Meteor, Blizzard, Plague) cost 95 mana at rank 1 (v563: +8% a rank, like every Mana/Stamina skill)
   plague:{cost:95}, soulGate:{cost:40}, immolate:{cost:35}, flameVortex:{cost:45}, permafrost:{cost:21, step:-1.8},
   nova:{cost:26}, tornado:{cost:35}, hurricane:{cost:95}, iceArmor:{cost:0}, pyroTorrent:{cost:20}, blizzard:{cost:95}, meteor:{cost:95}, stormcall:{cost:32}, raiseDead:{cost:12}, fear:{cost:25},  /* pyroTorrent cost is PER SECOND while channelling */
   shieldThrow:{cost:25, minCd:1.0}, bulwark:{cost:30}, mirrorSteel:{cost:25, step:-10/9}, seismicSlam:{cost:25}, seismicAnchor:{cost:25, step:-10/9}, whirlwind:{cost:15, minCd:1.0}, unbreakable:{cost:0, minCd:8},
@@ -287,12 +287,18 @@ const MANA_ON_HIT_PCT = {lightningArc:0.04, fireball:0.03, iceBolt:0.08, soulSap
 const WARRIOR_DMG_MULT = 1.25;
 function resourceName(p){ return RESOURCE_NAME[p.cls]||'Mana'; }
 // Cost of a skill for this player: base + per-rank step, and Mystic costs grow 2% per level past 20 so a bigger pool doesn't trivialise them.
+const COST_PER_RANK = 0.08;   // v563: x1.72 at rank 10 (about how much mana / Stamina grows from a skill's first rank to its tenth)
+let _rageSkillIds = null;
+function isRageSkill(id){ if(!_rageSkillIds){ _rageSkillIds = new Set(); for(const k in SKILL_TREES) for(const n of SKILL_TREES[k].nodes) _rageSkillIds.add(n.id); } return _rageSkillIds.has(id); }
 function resCost(p,id,rankOverride){
   const r = RESOURCE_SKILLS[id]; if(!r) return 0;
   let c = r.cost;
   if(id==='raiseDead' && p && p.skills) return RAISE_DEAD_MANA_PER_SKEL * Math.max(1, necroSkeletonLimit(p));   // v489: 12 mana per skeleton raised
-  if(r.step){ const rk = rankOverride!=null ? rankOverride : ((p&&p.skills&&effectiveRank(p,id))||0); c += r.step*Math.max(0,rk-1); }
-  // v562: Mystic costs no longer grow 2% per level past 20 (D2 and PoE tie cost to the skill's level, never the character's)
+  const rk = rankOverride!=null ? rankOverride : ((p&&p.skills&&effectiveRank(p,id))||0);
+  // v563: Mana and Stamina costs grow with the skill's rank, as the pools grow with Intelligence / Dexterity (never with character level);
+  // Rage stays a fixed 100, so Rage skills keep their own small rank steps
+  if(isRageSkill(id)){ if(r.step) c += r.step*Math.max(0,rk-1); }
+  else c *= 1 + COST_PER_RANK*Math.max(0, rk-1);
   if(p && WR_SKILLS[id] && (p.windReady || p._wrCostWin>0)) c *= 0.5;   // v466 Windrunner
   if(p && p.cls==='ranger' && p.skills){ const ts=effectiveRank(p,'steadyBreathing')||0; if(ts>0) c *= 1 - 0.05*Math.min(10,ts); }   // v497: Steady Breathing is its own Marksman node
   return Math.round(c);

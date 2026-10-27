@@ -186,7 +186,7 @@ const EQUIP_AFFIXES = {
     ],
     suffixes: [
       {word:'Warding',   key:'defensePct',       label:'Defense %'},
-      {word:'Agility',   key:'dexterity',         label:'Dexterity', gate:'rangerArmor'},
+      {word:'Agility',   key:'dexterity',         label:'Dexterity'},
       {word:'Dousing',   key:'fireResistPct',      label:'Fire Resist %'},
       {word:'Warmth',    key:'coldResistPct',      label:'Cold Resist %'},
       {word:'Grounding', key:'lightningResistPct', label:'Lightning Resist %'},
@@ -205,7 +205,7 @@ const EQUIP_AFFIXES = {
     ],
     suffixes: [
       {word:'Warding',   key:'defensePct',       label:'Defense %'},
-      {word:'Agility',   key:'dexterity',         label:'Dexterity', gate:'rangerArmor'},
+      {word:'Agility',   key:'dexterity',         label:'Dexterity'},
       {word:'Dousing',   key:'fireResistPct',      label:'Fire Resist %'},
       {word:'Warmth',    key:'coldResistPct',      label:'Cold Resist %'},
       {word:'Grounding', key:'lightningResistPct', label:'Lightning Resist %'},
@@ -222,7 +222,7 @@ const EQUIP_AFFIXES = {
       {word:'Holy',    key:'lifeRegenPct', label:'Life Regen %'},
     ],
     suffixes: [
-      {word:'Agility',   key:'dexterity',         label:'Dexterity', gate:'rangerArmor'},
+      {word:'Agility',   key:'dexterity',         label:'Dexterity'},
       {word:'Dousing',   key:'fireResistPct',      label:'Fire Resist %'},
       {word:'Warmth',    key:'coldResistPct',      label:'Cold Resist %'},
       {word:'Grounding', key:'lightningResistPct', label:'Lightning Resist %'},
@@ -292,6 +292,12 @@ const EQUIP_AFFIXES = {
     ],
   },
 };
+// v563 attributes: Strength (of Might), Dexterity (of Agility), Intelligence (of Mind) on armor, gloves, boots, belts, shields and jewelry.
+// Which one is likely follows the armor's material (see ATTR_MAT_PREF in items/mods.js).
+{ const ST={word:'Might',key:'strength',label:'Strength'}, DX={word:'Agility',key:'dexterity',label:'Dexterity'}, IN={word:'Mind',key:'intelligence',label:'Intelligence'};
+  const P=o=>Object.assign({},o);
+  ['helm','gloves','boots','belt','ring'].forEach(c=>{ const q=EQUIP_AFFIXES[c]; [ST,DX,IN].forEach(a=>{ if(!q.suffixes.some(x=>x.key===a.key)) q.suffixes.push(P(a)); }); });
+  EQUIP_AFFIXES.shield.suffixes.push(P(ST)); }
 // v440 new gear mods
 { const CD={word:'Ruin',key:'critDmgPct',label:'Crit Damage %'}, SD={word:'Lingering',key:'statusDurPct',label:'Ailment Duration %'},
         VE={word:'Slaying',key:'dmgVsElitePct',label:'Damage vs Elites %',minIlvl:50}, LK={word:'Bloodthirst',key:'lifeOnKill',label:'Life on Kill'},
@@ -416,6 +422,8 @@ function itemCardHtml(item, other){
   const rc = itemClassRestriction(item);
   if(rc) h += '<div class="icReq" style="color:#e8a24a">('+rc+' Only)</div>';
   if(item.levelReq && item.levelReq>1 && !item.unidentified) h += '<div class="icReq" style="color:#e8c44a">Requires Lv.'+item.levelReq+'</div>';
+  { const rq = itemAttrReq(item), pl = (typeof game!=='undefined' && game && game.player) || null;   // v563: Strength / Dexterity / Intelligence needed
+    if(rq) h += '<div class="icReq" style="color:'+(pl && pl.attrs && !itemReqMet(pl, item) ? '#e05a4a' : '#e8c44a')+'">'+itemReqText(item)+(pl && pl.attrs && !itemReqMet(pl, item) ? ' &middot; its bonuses are off until you have it' : '')+'</div>'; }
   if(item.forgeDoubled) h += '<div class="icReq" style="color:#7fe07f">(doubled)</div>';
   if(item.crimson) h += '<div class="icReq" style="color:#d4344f">Obsidian-forged &middot; crimson</div>';
   if(item.unidentified) return h+'<div style="color:#b8a878;">Unidentified &mdash; its modifiers are revealed when you buy it.</div>';

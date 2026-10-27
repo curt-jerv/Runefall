@@ -204,12 +204,8 @@ function equipItemRaw(p, item){
   // Robe or Leather; Warrior can wear any of Robe/Leather/Plate. Items
   // generated before this update have no .material and are grandfathered
   // in (no check applied to them).
-  if((item.slotType==='helm' || item.slotType==='armor' || item.slotType==='gloves' || item.slotType==='boots') && item.material){
-    if(!canEquipArmorMaterial(p.cls, item.material)){
-      showMsg('I cannot use this', 1.3);
-      return false;
-    }
-  }
+  // v563: any class can wear any armor; it needs Strength / Dexterity / Intelligence instead (worn without it, it does nothing)
+  if(itemAttrReq(item) && !itemReqMet(p, item)) showMsg(itemReqText(item)+': its bonuses are off until you have it', 1.8);
   // Tiered gear (Field Plate/Full Plate, Scalehide/Demonhide, Adept/Arcanist robes,
   // Hunter/Recurve Bow, etc) requires a matching character level -- items
   // generated before this update have no .levelReq (undefined) and are
@@ -295,9 +291,8 @@ function tryAutoEquip(p, item){
   if(item.slotType==='weapon2h' && (p.cls!=='warrior' || !hasWeaponsSpec)) return false;
   if(item.slotType==='staff' && p.cls!=='mystic') return false;
   if(item.slotType==='bow' && p.cls!=='ranger') return false;
-  if((item.slotType==='helm' || item.slotType==='armor' || item.slotType==='gloves' || item.slotType==='boots') && item.material){
-    if(!canEquipArmorMaterial(p.cls, item.material)) return false;
-  }
+  if(item.material && !canEquipArmorMaterial(p.cls, item.material)) return false;   // v563: picking up only puts on your own class's armor by itself...
+  if(!itemReqMet(p, item)) return false;   // ...and only if you meet its requirement
   if(item.levelReq && item.levelReq>1 && p.level < item.levelReq) return false;
   let targetSlot = null;
   if(item.slotType==='ring'){
@@ -369,9 +364,24 @@ function recalcStats(p){
   const ALL_TREE_KEYS = ['defender','berserker','templar','survivalist','marksman','hunter','djinn','elementalist','necromancer'];
   ALL_TREE_KEYS.forEach(k=>{ skillBonusByTree[k]=0; });
   const eq = p.equipment || {};
+  // v563: Strength / Dexterity / Intelligence from level + gear; gear whose requirement isn't met (without its own bonus) stays worn but counts for nothing
+  const baseAttr = {}; ATTR_KEYS.forEach(k=>{ baseAttr[k] = attrBase(p.cls, k, p.level||1); });
+  const gearAttr = it=>{ const o = {}; for(const af of (it.affixes||[])) if(ATTR_KEYS.indexOf(af.key)>=0) o[af.key] = (o[af.key]||0) + (af.value||0); return o; };
+  const inactive = {};
+  for(let pass=0; pass<4; pass++){
+    const tot = Object.assign({}, baseAttr);
+    for(const s of EQUIP_SLOTS){ const it = eq[s]; if(it && !inactive[s]){ const ga = gearAttr(it); for(const k in ga) tot[k] += ga[k]; } }
+    let changed = false;
+    for(const s of EQUIP_SLOTS){ const it = eq[s]; if(!it) continue;
+      const own = inactive[s] ? {} : gearAttr(it), t2 = {}; ATTR_KEYS.forEach(k=>{ t2[k] = tot[k] - (own[k]||0); });
+      const off = !itemReqMet(p, it, t2); if(!!inactive[s] !== off){ inactive[s] = off; changed = true; } }
+    if(!changed) break;
+  }
+  p.inactiveSlots = inactive;
+  let addStr = 0, addInt = 0;
   for(const slot of EQUIP_SLOTS){
     const it = eq[slot];
-    if(!it) continue;
+    if(!it || inactive[slot]) continue;
     migrateItemAffixes(it); // (v105) retired evasion/defence keys -> dexterity/armor
     const isWpnSlot = (slot==='mainhand'||slot==='offhand') && !!FLAT_ELEM_WEAPON[it.slotType];
     for(const af of it.affixes){
@@ -390,6 +400,8 @@ function recalcStats(p){
       else if(af.key==='mp') addMp+=af.value;
       else if(af.key==='crit' || af.key==='critChance') addCrit+=af.value;
       else if(af.key==='dexterity') addDexterity+=af.value;
+      else if(af.key==='strength') addStr+=af.value;
+      else if(af.key==='intelligence') addInt+=af.value;
       else if(af.key==='spellPower'){}   // v457: the staff's +rank only; its damage now comes from the staff's own range
       else if(af.key==='fireDmg') addFireDmg+=af.value;
       else if(af.key==='coldDmg') addColdDmg+=af.value;
@@ -470,13 +482,15 @@ function recalcStats(p){
   // attack cooldown, same shape every other atkSpeedMod source above uses.
   { const _asp = addAtkSpeedPct + (partBonuses(p).atkspd||0); if(_asp>0) atkSpeedMod *= (1 - clamp(_asp,0,40)/100); }
   const pb = partBonuses(p); p.partB = pb;
-  let newMaxHp = 100 + p.level * (p.cls==='warrior' ? WARRIOR_HP_PER_LEVEL : HP_PER_LEVEL) + addHp;
-  if(p.cls==='warrior') newMaxHp = Math.round(newMaxHp*WARRIOR_HP_MULT);
+  p.strength = baseAttr.strength + addStr; p.dexterity = baseAttr.dexterity + addDexterity; p.intelligence = baseAttr.intelligence + addInt;
+  p.attrs = {strength:p.strength, dexterity:p.dexterity, intelligence:p.intelligence};
+  let newMaxHp = Math.round(100 + p.level*LIFE_PER_LEVEL + p.strength*LIFE_PER_STR + addHp);   // v563: life comes from level and Strength
   if(pb.hp) newMaxHp = Math.round(newMaxHp*(1+pb.hp/100));
   { const si=(p.skills && effectiveRank(p,'survivalInstinct'))||0; if(si>0) newMaxHp = Math.round(newMaxHp*(1+INSTINCT_HP_PER_RANK*si)); }
   if(((p.skills && effectiveRank(p,'ironSkin'))||0) >= BASE_MAX_RANK) newMaxHp = Math.round(newMaxHp*(1+IRON_SKIN_RANK5_LIFE));
   if(p.coffeeT>0) newMaxHp = Math.max(1, Math.round(newMaxHp*COFFEE_HP_MULT));
-  const newMaxMp = Math.round((p.cls==='warrior' ? RAGE_MAX + addMp : p.cls==='ranger' ? STAMINA_BASE + (p.level-1)*STAMINA_PER_LEVEL + addMp : BASE_MAXMP + (p.level-1)*MP_PER_LEVEL + addMp) * (1 + (pb.mana||0)/100));
+  // v563: mana comes from Intelligence, Stamina from Dexterity (Rage stays a fixed 100)
+  const newMaxMp = Math.round((p.cls==='warrior' ? RAGE_MAX + addMp : p.cls==='ranger' ? STAMINA_BASE + Math.max(0, p.dexterity-ATTR_MAIN_START)*STAMINA_PER_DEX + addMp : MANA_BASE + p.intelligence*MANA_PER_INT + addMp) * (1 + (pb.mana||0)/100));
   const hpDiff = newMaxHp - (p.maxHp==null ? newMaxHp : p.maxHp);
   p.maxHp = newMaxHp;
   p.hp = (p.hp==null) ? newMaxHp : clamp(p.hp + Math.max(0,hpDiff), 0, p.maxHp);
@@ -501,7 +515,8 @@ function recalcStats(p){
   // v457: weapon damage range (bare hands if nothing is held) + matching percentage bonuses
   if(!(wMax>0)){ const L = p.level||1; wMin = Math.round(4 + 1.0*L); wMax = Math.round(8 + 1.6*L); }
   p.wpnMin = wMin; p.wpnMax = wMax;
-  p.physDmgPct = addPhysPct + pb.physpct; p.elemDmgPct = addElemPct + pb.elempct;
+  p.physDmgPct = addPhysPct + pb.physpct + p.strength/STR_PER_DMG_PCT; p.elemDmgPct = addElemPct + pb.elempct + p.intelligence/INT_PER_DMG_PCT;   // v563: +1% per 5 Strength / Intelligence
+  p.dexBowPct = p.dexterity/DEX_PER_BOW_PCT;
   p.fireDmgPct = addFirePct + pb.firepct; p.coldDmgPct = addColdPct + pb.coldpct; p.lightningDmgPct = addLightPct + pb.lightpct; p.poisonDmgPct = addPoisPct + pb.poisonpct;
   // v83 elemental flat damage (Flaming/Chilling/Lightning/Poisoning
   // prefixes, staff Fire/Ice/Lightning/Poison suffixes): this game has no
@@ -542,7 +557,7 @@ function recalcStats(p){
   // raw item total separately for anything that wants to display it apart
   // from Warding's contribution).
   p.defenceFlat = addDefenceFlat;
-  p.defense = (addArmor + addDefenceFlat + addDexterity*DEF_PER_DEX + (p.cls==='warrior' ? (WARRIOR_BASE_ARMOR + WARRIOR_ARMOR_PER_LEVEL*p.level)*DEF_SCALE : 0)) * (1 + addDefensePct/100) * (1 + ironSkinDefensePct(p)) * (p.beerT>0 ? BEER_ARMOR_MULT : 1) * (1 + pb.def/100) * (1 + (p.bannerDefNow||0)/100) * (p.hurricaneT>0 ? 1 + hurricaneDefPct((p.skills && effectiveRank(p,'hurricane'))||1) : 1);   // v489 Hurricane
+  p.defense = (addArmor + addDefenceFlat + p.dexterity*DEF_PER_DEX + (p.cls==='warrior' ? (WARRIOR_BASE_ARMOR + WARRIOR_ARMOR_PER_LEVEL*p.level)*DEF_SCALE : 0)) * (1 + addDefensePct/100) * (1 + ironSkinDefensePct(p)) * (p.beerT>0 ? BEER_ARMOR_MULT : 1) * (1 + pb.def/100) * (1 + (p.bannerDefNow||0)/100) * (p.hurricaneT>0 ? 1 + hurricaneDefPct((p.skills && effectiveRank(p,'hurricane'))||1) : 1);   // v489 Hurricane
   p.armor = p.defense/DEF_SCALE;   // old-scale value, still used by skills that add armor to their damage
   // v83 Studded (+Thorns): flat damage reflected onto an attacker whenever
   // the player is actually hit (not blocked/dodged) -- see playerDamage.
@@ -617,8 +632,8 @@ function recalcStats(p){
   // the hit" roll gear-based Evasion already grants, per spec ("+dodge%").
   // (v105) gear Evasion % is gone -- gear rolls Dexterity, and every 10
   // Dexterity on gear = +1% Evasion (dodge).
-  p.dexterity = addDexterity;
-  p.evasion = Math.min(60, dexEvasionPct(addDexterity, (typeof game!=='undefined' && game) ? monsterLevel(game) : p.level) + pb.eva); p.evaPb = pb.eva||0;
+  p.dexDodge = Math.min(DEX_DODGE_CAP, dexEvasionPct(p.dexterity, p.level||1));   // measured against your own level so it doesn't jump in town   // v563: Dexterity gives a small dodge chance again
+  p.evasion = Math.min(60, p.dexDodge + pb.eva); p.evaPb = pb.eva||0;
   if(p.coffeeT>0) atkSpeedMod *= COFFEE_ATKSPD_MULT;
   p.atkCdMax = BASE_ATK_CD * atkSpeedMod;
   p.atkSpeedTotalPct = (1/Math.max(0.05,atkSpeedMod) - 1)*100; p.atkSpeedGearPct = clamp(addAtkSpeedPct + (partBonuses(p).atkspd||0), 0, 40);
@@ -646,6 +661,6 @@ function projectileSpeedMult(p){ return 1 + clamp((p&&p.projectileSpeedPct)||0, 
 const EVASION_CAP = 0.6;
 // (v250) Evasion from Dex is a diminishing ratio against the area's monster level (like D2 defence vs attack rating).
 function dexEvasionPct(dex, ml){ const d = Math.max(0, dex||0); return Math.min(45, Math.round(1000*d/(d + 25*Math.max(1,ml||1) + 100))/10); }
-function gearEvasionNow(p){ return Math.min(60, (p.evaPb||0)); }   // v346: Dexterity now feeds Defense instead
+function gearEvasionNow(p){ return Math.min(60, (p.evaPb||0) + (p.dexDodge||0)); }   // v563: Dexterity feeds Defense and a little dodge
 function evasionChance(p){ const base = clamp(gearEvasionNow(p)/100 + evasionSkillChance(p), 0, EVASION_CAP); return (p.vanishEvaT>0 && typeof VANISH_EVA!=='undefined') ? Math.max(base, VANISH_EVA) : base; }
 

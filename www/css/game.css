@@ -1378,3 +1378,6 @@ body.noPotionBtn #actionCluster .interactBtn{ right:127px !important; bottom:127
 .tipRow{ margin-top:1px; }
 .tipLab{ color:#c9a86a; }
 .tipNext{ color:#8f9aa3; }
+/* v563: gear worn without the Strength / Dexterity / Intelligence it needs */
+.pdSlot.pdInactive{ box-shadow:inset 0 0 0 2px #c0392b, 0 0 6px rgba(192,57,43,.6) !important; }
+.pdSlot.pdInactive .slotItem{ opacity:.55; filter:grayscale(.6); }
