@@ -75,7 +75,7 @@ function claimShrineBlessing(){
   p.skillPoints = (p.skillPoints||0) + 2;
   forceAddToBag(p, makeAwakenedRuneItem());
   const q = getQuest(p, 'shrine_stone');
-  if(q){ q.progress=q.total; q.desc='The mountain judged you worthy and awakened the runestone. Show it to the scholar.'; }   // v456: completed by the scholar
+  if(q){ q.progress=q.total; q.desc='The mountain judged you worthy and awakened the runestone. Show it to Corwin.'; }   // v456: completed by the scholar
   p.snowWallOpen = true;
   npcMark(p, 'scholar', true);
   showBigMsg('The Mountain judges you worthy.', 'Received +2 skill points.', 3.6);
@@ -293,7 +293,7 @@ function talkToQuestGiver(){
       } else if(wq && wq.status==='active'){
         showMsg('"The runestone is held at the top of Frosthold Tower. Bring it down and we can face the Wraith Lord."', 3.4);
       } else {
-        { const bq = getQuest(p, QUEST_BRIDGE.id); showMsg(bq && bq.status==='active' ? '"The bandits still hold the old bridge ('+bq.progress+'/'+bq.total+')."' : '"Be careful out there."', 2.8); }   // v456: no more respec here (the well still offers it)
+        { const bq = getQuest(p, QUEST_BRIDGE.id); if(bq && bq.status==='active') showMsg('"The bandits still hold the old bridge ('+bq.progress+'/'+bq.total+')."', 2.8); else talkTownTip({name:'Aldric the Elder'}); }   /* v546: nothing to ask of you -- a piece of advice instead */   // v456: no more respec here (the well still offers it)
       }
     }
   } else if(q){

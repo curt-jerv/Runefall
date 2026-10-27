@@ -37,6 +37,7 @@ function clearSpawnArea(g){
       // v525: a zone change that never asked for a dungeon trip seed ends the current trip (see tripSeed)
       const outer = !game._enterDepth; game._enterDepth = (game._enterDepth||0)+1; if(outer) game._famCalled = false;
       let r; try{ r = orig.apply(this, args); } finally { game._enterDepth--; }
+      if(outer && n!=='goToTown' && n!=='enterTavern') game.tpReturn = null;   // v546: leaving town any other way closes the town portal
       if(outer && !game._famCalled){ game._tripFam = null; game._tripBase = 0; }
       if(outer && typeof rrKeepsSeed==='function' && !rrKeepsSeed(game)) game._rrSeed = 0;
       if(outer && typeof lakeKeepsSeed==='function' && !lakeKeepsSeed(game)) game._lakeSeed = 0;   // v530: the Lakeside Ruins re-roll after you leave the lake country   // v527: leaving the canyon country re-rolls Redridge next time

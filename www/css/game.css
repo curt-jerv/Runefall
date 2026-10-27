@@ -1273,6 +1273,7 @@
 #hudDock .gres{ position:absolute; left:0; right:0; top:0; height:0%; background:rgba(40,40,48,.75); }
 #hudDock .gshine{ position:absolute; left:16%; top:9%; width:38%; height:26%; border-radius:50%; background:radial-gradient(ellipse, rgba(255,255,255,.35), rgba(255,255,255,0) 70%); pointer-events:none; }
 #hudDock .gnum{ position:absolute; left:0; right:0; bottom:20%; text-align:center; font:italic 700 17px 'Alegreya',Georgia,serif; letter-spacing:.02em; color:#f4ead8; text-shadow:0 1px 2px #000, 0 0 3px #000; pointer-events:none; }
+#hudDock .gia{ position:absolute; left:0; right:0; bottom:9%; text-align:center; font:italic 700 11px 'Alegreya',Georgia,serif; color:#1c3d8c; text-shadow:0 0 2px #cfe8ff, 0 0 3px #cfe8ff; pointer-events:none; }   /* v546: Ice Armor value */
 #dockMid{ display:flex; flex-direction:column; gap:5px; width:250px; pointer-events:auto; padding-bottom:4px; }
 #dockMid #topBtns{ display:flex !important; gap:4px !important; justify-content:stretch !important; pointer-events:auto; margin:0 !important; }
 #dockMid #topBtns > div{ height:26px !important; font-size:11px !important; pointer-events:auto; }
@@ -1361,3 +1362,11 @@ body.noPotionBtn #actionCluster .interactBtn{ right:127px !important; bottom:127
 
 /* v514: NPC dialogue text a little bigger and easier to read */
 #npcText, #questGiverText{ font-size:16px !important; line-height:1.5; max-height:56vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+
+/* v546: town portal button (dimmed in town) */
+#dockMid #topBtns #tpBtn{ color:#9ad0ff; }
+#dockMid #topBtns #tpBtn.off{ opacity:.45; }
+#dockMid{ width:280px; }
+#dockMid #topBtns > div{ flex:1 1 auto !important; letter-spacing:0 !important; padding:0 3px !important; }
+#dockMid #topBtns #mapBtn{ flex:1 1 auto !important; min-width:0 !important; }
+@media (orientation:portrait){ #dockMid{ width:auto; } #dockMid #topBtns{ gap:3px !important; } #dockMid #topBtns > div{ font-size:9.5px !important; padding:0 2px !important; } }

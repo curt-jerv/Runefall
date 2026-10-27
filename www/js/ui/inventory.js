@@ -94,7 +94,7 @@ function statInfoText(key, p){
     AREA: '+'+pc(p.aoeRadiusPct||0)+'% area size for area skills (gear cap '+AOE_AFFIX_CAP_PCT+'%).',
     COOLDOWN: pc((p.cdrPct||0)*100)+'% shorter skill cooldowns (cap 30%).',
     'PROJ SPD': 'Projectiles fly '+pc(p.projectileSpeedPct||0)+'% faster.',
-    BLEED: pc(p.bleedChancePct||0)+'% chance for your hits to cause Bleed.',
+    BLEED: pc(p.bleedChancePct||0)+'% chance for each hit to cause Bleed (gear, cap 60%). A Bleed makes the enemy lose '+pc(BLEED_DPS_PCT*partBleedMult()*100)+'% of that hit\u2019s damage every second for '+BLEED_DUR+'s. Bleeds from different sources (this chance, Splinter Shot, Crippling Shot, Reave, wolves) stack, up to '+BLEED_MAX_STACKS+' at once; a new Bleed from the same source refreshes it and keeps the stronger one.',
     'AILMENT DUR': 'Your ailments last '+pc((p.statusDurPct||0)*100)+'% longer (gear cap 75%).',
     'LIGHT RADIUS': 'Your circle of light is '+pc((p.lightRadiusPct||0)*100)+'% wider (gear cap 60%).',
     'SKILL DUR': 'Your skill effects last '+pc((p.skillDurPct||0)*100)+'% longer: ailments, ground effects (Blizzard, Meteor fire, Consecrate, Plague, trap clouds), Hurricane, Tornado, Flame Vortex, banners and the Mirage decoy (gear cap 50%).',
@@ -190,7 +190,7 @@ function statSummaryHtml(p){
     pct('AREA','AREA',p.aoeRadiusPct||0,true)+
     pct('COOLDOWN','COOLDOWN',(p.cdrPct||0)*100)+
     pct('PROJ SPD','PROJ SPD',p.projectileSpeedPct||0,true)+
-    pct('BLEED','BLEED',p.bleedChancePct||0)+
+    pct('BLEED','BLEED CHANCE',p.bleedChancePct||0)+
     pct('AILMENT DUR','AILMENT DUR',(p.statusDurPct||0)*100,true)+
     pct('SKILL DUR','SKILL DUR',(p.skillDurPct||0)*100,true)+
     pct('LIGHT RADIUS','LIGHT RADIUS',(p.lightRadiusPct||0)*100,true)+

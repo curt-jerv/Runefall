@@ -406,6 +406,7 @@ function render(){
       if(iz.altar){
         drawables.push({depth:iz.altar.x+iz.altar.y, draw:()=>drawShrineAltarIso(iz.altar, g.clock||0)});
         drawables.push({depth:iz.altar.x+iz.altar.y+1, draw:()=>drawEdgeLabelIso(iz.altar, 'SHRINE')});
+        { const sst = g.player.shrineStage||0; if(sst>=2 ? sst<3 : (sst===0 && findRunestone(g.player))) drawables.push({depth:iz.altar.x+iz.altar.y+400, draw:()=>drawInteractHintIso(iz.altar, 120, g.clock||0)}); }   // v546: the altar wants you
         if(iz.homePortal){ const hp = iz.homePortal; drawables.push({depth:hp.x+hp.y-1, draw:()=>drawBluePortalIso(hp, g.clock||0)}); drawables.push({depth:hp.x+hp.y, draw:()=>drawEdgeLabelIso(hp, 'MISTFALL')}); }   // v490
       }
       if(iz.chestSpot) drawables.push({depth:iz.chestSpot.x+iz.chestSpot.y, draw:()=>drawChestIso(iz.chestSpot)});
@@ -594,6 +595,7 @@ function render(){
         drawables.push({depth:g.crypt.chestSpot.x+g.crypt.chestSpot.y, draw:()=>drawChestIso(g.crypt.chestSpot)});
       }
       if(g.crypt.tomb) drawables.push({depth:g.crypt.tomb.x+g.crypt.tomb.y+40, draw:()=>drawCryptTomb(g.crypt.tomb, g.clock||0)});
+      if(g.crypt.tomb && (g.crypt.bossDone || g.player.defilerSlain) && !g.player.inscriptionTaken) drawables.push({depth:g.crypt.tomb.x+g.crypt.tomb.y+400, draw:()=>drawInteractHintIso(g.crypt.tomb, 110, g.clock||0)});   // v546: inspect the sarcophagus
       for(const pe of g.enemies) if(pe.possessed && pe.hp>0) drawables.push({depth:pe.x+pe.y-1, draw:()=>drawPossessedAura(pe, g.clock||0)});
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -748,6 +750,7 @@ function render(){
       for(const e of g.enemies) if(e.balrog && e.brBoss) drawables.push({depth:-100000+e.x*0.001, draw:()=>drawBalrogTelegraph(e)});
       if(t.beacons) for(const bc of t.beacons) if(vis(bc.x,bc.y)){ drawables.push({depth:bc.x+bc.y, draw:()=>drawRRBeaconIso(bc, g.clock||0, bc.lit)}); drawables.push({depth:bc.x+bc.y+1, draw:()=>drawEdgeLabelIso(bc, bc.lit?'BEACON LIT':'BEACON')}); }
       for(const pr of t.props) if(vis(pr.x,pr.y)) drawables.push({depth:pr.x+pr.y+(pr.kind==='sigil'||pr.kind==='breach'||pr.kind==='carpet'?-500:0)+((pr.kind==='pew'||pr.kind==='machine'||KP_BLK[pr.kind])?(pr.w+pr.h)/2:0), draw:()=>drawKeepProp(pr, g.clock||0)});
+      if(t.lore) for(const l of t.lore) if(l.id && !(g.player.keepLore && g.player.keepLore[l.id]) && vis(l.x,l.y)) drawables.push({depth:l.x+l.y+300, draw:()=>drawQuestMarkIso(l.x, l.y, g.clock||0, 92)});   // v546: '!' over unread lore
     }
     if(t.subzone==='rrtower'){
       const lit = !!(g.player.rrBeacons && g.player.rrBeacons[t.rrId]);
@@ -820,6 +823,7 @@ function render(){
       if(t.beacon){
         // The rooftop's big light-feature centerpiece.
         drawables.push({depth:t.beacon.x+t.beacon.y, draw:()=>drawLighthouseBeaconIso(t.beacon, g.clock||0, !!g.player.lighthouseBeaconOn)});
+        if(!g.player.lighthouseBeaconOn && !g.enemies.some(e=>e.hp>0 && (e.bkBoss||e.isBoss))) drawables.push({depth:t.beacon.x+t.beacon.y+400, draw:()=>drawInteractHintIso(t.beacon, 140, g.clock||0)});   // v546: click me
       }
       if(t.waypoint){
         drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, waypointLit())});
@@ -977,6 +981,7 @@ function render(){
   if(g.banner && g.banner.fx) drawables.push({depth:g.banner.x+g.banner.y, draw:()=>drawParticlesIso([g.banner.fx], 'pole')});
   pushOwPoiDrawables(g, drawables);   // v525
   pushRoadEvDrawables(g, drawables);   // v529
+  pushTownPortalDrawables(g, drawables);   // v546
   drawables.sort((a,b)=>a.depth-b.depth);
   moodSoftStroke = moodOn() && !moodLow() && !MOOD_DBG.noSoft;   // v470: soft outlines while the world and characters are drawn
   try{ for(const d of drawables) d.draw(); } finally { moodSoftStroke = false; }

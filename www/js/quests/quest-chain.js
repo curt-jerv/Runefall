@@ -82,7 +82,7 @@ function drawDwarfWallIso(pos, clock){
 // v449: redrawn north-up -- the mountains (Icy Summit, Frosthold, Redridge, Cliffside, Shadow Keep) to the north,
 // the lowlands (River Valley, Withered Crossroads, Cursed Cemetery, Lakeside, Black Marsh) to the south, matching each zone's gates.
 const WM_NODES = {
-  town:{x:9,y:52,t:'Mistfall',l:'',up:1}, forest:{x:26,y:50,t:'Dark Forest',l:'1'},
+  town:{x:4.5,y:52,t:'Mistfall',l:'',up:1}, forest:{x:26,y:50,t:'Dark Forest',l:'1'},
   river:{x:30,y:66,t:'River Valley',l:'6',f:'reachedRiverValley',dir:'l'}, sunlit:{x:44,y:78,t:'Withered Crossroads',l:'10',f:'reachedSunlitPlains',up:1},
   lighthouse:{x:25,y:85,t:'Lighthouse Tower',l:'11-16',f:'reachedLighthouseTower'}, cemetery:{x:48,y:96,t:'Cursed Cemetery',l:'17',f:'reachedCursedCemetery',dir:'r'},
   lakeside:{x:66,y:78,t:'Lakeside Ruins',l:'21',f:'reachedLakesideRuins'}, marsh:{x:90,y:80,t:'Black Marsh',l:'28',f:'reachedBlackMarsh'}, highlands:{x:62,y:54,t:'Barren Highlands',l:'32',f:'reachedHighlands'},
@@ -125,12 +125,12 @@ function wmPaintLand(CW, CH, sc, dpr){
   // land blobs (everything below is drawn WM_OFS to the right so the western coast isn't cut by the frame)
   o.translate(WM_OFS,WM_OFY); l.translate(WM_OFS,WM_OFY);
   // v460: one continuous continent -- the only coastline is the west coast (Mistfall's harbour, the Lighthouse cape); land runs off the other three edges
-  const coastPts = [[-8,5],[6,7.5],[20,8.5],[34,4.5],[44,1.5],[52,0.4],[60,2],[68,6.5],[76,13],[82,19.5],[87,20.5],[93,15],[100,10.5],[106,9],[118,9]];
+  const coastPts = [[-8,5],[6,7.5],[20,8.5],[34,4.5],[44,1.5],[52,0.4],[60,2],[68,6.5],[76,13],[82,19.5],[87,20.5],[91,22],[95,23],[100,23.5],[118,24]];   // v546: no western cape below the Lighthouse
   const coastX = y=>{ let i=0; while(i<coastPts.length-2 && coastPts[i+1][0]<y) i++; const [y0,x0]=coastPts[i], [y1,x1]=coastPts[i+1]; const t=Math.max(0,Math.min(1,(y-y0)/(y1-y0))), u=t*t*(3-2*t); return x0+(x1-x0)*u + Math.sin(y*0.9)*0.55 + Math.sin(y*2.3+1)*0.3; };
   // v489: an eastern coastline too -- the sea lies beyond Shadow Keep
   // v533: the east coast follows the eastern regions -- Shadow Keep on the shore, the sea cliffs of Cliffside, a long
   // bay below Redridge -- and a ragged south coast with capes and coves runs under the lowlands; the north stays land.
-  const WM_SOUTH_Y = 101.5;   // where the west coast turns the corner into the south coast
+  const WM_SOUTH_Y = 95;   // where the west coast turns the corner into the south coast
   const eastPts = [[-8,131],[2,129],[10,126],[16,123.5],[22,115],[28,110.5],[34,108.5],[40,103],[46,98],[52,94.5],[58,93],[64,95.5],[70,100.5],[76,104],[82,105.5],[88,103.5],[92,101]];
   const southPts = [[0,WM_SOUTH_Y],[14,99],[20,95.5],[25,93.6],[30,95.8],[35,99.8],[41,103.4],[49,103.8],[55,100],[60,95],[65,92.4],[70,92],[75,93.6],[80,96.2],[85,95.2],[90,96.6],[95,95],[99,92.6],[103,91]];
   const wmCurve = (P, v, wob)=>{ let i=0; while(i<P.length-2 && P[i+1][0]<v) i++; const [a0,b0]=P[i], [a1,b1]=P[i+1]; const t=Math.max(0,Math.min(1,(v-a0)/(a1-a0))), u=t*t*(3-2*t); return b0+(b1-b0)*u + (wob ? Math.sin(v*0.9+wob)*0.7 + Math.sin(v*2.3+wob*2)*0.35 + Math.sin(v*5.1+wob)*0.15 : 0); };
@@ -281,7 +281,7 @@ function renderWorldMap(){
       cx2.fillStyle = '#8fe06a'; cx2.beginPath(); cx2.arc(X,Y,mr+2,0,7); cx2.fill(); cx2.lineWidth = 2.5; cx2.strokeStyle = '#fff'; cx2.stroke();
       cx2.fillStyle = '#ff7a3d'; cx2.beginPath(); cx2.arc(X,Y,mr*0.5,0,7); cx2.fill();
       const f2 = Math.max(12, Math.min(22, sc*2.7)), dir = hn.up ? 1 : -1, ty = Y + dir*(mr+f2*1.5) + (hn.up?0:0);
-      cx2.font = 'bold '+f2+'px system-ui'; cx2.textAlign = 'center'; cx2.textBaseline = 'middle'; cx2.lineWidth = 5; cx2.strokeStyle = 'rgba(0,0,0,.92)'; cx2.lineJoin = 'round'; cx2.strokeText('▼ YOU ARE HERE', X, ty); cx2.fillStyle = '#9af07a'; cx2.fillText('▼ YOU ARE HERE', X, ty);
+      cx2.font = 'bold '+f2+'px system-ui'; cx2.textAlign = 'center'; cx2.textBaseline = 'middle'; cx2.lineWidth = 5; cx2.strokeStyle = 'rgba(0,0,0,.92)'; cx2.lineJoin = 'round'; const hw = cx2.measureText('▼ YOU ARE HERE').width/2 + 6, CWd = cx2.canvas.width/dpr, tx = Math.max(hw, Math.min(CWd-hw, X)); cx2.strokeText('▼ YOU ARE HERE', tx, ty); cx2.fillStyle = '#9af07a'; cx2.fillText('▼ YOU ARE HERE', tx, ty);   /* v546: kept inside the frame */
       cx2.restore(); }
   };
   draw(0);

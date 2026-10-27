@@ -3613,6 +3613,7 @@ function updateStep(dt){
       showMsg('A portal to the Withered Crossroads opens.', 2.6, '#9fd8ff');
     }
     if(t.rooftop && !t.ft && g.enemies.length===0){
+      if(t.beacon && !p.lighthouseBeaconOn && !t._beaconMsg){ t._beaconMsg = true; showBigMsg('LIGHT THE BEACON', 'The rooftop is yours', 3.4, true); }   // v546
       if(!p.lighthouseChestLooted && !g.chest){ const at = t.bkDeath || {x:t.beacon.x + 70, y:t.beacon.y + 60}; g.chest = fixLootSpot(g, {x:clamp(at.x, 60, t.w-60), y:clamp(at.y, 60, t.h-60), r:20, opened:false}); }
       if(!p.lighthouseFloor5Cleared){
         p.lighthouseFloor5Cleared = true;
