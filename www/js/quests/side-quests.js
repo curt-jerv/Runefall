@@ -26,7 +26,7 @@ function spawnDefiler(g){
   const e = spawnEnemy(g, 'bandit', {x:TR.x+TR.w/2, y:TR.y+TR.h*0.55});   // v310: mid-room, well clear of the door
   if(!e) return;
   e.defiler = true; e.possessed = true; e.isLairBoss = true; e.bossName = 'The Possessed Graverobber'; e.engaged = true;
-  e.r = Math.round(e.r*1.375); e.baseR = e.r;   // v548: 25% bigger e.maxHp = Math.round(e.maxHp*14); e.hp = e.maxHp; e.dmg *= 1.5; e.speed *= 1.0;
+  e.r = Math.round(e.r*1.375); e.baseR = e.r;   /* v548: 25% bigger */ e.maxHp = Math.round(e.maxHp*14); e.hp = e.maxHp; e.dmg *= 1.5; e.speed *= 1.0;
   e.atkCdMax = 1.9;   // v310: slower, heavier swings
   e.dfPhase = 0; e.aggroRange = 99999; e.leashRange = 99999;
   // v548: the tomb is his alone -- the packs that wandered in are gone (only his own risen dead join him)

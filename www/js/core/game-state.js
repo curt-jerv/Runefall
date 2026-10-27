@@ -620,7 +620,8 @@ function spawnEnemy(g, type, pos){
   }
   const depth = g.depth;
   let e;
-  if(type==='grunt'){
+  if(WILDLIFE_TYPES[type]){ e = wildlifeStats(type, x, y, depth); }   // v550: Thornback / Hookbeak / Exiled Plague Doctor (monsters/wildlife.js)
+  else if(type==='grunt'){
     e = {type,x,y,r:15,hp:22+depth*4,maxHp:22+depth*4,speed:rand(85,105),dmg:7+depth*1.6,
          atkCd:0,atkCdMax:0.9,color:'#b4293f',state:'chase',hitT:0};
   } else if(type==='archer'){
@@ -1073,6 +1074,7 @@ function spawnEnemy(g, type, pos){
     // "home" spot + aggro/leash tuning -- only acted on in the Forest (see
     // update()), so this is harmless for dungeon enemies, which always engage
     homeX:x, homeY:y, aggroed:false, wanderTarget:null, wanderCd:rand(0,2)});
+  if(WILDLIFE_TYPES[type]) wildlifeAggro(e);
   if(type==='wolf'){ e.aggroRange=230; e.leashRange=420; e.wanderRadius=60; }
   else if(type==='spider'){ e.aggroRange=210; e.leashRange=380; e.wanderRadius=50; }
   else if(type==='bear'){ e.aggroRange=190; e.leashRange=380; e.wanderRadius=45; }

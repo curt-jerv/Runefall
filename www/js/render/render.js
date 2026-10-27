@@ -426,13 +426,7 @@ function render(){
       for(const o of rv.obstacles){ if(!o.isProp) continue; const cx=o.x+o.w/2, cy=o.y+o.h/2; if(visR(cx,cy)) drawables.push({depth:cx+cy, draw:()=>drawRvProp(o, clkR)}); }
       for(const d of rv.decor) if(visR(d.x,d.y)) drawables.push({depth:d.x+d.y-(d.k==='lily'?4:2), draw:()=>{ if(RV_DECOR_KINDS[d.k]) drawRvDecor(d, clkR); else drawDecorIso(d, clkR); }});
       drawables.push({depth:rv.northGate.x+rv.northGate.y, draw:()=>drawEdgeLabelIso(rv.northGate, 'DARK FOREST')});
-      drawables.push({depth:rv.southGate.x+rv.southGate.y, draw:()=>drawSunArchIso(rv.southGate, clkR)});
-      for(const sd of [-1,1]){
-        const sg = rv.southGate;
-        drawables.push({depth:sg.x+sd*170+sg.y-10+(sd<0?-75:75), draw:()=>drawSunArchFlank(sg, sd, clkR)});
-        const bz = {k:'brazier', x:sg.x+sd*95, y:sg.y-60, s:1.3}; drawables.push({depth:bz.x+bz.y, draw:()=>drawMtnDeco(bz)});
-        const bn = {k:'banner', x:sg.x+sd*140, y:sg.y-80, s:1.2}; drawables.push({depth:bn.x+bn.y, draw:()=>drawMtnDeco(bn)});
-      }
+      drawables.push({depth:rv.southGate.x+rv.southGate.y-2, draw:()=>drawWitheredGateIso({x:rv.southGate.x, y:rv.southGate.y-30}, clkR)});   // v551: the same weathered gate as on the Crossroads side (was a bright sunlit arch)
       drawables.push({depth:rv.southGate.x+rv.southGate.y+1, draw:()=>drawEdgeLabelIso(rv.southGate, 'WITHERED CROSSROADS')});
       drawables.push({depth:rv.caveGate.x+rv.caveGate.y, draw:()=>drawMinotaurCaveIso(rv.caveGate, clkR)});
       drawables.push({depth:rv.caveGate.x+rv.caveGate.y+2, draw:()=>drawEdgeLabelIso(rv.caveGate, 'MINOTAUR CAVE')});
@@ -982,6 +976,8 @@ function render(){
   pushOwPoiDrawables(g, drawables);   // v525
   pushRoadEvDrawables(g, drawables);   // v529
   pushTownPortalDrawables(g, drawables);   // v546
+  pushBanditCampDrawables(g, drawables);   // v550
+  pushOuterScenery(g, drawables);   // v551: trees past the edge, the Crossroads gate
   drawables.sort((a,b)=>a.depth-b.depth);
   moodSoftStroke = moodOn() && !moodLow() && !MOOD_DBG.noSoft;   // v470: soft outlines while the world and characters are drawn
   try{ for(const d of drawables) d.draw(); } finally { moodSoftStroke = false; }

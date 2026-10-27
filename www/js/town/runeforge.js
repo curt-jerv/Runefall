@@ -483,11 +483,20 @@ function enterSunlitPlains(from){
   showMsg('Withered Crossroads', 1.4);
   // Same pack-anchor/pool-density approach as the Dark Forest's own
   // post-v68 population (see SUNLIT_PACK_ANCHOR_TARGET/SUNLIT_PACK_COUNT).
-  const anchors = shuffle(breatheAnchors(g.sun.packAnchors, {gap:400}));
+  const anchors = shuffle(breatheAnchors(g.sun.packAnchors, {gap:330}));
+  // v550: two or three bandit camps (fire, tents, 5-7 bandits with a brute) on anchors well clear of the roads
+  g.sun.banditCamps = [];
+  { const nc = SUN_CAMPS[0] + Math.floor(Math.random()*(SUN_CAMPS[1]-SUN_CAMPS[0]+1));
+    for(let i=anchors.length-1; i>=0 && g.sun.banditCamps.length<nc; i--){
+      const a = anchors[i];
+      if(sunRoadNear(g.sun, a.x, a.y).d < 260 || g.sun.banditCamps.some(c=>dist(c,a) < 1400)) continue;
+      const c = makeBanditCamp(a); g.sun.banditCamps.push(c); anchors.splice(i,1); spawnBanditCamp(g, c);
+    } }
   const count = Math.min(SUNLIT_PACK_COUNT, anchors.length);
   for(let i=0;i<count;i++){
     spawnSunlitPack(g, anchors[i]);
   }
+  try{ spawnPlagueDoctor(g); }catch(err){}   // v550: an elite loner on the Cemetery side
   // v350: hard clearance -- no monster starts within 420 of the entrance gates, the waypoint or where you arrive
   { const keep = [g.sun.forestGate, g.sun.waypoint, g.sun.westGate, g.sun.eastGate, g.sun.southGate, g.player];
     g.enemies = g.enemies.filter(e=>keep.every(k=>dist(e,k) >= 420)); }

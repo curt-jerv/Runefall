@@ -115,7 +115,7 @@ function openTeleportMenu(from){
   teleportLighthouse5Btn.style.display = 'none'; // rooftop waypoint removed
   // v71: Lakeside Ruins gets its own waypoint, gated on reachedLakesideRuins,
   // same rule as reachedSunlitPlains above.
-  teleportLakesideBtn.style.display = 'none';   // v489: Lakeside waypoint removed
+  teleportLakesideBtn.style.display = (from!=='lakeside' && game.player.reachedLakesideRuins) ? '' : 'none';   // v551: the Lakeside waypoint is back, beside the bridge
   teleportDeepBtn.style.display = (from!=='deep' && game.player.reachedDeepWp) ? '' : 'none';   // v489: Ember Caverns
   teleportBlackMarshBtn.style.display = (from!=='marsh' && game.player.reachedBlackMarsh) ? '' : 'none';
   teleportForgottenTowerBtn.style.display = (from!=='forgottentower' && game.player.reachedForgottenTower) ? '' : 'none';   // v340: listed right under Black Marsh

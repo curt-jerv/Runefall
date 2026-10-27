@@ -280,7 +280,7 @@ function makeMountainPass(){
     put('crag', tx+170+rand(0,60), y, rand(0.9,1.4), {h:rand(80,140)});
   }
   deco.sort((a,b)=>(a.x+a.y)-(b.x+b.y));
-  return { isMtn:true, name:'Mountain Pass', w, h, ts:TS, cols, rows, E, K, B, CH, C, wallDrop:120, edgeLines:true, colorFn:mtnColor,
+  return { isMtn:true, name:'Mountain Pass', w, h, ts:TS, cols, rows, E, K, B, CH, C, wallDrop:120, edgeLines:true, edgeRockPal:['#6c6e74','#92949a','#36373b'], colorFn:mtnColor,
     obstacles, rocks:[], waypoints:[], packAnchors, waypoint, deco, forestGate, frostGate, mineGate, depthsGate:mineGate, summitGate, ledgeGaps };
 }
 function mtnColor(R, i, hj, k, f){

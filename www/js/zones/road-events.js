@@ -10,7 +10,7 @@
 //   merchant -- Orrin Thistlewick, a wandering peddler with a cart, selling good rares. Very rare.       (all three)
 // The encounter lives in g.roadEv (g.roadEvRoom = the room it belongs to). roadEvRoll runs after a zone's monsters spawn.
 const ROAD_EV_ZONES = {
-  sunlitplains: { chance:0.8,  kinds:{caravan:3, scarecrow:2, herd:2, cellar:2, carrion:2} },
+  sunlitplains: { chance:1, min:1, extra:[0.45, 0.33], kinds:{caravan:3, scarecrow:2, herd:2, cellar:2, carrion:2} },   // v550: always one, sometimes two or three
   rivervalley:  { chance:0.6,  kinds:{caravan:3, carrion:2} },
   lakesideruins:{ chance:0.4,  kinds:{carrion:1} },
 };
@@ -67,23 +67,34 @@ function roadEvFieldSpot(g, r){
 function roadEvClearAround(g, s, R){ g.enemies = g.enemies.filter(e=>e.roadEv || spawnSafeKeep(e) || Math.hypot(e.x-s.x, e.y-s.y) > R); }
 
 // ---- the roll ----
+// v550: several encounters can share one visit (g.roadEvs). The Crossroads always has at least one (a second 45% of the
+// time, a third 15%); kinds not met yet this session come first, but once all are spent they can repeat there.
+// g.roadEv is the one being looked at right now (set while each is ticked, drawn or interacted with).
 function roadEvRoll(g){
-  g.roadEv = null; g.roadEvRoom = g.room;
+  g.roadEv = null; g.roadEvs = []; g.roadEvRoom = g.room;
   const cfg = ROAD_EV_ZONES[g.scene]; if(!cfg || !g.room) return;
   // v532: each encounter happens at most once per play session (since the character was loaded), so the peddler
   // or a caravan never turns up again in the next zone
   const seen = g.roadEvSeen || (g.roadEvSeen = {});
-  let kind = null;
-  if(!seen.merchant && Math.random() < ROAD_MERCHANT_CHANCE) kind = 'merchant';
-  else if(Math.random() < cfg.chance){
-    const ks = Object.keys(cfg.kinds).filter(k=>!seen[k]), tot = ks.reduce((a,k)=>a+cfg.kinds[k], 0);
-    let r = Math.random()*tot; for(const k of ks){ r -= cfg.kinds[k]; if(r <= 0){ kind = k; break; } }
+  const used = {}, want = [];
+  if(!seen.merchant && Math.random() < ROAD_MERCHANT_CHANCE) want.push('merchant');
+  let n = cfg.min ? cfg.min : (Math.random() < cfg.chance ? 1 : 0);
+  if(n && cfg.extra) for(const c of cfg.extra) if(Math.random() < c) n++;
+  for(let i=0;i<n;i++){
+    let ks = Object.keys(cfg.kinds).filter(k=>!seen[k] && !used[k]);
+    if(!ks.length && cfg.min && i < cfg.min) ks = Object.keys(cfg.kinds).filter(k=>!used[k]);   // the guaranteed one may repeat
+    const tot = ks.reduce((a,k)=>a+cfg.kinds[k], 0); if(!tot) break;
+    let r = Math.random()*tot; for(const k of ks){ r -= cfg.kinds[k]; if(r <= 0){ used[k] = true; want.push(k); break; } }
   }
-  if(window.__roadEvForce) kind = window.__roadEvForce;
-  if(!kind) return;
+  if(window.__roadEvForce) want.splice(0, want.length, ...String(window.__roadEvForce).split(','));
+  for(const kind of want){ const ev = roadEvMake(g, kind); if(ev) g.roadEvs.push(ev); }
+  g.roadEv = g.roadEvs[0] || null;
+}
+function roadEvMake(g, kind){
+  const seen = g.roadEvSeen || (g.roadEvSeen = {});
   const field = kind==='scarecrow' || kind==='herd' || kind==='cellar';
   const s = field ? roadEvFieldSpot(g, kind==='cellar' ? 130 : 90) : roadEvRoadSpot(g, kind==='merchant' ? 70 : 80);
-  if(!s) return;
+  if(!s) return null;
   seen[kind] = true;
   const ev = {kind, x:s.x, y:s.y, road:s.road||null, state:'idle', mobs:[], seed:Math.random()};
   if(s.road){ ev.flip = s.x < s.road.x; }
@@ -119,11 +130,24 @@ function roadEvRoll(g){
     ev.npc = {x:ev.x, y:ev.y, id:31, robe:'#5a4a7a', hood:'#3a2e52', long:true, tool:'lantern'};
     ev.cart = {x:ev.x+70, y:ev.y-50};
   }
-  g.roadEv = ev;
+  return ev;
 }
 
-// ---- interaction ----
+// ---- v550: the list wrappers ----
+function roadEvList(g){ return g.roadEvs || (g.roadEv ? [g.roadEv] : []); }
 function roadEvKind(g){
+  const evs = roadEvList(g);
+  if(!evs.length) return roadEvKind1(g);
+  for(const ev of evs){ g.roadEv = ev; const k = roadEvKind1(g); if(k) return k; }
+  return null;
+}
+function roadEvKilled(g, e){
+  const evs = roadEvList(g), ev = evs.find(v=>v.mobs.includes(e) || v.boss===e) || null;
+  g.roadEv = ev || g.roadEv; roadEvKilled1(g, e);
+}
+function roadEvTick(g, p, dt){ for(const ev of roadEvList(g)){ g.roadEv = ev; roadEvTick1(g, p, dt); } }
+// ---- interaction ----
+function roadEvKind1(g){
   roadEvLabels();
   const ev = g.roadEv, p = g.player;
   if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='cellar') return dist(p, g.tower.entrance) < g.tower.entrance.r + p.r + 22 ? 'cellarExit' : null;
@@ -202,7 +226,7 @@ function roadScarecrowTick(g, e, dt){
     showMsg('Crows burst from the scarecrow\'s coat!', 1.6, '#c9a050');
   }
 }
-function roadEvKilled(g, e){
+function roadEvKilled1(g, e){
   const ev = g.roadEv;
   if(e.blackRam){
     const lvl = Math.max(1, monsterLevel(g));
@@ -216,7 +240,7 @@ function roadEvKilled(g, e){
 }
 
 // ---- every frame ----
-function roadEvTick(g, p, dt){
+function roadEvTick1(g, p, dt){
   const ev = g.roadEv; if(!ev || g.roadEvRoom!==g.room) return;
   const allDown = ()=>ev.mobs.every(e=>!(e.hp>0) || !g.enemies.includes(e));
   if(ev.wagon) pushOutOfRect(p, ev.wagon);
@@ -268,7 +292,7 @@ function spawnRoadCellar(g){
 function enterRoadCellar(){
   const g = game, ev = g.roadEv;
   g._cellarReturn = null;
-  if(ev && ev.kind==='cellar' && g.scene==='sunlitplains') g._cellarReturn = {scene:g.scene, room:g.room, sun:g.sun, enemies:g.enemies, loot:g.loot, ev, owPoi:g.owPoi, owPoiRoom:g.owPoiRoom, depth:g.depth, x:ev ? ev.door.x : g.player.x, y:ev ? ev.door.y+50 : g.player.y};
+  if(ev && ev.kind==='cellar' && g.scene==='sunlitplains') g._cellarReturn = {scene:g.scene, room:g.room, sun:g.sun, enemies:g.enemies, loot:g.loot, ev, evs:g.roadEvs, owPoi:g.owPoi, owPoiRoom:g.owPoiRoom, depth:g.depth, x:ev ? ev.door.x : g.player.x, y:ev ? ev.door.y+50 : g.player.y};
   enterSubZone('cellar', {});
 }
 function roadCellarExit(){
@@ -276,7 +300,7 @@ function roadCellarExit(){
   if(!R || !R.room){ enterSunlitPlains(); return; }
   g._cellarReturn = null;
   g.scene = R.scene; g.room = R.room; g.sun = R.sun; g.tower = null; g.depth = R.depth;
-  g.enemies = R.enemies.filter(e=>e.hp>0); g.loot = R.loot; g.owPoi = R.owPoi; g.owPoiRoom = R.owPoiRoom; g.roadEv = R.ev; g.roadEvRoom = R.room;
+  g.enemies = R.enemies.filter(e=>e.hp>0); g.loot = R.loot; g.owPoi = R.owPoi; g.owPoiRoom = R.owPoiRoom; g.roadEv = R.ev; g.roadEvs = R.evs || [R.ev]; g.roadEvRoom = R.room;
   g.projectiles = []; g.portal = null; g.chest = null; g.traps = []; g.shieldThrow = null;
   p.x = R.x; p.y = R.y; p.crX = undefined;
   for(const f of (g.followers||[])){ f.x = p.x; f.y = p.y; }
@@ -298,8 +322,10 @@ function updateRoadCellar(g, dt){
 
 // ---- drawing ----
 function pushRoadEvDrawables(g, drawables){
-  const ev = g.roadEv;
   if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='cellar'){ if(g.chest) drawables.push({depth:g.chest.x+g.chest.y, draw:()=>drawChestIso(g.chest)}); return; }
+  for(const ev of roadEvList(g)) pushRoadEvDrawables1(g, drawables, ev);
+}
+function pushRoadEvDrawables1(g, drawables, ev){
   if(!ev || g.roadEvRoom!==g.room) return;
   const cl = g.clock||0;
   if(ev.kind==='caravan'){

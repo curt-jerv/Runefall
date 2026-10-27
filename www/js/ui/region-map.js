@@ -191,8 +191,7 @@ const MAP_ROAD_EV = {caravan:['Caravan','\u2605'], scarecrow:['Scarecrow','!'], 
 const MAP_OW_POI = {cache:['Hidden Cache','\u2605'], shrine:['Shrine','+'], hoard:['Guarded Hoard','\u2605']};
 function mapEventPts(g){
   const out = [];
-  const ev = g.roadEv;
-  if(ev && g.roadEvRoom===g.room && ev.state!=='done' && MAP_ROAD_EV[ev.kind]){ const d = MAP_ROAD_EV[ev.kind]; out.push({pos:ev.kind==='cellar' && ev.door ? ev.door : ev, label:d[0], icon:d[1]}); }
+  for(const ev of roadEvList(g)) if(ev && g.roadEvRoom===g.room && ev.state!=='done' && MAP_ROAD_EV[ev.kind]){ const d = MAP_ROAD_EV[ev.kind]; out.push({pos:ev.kind==='cellar' && ev.door ? ev.door : ev, label:d[0], icon:d[1]}); }   // v550: every encounter of the visit
   if(g.owPoi && g.owPoiRoom===g.room) for(const c of g.owPoi){ if(c.opened || c.used || !MAP_OW_POI[c.kind]) continue; const d = MAP_OW_POI[c.kind]; out.push({pos:c, label:d[0], icon:d[1]}); }
   return out;
 }

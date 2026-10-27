@@ -95,7 +95,31 @@ function edgeLinks(room){
   else if(sc==='cursedcemetery'){ add(room.sunlitGate,'sunlit'); }
   return room._edgeL = L;
 }
+// v551: zones whose whole surroundings are painted (no more black squares past the edge): each side shows the land
+// beyond it, and the roads run on out through their gates
+const OUTSIDE_SIDES = {
+  sunlitplains: {n:'river', w:'cliffsea', e:'lake', s:'cemetery'},
+  lakesideruins: {w:'sunlitroad', n:'forest', e:'forest', s:'forest'},
+};
+const OUT_ROAD = ['#5e4d37','#544530'], OUT_ROAD_X = 300;   // the Crossroads' own road beyond the Lakeside's west gate runs north-south this far out
+function outsideFill(room, wx, wy, cfg){
+  const ix = Math.floor(wx/46), iy = Math.floor(wy/46), ck = ((ix+iy)%2+2)%2, hs = tileHash(ix, iy);
+  const dw = -wx, de = wx-room.w, dn = -wy, ds = wy-room.h;
+  let side = 'n', d = dn; if(dw>d){ side = 'w'; d = dw; } if(de>d){ side = 'e'; d = de; } if(ds>d){ side = 's'; d = ds; }
+  const kind = cfg[side], rw = SUN_ROAD_HALFW + (hs-0.5)*14;
+  for(const l of edgeLinks(room)){ if(l.side!==side || kind==='cliffsea') continue; const lat = (side==='w'||side==='e') ? Math.abs(wy-l.y) : Math.abs(wx-l.x); if(lat < rw && (kind!=='sunlitroad' || d < OUT_ROAD_X+SUN_ROAD_HALFW)) return OUT_ROAD[ck]; }
+  if(kind==='cliffsea'){
+    if(d < 50) return hs<0.3 ? '#5a5248' : (ck ? '#6a6156' : '#625a50');      // the rocky lip
+    if(d < 110) return ck ? '#2a2622' : '#24201d';                             // the cliff falling away
+    if(d < 150) return hs<0.5 ? '#6e8ea4' : '#58788e';                        // surf breaking at its foot
+    return hs<0.15 ? '#1e4a74' : (ck ? '#163c62' : '#133658');                // the open sea below
+  }
+  if(kind==='sunlitroad'){ if(Math.abs(d-OUT_ROAD_X) < rw) return OUT_ROAD[ck]; const p = ['#5a5234','#544c30']; return hs<0.2 ? '#4e4a2e' : p[ck]; }
+  const pal = EDGE_PAL[kind] || EDGE_PAL.forest;
+  return hs < 0.12 ? pal[1-ck] : pal[ck];
+}
 function edgeFill(room, wx, wy){
+  { const cfg = OUTSIDE_SIDES[game && game.scene]; if(cfg) return outsideFill(room, wx, wy, cfg); }
   const ix = Math.floor(wx/46), iy = Math.floor(wy/46), ck = ((ix+iy)%2+2)%2;
   for(const l of edgeLinks(room)){
     const along = l.side==='w' ? -wx : l.side==='e' ? wx-room.w : l.side==='n' ? -wy : wy-room.h;

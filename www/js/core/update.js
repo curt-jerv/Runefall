@@ -5,6 +5,7 @@ function updateStep(dt){
   const g = game, p = g.player, room = g.room;
   try{ dungeonPersist(g); }catch(err){}
   try{ tpCastTick(g, dt); }catch(err){}   // v548
+  try{ playerKnockTick(g, dt); }catch(err){}   // v550: Hookbeak kicks slide you back
   if(showBigMsg._hold && g.scene!=='darkcrypt') bigMsgRelease();   // v536: a held crypt banner goes when you leave
   if(p.wellRestedT>0) wellRestedTick(p, dt);
   try{ wmMark(g, p); }catch(err){}
@@ -421,6 +422,7 @@ function updateStep(dt){
                 if(isCrit) hitStop(g, 0.04);
                 checkExecute(g, e);
                 applyOffensiveStanceBleed(p, e, hitDmg);
+                if(e.thorns) meleeThorns(g, p, e);   // v550: Thornback quills
                 const kb=8; e.x += Math.cos(eang)*kb; e.y += Math.sin(eang)*kb;
               }
             }
@@ -2604,6 +2606,9 @@ function updateStep(dt){
       updateFhTurret(g, e, dt, target, d);
     } else if(e.type==='windigo'){
       updateWindigo(g, e, dt, target, d, isFollowerTarget, chillMult, room);
+    } else if(e.type==='thornback'){ updateThornback(g, e, dt, target, d, isFollowerTarget, chillMult, room);   // v550
+    } else if(e.type==='hookbeak'){ updateHookbeak(g, e, dt, target, d, isFollowerTarget, chillMult, room);
+    } else if(e.type==='plaguedoc'){ updatePlagueDoc(g, e, dt, target, d, isFollowerTarget, chillMult, room);
     } else if(e.type==='lavabeetle'){
       updateLavaBeetle(g, e, dt, target, d, isFollowerTarget, chillMult, room);
     } else if(e.type==='vulture'){
@@ -3077,6 +3082,7 @@ function updateStep(dt){
       if(g.enemies[i].dwc) dwConstructSlain(g, g.enemies[i]);
       if(g.enemies[i].colossus) colossusSlain(g.enemies[i]);
       if(g.enemies[i].type==='magmagolem') golemDeath(g, g.enemies[i]);
+      if(g.enemies[i].type==='plaguedoc') plagueDocDeath(g, g.enemies[i]);   // v550: three bats burst out
       if(g.enemies[i].type==='poisonwalker') walkerDeath(g, g.enemies[i]);
       if(g.enemies[i].sapMarked && !g.enemies[i].soulTaken){ g.enemies[i].soulTaken = true; p.souls = Math.min(SOUL_CAP, (p.souls||0) + SOUL_SAP_SOULS_PER_KILL); checkDemonBindThreshold(g); }
       if(g.enemies[i].deathNova) specialDeathNova(g, g.enemies[i]);

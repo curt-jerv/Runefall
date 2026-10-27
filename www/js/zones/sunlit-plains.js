@@ -30,8 +30,8 @@ const SUNLIT_EAST_EXIT_SPOT = {x:SUN_W-16, y:SUN_CY};
 // How many pack anchors to try to place -- reuses the Dark Forest's own
 // post-v68 target/spacing 1-for-1 since the two zones share the exact same
 // footprint, so pack density and the spread-out, not-clumped feel match.
-const SUNLIT_PACK_ANCHOR_TARGET = FOREST_PACK_ANCHOR_TARGET;
-const SUNLIT_PACK_COUNT = 70;
+const SUNLIT_PACK_ANCHOR_TARGET = 230;   // v550: more room for packs (was the Forest's 140)
+const SUNLIT_PACK_COUNT = 95;   // v550: denser (was 70 -- the Crossroads measured ~6.5 monsters per million square units vs the Forest's ~11)
 // v527: the Lighthouse (west), Lakeside Ruins (east) and Cemetery (south) gates sit at a random spot along their
 // edge every visit; a winding old road runs from each gate (and from the Forest gate) into the crossroad centre
 // beside the waypoint. room.roads = the smoothed polylines, room.roadGrid = buckets for sunRoadNear().
@@ -75,12 +75,18 @@ function sunRoadNear(room, x, y){
   }
   return out;
 }
+// v550: small bandit bands (2-3, sometimes with an archer), wolf packs, Thornbacks, Hookbeak packs, crow flocks and boars;
+// bigger bandit camps (5-7 round a fire with tents, led by a brute) are placed separately (sunCamps)
 const SUNLIT_PACK_TEMPLATES = [
-  { type:'bandit', countMin:2, countMax:4 },
-  { type:'bandit', countMin:2, countMax:4 },
-  { type:'banditarcher', countMin:1, countMax:3 },
+  { type:'bandit', countMin:2, countMax:3, archer:0.5 },
+  { type:'bandit', countMin:2, countMax:3, archer:0.5 },
+  { type:'wolf', countMin:3, countMax:4 },
+  { type:'thornback', countMin:2, countMax:3 },
+  { type:'hookbeak', countMin:3, countMax:6 },
+  { type:'crow', countMin:4, countMax:5 },
   { type:'boar', countMin:1, countMax:3 },
 ];
+const SUN_CAMPS = [2, 3];   // bandit camps per visit
 function makeSunlitPlains(){
   const w=SUN_W, h=SUN_H;
   const forestGate = {x:SUN_CX, y:16, r:34};
@@ -187,10 +193,47 @@ function makeSunlitPlains(){
 }
 function spawnSunlitPack(g, anchor, template){
   const t = template || SUNLIT_PACK_TEMPLATES[Math.floor(Math.random()*SUNLIT_PACK_TEMPLATES.length)];
+  wildPack(g, anchor, t);
+}
+// v550: shared by the Crossroads, River Valley and Lakeside Ruins: a template pack, with crows as a flock and bandit bands
+// that may bring an archer
+function wildPack(g, anchor, t){
   const n = forestPackSize(t);
+  if(t.type==='crow'){ spawnCrowFlock(g, anchor, n); return; }
   const spread = 100 + n*18;
   for(let i=0;i<n;i++){
-    spawnEnemy(g, t.type, {x:anchor.x+rand(-spread,spread), y:anchor.y+rand(-spread,spread)});
+    const type = (t.archer && i===n-1 && Math.random() < t.archer) ? 'banditarcher' : t.type;
+    spawnEnemy(g, type, {x:anchor.x+rand(-spread,spread), y:anchor.y+rand(-spread,spread)});
+  }
+}
+// v550: a bandit camp -- a fire, two or three tents and 5-7 bandits (a brute leads them, an archer or two) sitting round it
+function makeBanditCamp(at){
+  const tents = [], n = 2 + Math.floor(Math.random()*2), a0 = Math.random()*6.28;
+  for(let i=0;i<n;i++){ const a = a0 + i*(6.28/n) + rand(-0.3,0.3); tents.push({x:at.x+Math.cos(a)*150, y:at.y+Math.sin(a)*110, rot:Math.random()<0.5}); }
+  return {x:at.x, y:at.y, r:26, tents};
+}
+function spawnBanditCamp(g, camp){
+  const n = 5 + Math.floor(Math.random()*3);
+  for(let i=0;i<n;i++){
+    const a = i/n*6.28 + rand(-0.2,0.2), r = rand(60, 95);
+    const type = i===0 ? 'banditbrute' : (i<=1+Math.floor(Math.random()*2) ? 'banditarcher' : 'bandit');
+    const e = spawnEnemy(g, type, {x:camp.x+Math.cos(a)*r, y:camp.y+Math.sin(a)*r*0.75}); if(e){ e.campEnemy = false; e.wanderRadius = 30; }
+  }
+}
+function drawCampFireIso(c, clock){
+  const iso = toIso(c.x, c.y), fl = 0.8 + 0.2*Math.sin((clock||0)*7);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const gr = ctx.createRadialGradient(iso.x, iso.y-6, 4, iso.x, iso.y-6, 130); gr.addColorStop(0, 'rgba(255,170,70,'+(0.42*fl)+')'); gr.addColorStop(1, 'rgba(255,120,40,0)');
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(iso.x, iso.y-6, 150, 85, 0, 0, 7); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(1.7, 1.7); ctx.translate(-iso.x, -iso.y); drawBonfireIso(c, clock); ctx.restore();
+}
+function pushBanditCampDrawables(g, drawables){
+  const cs = g.room && g.room.banditCamps; if(!cs) return;
+  const cam = g.camera, vis = (x,y)=>{ const i = toIso(x,y); return !cam || (i.x>cam.x-300 && i.x<cam.x+W+300 && i.y>cam.y-300 && i.y<cam.y+H+300); };
+  for(const c of cs){
+    if(!vis(c.x, c.y)) continue;
+    drawables.push({depth:c.x+c.y-40, draw:()=>drawCampFireIso(c, g.clock||0)});
+    for(const t of c.tents) drawables.push({depth:t.x+t.y, draw:()=>drawTentIso(t)});
   }
 }
 
