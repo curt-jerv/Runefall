@@ -200,7 +200,7 @@ function splinterBurst(g, p, pr, e){
 // pattern Shield Bash's Rank-5 knockdown already established.
 const MULTI_SHOT_SPREAD = 0.4; // total fan spread, radians
 const MULTI_SHOT_ATKSPD_PER_RANK = 0.04;
-const MULTI_SHOT_DMG_MULT = 1.05;   // v545
+const MULTI_SHOT_DMG_MULT = 1.2;   // v545: 1.05; v559: 1.2
 function multiShotCount(rank){ return rank>=5 ? 5 : 3; }   // v499: Phantom Quiver no longer adds arrows (it makes projectiles pierce)
 // v499 Phantom Quiver: every player projectile rolls ONCE for a 50% chance to pass through the enemies it hits (shots that detonate or bounce keep their own rules)
 function quiverPierce(p, pr){
@@ -452,7 +452,7 @@ const FOLLOWER_FOLLOW_DIST = 55; // Attack stance: idle follow distance behind t
 const TAUNT_RANGE = 170;
 const FOLLOWER_RESPAWN_TIME = 10; // a fallen follower rejoins after this many seconds, not just on level clear
 // v211: a fallen Squire knight is re-summoned after 10s; Commander ranks shorten that to 5s at rank 5. Squire life -10%.
-const KNIGHT_RESPAWN_MIN = 5, SQUIRE_HP_MULT = 0.9;
+const KNIGHT_RESPAWN_MIN = 5, SQUIRE_HP_MULT = 0.8, SQUIRE_DMG_K = 0.88;   // v559: squires a little softer and weaker (were 0.9 life, full damage)
 function knightRespawnTime(p){
   const r = clamp((p && p.skills && effectiveRank(p,'squire')) || 0, 0, 5);
   return r>0 ? FOLLOWER_RESPAWN_TIME - (FOLLOWER_RESPAWN_TIME-KNIGHT_RESPAWN_MIN)*(r-1)/4 : FOLLOWER_RESPAWN_TIME;
@@ -713,7 +713,7 @@ function followerDmg(p, f){
     return (NECRO_DEMON_BASE_DMG + p.level*1.4) * hunterFollowerStatMult(rank) * fdMult * demonSoulMult(p, DEMON_DMG_PER_10) * (rank>=BASE_MAX_RANK ? SUMMON_MAX_RANK_DMG : 1);
   }
   const squireRank = (p.skills && effectiveRank(p,'squire')) || 0;
-  let dmg = (FOLLOWER_BASE_DMG + p.level*1.1) * offensiveStanceFollowerDmgMult(p) * templarFollowerMult(p, f); // (v124) Squire ranks add life only; damage comes from Offensive Stance
+  let dmg = (FOLLOWER_BASE_DMG + p.level*1.1) * SQUIRE_DMG_K * offensiveStanceFollowerDmgMult(p) * templarFollowerMult(p, f); // (v124) Squire ranks add life only; damage comes from Offensive Stance
   // Rally/Rallying Cry: while the post-rally buff window is active, followers
   // get a flat chance (same for everyone, not rank-scaled) to land a
   // bonus-damage crit.

@@ -115,6 +115,15 @@ const SKILL_WD = {
   soulFire:     {t:'physical', c:'spell',  r:[230,330], per:'explosion, half physical / half poison', split:{t:'poison', f:0.5}},   // v489
   // v489: sacrifice is life-based now (sacrificeLifePct), not weapon damage
 };
+// v559 balance (sim: packs of 8 at your own level, typical gear, no stones; target ~8s a pack): Defender down, Berserker's late
+// skills, traps and the Marksman/Hunter shots up (Immolate's fire boost is trimmed in skills/mystic.js).
+// Scaling the table itself keeps the skill tooltips in step with what the skills really do.
+const SKILL_WD_TUNE = { shieldBash:0.8, shieldThrow:0.8, seismicSlam:0.8, guardian:0.8,
+  fury:1.3, assault:1.3, cleave:1.3, whirlwind:1.3,
+  trap:1.3, poisonTrap:1.3, frostTrap:1.3, explosiveTrap:1.3,
+  rapidShot:1.15, splinterShot:1.15, rainOfArrows:1.15, aimedShot:1.15,
+  cripplingShot:1.35, explosiveShot:1.35, stunShot:1.35 };
+for(const id in SKILL_WD_TUNE){ const d = SKILL_WD[id], k = SKILL_WD_TUNE[id]; if(d) d.r = d.r.map(v=>Math.round(v*k)); }
 function swdPct(arr, rank){ const r = Math.max(1, rank||1); return arr[0] + (arr[1]-arr[0])/9*(r-1); }
 function swd(id, rank){ const d = SKILL_WD[id]; return d ? swdPct(d.r, rank)/100 : 1; }
 function swdX(id, rank){ const d = SKILL_WD[id]; return (d && d.x) ? swdPct(d.x.r, rank)/100 : 0; }

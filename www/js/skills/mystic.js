@@ -230,7 +230,8 @@ function pushEnemy(g, e, ang, dist0){
 }
 const IMMOLATE_CD = 20, IMMOLATE_SELF_PCT = 0.05, IMMOLATE_MIN_HP = 0.25, IMMOLATE_EXPLODE_R = 85, IMMOLATE_EXPLODE_PCT = 0.6;
 function immolateDuration(rank){ return 6 + 1*(Math.max(1,rank)-1); }
-function immolateBoost(rank){ const r = Math.max(1, rank||1); return r<=5 ? 0.5 + 0.125*(r-1) : 1.0 + 0.2*(Math.min(10,r)-5) + 0.05*Math.max(0, r-10); }   // v489: +50% / +100% at rank 5 / +200% at rank 10
+const IMMOLATE_BOOST_K = 0.75;   // v559: Immolate's fire boost x0.75 (+37.5% at rank 1 / +75% at rank 5 / +150% at rank 10)
+function immolateBoost(rank){ const r = Math.max(1, rank||1); return IMMOLATE_BOOST_K*(r<=5 ? 0.5 + 0.125*(r-1) : 1.0 + 0.2*(Math.min(10,r)-5) + 0.05*Math.max(0, r-10)); }   // v489: +50% / +100% at rank 5 / +200% at rank 10
 const FLAME_VORTEX_CD = 14, FLAME_VORTEX_R = 75, FLAME_VORTEX_PULL = 0, FLAME_VORTEX_SELF_PCT = 0.12, FLAME_VORTEX_BLAST_MULT = 4;
 function flameVortexDur(rank){ return 4 + 0.5*(Math.max(1,rank)-1); }
 // v490: Pyre Heart (amber stone): while Immolate burns, a Flame Vortex swirls around you. It uses your Flame Vortex

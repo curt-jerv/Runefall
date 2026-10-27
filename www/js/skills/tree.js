@@ -659,7 +659,8 @@ function parLife(l){ return 120 + 15*l; }
 function parHit(l){ return 15 + 3.7*l; }
 const MON_DMG_PAR = 0.1125;                         // standard monster hit = 11.25% of par life (x0.8 for an average normal = 9%)
 function monStdDmg(ml){ return MON_DMG_PAR*parLife(Math.max(1, ml)); }
-function monStdLife(ml){ const l = Math.max(1, ml); return parHit(l)*(4.5 + 0.1*l)/0.7; }
+const LATE_LIFE_LV = 40, LATE_LIFE_MULT = 1.25;   // v559: from the Frosthold Tower and Dungeon on (monster level 40+), monsters have a quarter more life
+function monStdLife(ml){ const l = Math.max(1, ml); return parHit(l)*(4.5 + 0.1*l)/0.7 * (l >= LATE_LIFE_LV ? LATE_LIFE_MULT : 1); }
 function oldStdLife(d){ return 55 + 7*Math.max(1, d||1); }
 function oldStdDmg(d){ return 13 + 2.2*Math.max(1, d||1); }
 // traps and hazards written in the old numbers keep the same share of a standard monster's hit
