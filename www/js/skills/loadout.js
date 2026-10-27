@@ -264,9 +264,9 @@ const RESOURCE_SKILLS = {
   // (v146) Mystic basic spells now cost more per rank (step); the big Mystic skills cost mana too (no minCd: their own cooldowns stand).
   // (v152) Lightning Arc / Fireball / Ice Bolt / Soul Sap no longer cost mana -- they REWARD it on hit (MANA_ON_HIT_PCT).
   // Everything else costs a lot more, against a much smaller pool.
-  // v561: the four big spells (Hurricane, Meteor, Blizzard, Plague) cost 60 mana at rank 1, 50 at rank 10 (Mystic costs still grow 2% per level past 20)
-  plague:{cost:60, step:-10/9}, soulGate:{cost:40}, immolate:{cost:35}, flameVortex:{cost:45}, permafrost:{cost:21, step:-1.8},
-  nova:{cost:26}, tornado:{cost:35}, hurricane:{cost:60, step:-10/9}, iceArmor:{cost:0}, pyroTorrent:{cost:20}, blizzard:{cost:60, step:-10/9}, meteor:{cost:60, step:-10/9}, stormcall:{cost:32}, raiseDead:{cost:12}, fear:{cost:25},  /* pyroTorrent cost is PER SECOND while channelling */
+  // v562: the four big spells (Hurricane, Meteor, Blizzard, Plague) cost a flat 95 mana; no cost grows with character level any more
+  plague:{cost:95}, soulGate:{cost:40}, immolate:{cost:35}, flameVortex:{cost:45}, permafrost:{cost:21, step:-1.8},
+  nova:{cost:26}, tornado:{cost:35}, hurricane:{cost:95}, iceArmor:{cost:0}, pyroTorrent:{cost:20}, blizzard:{cost:95}, meteor:{cost:95}, stormcall:{cost:32}, raiseDead:{cost:12}, fear:{cost:25},  /* pyroTorrent cost is PER SECOND while channelling */
   shieldThrow:{cost:25, minCd:1.0}, bulwark:{cost:30}, mirrorSteel:{cost:25, step:-10/9}, seismicSlam:{cost:25}, seismicAnchor:{cost:25, step:-10/9}, whirlwind:{cost:15, minCd:1.0}, unbreakable:{cost:0, minCd:8},
   // v489 Ranger: flat Stamina costs that grow with rank (basic shots -- Strike, Rapid Shot, Splinter Shot, Multi Shot -- are free and refill Stamina)
   cripplingShot:{cost:24, step:1.2}, stunShot:{cost:31.2, step:1.44}, explosiveShot:{cost:36, step:1.8}, aimedShot:{cost:40, step:2}, rainOfArrows:{cost:50, step:2.5}, huntersMark:{cost:20, step:0.5}, explosiveTrap:{cost:42, step:1.2}, poisonTrap:{cost:24, step:0.96}, frostTrap:{cost:24, step:0.96},   // v545: traps and the Hunter's special shots cost 20% more
@@ -292,7 +292,7 @@ function resCost(p,id,rankOverride){
   let c = r.cost;
   if(id==='raiseDead' && p && p.skills) return RAISE_DEAD_MANA_PER_SKEL * Math.max(1, necroSkeletonLimit(p));   // v489: 12 mana per skeleton raised
   if(r.step){ const rk = rankOverride!=null ? rankOverride : ((p&&p.skills&&effectiveRank(p,id))||0); c += r.step*Math.max(0,rk-1); }
-  if(p && p.cls==='mystic') c *= 1 + 0.02*Math.max(0,(p.level||1)-20);
+  // v562: Mystic costs no longer grow 2% per level past 20 (D2 and PoE tie cost to the skill's level, never the character's)
   if(p && WR_SKILLS[id] && (p.windReady || p._wrCostWin>0)) c *= 0.5;   // v466 Windrunner
   if(p && p.cls==='ranger' && p.skills){ const ts=effectiveRank(p,'steadyBreathing')||0; if(ts>0) c *= 1 - 0.05*Math.min(10,ts); }   // v497: Steady Breathing is its own Marksman node
   return Math.round(c);
