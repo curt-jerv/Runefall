@@ -39,7 +39,7 @@ const MATERIAL_ARMOR_BASE = {
 const ARMOR_SPREAD = 5;   // legacy, unused since v346
 // (v346) Defense replaces flat armor: it lowers the CHANCE an enemy attack lands (Diablo 2 style), never the damage of a hit that lands.
 const DEF_SCALE = 9;                 // item Defense numbers are 9x the old armor numbers; p.armor keeps the old scale for skills that scale off it
-const DEF_AR_BASE = 330, DEF_AR_PER_ML = 9;   // enemy Attack Rating by monster level
+const DEF_AR_BASE = 40, DEF_AR_PER_ML = 25;   // enemy Attack Rating by monster level. v542: grows with gear Defense, so at your own level monsters land ~85% on a Mystic, ~78% on a Ranger, ~60% on a Warrior at every level (was 330+9/lvl: plate became nearly unhittable late)
 const DEF_HIT_MIN = 0.25, DEF_HIT_MAX = 0.90;
 const DEF_PER_DEX = 1.5;               // each Dexterity point adds Defense
 function enemyAttackRating(ml){ return DEF_AR_BASE + DEF_AR_PER_ML*Math.max(1, ml||1); }
