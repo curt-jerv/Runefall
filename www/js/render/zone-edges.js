@@ -68,3 +68,97 @@ function drawWitheredGateIso(pos, clock){
   ctx.save(); ctx.fillStyle = '#121014'; ctx.beginPath(); ctx.ellipse(cq.x, cq.y, 6, 4, -0.2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(cq.x+5, cq.y-4, 3, 0, 7); ctx.fill();
   ctx.fillStyle = '#c8a040'; ctx.beginPath(); ctx.moveTo(cq.x+7.5, cq.y-4.5); ctx.lineTo(cq.x+11, cq.y-3.5); ctx.lineTo(cq.x+7.5, cq.y-2.8); ctx.closePath(); ctx.fill(); ctx.restore();
 }
+// ---------------- v552: the Lighthouse rooftop, open to the sky ----------------
+// The world far below is drawn on a plane that slides at LH_BELOW_K of the camera's speed (parallax), so it reads as
+// a long way down: the sea to the west, the Withered Crossroads to the east, and the tower's own shaft dropping into the haze.
+const LH_BELOW_K = 0.36, LH_BELOW_DROP = 0;   // the ground straight below sits behind the deck, so the sea shows past the west rail and the land past the east
+function lhCoastX(by){ return -380 + 170*Math.sin(by*0.0011) + 80*Math.sin(by*0.0033+1.7); }
+function lhBelowScenery(room){
+  if(room._below) return room._below;
+  let s = 977; const rnd = ()=>{ s = (s*16807) % 2147483647; return s/2147483647; };
+  const trees = [], houses = [], waves = [], road = [];
+  for(let i=0;i<900;i++){ const by = (rnd()-0.5)*14000, bx = lhCoastX(by) + 260 + rnd()*9000; trees.push({x:bx, y:by, r:5+rnd()*7, d:rnd()<0.6}); }
+  for(let i=0;i<16;i++){ const by = (rnd()-0.5)*6000, bx = lhCoastX(by) + 700 + rnd()*3500; houses.push({x:bx, y:by, w:60+rnd()*50, h:40+rnd()*30}); }
+  for(let i=0;i<260;i++){ const by = (rnd()-0.5)*14000, bx = lhCoastX(by) - 150 - rnd()*7000; waves.push({x:bx, y:by, l:40+rnd()*90, ph:rnd()*6.28}); }
+  for(let k=0;k<=40;k++){ const bx = 300 + k*220; road.push({x:bx, y:60 + 260*Math.sin(k*0.45) + k*30}); }
+  room._below = {trees, houses, waves, road};
+  return room._below;
+}
+function drawLhRoof(room, cam){
+  const c = room.roofC, RR = room.roofR, S0 = toIso(c.x, c.y), K = LH_BELOW_K, clk = (game && game.clock) || 0;
+  const cc = {x:cam.x + W/2, y:cam.y + H/2};
+  const ox = S0.x + (cc.x - S0.x)*(1-K), oy = S0.y + LH_BELOW_DROP + (cc.y - S0.y)*(1-K);
+  const B = (bx,by)=>({x:ox + (bx-by)*ISO_KX*K, y:oy + (bx+by)*ISO_KY*K});
+  const X0 = cam.x-20, Y0 = cam.y-20, X1 = cam.x+W+20, Y1 = cam.y+H+20, on = (q, m)=>q.x>X0-m && q.x<X1+m && q.y>Y0-m && q.y<Y1+m;
+  const sc = lhBelowScenery(room);
+  ctx.save();
+  // the land: the Crossroads' dead fields
+  ctx.fillStyle = '#5e5638'; ctx.fillRect(X0, Y0, X1-X0, Y1-Y0);
+  // the sea, west of a ragged coast
+  ctx.fillStyle = '#122c46'; ctx.beginPath();
+  let first = true;
+  for(let by=-9000; by<=9000; by+=300){ const q = B(lhCoastX(by), by); if(first){ ctx.moveTo(q.x, q.y); first = false; } else ctx.lineTo(q.x, q.y); }
+  { const a = B(-30000, 9000), b = B(-30000, -9000); ctx.lineTo(a.x, a.y); ctx.lineTo(b.x, b.y); }
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(210,225,235,0.35)'; ctx.lineWidth = 3; ctx.beginPath(); first = true;
+  for(let by=-9000; by<=9000; by+=300){ const q = B(lhCoastX(by)-30, by); if(first){ ctx.moveTo(q.x, q.y); first = false; } else ctx.lineTo(q.x, q.y); }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(150,180,205,0.28)'; ctx.lineWidth = 1.4;
+  for(const wv of sc.waves){ const q = B(wv.x + Math.sin(clk*0.6+wv.ph)*30, wv.y); if(!on(q, 40)) continue; const l = wv.l*K; ctx.beginPath(); ctx.moveTo(q.x-l, q.y); ctx.quadraticCurveTo(q.x, q.y-3, q.x+l, q.y); ctx.stroke(); }
+  // a dirt road winding off east, farmhouses and dead trees
+  ctx.strokeStyle = '#7e6a48'; ctx.lineWidth = 9; ctx.lineJoin = 'round'; ctx.beginPath();
+  sc.road.forEach((pt,i)=>{ const q = B(pt.x, pt.y); if(i) ctx.lineTo(q.x, q.y); else ctx.moveTo(q.x, q.y); }); ctx.stroke();
+  for(const hs of sc.houses){ const q = B(hs.x, hs.y); if(!on(q, 40)) continue; const hw = hs.w*K*0.9, hh = hs.h*K*0.9;
+    ctx.fillStyle = '#4a3c2c'; ctx.fillRect(q.x-hw/2, q.y-hh*0.5, hw, hh*0.5); ctx.fillStyle = '#5a2e22'; ctx.beginPath(); ctx.moveTo(q.x-hw*0.6, q.y-hh*0.5); ctx.lineTo(q.x, q.y-hh*1.1); ctx.lineTo(q.x+hw*0.6, q.y-hh*0.5); ctx.closePath(); ctx.fill(); }
+  for(const tr of sc.trees){ const q = B(tr.x, tr.y); if(!on(q, 20)) continue; const r = tr.r*K*2.2;
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(q.x+2, q.y+1, r, r*0.45, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = tr.d ? '#262c18' : '#3a3018'; ctx.beginPath(); ctx.arc(q.x, q.y-r*0.8, r, 0, 7); ctx.fill(); }
+  // haze over everything far below
+  const hz = ctx.createLinearGradient(0, Y0, 0, Y1); hz.addColorStop(0, 'rgba(66,62,60,0.3)'); hz.addColorStop(1, 'rgba(34,32,34,0.18)');
+  ctx.fillStyle = hz; ctx.fillRect(X0, Y0, X1-X0, Y1-Y0);
+  // the tower's shaft dropping away under the deck
+  const rx = RR*1.414*ISO_KX, ry = RR*1.414*ISO_KY, sx = rx*0.86, sy = ry*0.86, L = 1400;
+  const sg = ctx.createLinearGradient(S0.x-sx, 0, S0.x+sx, 0); sg.addColorStop(0, '#6c645a'); sg.addColorStop(0.45, '#4e4840'); sg.addColorStop(1, '#24212a');
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.moveTo(S0.x-sx, S0.y); ctx.lineTo(S0.x-sx, S0.y+L); ctx.ellipse(S0.x, S0.y+L, sx, sy, 0, Math.PI, 0, true); ctx.lineTo(S0.x+sx, S0.y); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(20,16,14,0.35)'; ctx.lineWidth = 2;
+  for(let k=1;k<20;k++){ ctx.beginPath(); ctx.ellipse(S0.x, S0.y+k*70, sx, sy, 0, 0, Math.PI); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(14,10,12,0.75)';
+  for(let k=0;k<5;k++){ const wy = S0.y + ry*0.9 + 140 + k*260, wx = S0.x + (k%2 ? 0.35 : -0.4)*sx; ctx.beginPath(); ctx.moveTo(wx-9, wy+30); ctx.lineTo(wx-9, wy); ctx.arc(wx, wy, 9, Math.PI, 0); ctx.lineTo(wx+9, wy+30); ctx.closePath(); ctx.fill(); }
+  const fade = ctx.createLinearGradient(0, S0.y+ry, 0, S0.y+L); fade.addColorStop(0, 'rgba(56,58,76,0)'); fade.addColorStop(1, 'rgba(56,58,76,0.95)');
+  ctx.fillStyle = fade; ctx.fillRect(S0.x-sx-2, S0.y, sx*2+4, L+sy);
+  // the deck's thick edge, then the deck itself
+  ctx.fillStyle = '#3a342e'; ctx.beginPath(); ctx.ellipse(S0.x, S0.y+26, rx*1.02, ry*1.02, 0, 0, 7); ctx.fill();
+  const dg = ctx.createRadialGradient(S0.x, S0.y, 20, S0.x, S0.y, rx); dg.addColorStop(0, '#827a6c'); dg.addColorStop(1, '#5c564c');
+  ctx.fillStyle = dg; ctx.beginPath(); ctx.ellipse(S0.x, S0.y, rx*1.02, ry*1.02, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(30,26,22,0.45)'; ctx.lineWidth = 1.5;
+  const ring = (r)=>{ ctx.beginPath(); ctx.ellipse(S0.x, S0.y, r*1.414*ISO_KX, r*1.414*ISO_KY, 0, 0, 7); ctx.stroke(); };
+  for(let r=150; r<RR; r+=80) ring(r);
+  for(let r=150; r<RR; r+=80){ const n = Math.round(r/26); for(let i=0;i<n;i++){ const a = (i + (r/80)%2*0.5)/n*Math.PI*2; const p1 = toIso(c.x+Math.cos(a)*r, c.y+Math.sin(a)*r), p2 = toIso(c.x+Math.cos(a)*Math.min(RR, r+80), c.y+Math.sin(a)*Math.min(RR, r+80)); ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); } }
+  ctx.fillStyle = '#4a4440'; ctx.beginPath(); ctx.ellipse(S0.x, S0.y, 150*1.414*ISO_KX, 150*1.414*ISO_KY, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(200,170,110,0.35)'; ctx.lineWidth = 2; ring(140); ring(118);
+  for(let i=0;i<8;i++){ const a = i/8*Math.PI*2, q = toIso(c.x+Math.cos(a)*138, c.y+Math.sin(a)*138), q2 = toIso(c.x+Math.cos(a+0.39)*96, c.y+Math.sin(a+0.39)*96); ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q2.x, q2.y); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(S0.x, S0.y, rx*1.02, ry*1.02, 0, 0, 7); ctx.ellipse(S0.x, S0.y, rx*0.94, ry*0.94, 0, 0, 7, true); ctx.fill('evenodd');
+  ctx.restore();
+}
+// the iron railing round the deck: one post per drawable, with the rails out to the next post
+function pushLhRoofDrawables(g, drawables){
+  const t = g.tower; if(!t || !t.openRoof) return;
+  const P = t.roofPosts;
+  for(let i=0;i<P.length;i++){
+    const a = P[i], b = P[(i+1)%P.length];
+    drawables.push({depth:(a.x+b.x)/2+(a.y+b.y)/2, draw:()=>drawLhRailIso(a, b)});
+  }
+}
+function drawLhRailIso(a, b){
+  const qa = toIso(a.x, a.y), qb = toIso(b.x, b.y);
+  ctx.save();
+  ctx.strokeStyle = '#1e1a18'; ctx.lineWidth = 3.2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(qa.x, qa.y-34); ctx.lineTo(qb.x, qb.y-34); ctx.stroke();
+  ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(qa.x, qa.y-17); ctx.lineTo(qb.x, qb.y-17); ctx.stroke();
+  for(let k=1;k<4;k++){ const x = qa.x+(qb.x-qa.x)*k/4, y = qa.y+(qb.y-qa.y)*k/4; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, y-1); ctx.lineTo(x, y-34); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(160,150,140,0.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(qa.x, qa.y-35.5); ctx.lineTo(qb.x, qb.y-35.5); ctx.stroke();
+  ctx.fillStyle = '#2a2420'; ctx.fillRect(qa.x-3, qa.y-38, 6, 38); ctx.fillStyle = '#4a4038'; ctx.fillRect(qa.x-3, qa.y-38, 2, 38);
+  ctx.beginPath(); ctx.arc(qa.x, qa.y-40, 4, 0, 7); ctx.fillStyle = '#3a322c'; ctx.fill();
+  ctx.restore();
+}
+function lhRoofOpen(g){ return !!(g && g.scene==='lighthouse' && g.tower && g.tower.openRoof); }

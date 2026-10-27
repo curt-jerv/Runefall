@@ -271,7 +271,7 @@ function hudBottomPx(){
   if(t-_hudBT > 600){ _hudBT = t; const el = document.getElementById('topWrap'); if(el){ const b = el.getBoundingClientRect().bottom; if(b>0 && b<H*0.4) _hudB = b; } }   // v493: the top HUD stack (region name, buffs)
   return _hudB;
 }
-function losShadowScene(g){ return !!(g && g.started && g.player && (g.scene==='darkcrypt' || isUndergroundScene(g) || (g.scene==='lighthouse' && g.room && g.room.subzone!=='pool' && !kpOutdoor(g)))); }   // v492: every tower and hall (not the Shadow Keep's open courtyard) hides what is behind walls
+function losShadowScene(g){ return !!(g && g.started && g.player && (g.scene==='darkcrypt' || isUndergroundScene(g) || (g.scene==='lighthouse' && g.room && g.room.subzone!=='pool' && !kpOutdoor(g) && !lhRoofOpen(g)))); }   // v492: every tower and hall (not the Shadow Keep's open courtyard) hides what is behind walls
 function losEnemyHidden(g, e){
   if(!losShadowScene(g) || e===g.player) return false;
   if(dist(g.player, e) < 60) return false;
@@ -372,7 +372,8 @@ function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
   // v515: the dark ring is for towers and dungeons only (every overworld zone, town included, is plainly lit); the player's warm glow still shows (drawPlayerGlowOnly)
-  if(g.scene!=='lighthouse' || isUndergroundScene(g) || kpOutdoor(g)) return false;
+  if(g.scene!=='lighthouse' || isUndergroundScene(g) || kpOutdoor(g) || lhRoofOpen(g)) return false;   // v552: the Lighthouse roof is open air
+  if(g.room && g.room.fht) return false;   // v554: the Frosthold Tower is lit by its own braziers -- no dark veil
   if(g.room && g.room.subzone==='pool') return false;   // v521: the Marsh Pool is open ground, not underground -- plain lit with the edge ring
   if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
   return true;
@@ -395,6 +396,7 @@ function skillLights(g, cam){
     out.push({x, y, r, c, a:a*SKILL_LIGHT_K});
   };
   const FIRE = '255,140,50', BOLT = '160,215,255';
+  if(g.room && g.room.bonfires) for(const b of g.room.bonfires) add(b.x, b.y, 230, FIRE, 1.7, 8);   // v552: tower bonfires light their rooms
   if(g.projectiles) for(const pr of g.projectiles){
     if(pr.isFireball) add(pr.x, pr.y, 150, FIRE, 0.95, 18);
     else if(pr.isLightningArc) add(pr.x, pr.y, 150, BOLT, 0.95, 18);

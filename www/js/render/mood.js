@@ -36,6 +36,7 @@ function moodProfile(g){
   if(g.scene==='lighthouse' && g.room){
     if(g.room.hell || g.room.deep) return {desat:0.20, mul:'rgb(232,206,190)', vig:0.0, grime:0.30};
     if(g.room.subzone==='pool') return MOOD_PROFILES.blackmarsh;
+    if(g.room.openRoof) return {desat:0.34, mul:'rgb(200,200,214)', vig:0.40, grime:0.30};   // v552
     if(g.room.subzone==='keep' && kpOutdoor(g)) return {desat:0.36, mul:'rgb(196,198,210)', vig:0.50, grime:0.34};
   }
   if(g.scene==='mountainpass' && g.mtn && g.mtn.isCliff) return {desat:0.34, mul:'rgb(198,202,214)', vig:0.50, grime:0.34};

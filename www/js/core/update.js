@@ -3090,7 +3090,7 @@ function updateStep(dt){
       if(g.enemies[i].ftMapCarrier && !p.ftMapFound){ p.ftMapFound = true; showMsg('Forgotten Tower map found \u2014 every floor is now charted', 3.4, '#e8c44a'); saveGame(); }   // v490
       if(g.enemies[i].hwMapCarrier && !p.hwMapFound){ p.hwMapFound = true; showMsg('Highward map found — every floor is now charted', 3.4, '#e8c44a'); saveGame(); }
       if(g.enemies[i].mapBrute && room.subzone==='keep'){ p.keepMaps = p.keepMaps || {}; if(!p.keepMaps[room.kpArea]){ p.keepMaps[room.kpArea] = true; showMsg('Floor map found \u2014 this floor is now charted', 3.4, '#e8c44a'); saveGame(); } }
-      if((room.floorRects || room.maze) && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; showMsg('Dungeon map found', 2.8, '#e8c44a'); }
+      if((room.floorRects || room.maze) && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; if(room.ft){} else if(room.maze && room.lhSeed!=null){ g.lhMapTrip = g._tripBase; showMsg('Tower map found \u2014 every floor is now charted', 3.4, '#e8c44a'); } else showMsg('Dungeon map found', 2.8, '#e8c44a'); }   // v552: the Lighthouse's one bearer charts the whole climb
       { const dp = (g.enemies[i].swimmer && room.nearestDry) ? room.nearestDry(g.enemies[i].x, g.enemies[i].y) : g.enemies[i];
         dropLoot(g, dp.x, dp.y, g.enemies[i].type, g.enemies[i].isLairBoss, g.enemies[i]);
         partsMaybeDrop(g, g.enemies[i]);
@@ -3567,6 +3567,7 @@ function updateStep(dt){
     updatePortalChoice(false);
     const t = g.tower;
     if(g.fhtStore) g.fhtStore[t.floor] = g.enemies;
+    fhtTick(g, p, dt);   // v554: stashes, the Commander's sealing door, turret respawns
     let fkind = null;
     if(dist(p, t.entrance) < t.entrance.r + p.r + 22) fkind = t.floor===1 ? 'fhtToKeep' : 'fhtDown';
     else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) fkind = 'fhtUp';
@@ -3595,6 +3596,9 @@ function updateStep(dt){
     else if(t.floor>1 && dist(p, t.entrance) < t.entrance.r + p.r + 22) lhKind = 'lighthouseStairsDown';
     else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) lhKind = 'lighthouseStairsUp';
     if(t.maze && t.stairs && !t.stairsSeen && dist(p, t.stairs) < 520) t.stairsSeen = true;
+    if(t.lhCache) lhCacheTick(g, p);   // v552
+    if(t.openRoof){ const c = t.roofC, lim = t.roofR - 6;   // v552: nobody goes over the railing
+      for(const e of [p, ...(g.followers||[]), ...g.enemies]){ const d = Math.hypot(e.x-c.x, e.y-c.y); if(d > lim + 10){ e.x = c.x + (e.x-c.x)/d*lim; e.y = c.y + (e.y-c.y)/d*lim; } } }
     else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ if(t.ft){ lhKind = 'waypointForgottenTower'; } else { lhKind = 'waypointLighthouse1'; } }
     // v94 (quest feature): the rooftop's beacon starts off (p.lighthouseBeaconOn
     // false) -- while it's off, walking up to it shows the same small

@@ -151,6 +151,7 @@ function render(){
     if(room.deep){ drawDeepFloor(room, cam); }
     else if(room.subzone==='keep'){ if(room.hell) drawHellFloor(room, cam); else { drawSubFloor(room, cam); drawKeepWalls(room); } }
     else if(room.subzone){ drawSubFloor(room, cam); if(room.subzone==='sunken' || room.subzone==='temple' || room.subzone==='rrtower' || room.subzone==='cellar') drawWalls(room); }
+    else if(room.openRoof) drawLhRoof(room, cam);   // v552
     else {
     cachedFloor(room, cam, c=>drawFloor(room, c));
     drawWalls(room);
@@ -769,6 +770,7 @@ function render(){
     if(g.shieldThrow) drawables.push({depth:g.shieldThrow.x+g.shieldThrow.y, draw:()=>drawShieldThrowIso(g.shieldThrow)});
   } else if(g.scene==='lighthouse' && g.tower && g.tower.fht){
     const t = g.tower;
+    pushLhDecorDrawables(g, drawables);   // v554
     if(t.floor===1){
       drawables.push({depth:t.entrance.x+t.entrance.y, draw:()=>drawLighthouseDoorIso(t.entrance, g.clock||0)});
       drawables.push({depth:t.entrance.x+t.entrance.y+1, draw:()=>drawEdgeLabelIso(t.entrance, 'FROSTHOLD KEEP')});
@@ -813,10 +815,11 @@ function render(){
         drawables.push({depth:t.stairs.x+t.stairs.y-1, draw:()=>drawStairsDownIso(t.stairs, g.clock||0)});
         drawables.push({depth:t.stairs.x+t.stairs.y, draw:()=>drawEdgeLabelIso(t.stairs, 'STAIRS UP')});
       }
+      pushLhDecorDrawables(g, drawables); pushLhRoofDrawables(g, drawables);   // v552
       if(t.witch) drawables.push({depth:t.witch.x+t.witch.y, draw:()=>drawWitchIso(t.witch, g.clock||0, !game.enemies.some(e=>e.hp>0 && e.ftGuard))});
       if(t.beacon){
         // The rooftop's big light-feature centerpiece.
-        drawables.push({depth:t.beacon.x+t.beacon.y, draw:()=>drawLighthouseBeaconIso(t.beacon, g.clock||0, !!g.player.lighthouseBeaconOn)});
+        drawables.push({depth:t.beacon.x+t.beacon.y, draw:()=>{ if(t.openRoof){ const q = toIso(t.beacon.x, t.beacon.y); ctx.save(); ctx.translate(q.x, q.y); ctx.scale(1.5, 1.5); ctx.translate(-q.x, -q.y); } drawLighthouseBeaconIso(t.beacon, g.clock||0, !!g.player.lighthouseBeaconOn); if(t.openRoof) ctx.restore(); }});   // v552: bigger on the open roof
         if(!g.player.lighthouseBeaconOn && !g.enemies.some(e=>e.hp>0 && (e.bkBoss||e.isBoss))) drawables.push({depth:t.beacon.x+t.beacon.y+400, draw:()=>drawInteractHintIso(t.beacon, 140, g.clock||0)});   // v546: click me
       }
       if(t.waypoint){
@@ -1006,7 +1009,7 @@ function render(){
   else if(playerGlowScene(g)) drawOverworldRing(g);   // v516: overworld zones: a gentle edge ring and your warm glow
   flushLosPending();   // (v501) normally already folded into the veil above
   if(g.enemies && g.enemies.some(x=>x.dwc && (x.cState==='laser' || x.cState==='flatten'))){ ctx.save(); ctx.translate(-cam.x+shX, -cam.y+shY); for(const x of g.enemies) if(x.dwc) drawDwBeam(x); ctx.restore(); }   // v490: Construct's Furnace Beam glows over the dark
-  else if(g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g)) drawDungeonVignette(g);
+  else if(g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g) && !lhRoofOpen(g) && !(g.room && g.room.fht)) drawDungeonVignette(g);
   if(g.scene==='lighthouse' && g.room && g.room.bridge) drawBridgeGlow(g);
   drawRegionDarkening(g);
   if(isCliff(g) || kpOutdoor(g)) drawCliffStorm(g);

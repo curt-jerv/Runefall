@@ -301,9 +301,9 @@ function renderKeepMap(g, p, box){
 function renderLhMazeMap(g, p, box){
   const R = g.tower;
   box.classList.remove('genericMode');
-  if(!R.mapFound){   // v505: charted by this floor's Map Bearer
+  if(!R.fht && !R.mapFound && !(g.lhMapTrip!=null && g._tripFam==='lh' && g.lhMapTrip===g._tripBase)){   // v505: charted by this floor's Map Bearer (v552: the ground floor's bearer charts every floor)
     box.classList.add('genericMode');
-    box.innerHTML = '<div style="padding:28px 12px;text-align:center;color:var(--bone-dim);font-family:Alegreya,Georgia,serif;line-height:1.6;">No map of this floor yet.<br>Slay the Map Bearer (ringed in gold) to find it.</div>';
+    box.innerHTML = '<div style="padding:28px 12px;text-align:center;color:var(--bone-dim);font-family:Alegreya,Georgia,serif;line-height:1.6;">No map of this floor yet.<br>Slay the Map Bearer (ringed in gold) on the ground floor to find it.</div>';
     return;
   }
   const cv = document.createElement('canvas'); const S = 640, fit = mapFit(box), side = Math.min(fit.W, fit.H);
@@ -316,7 +316,11 @@ function renderLhMazeMap(g, p, box){
   c.strokeStyle = '#8a6e40'; c.lineWidth = 2; c.strokeRect(ox, oy, R.w*k, R.h*k);
   const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 12); };
   mark(R.entrance, R.floor===1 ? 'E' : '\u25BC', '#7fd87f'); mark(R.waypoint, 'W', '#5fd0ff');
-  if(R.stairsSeen) mark(R.stairs, '\u25B2', '#e8c44a');
+  if(R.cmdDoor){ const cs = g.enemies.find(e=>e.fhCmd && e.hp>0); if(cs) mark(cs, '!', '#e05a5a'); }   // v554
+  if(R.chestSpot && R.floor===4) mark(R.chestSpot, '\u2605', '#e8c44a');
+  mark(R.stairs, '\u25B2', '#e8c44a');   // v552: the map always shows the way up
+  for(const b of (R.bonfires||[])){ c.fillStyle = '#ff9a3a'; c.beginPath(); c.arc(ox+b.x*k, oy+b.y*k, 4, 0, 7); c.fill(); }
+  if(R.lhCache && !R.lhCache.opened) mark(R.lhCache, '\u25A0', '#e8c44a');
   if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(ox+p.x*k, oy+p.y*k, 9, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, ox+p.x*k, oy+p.y*k, S); }
 }
 function renderHwMap(g, p, box){
@@ -416,6 +420,8 @@ function renderFtMap(g, p, box){
   c.strokeStyle = '#9c7f4a'; c.lineWidth = 2; c.strokeRect(ox, oy, R.w*k, R.h*k);
   const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 12); };
   mark(R.entrance, R.floor===1 ? 'B' : '▼', '#7fd87f'); mark(R.stairs, '▲', '#e8c44a'); mark(R.waypoint, 'W', '#5fd0ff');
+  for(const b of (R.bonfires||[])){ c.fillStyle = '#ff9a3a'; c.beginPath(); c.arc(ox+b.x*k, oy+b.y*k, 3, 0, 7); c.fill(); }   // v553
+  if(R.lhCache && !R.lhCache.opened) mark(R.lhCache, '\u25A0', '#e8c44a');
   if(R.witch) mark(R.witch, '?', '#e8c44a');
   if(R.clearPortal) mark(R.clearPortal, 'M', '#5fd0ff');
   if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(ox+p.x*k, oy+p.y*k, 9, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, ox+p.x*k, oy+p.y*k, CW); }
@@ -450,7 +456,7 @@ function renderRegionMap0(){
   if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='keep' && g.tower.kpArea<=3){ renderKeepMap(g, p, box); return; }
   if(g.scene==='lighthouse' && g.tower && g.tower.deep){ renderDeepMap(g, p, box); return; }
   if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='highward'){ renderHwMap(g, p, box); return; }
-  if(g.scene==='lighthouse' && g.tower && g.tower.maze){ renderLhMazeMap(g, p, box); return; }
+  if(g.scene==='lighthouse' && g.tower && g.tower.maze && !g.tower.ft){ renderLhMazeMap(g, p, box); return; }
   if(g.scene==='lighthouse' && g.tower && (g.tower.subzone==='sunken' || g.tower.subzone==='temple') && g.tower.floorMask){ renderSubCaveMap(g, p, box); return; }   // v490
   if(g.scene==='lighthouse' && g.tower && g.tower.ft && !g.tower.subzone){ renderFtMap(g, p, box); return; }   // v490
   if(g.scene==='icyzone' && g.iz && g.iz.kind==='cellar' && g.iz.floorMask){ renderSubCaveMap(g, p, box, g.iz); return; }   // v546
