@@ -272,10 +272,11 @@ function talkToQuestGiver(){
   { const bq0 = getQuest(p, QUEST_BRIDGE.id); if(bq0 && bq0.status==='complete' && !bq0.rewarded){ grantBridgeReward(p, bq0); return; } }   // v486: turn in the bridge any time
   if(q && q.status==='complete'){
     if(!q.rewarded){
-      if(grantQuestRewardItem(p)) q.rewarded = true;
+      if(grantQuestRewardItem(p)){ q.rewarded = true; voicePlay('aldric_hunt_reward'); }   // v555: voiced
     } else if(!getQuest(p, QUEST_BRIDGE.id) && !p.bridgeCleared){
       pendingQuestGiver = 'oldmanBridge';
       questGiverNameEl.textContent = 'Aldric the Elder';
+      voicePlay('aldric_bridge_offer');
       questGiverTextEl.textContent = '"Bandits have seized the old bridge in the River Valley, south of the Dark Forest. It is the only road to the Withered Crossroads. Drive them out of their camp and the way will be safe again. Will you clear it?"';
       openQuestGiverDialogue();
     } else {
@@ -293,7 +294,7 @@ function talkToQuestGiver(){
       } else if(wq && wq.status==='active'){
         showMsg('"The runestone is held at the top of Frosthold Tower. Bring it down and we can face the Wraith Lord."', 3.4);
       } else {
-        { const bq = getQuest(p, QUEST_BRIDGE.id); if(bq && bq.status==='active') showMsg('"The bandits still hold the old bridge ('+bq.progress+'/'+bq.total+')."', 2.8); else talkTownTip({name:'Aldric the Elder'}); }   /* v546: nothing to ask of you -- a piece of advice instead */   // v456: no more respec here (the well still offers it)
+        { const bq = getQuest(p, QUEST_BRIDGE.id); if(bq && bq.status==='active') showMsg('"The bandits still hold the old bridge ('+bq.progress+'/'+bq.total+')."', 2.8); else { talkTownTip({name:'Aldric the Elder'}); voicePlay('aldric_careful', {gap:20}); } }   /* v546: nothing to ask of you -- a piece of advice instead */   // v456: no more respec here (the well still offers it)
       }
     }
   } else if(q){
@@ -304,6 +305,7 @@ function talkToQuestGiver(){
     pendingQuestGiver = 'oldman';
     questGiverNameEl.textContent = 'Aldric the Elder';
     questGiverTextEl.textContent = '"' + QUEST_FIND_HUNTERS.desc + '"';
+    voicePlay('aldric_hunt_offer');
     openQuestGiverDialogue();
   }
 }
@@ -331,11 +333,12 @@ function talkToBarkeeper(){
   } else if(q && q.status==='complete'){
     showMsg('"Thank you, traveler -- the beacon\'s lit and the Tavern is finally open!"', 2.4);
   } else if(q){
-    showMsg('"Please -- climb to the top of the Lighthouse and light the beacon."', 2.4);
+    showMsg('"Please -- climb to the top of the Lighthouse and light the beacon."', 2.4); voicePlay('hobbs_ltw_ongoing', {gap:6});
   } else {
     pendingQuestGiver = 'barkeeper';
     questGiverNameEl.textContent = 'Hobbs the Barkeeper';
     questGiverTextEl.textContent = '"' + QUEST_LIGHT_THE_WAY.desc + '"';
+    voicePlay('hobbs_ltw_offer');
     openQuestGiverDialogue();
   }
 }

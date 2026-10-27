@@ -291,6 +291,7 @@ function witchTowerInteract(){
   const p = game.player;
   // v490: the cage opens whenever you reach it (a stray, unseen enemy used to keep it shut)
   const wPos = game.tower && game.tower.witch ? {x:game.tower.witch.x, y:game.tower.witch.y} : {x:game.tower.w/2, y:game.tower.h/2};
+  voicePlay('witch_rescued');   // v555
   showNpcText('The Witch', '"Thank you. Come see me by my camp."', 'Continue', ()=>{
     p.witchRescued = true;
     if(game.tower) game.tower.witch = null;

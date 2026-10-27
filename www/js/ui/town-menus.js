@@ -334,6 +334,7 @@ const SMITH_TEXT = {
 };
 function openBlacksmithMenu(){
   const p = game.player, st = smithState(p);
+  if(smithOverlay.style.display!=='flex'){ if(st==='turnin') voicePlay('brom_hammer'); else voiceBrom(); }   // v555: Brom greets you (only when the menu first opens)
   game.modalOpen = true;
   { let stx = SMITH_TEXT[st]; if(st==='offer'){ const hq0 = getQuest(p, QUEST_FIND_HUNTERS.id); if(!(hq0 && hq0.status==='complete')) stx = stx.replace(/^"You brought those hunters home -- good\. Then you can hear/, '"Listen, traveler, and hear'); } document.getElementById('smithText').textContent = stx; }
   const qb = document.getElementById('smithQuestBtn');
@@ -579,10 +580,10 @@ function openShop(vendor){
     document.getElementById('shopTitle').textContent = ROAD_MERCHANT_NAME+' \u2014 the Wandering Peddler';
   } else if(vendor==='runeforge'){
     t.stock = t.blacksmithStock;
-    document.getElementById('shopTitle').textContent = 'Obsidian Forge';
+    document.getElementById('shopTitle').textContent = 'Obsidian Forge'; voicePlay('brom_forge', {gap:8});
   } else if(vendor==='socket'){
     t.stock = t.blacksmithStock;
-    document.getElementById('shopTitle').textContent = 'Brom \u2014 Socketing';
+    document.getElementById('shopTitle').textContent = 'Brom \u2014 Socketing'; voicePlay('brom_socket', {gap:8});
   } else {
     t.stock = t.blacksmithStock;
     document.getElementById('shopTitle').textContent = 'Brom \u2014 restocks in '+restockLabel();

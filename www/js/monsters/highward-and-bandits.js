@@ -288,7 +288,7 @@ function updateBanditKing(g, e, dt, target, d, isFT, chill, room){
   const frac = e.hp/e.maxHp;
   if((e.bkCall||0) < 2 && frac < (e.bkCall ? 0.34 : 0.67)){
     e.bkCall = (e.bkCall||0) + 1;
-    showMsg('“To me, lads! Cut them down!”', 2.4, '#ffd27a');
+    showMsg('“To me, lads! Cut them down!”', 2.4, '#ffd27a'); voicePlay('bk_cut');   // v555
     const kinds = ['bandit','bandit','banditarcher'].concat(e.bkCall===2 ? ['banditbrute'] : []);
     kinds.forEach((k,i)=>{ const a = i*2.2+Math.random(); const x = clamp(e.x+Math.cos(a)*220, 60, room.w-60), y = clamp(e.y+Math.sin(a)*220, 60, room.h-60); const a2 = spawnEnemy(g, k, {x, y}); if(a2){ a2.aggroed = true; a2.engaged = true; a2.xpMul = 0.5; g.particles.push({type:'burst', x, y, t:0.4, max:0.4, color:'#c9a25a'}); } });
   }

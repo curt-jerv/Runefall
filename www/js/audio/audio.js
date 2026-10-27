@@ -483,6 +483,35 @@ function audDeathKind(e){
   if(e.r>=16 || AUD_BEAST.test(t) || /brute|demon|fiend|hellhound|imp/.test(t)) return 'deathBeast';
   return 'deathSmall';
 }
+// v555: spoken NPC lines (www/audio/voice/<key>.ogg), fetched the first time they are needed. One line at a time; the
+// music dips while someone speaks. opts.gap = seconds before the same line may play again.
+const VOICE_BANK = ['aldric_hunt_offer','aldric_hunt_reward','aldric_bridge_offer','aldric_bridge_reward','aldric_careful',
+  'hobbs_ltw_offer','hobbs_ltw_ongoing','brom_shop1','brom_shop2','brom_shop3','brom_socket','brom_forge','brom_hammer','witch_rescued','bk_cut'];
+const VOICE_VOL = 1.3, VOICE_DUCK = 0.35;
+AUD.vbuf = {}; AUD.vlast = {}; AUD.vcur = null; AUD.vwant = null;
+function voicePlay(key, opts){
+  try{
+    audInit(); if(!AUD.ok || VOICE_BANK.indexOf(key)<0) return;
+    const now = performance.now(), gap = (opts && opts.gap) || 0;
+    if(gap && now-(AUD.vlast[key]||-1e9) < gap*1000) return;
+    AUD.vlast[key] = now;
+    const want = AUD.vwant = {key, t:now};
+    const go = b=>{ if(b && AUD.vwant===want && performance.now()-want.t < 3000) voiceStart(b); };
+    if(AUD.vbuf[key]) go(AUD.vbuf[key]);
+    else sndFetch('audio/voice/'+key+'.ogg', b=>{ if(!b || AUD.vbuf[key]) return; AUD.vbuf[key] = b; go(b); });
+  }catch(e){}
+}
+function voiceStop(){ const v = AUD.vcur; AUD.vcur = null; if(v){ try{ v.stop(); }catch(e){} } }
+function voiceStart(b){
+  const c = AUD.ctx; if(c.state==='suspended') c.resume();
+  voiceStop();
+  const src = c.createBufferSource(), g = c.createGain();
+  src.buffer = b; g.gain.value = VOICE_VOL; src.connect(g); g.connect(AUD.sfx); src.start();
+  AUD.vcur = src;
+  AUD.music.gain.setTargetAtTime(0.95*audSetting('musicVol',0)*VOICE_DUCK, c.currentTime, 0.12);
+  src.onended = ()=>{ if(AUD.vcur===src || !AUD.vcur){ AUD.vcur = null; audApplyVolumes(); } };
+}
+function voiceBrom(){ AUD.bromN = ((AUD.bromN==null ? Math.floor(Math.random()*3) : AUD.bromN) + 1) % 3; voicePlay('brom_shop'+(AUD.bromN+1)); }
 // interface clicks
 document.addEventListener('pointerdown', ev=>{ try{ const t = ev.target; if(t && t.closest && t.closest('button,.plaque,.toggleRow,.closeBtn,.skillChoice,.invSlot,.shopItem,.tabBtn')) sfxPlay('ui', 1); }catch(e){} }, true);
 

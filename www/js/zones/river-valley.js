@@ -307,6 +307,7 @@ function grantBridgeReward(p, q){
   const xp = Math.round((p.xpNext||100)*mult);
   p.gold += 80; bagPulse();
   gainXp(game, xp);
+  voicePlay('aldric_bridge_reward');   // v555
   showMsg('"You cleared the bridge! Take this for the road." '+bi.name+' + 80 gold, +'+xp+' XP', 3.6);
   updateQuestBadge(); saveGame();
 }
