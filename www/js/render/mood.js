@@ -108,24 +108,30 @@ function drawGroundGrime(g, cam){
 // layer cost almost nothing by comparison. Spells and numbers are graded too now, but stay bright enough to read.
 let moodCssKey = '';
 const moodVigEl = document.getElementById('moodVig'), moodGrainEl = document.getElementById('moodGrain');
+const GRIM_K = 0.3, BRIGHT_DEFAULT = 0.7, BRIGHT_MIN = 0.5, BRIGHT_MAX = 1.2;   // v547
+function brightSetting(){ const b = settings && settings.bright; return clamp(b>0 ? b : BRIGHT_DEFAULT, BRIGHT_MIN, BRIGHT_MAX); }
 function moodFilterFor(pr){
   const m = pr._rgb || (pr._rgb = pr.mul.match(/\d+/g).map(Number));
   const lum = (m[0]*0.3 + m[1]*0.59 + m[2]*0.11)/255, warm = Math.max(0, (m[0]-m[2])/255);
   // v522: a much lighter touch -- a little colour pulled out and a slight warm tint, but no more heavy darkening; the Brightness slider scales it
-  const sat = Math.max(0.7, 1 - pr.desat*0.6), bri = Math.max(0.82, 0.96 - (1-lum)*0.25 - (pr.crush||0)*0.15) * ((settings && settings.bright) || 1);
-  return 'saturate('+sat.toFixed(2)+') sepia('+Math.min(0.22, warm*0.7).toFixed(2)+') brightness('+bri.toFixed(2)+') contrast(1.06)';
+  // v547: plus GRIM_K (30%) of the old 'Atmosphere: High' grade -- more colour pulled out, a browner tint and harder contrast
+  const K = GRIM_K, mix = (a, b)=>a + (b - a)*K;
+  const sat = mix(Math.max(0.7, 1 - pr.desat*0.6), Math.max(0.35, 1 - pr.desat*1.15)), sep = mix(Math.min(0.22, warm*0.7), Math.min(0.45, warm*1.3)), con = mix(1.06, 1.12);
+  const bri = Math.max(0.82, 0.96 - (1-lum)*0.25 - (pr.crush||0)*0.15) * brightSetting();
+  return 'saturate('+sat.toFixed(2)+') sepia('+sep.toFixed(2)+') brightness('+bri.toFixed(2)+') contrast('+con.toFixed(3)+')';
 }
 function applyMoodCss(g){
   const on = !!(g && g.started) && moodOn() && !MOOD_DBG.noCss;
   const pr = on ? moodProfile(g) : null;
-  const key = on ? (g.scene+'|'+(g.room&&g.room.subzone||'')+'|'+(pr.mul)+'|'+pr.desat+'|'+pr.vig+'|'+grainOn()+'|'+((settings&&settings.bright)||1)) : 'off|'+grainOn()+'|'+!!(g&&g.started);
+  const key = on ? (g.scene+'|'+(g.room&&g.room.subzone||'')+'|'+(pr.mul)+'|'+pr.desat+'|'+pr.vig+'|'+grainOn()+'|'+brightSetting()) : 'off|'+grainOn()+'|'+!!(g&&g.started);
   if(key===moodCssKey) return; moodCssKey = key;
   if(!on){ canvas.style.filter = ''; if(moodVigEl) moodVigEl.style.display = 'none'; if(moodGrainEl) moodGrainEl.style.display = (g && g.started && grainOn()) ? 'block' : 'none'; return; }
   canvas.style.filter = moodFilterFor(pr);
   if(moodVigEl){
     if(pr.vig>0){
       const m = pr._rgb, t = 'rgba('+Math.round(m[0]*0.05)+','+Math.round(m[1]*0.04)+','+Math.round(m[2]*0.04)+',';
-      moodVigEl.style.background = 'radial-gradient(ellipse 75% 70% at 50% 47%, '+t+'0) 45%, '+t+(pr.vig*0.3).toFixed(2)+') 78%, '+t+Math.min(0.6,pr.vig*0.8).toFixed(2)+') 100%)';   // v522: softer
+      const vm = (a, b)=>a + (b - a)*GRIM_K;   // v547: 30% of the old, heavier vignette
+      moodVigEl.style.background = 'radial-gradient(ellipse 75% 70% at 50% 47%, '+t+'0) '+vm(45,38).toFixed(0)+'%, '+t+vm(pr.vig*0.3, pr.vig*0.5).toFixed(2)+') '+vm(78,72).toFixed(0)+'%, '+t+vm(Math.min(0.6,pr.vig*0.8), Math.min(0.85,pr.vig*1.15)).toFixed(2)+') 100%)';   // v522: softer
       moodVigEl.style.display = 'block';
     } else moodVigEl.style.display = 'none';
   }
@@ -181,6 +187,7 @@ let moodSoftStroke = false;
     };
   }catch(e){}
 })();
+const FOREST_DARK = 0.55;
 function drawRegionDarkening(g){
   const p = g.player;
   let a = 0, col = '8,6,26';
@@ -197,8 +204,7 @@ function drawRegionDarkening(g){
   else if(g.scene==='highlands'){ a = 0.2; col='26,34,48'; }
   else if(g.scene==='lighthouse' && g.room && g.room.subzone==='pool'){ a = 0.52; col='4,22,12'; }
   else if(g.scene==='forest'){   // v229: a little lighter, and brighter again toward the Withered Crossroads exit (south)
-    const fh = (g.forest && g.forest.h) || 3800;
-    a = 0.2 * (1 - 0.6*sm((p.y - fh*0.5)/(fh*0.46))); col='2,8,14';   // v522: the forest's gloom comes mostly from its own dark colours now
+    a = FOREST_DARK; col='2,8,14';   // v547: the whole forest is lit like the River Valley's entrance
   }
   else if(g.scene==='rivervalley'){ a = 0.42 - 0.06*sm((p.y-300)/2200); col='2,8,14'; }   // v522: a shade lighter than the Forest, darker than the open Crossroads   // v233: continues the Forest's brightening south gate into open daylight
   else if(g.scene==='town'){ a = 0.32; col='12,10,34'; }      // v193: Mistfall's dusk
@@ -210,7 +216,7 @@ function drawRegionDarkening(g){
   vg.addColorStop(0,'rgba('+col+',0)'); vg.addColorStop(1,'rgba('+col+','+Math.min(0.6,a*0.9).toFixed(3)+')');
   ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
   ctx.restore();
-  if(g.scene==='forest'){ drawAmbientMist(g, 0.10*Math.max(0.25, a/0.32), '150,190,190'); }   // v199: fireflies removed
+  if(g.scene==='forest'){ drawAmbientMist(g, 0.06, '150,190,190'); }   // v547: a fixed thin mist (it used to grow with the darkness and wash it out)   // v199: fireflies removed
   else if(g.scene==='highlands') drawHighlandsAtmos(g);
   else if(g.scene==='town'){ drawAmbientMist(g, 0.17, '190,200,228'); drawTownGlows(g); }
 }

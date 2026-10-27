@@ -1004,7 +1004,7 @@ function render(){
     ctx.restore();
   }
   if(g.scene==='darkcrypt') drawDarkCryptOverlay(g, DARKCRYPT_PLAYER_LIGHT_R, true);
-  else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3, sunk = g.scene==='lighthouse' && g.room && g.room.subzone==='sunken'; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*UNDERGROUND_LIGHT_SCALE*lightRadiusMult(g.player)*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : sunk ? 1.05 : 1), false, hrt ? '#1c0503' : null, sunk ? 0.92 : null, sunk ? 0.12 : UNDERGROUND_CORE_DIM); }   // v507: the Sunken Depths are lit a good deal brighter   // v493: +Light Radius
+  else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3, sunk = g.scene==='lighthouse' && g.room && g.room.subzone==='sunken'; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*UNDERGROUND_LIGHT_SCALE*lightRadiusMult(g.player)*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : sunk ? 1.05 : 1), false, hrt ? '#1c0503' : null, sunk ? 0.92 : null, sunk ? 0.12 : (CAVE_CORE_DIM[g.scene] || UNDERGROUND_CORE_DIM)); }   // v507: the Sunken Depths are lit a good deal brighter   // v493: +Light Radius
   else if(wlDarkFight(g)) drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*0.9*lightRadiusMult(g.player), false);   // v434: darkness closes in during the Wraith Lord fight (10% tighter than the caves)
   else if(lightVeilScene(g)) drawLightVeil(g);   // v492/v493: the dark around towers and halls, lit by your own light
   else if(playerGlowScene(g)) drawOverworldRing(g);   // v516: overworld zones: a gentle edge ring and your warm glow

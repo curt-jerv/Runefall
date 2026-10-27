@@ -56,6 +56,7 @@ const DARKCRYPT_PLAYER_LIGHT_R = 213;  // v222: 1.5x // (v120) a little larger: 
 const DARKCRYPT_TORCH_LIGHT_R = 70;
 // v224: every underground dungeon gets the crypt's black screen + lit circle, at 2x the crypt's radius
 const UNDERGROUND_LIGHT_R = DARKCRYPT_PLAYER_LIGHT_R*2;
+const CAVE_CORE_DIM = {minotaurcave:0.3, spiderlair:0.42, bearcave:0.5};   // v547: the caves off the Forest and River Valley stay darker than the woods outside
 function isUndergroundScene(g){
   const sc = g.scene;
   return sc==='dungeon'||sc==='spiderlair'||sc==='bearcave'||sc==='minotaurcave'||sc==='ancientruins'||sc==='raptorlair'||(sc==='lighthouse' && !!(g.room && (g.room.subzone==='sunken' || g.room.subzone==='temple' || g.room.subzone==='rrtower' || g.room.subzone==='cellar' || g.room.subzone==='highward' || g.room.deep===1 || g.room.deep===3)));

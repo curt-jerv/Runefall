@@ -19,6 +19,7 @@ function saveSettings(s){
   try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }catch(e){}
 }
 let settings = loadSettings();
+if(!settings.brightV547){ settings.bright = 0.7; settings.brightV547 = true; saveSettings(settings); }   // v547: brightness starts at 70% (slider 50-120%)
 // v487: apply the saved Graphics quality (see gfxLevel by resize())
 function gfxApply(level){ level = Math.max(0, Math.min(2, level)); glowMode = level; if(level!==gfxLevel){ gfxLevel = level; resize(); } }
 function gfxInit(){ const v = settings.gfxQ || 'auto'; gfxApply(v==='high' ? 2 : v==='low' ? 0 : 1); }
@@ -135,7 +136,7 @@ function syncGraphicsUI(){
   const gq = settings.gfxQ || 'auto';
   document.querySelectorAll('#gfxSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===gq));
   document.querySelectorAll('#fpsSeg button').forEach(b=>b.classList.toggle('on', +b.dataset.v===(+settings.fpsCap===30 ? 30 : 60)));
-  { const bs = document.getElementById('brightSlider'), bv = Math.round((settings.bright||1)*100); if(bs){ bs.value = bv; document.getElementById('brightValueLabel').textContent = bv+'%'; } }
+  { const bs = document.getElementById('brightSlider'), bv = Math.round(brightSetting()*100); if(bs){ bs.value = bv; document.getElementById('brightValueLabel').textContent = bv+'%'; } }
   setToggleUI(document.getElementById('toggleGrain'), settings.grain!==false);
   { const o = settings.orient || 'auto'; document.querySelectorAll('#orientSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===o)); }
 }
