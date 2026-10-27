@@ -1,4 +1,4 @@
-// Runefall loader (v556). The game is split into the files below; their ORDER matters (a file may use things
+// Runefall loader (v557). The game is split into the files below; their ORDER matters (a file may use things
 // set up by an earlier one). All files are fetched first and then run back-to-back in one go, exactly like the
 // old single-file game, so no tap or timer can reach a function that hasn't loaded yet.
 // Adding a file: put it in www/js/<folder>/, add its path to this list, run `node scripts/check-js.js`.
@@ -28,7 +28,7 @@ const RUNEFALL_FILES = [
   'monsters/minotaur.js',
   'items/mods.js',
   'ui/bag.js',
-  'ui/inventory.js',
+  'ui/inventory.js', 'ui/item-art.js',
   'ui/stash.js',
   'ui/region-map.js',
   'quests/side-quests.js',

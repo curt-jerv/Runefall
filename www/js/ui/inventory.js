@@ -413,6 +413,7 @@ function uniqSvgIds(str){
 }
 function bagArtSvg(it){
   if(it && it.questId){ const qa = questArtSvg(it); if(qa) return qa; }
+  if(it && !it.questId && typeof tierArtSvg==='function'){ const ta = tierArtSvg(it); if(ta) return ta; }   // v557: tiered gear art (ui/item-art.js)
   const [w,h] = itemShape(it), W = w*20, H = h*20, acc = it.color || '#c9b6ff', st = it.slotType, bi = baseBracketIdx(it.ilvl||1);
   const steel='#cfd8e2', steelD='#6f7b8a', gold='#d8b04a', wood='#7a5230', dark='#1a1620';
   const mat = ART_MAT[it.material] || '#aab4c0';
