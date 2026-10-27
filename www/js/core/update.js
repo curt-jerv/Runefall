@@ -1,8 +1,10 @@
 // v487: each simulation step gets fresh obstacle grids (see obsGrid)
+const ATK_BUFFER = 0.3;
 function update(dt){ OBS_FRAME++; OBS_IN_UPDATE = true; try{ updateStep(dt); } finally { OBS_IN_UPDATE = false; } }
 function updateStep(dt){
   const g = game, p = g.player, room = g.room;
   try{ dungeonPersist(g); }catch(err){}
+  try{ tpCastTick(g, dt); }catch(err){}   // v548
   if(showBigMsg._hold && g.scene!=='darkcrypt') bigMsgRelease();   // v536: a held crypt banner goes when you leave
   if(p.wellRestedT>0) wellRestedTick(p, dt);
   try{ wmMark(g, p); }catch(err){}
@@ -290,6 +292,9 @@ function updateStep(dt){
   // attack
   const isBow = !!(p.equipment.mainhand && p.equipment.mainhand.slotType==='bow');
   const staffItem = (p.equipment.mainhand && p.equipment.mainhand.slotType==='staff') ? p.equipment.mainhand : null;
+  if(wantAttack && p.atkCd>0){ if(!(p._atkBuf>0)) p._atkBuf = ATK_BUFFER; else p._atkBuf -= dt; }   // v548: a press during the cooldown is held a moment instead of lost
+  else p._atkBuf = 0;
+  const atkKeep = wantAttack && p.atkCd>0 && p._atkBuf>0;
   if(wantAttack && p.atkCd<=0 && !preciseShotActive(p)){
     p.atkCd = p.atkCdMax;
     // Melee range bump: base reach 62->74 (~20%), a modest bump to feel
@@ -336,16 +341,16 @@ function updateStep(dt){
           const isF = spell==='fire';
           const sd = elementalPolarityDmg(p, isF?FIREBALL_BASE_DMG:ICE_BOLT_BASE_DMG, stN, isF?'fireball':'iceBolt') * (isCrit?critMultOf(p):1);
           g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*ELEMENTAL_BOLT_SPEED, vy:Math.sin(ang)*ELEMENTAL_BOLT_SPEED,
-            r:7, dmg:sd, from:'player', life:1.4, color:isF?'#ff7a3d':'#7ad0ff', isArrow:true, crit:isCrit, isFireball:isF, isIceBolt:!isF});
+            r:7, dmg:sd, from:'player', life:1.9, color:isF?'#ff7a3d':'#7ad0ff', isArrow:true, crit:isCrit, isFireball:isF, isIceBolt:!isF});
         }
       } else   // v454: Strike is a plain purple arcane bolt for every Mystic (no element, no ailment)
       g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*STAFF_BOLT_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*STAFF_BOLT_SPEED*projectileSpeedMult(p),
-        r:6, dmg, from:'player', life:1.4, color:'#b57bff', isArrow:true, isArcaneBolt:true, crit:isCrit});
+        r:6, dmg, from:'player', life:1.9, color:'#b57bff', isArrow:true, isArcaneBolt:true, crit:isCrit});
     } else if(isBow){
       if(p.cls==='ranger') gainResource(p, STAMINA_ON_SHOT);
       // Ranger basic attack: one arrow (v495: Multi Shot is its own button now and no longer changes Strike)
       g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
-        r:5, dmg, from:'player', life:1.4, color:'#e8c44a', isArrow:true, crit:isCrit});
+        r:5, dmg, from:'player', life:1.9, color:'#e8c44a', isArrow:true, crit:isCrit});
     } else {
       // Cleave (Berserker, v56): while wielding a two-handed weapon AND
       // ranked, the basic Strike auto-becomes the wide-arc Cleave sweep
@@ -427,7 +432,7 @@ function updateStep(dt){
       }
     }
   }
-  wantAttack=false;
+  wantAttack = atkKeep;
   lastHitCrit = false;
 
   // shield bash / Slam (Defender skill): a plain active trigger on its own
@@ -588,7 +593,7 @@ function updateStep(dt){
     wantPackTactics=false;
     const ptRank = effectiveRank(p,'packTactics')||0;
     if(ptRank>0 && p.packTacticsCd<=0){
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
       if(target && g.followers && g.followers.length){
         const packFollowers = g.followers.filter(f=>f.kind==='wolf'||f.kind==='bear');
         if(packFollowers.length){
@@ -671,7 +676,7 @@ function updateStep(dt){
     wantRapidShot=false;
     const rsRank = effectiveRank(p,'rapidShot')||0;
     if(rsRank>0 && isBow && p.atkCd<=0 && !p.rapidShotBurst && !p.dodging){   // v489: a free basic shot on the Strike timer
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -713,7 +718,7 @@ function updateStep(dt){
     else {
       wantCripplingShot=false;
       if(csRank>0 && p.atkCd<=0 && !p.dodging && !(p.cripplingShotCd>0) && resourceAffordable(p,'cripplingShot')){
-        const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+        const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
         const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
         p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
         p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -790,7 +795,7 @@ function updateStep(dt){
     else {
       wantStunShot=false;
       if(ssRank2>0 && p.atkCd<=0 && !p.dodging && !(p.stunShotCd>0) && resourceAffordable(p,'stunShot')){
-        const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+        const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
         const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
         p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
         p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -810,7 +815,7 @@ function updateStep(dt){
     wantAimedShot=false;
     const asRank = effectiveRank(p,'aimedShot')||0;
     if(asRank>0 && isBow && p.aimedShotCd<=0){
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
       const ang = holdAimShotDir ? Math.atan2(holdAimShotDir.y, holdAimShotDir.x) : (target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x));
       holdAimShotDir = null;
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
@@ -831,7 +836,7 @@ function updateStep(dt){
     wantHuntersMark=false;
     const hmRank = effectiveRank(p,'huntersMark')||0;
     if(hmRank>0 && p.huntersMarkCd<=0){
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0)+60);
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0)+60);
       if(target){
         for(const e2 of g.enemies){ if(e2!==target && e2.markT>0) e2.markT = 0; }
         target.markT = HMARK_DUR + (hmRank-1); target.markBonus = HMARK_BONUS + HMARK_BONUS_STEP*(hmRank-1);
@@ -1120,7 +1125,7 @@ function updateStep(dt){
     wantRainOfArrows=false;
     const roaRank = effectiveRank(p,'rainOfArrows')||0;
     if(roaRank>0 && p.rainOfArrowsCd<=0){
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0)*2);
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0)*2);
       const tx = target ? target.x : p.x+p.facing.x*160, ty = target ? target.y : p.y+p.facing.y*160;
       p.rainOfArrowsCdMax = applyCdr(p, RAIN_OF_ARROWS_CD);
       p.rainOfArrowsCd = p.rainOfArrowsCdMax;
@@ -1543,7 +1548,7 @@ function updateStep(dt){
     const tRank = effectiveRank(p,'tornado')||0;
     if(tRank>0 && p.tornadoCd<=0){
       p.movementStopT = 0.2;
-      const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -1615,7 +1620,7 @@ function updateStep(dt){
     wantFireball=false;
     const fbRank = effectiveRank(p,'fireball')||0;
     if(fbRank>0 && p.atkCd<=0 && !(p.fbQueue && p.fbQueue.length)){
-      const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -1647,7 +1652,7 @@ function updateStep(dt){
     const ibRank = effectiveRank(p,'iceBolt')||0;
     const orbMode = uq(p,'uq_elementalist');   // v499 Crystalline Prism: Ice Bolt becomes Frozen Orb
     if(ibRank>0 && p.atkCd<=0 && !(orbMode && p.frozenOrbCd>0)){
-      const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -1689,7 +1694,7 @@ function updateStep(dt){
     wantDeathBolt=false;
     const dbRank = effectiveRank(p,'deathBolt')||0;
     if(dbRank>0 && p.atkCd<=0){
-      const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.atkCd = p.atkCdMax;
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)}; p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -1722,7 +1727,7 @@ function updateStep(dt){
   if(wantSoulSap){
     wantSoulSap=false;
     const ssRank = effectiveRank(p,'soulSap')||0;   // v460: Staff of Souls
-    const ssTarget = ssRank>0 ? nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0)) : null;
+    const ssTarget = ssRank>0 ? nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0)) : null;
     const ssTargets = []; if(ssTarget){ ssTargets.push(ssTarget); for(let k=1;k<soulSapTargets(ssRank);k++){ const t2 = nearestEnemy(g, ssTarget, SOUL_SAP_SPLASH_R, ssTargets); if(!t2 || !enemyOnScreen(g,t2)) break; ssTargets.push(t2); } }   // v497: rank 1 hits one enemy, rank 3 two, rank 5 three -- all on screen
     // (v106) Soul Sap is a targeted, instant drain: it needs an enemy in range
     // (no target = no cast, cooldown untouched). No outbound projectile -- a
@@ -3370,12 +3375,12 @@ function updateStep(dt){
       if(l.type==='potion'){ p.hp = Math.min(p.maxHp, p.hp+p.maxHp*0.3); showMsg('+Health', 0.6); g.loot.splice(i,1); try{ sfxPlay('potion', 1); }catch(err){} }   // v543: a gulp for health globes too
       else if(l.type==='gold'){ p.gold += l.amt; goldPop(g, l.x, l.y, l.amt); g.loot.splice(i,1); }
       else if(l.type==='item'){
-        if(addToBag(p, l.item)){
-          const eq = tryAutoEquip(p, l.item);
+        { const took = lootTake(p, l.item); if(took){   // v548: a full bag no longer stops an item you can wear right away
+          const eq = took==='equipped';
           showMsg(eq ? 'Equipped: '+l.item.name : l.item.name, 1.5);
           bagPulse(); g.loot.splice(i,1);
         }
-        else { if(!(p._fullMsgT>0)){ showMsg(fullMsgFor(l.item), 1.0); p._fullMsgT = 1.2; } } // leave it on the ground until there's room
+        else { if(!(p._fullMsgT>0)){ showMsg(fullMsgFor(l.item), 1.0); p._fullMsgT = 1.2; } } }   // leave it on the ground until there's room
       }
       else g.loot.splice(i,1);
     }
@@ -3560,7 +3565,7 @@ function updateStep(dt){
     if(dist(p, t.entrance) < t.entrance.r + p.r + 22) fkind = t.floor===1 ? 'fhtToKeep' : 'fhtDown';
     else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) fkind = 'fhtUp';
     updateInteractPrompt(fkind);
-    if(t.floor===4 && !p.fhtRuneTaken && !g.chest && !g.enemies.some(x=>x.isFhtTemplar && x.hp>0)){
+    if(t.floor===4 && !g.chest && !t._chmpChest && !g.enemies.some(x=>x.isFhtTemplar && x.hp>0)){ t._chmpChest = true;
       g.chest = {x:t.chestSpot.x, y:t.chestSpot.y, r:24, opened:false, templar:true};
       showMsg('The Frosthold Champions have fallen — a chest appears', 3.0);
     }
@@ -3709,6 +3714,7 @@ function updateStep(dt){
     const nearCemeteryGate = dist(p, g.crypt.cemeteryGate) < g.crypt.cemeteryGate.r + p.r + 22;
     const nearCryptWaypoint = dist(p, g.crypt.waypoint) < g.crypt.waypoint.r + p.r + 24;
     // (v120) once the chest is looted a portal appears beside it, leading back to the cemetery
+    if(!g.crypt.bossDone && p.defilerSlain && !p.inscriptionTaken) g.crypt.bossDone = true;   // v548: slain on an earlier visit but the tomb never read -- he stays down and the tomb can be read
     if(g.crypt.bossDone && p.defilerSlain && !p.inscriptionTaken) bigMsgHold('Inspect the opened tomb', ''); else bigMsgRelease();   // v536
     if(g.crypt.bossDone && p.inscriptionTaken && !g.crypt.returnPortal){   // v326: the portal only opens once the sarcophagus has been searched for the Templar Inscription
       g.crypt.returnPortal = {x:g.crypt.chestSpot.x+70, y:g.crypt.chestSpot.y, r:26};
@@ -3727,9 +3733,10 @@ function updateStep(dt){
     { const df = g.enemies.find(x=>x.defiler && x.hp>0);
       if(df){
         const f = df.hp/df.maxHp, ph = f<0.33 ? 2 : f<0.66 ? 1 : 0;
+        defilerPhases(g, df, f, dt);   // v548
         if(ph>df.dfPhase){
           df.dfPhase = ph;
-          for(let i=0;i<4;i++){ const a = i*1.5708; const sk = spawnEnemy(g, 'skeleton', {x:df.x+Math.cos(a)*100, y:df.y+Math.sin(a)*100}); if(sk) sk.noReward = true; }
+          for(let i=0;i<2;i++){ const a = i*3.1416 + 0.8;   /* v548: two risen dead per phase (was four) */ const sk = spawnEnemy(g, 'skeleton', {x:df.x+Math.cos(a)*100, y:df.y+Math.sin(a)*100}); if(sk) sk.noReward = true; }
           g.particles.push({type:'ring', x:df.x, y:df.y, t:0.7, max:0.7, r:210, color:'#9a6aff'});
           showMsg('The dead claw up from the floor...', 1.8, '#b9a8ff');
         }

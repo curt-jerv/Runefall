@@ -135,11 +135,11 @@ function updateTown(dt){
     if(lootIsManual(l)) continue;
     if(dist(l,p) < l.r+p.r+6){
       if(l.type==='item'){
-        if(addToBag(p, l.item)){
-          const eq = tryAutoEquip(p, l.item);
+        { const took = lootTake(p, l.item); if(took){   // v548: a full bag no longer stops an item you can wear right away
+          const eq = took==='equipped';
           showMsg(eq ? 'Equipped: '+l.item.name : l.item.name, 1.2);
           bagPulse(); g.loot.splice(i,1);
-        } else { showMsg(fullMsgFor(l.item), 1.0); }
+        } else { showMsg(fullMsgFor(l.item), 1.0); } }
       } else g.loot.splice(i,1);
     }
   }

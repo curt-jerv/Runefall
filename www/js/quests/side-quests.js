@@ -26,11 +26,37 @@ function spawnDefiler(g){
   const e = spawnEnemy(g, 'bandit', {x:TR.x+TR.w/2, y:TR.y+TR.h*0.55});   // v310: mid-room, well clear of the door
   if(!e) return;
   e.defiler = true; e.possessed = true; e.isLairBoss = true; e.bossName = 'The Possessed Graverobber'; e.engaged = true;
-  e.r = Math.round(e.r*1.1); e.baseR = e.r; e.maxHp = Math.round(e.maxHp*14); e.hp = e.maxHp; e.dmg *= 1.5; e.speed *= 1.0;
+  e.r = Math.round(e.r*1.375); e.baseR = e.r;   // v548: 25% bigger e.maxHp = Math.round(e.maxHp*14); e.hp = e.maxHp; e.dmg *= 1.5; e.speed *= 1.0;
   e.atkCdMax = 1.9;   // v310: slower, heavier swings
   e.dfPhase = 0; e.aggroRange = 99999; e.leashRange = 99999;
-  showMsg('“You’re all going to die.”', 2.6, '#c8b8ff');
+  // v548: the tomb is his alone -- the packs that wandered in are gone (only his own risen dead join him)
+  g.enemies = g.enemies.filter(x=>x===e || x.hp<=0 || !(x.x>TR.x-40 && x.x<TR.x+TR.w+40 && x.y>TR.y-40 && x.y<TR.y+TR.h+40));
   shakeScreen(g, 5, 0.5);
+}
+// v548: 75% -- his line; 50% -- he swells another 25% and moves/swings 1.3x faster; 25% -- he lifts off the ground and casts Death Bolts
+function defilerPhases(g, df, f, dt){
+  const p = g.player;
+  if(f<0.75 && !df.dfSaid){ df.dfSaid = true; showMsg('“You’re all going to die.”', 2.6, '#c8b8ff'); shakeScreen(g, 4, 0.4); }
+  if(f<0.5 && !df.dfGrow){
+    df.dfGrow = true; df.r = Math.round(df.r*1.25); df.baseR = df.r; df.speed *= 1.3; df.atkCdMax /= 1.3;
+    g.particles.push({type:'ring', x:df.x, y:df.y, t:0.6, max:0.6, r:160, color:'#9a6aff'});
+    showMsg('The possession tightens its grip...', 1.8, '#b9a8ff');
+  }
+  if(f<0.25 && !df.dfFly){ df.dfFly = true; df.dfBoltT = 1.0; df.dfVolley = 0; df.speed *= 0.55; showMsg('He rises from the ground...', 1.8, '#b9a8ff'); }
+  if(df.dfFly){
+    df.dfLift = Math.min(34, (df.dfLift||0) + dt*45);
+    df.atkCd = Math.max(df.atkCd||0, 0.5);   // no more shovel swings: he fights from the air
+    df.dfBoltT -= dt;
+    if(df.dfBoltT<=0 && p && !g.over){
+      const ang = Math.atan2(p.y-df.y, p.x-df.x);
+      df.dfVolley = (df.dfVolley||0) + 1;
+      if(df.dfVolley % 3 === 0){ for(const o of [-0.3, 0, 0.3]) fireDeathBolt(g, df, ang+o, p, df.dmg*0.7); }   // every third cast: a fan of three
+      else fireDeathBolt(g, df, ang, p, df.dmg*0.85);
+      df.atkAnimT = 0.3; df.dfBoltT = 1.15;
+      try{ sfxPlay('enemyCast', 0.8); }catch(e){}
+    }
+    if(Math.random() < dt*10) g.particles.push({type:'burst', x:df.x+rand(-18,18), y:df.y+rand(-8,8), t:0.5, max:0.5, color:'#7a4aff'});
+  }
 }
 function defilerSlain(g, e){
   const p = g.player;
@@ -328,7 +354,7 @@ function spawnSquid(g, pos){
   e.aggroRange = 480; e.leashRange = 800; e.wanderRadius = 0; e.armor = 2;
   return e;
 }
-const TEMPLE_W = 4600, TEMPLE_H = 2600, TEMPLE_DEPTH = 25;
+const TEMPLE_W = 6900, TEMPLE_H = 3470, TEMPLE_DEPTH = 25;   // v548: twice the area (was 4600x2600, a 4x3 grid)
 // v490: the Flooded Temple is no longer one straight line of halls. Each visit it is a new warren of flooded chambers
 // (a 4x3 grid with a few cells left as solid rock) joined by winding passages: a random spanning tree plus a couple of
 // loops. You arrive on the west side; the stair down waits in one of the chambers furthest from the entrance.
@@ -347,13 +373,13 @@ function makeFloodedTemple(){
   Math.random = rnd;
   let room, waypoint = null;
   try{
-    const COLS = 4, ROWS = 3, cw = w/COLS, ch = h/ROWS, ri = (a,b)=>a+Math.floor(rnd()*(b-a+1));
+    const COLS = 6, ROWS = 4, cw = w/COLS, ch = h/ROWS, ri = (a,b)=>a+Math.floor(rnd()*(b-a+1));
     const entRow = ri(0, ROWS-1), entId = entRow*COLS;
     const nb = i=>{ const c = i%COLS, r = (i/COLS)|0, o = []; if(c>0) o.push(i-1); if(c<COLS-1) o.push(i+1); if(r>0) o.push(i-COLS); if(r<ROWS-1) o.push(i+COLS); return o; };
     // leave 2-3 cells as solid rock, as long as the rest stays connected
     const keep = new Set(Array.from({length:COLS*ROWS}, (_,i)=>i));
     const connected = ()=>{ const seen = new Set([entId]), q = [entId]; while(q.length){ const i = q.pop(); for(const n of nb(i)) if(keep.has(n) && !seen.has(n)){ seen.add(n); q.push(n); } } return seen.size===keep.size; };
-    for(let k=0, t=0, drop=ri(2,3); k<drop && t<60; t++){ const i = ri(0, COLS*ROWS-1); if(i===entId || !keep.has(i)) continue; keep.delete(i); if(connected()) k++; else keep.add(i); }
+    for(let k=0, t=0, drop=ri(4,6); k<drop && t<120; t++){ const i = ri(0, COLS*ROWS-1); if(i===entId || !keep.has(i)) continue; keep.delete(i); if(connected()) k++; else keep.add(i); }
     const ids = [entId, ...[...keep].filter(i=>i!==entId)];
     const idx = new Map(ids.map((id,k)=>[id,k]));
     const chs = ids.map(id=>{
@@ -366,7 +392,7 @@ function makeFloodedTemple(){
     const links = [], linked = new Set(), lk = (a,b)=>Math.min(a,b)+'-'+Math.max(a,b);
     { const seen = new Set([entId]), stack = [entId];
       while(stack.length){ const cur = stack[stack.length-1], nx = nb(cur).filter(n=>keep.has(n) && !seen.has(n)); if(!nx.length){ stack.pop(); continue; } const n = nx[ri(0,nx.length-1)]; seen.add(n); stack.push(n); links.push([idx.get(cur), idx.get(n)]); linked.add(lk(cur,n)); } }
-    for(let k=0, t=0; k<2 && t<60; t++){ const a = ids[ri(0,ids.length-1)], ns = nb(a).filter(n=>keep.has(n)), b = ns[ri(0, Math.max(0,ns.length-1))]; if(b==null || linked.has(lk(a,b))) continue; linked.add(lk(a,b)); links.push([idx.get(a), idx.get(b)]); k++; }
+    for(let k=0, t=0; k<3 && t<90; t++){ const a = ids[ri(0,ids.length-1)], ns = nb(a).filter(n=>keep.has(n)), b = ns[ri(0, Math.max(0,ns.length-1))]; if(b==null || linked.has(lk(a,b))) continue; linked.add(lk(a,b)); links.push([idx.get(a), idx.get(b)]); k++; }
     // the stair down: a chamber at (or next to) the greatest passage distance from the entrance
     const depth = new Array(chs.length).fill(-1); depth[0] = 0;
     { const q = [0]; while(q.length){ const i = q.shift(); for(const [a,b] of links){ const o = a===i ? b : b===i ? a : -1; if(o>=0 && depth[o]<0){ depth[o] = depth[i]+1; q.push(o); } } } }
@@ -473,7 +499,7 @@ function spawnFloodedTemple(g){
   // v490: packs land on open cave floor (the temple is a cave-style floor mask now, not one open box)
   const room = g.room, av = [{x:room.entrance.x, y:room.entrance.y, r:380}];
   const okAt = (pt)=> mineOpenAt(room,pt.x,pt.y) && !subWaterAt(room,pt.x,pt.y) && !posBlockedByObstacles(pt.x,pt.y,18,room.obstacles);
-  for(let i=0;i<16;i++){
+  for(let i=0;i<32;i++){   // v548: twice the packs for twice the temple
     const c = deepMineSpot(room, av, 80); if(!c) continue;
     for(let k=0;k<3+Math.floor(Math.random()*2);k++){ const pt = {x:c.x+rand(-70,70), y:c.y+rand(-70,70)}; if(okAt(pt)) spawnEnemy(g, 'zombie', pt); }
   }
@@ -481,6 +507,6 @@ function spawnFloodedTemple(g){
   for(const q of room.pools){
     for(let k=0;k<2;k++){ const sp = subWaterSpot(room, q); if(sp) spawnSquid(g, sp); }
   }
-  if(room.pools.length) for(let i=0;i<3;i++){ const q = room.pools[(i*2)%room.pools.length], sp = subWaterSpot(room, q); if(sp) spawnEnemy(g, 'alligator', sp); }
+  if(room.pools.length) for(let i=0;i<6;i++){ const q = room.pools[(i*2)%room.pools.length], sp = subWaterSpot(room, q); if(sp) spawnEnemy(g, 'alligator', sp); }
 }
 

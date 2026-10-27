@@ -116,11 +116,11 @@ function updateFollowersAI(g, dt){
               if(l.type==='potion'){ p.hp = Math.min(p.maxHp, p.hp+p.maxHp*0.3); showMsg('+Health', 0.6); g.loot.splice(li,1); }
               else if(l.type==='gold'){ p.gold += l.amt; goldPop(g, l.x, l.y, l.amt); g.loot.splice(li,1); }
               else if(l.type==='item'){
-                if(addToBag(p, l.item)){
-                  const eq = tryAutoEquip(p, l.item);
+                { const took = lootTake(p, l.item); if(took){   // v548: a full bag no longer stops an item you can wear right away
+                  const eq = took==='equipped';
                   showMsg(eq ? 'Equipped: '+l.item.name : l.item.name, 1.5);
                   bagPulse(); g.loot.splice(li,1);
-                }
+                } }
                 // Bag full: same as a manual walk-over -- leave it on the
                 // ground. The cat just tries the next-nearest drop instead
                 // of getting stuck looping on this one.

@@ -78,10 +78,10 @@ function makeCursedCemetery(){
     return cemRoadDist(x,y) < CEM_ROAD_HALFW+30+m || dist({x,y},sunlitGate) < 160 || dist({x,y},tomb) < 190 || dist({x,y},statue) < 200 || dist({x,y},camp) < 230 || nearFence(x,y,40);
   }
   const deadTrees = [];
-  for(let i=0;i<220 && deadTrees.length<44;i++){
+  for(let i=0;i<900 && deadTrees.length<120;i++){   // v548: far more dead trees (was 44)
     const x = rand(60, w-60), y = rand(60, h-60), inF = cemInFence(x,y);
     if(offLimits(x,y,20) || (inF && Math.random()<0.75)) continue;
-    if(deadTrees.some(t=>dist(t,{x,y})<140)) continue;
+    if(deadTrees.some(t=>dist(t,{x,y})<95)) continue;
     deadTrees.push({x, y, s:rand(0.8,1.4)});
   }
   // tombstones: rows of them inside the fence, a scatter of older ones along the way down

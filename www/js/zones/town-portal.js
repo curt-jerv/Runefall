@@ -4,12 +4,39 @@
 // and put back as it was. Taking any other way out of town (waypoint, gate) closes the portal.
 const TP_KEEP = new Set(['player','followers','followerStance','followerRespawnCd','camera','msgT','msgText','msgColor','msgPos','over','started',
   'levelUpFlash','modalOpen','clock','particles','projectiles','roadEvSeen','_hoverLoot','_glowLR','_glowK','_enterDepth','_famCalled','town','tpReturn',
-  'banner','consecrate','judgments','soulGate','gateArchers','thrownTraps','mirage','traps','shieldThrow']);
+  'banner','consecrate','judgments','soulGate','gateArchers','thrownTraps','mirage','traps','shieldThrow','tpCast']);
 function townPortalAllowed(g){ return !!(g && g.started && !g.over && g.player && g.scene!=='town' && g.scene!=='tavern'); }
+// v548: the portal takes TP_CAST_T seconds to open (a blue bar fills under you); moving, dodging or dying breaks it
+const TP_CAST_T = 2;
 function townPortalCast(){
   const g = game, p = g && g.player;
   if(!g || !g.started || g.over || !p) return;
   if(g.scene==='town' || g.scene==='tavern'){ showMsg('You are already in Mistfall', 1.2); return; }
+  if(g.tpCast) return;
+  g.tpCast = {t:0, x:p.x, y:p.y};
+  try{ sfxPlay('whoosh', 0.6); }catch(e){}
+}
+function tpCastTick(g, dt){
+  const c = g.tpCast, p = g.player; if(!c) return;
+  if(g.over || !p || g.scene==='town' || g.scene==='tavern'){ g.tpCast = null; return; }
+  if(Math.hypot(p.x-c.x, p.y-c.y) > 8 || p.dodging){ g.tpCast = null; showMsg('The portal fades', 1.0, '#9ad0ff'); return; }
+  c.t += dt;
+  if(Math.random() < dt*14) g.particles.push({type:'burst', x:p.x+rand(-26,26), y:p.y+rand(-14,14), t:0.4, max:0.4, color:'#6ab8ff'});
+  if(c.t >= TP_CAST_T){ g.tpCast = null; townPortalGo(); }
+}
+function drawTpCastBar(g){
+  const c = g.tpCast, p = g.player; if(!c || !p) return;
+  const iso = toIso(p.x, p.y), w = 54, h = 7, k = clamp(c.t/TP_CAST_T, 0, 1);
+  ctx.save(); ctx.translate(iso.x - w/2, iso.y + 16);
+  ctx.fillStyle = 'rgba(0,0,0,0.75)'; roundRect(-2, -2, w+4, h+4, 4); ctx.fill();
+  const gr = ctx.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#9ad8ff'); gr.addColorStop(1, '#2a6ad8');
+  ctx.fillStyle = gr; roundRect(0, 0, w*k, h, 3); ctx.fill();
+  ctx.strokeStyle = 'rgba(160,210,255,0.8)'; ctx.lineWidth = 1; roundRect(-1, -1, w+2, h+2, 3.5); ctx.stroke();
+  ctx.restore();
+}
+function townPortalGo(){
+  const g = game, p = g && g.player;
+  if(!g || !g.started || g.over || !p || g.scene==='town' || g.scene==='tavern') return;
   const snap = {};
   for(const k of Object.keys(g)) if(!TP_KEEP.has(k)) snap[k] = g[k];
   const R = {g:snap, x:p.x, y:p.y, name:(typeof zoneDisplayName==='function' ? zoneDisplayName() : 'the wilds'), resume:(typeof resumeEnter!=='undefined' ? resumeEnter : null)};
@@ -65,6 +92,7 @@ function drawTownPortalIso(pos, clock){
   ctx.restore();
 }
 function pushTownPortalDrawables(g, drawables){
+  if(g.tpCast && g.player) drawables.push({depth:g.player.x+g.player.y+0.6, draw:()=>drawTpCastBar(g)});
   const R = g.tpReturn;
   if(!R || g.scene!=='town' || !R.pos) return;
   drawables.push({depth:R.pos.x+R.pos.y, draw:()=>drawTownPortalIso(R.pos, g.clock||0)});

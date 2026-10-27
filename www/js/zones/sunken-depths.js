@@ -52,20 +52,23 @@ function tripSeed(fam){
 }
 // v456: Sunken Depths is an organic grotto (like the Bear Cave): winding flooded caverns, then a great pool where the
 // Kraken lives, crossed by a narrow wooden walkway to a small island, and a treasure alcove beside it.
-const SKP = {cx:4300, cy:1330, rx:540, ry:420, isx:4075, isy:1330, isr:125, brY:1330, brHalf:48, brX0:3640};
+const SKP = {cx:7000, cy:1730, rx:540, ry:420, isx:6775, isy:1730, isr:125, brY:1730, brHalf:48, brX0:6340};   // v548: the grotto is twice as big; the Kraken's pool moved east with it
 function makeSunkenDepths(){
-  const w = 5400, h = 2400, saveRand = Math.random, rnd = subSeeded(tripSeed('sunken') + 8821);   // v525: new grotto every trip
+  const w = 8100, h = 3300, saveRand = Math.random, rnd = subSeeded(tripSeed('sunken') + 8821);   // v525: new grotto every trip
   Math.random = rnd;
   let R;
   try{
-    const chs = [{x:300, y:1200, rx:200, ry:175}, {x:900, y:700, rx:300, ry:240}, {x:1000, y:1700, rx:280, ry:230}, {x:1700, y:1150, rx:340, ry:280},
-                 {x:2400, y:620, rx:300, ry:240}, {x:2450, y:1760, rx:320, ry:240}, {x:3100, y:1150, rx:300, ry:260},
-                 {x:4200, y:1300, rx:790, ry:650, a1:0.06, a2:0.04}, {x:4950, y:440, rx:270, ry:200, a1:0.08, a2:0.05}];
-    const links = [[0,1],[0,2],[1,3],[2,3],[3,4],[3,5],[4,6],[5,6],[6,7],[7,8]];
-    R = organicCaveBuild({kind:'grotto', w, h, chambers:chs, links, tunnelR:110, entranceIdx:0, exitIdx:7, mainIdx:[1,2,3,4,5,6]});
+    // v548: twelve caverns before the Kraken's pool (was six)
+    const chs = [{x:300, y:1600, rx:200, ry:175}, {x:900, y:900, rx:300, ry:240}, {x:950, y:2300, rx:280, ry:230}, {x:1700, y:1600, rx:340, ry:280},
+                 {x:2450, y:800, rx:300, ry:240}, {x:2450, y:2500, rx:320, ry:240}, {x:3200, y:1600, rx:320, ry:270},
+                 {x:3950, y:850, rx:300, ry:240}, {x:3950, y:2450, rx:320, ry:250}, {x:4700, y:1600, rx:330, ry:270},
+                 {x:5400, y:900, rx:280, ry:230}, {x:5450, y:2400, rx:300, ry:240}, {x:5900, y:1650, rx:260, ry:220},
+                 {x:6900, y:1700, rx:790, ry:650, a1:0.06, a2:0.04}, {x:7650, y:840, rx:270, ry:200, a1:0.08, a2:0.05}];
+    const links = [[0,1],[0,2],[1,3],[2,3],[3,4],[3,5],[4,6],[5,6],[6,7],[6,8],[7,9],[8,9],[9,10],[9,11],[10,12],[11,12],[12,13],[13,14]];
+    R = organicCaveBuild({kind:'grotto', w, h, chambers:chs, links, tunnelR:110, entranceIdx:0, exitIdx:13, mainIdx:[1,2,3,4,5,6,7,8,9,10,11,12]});
     // grotto pools, off to the side in each cavern
     const pools = [];
-    for(let i=1;i<=6;i++){
+    for(let i=1;i<=12;i++){
       const c = chs[i];
       for(let k=0;k<2;k++){
         const a = rnd()*6.28, pw = Math.round(c.rx*(0.38+rnd()*0.22)), ph = Math.round(c.ry*(0.32+rnd()*0.2));
@@ -89,10 +92,10 @@ function makeSunkenDepths(){
       if(run) R.obstacles.push(run);
     }
     const rocks = [];
-    for(let i=0;i<80;i++){ const c = deepMineSpot(R, null, 20); if(c && !R.obstacles.some(o=>o.isWater && c.x>o.x-30 && c.x<o.x+o.w+30 && c.y>o.y-30 && c.y<o.y+o.h+30)) rocks.push({x:c.x, y:c.y, s:rand(0.6,1.2)}); }
+    for(let i=0;i<160;i++){ const c = deepMineSpot(R, null, 20); if(c && !R.obstacles.some(o=>o.isWater && c.x>o.x-30 && c.x<o.x+o.w+30 && c.y>o.y-30 && c.y<o.y+o.h+30)) rocks.push({x:c.x, y:c.y, s:rand(0.6,1.2)}); }
     const crystals = [];
     for(let i=0;i<40;i++){ const c = deepMineSpot(R, null, 20); if(c) crystals.push({x:c.x, y:c.y, s:rand(0.6,1.3), hue:rnd()<0.5 ? 0 : 1, ph:rnd()*6}); }   // v490: 40 glowing crystals (was 70) -- each is an additive blend
-    const ch = chs[8];
+    const ch = chs[14];
     const horde = [];
     for(let i=0;i<9;i++){ const a = i/9*6.28 + rnd()*0.4, rr = 70 + rnd()*70; horde.push({x:ch.x+Math.cos(a)*rr*1.2, y:ch.y+Math.sin(a)*rr*0.75, s:0.7+rnd()*0.6, gems:rnd()<0.5}); }
     const ent = chs[0];
@@ -188,16 +191,16 @@ function spawnSunkenDepths(g){
   const sp = (type,pos)=> pos && mineOpenAt(room,pos.x,pos.y) && !subWaterAt(room,pos.x,pos.y) ? spawnEnemy(g, type, pos) : null;
   const land = ()=> deepMineSpot(room, av, 80);
   const near = (c,r)=>({x:c.x+rand(-r,r), y:c.y+rand(-r,r)});
-  for(let i=0;i<6;i++){ const c = land(); if(!c) continue; for(let k=0;k<3+Math.floor(Math.random()*2);k++) sp('skeleton', near(c,80)); sp('skeletonarcher', near(c,90)); }
-  for(let i=0;i<4;i++){ const c = land(); if(!c) continue; for(let k=0;k<3;k++) sp('stormsnake', near(c,70)); }
+  for(let i=0;i<12;i++){ const c = land(); if(!c) continue; for(let k=0;k<3+Math.floor(Math.random()*2);k++) sp('skeleton', near(c,80)); sp('skeletonarcher', near(c,90)); }   // v548: x2 for the bigger grotto
+  for(let i=0;i<8;i++){ const c = land(); if(!c) continue; for(let k=0;k<3;k++) sp('stormsnake', near(c,70)); }
   // squids everywhere -- in the pools and crawling over the rocks
   for(const q of room.pools){ for(let k=0;k<2;k++){ const s2 = subWaterSpot(room, q); if(s2) spawnSquid(g, s2); } }
-  for(let i=0;i<12;i++){ const c = land(); if(!c) continue; for(let k=0;k<2+Math.floor(Math.random()*2);k++){ const pt = near(c,70); if(mineOpenAt(room,pt.x,pt.y) && !subWaterAt(room,pt.x,pt.y)) spawnSquid(g, pt); } }
+  for(let i=0;i<24;i++){ const c = land(); if(!c) continue; for(let k=0;k<2+Math.floor(Math.random()*2);k++){ const pt = near(c,70); if(mineOpenAt(room,pt.x,pt.y) && !subWaterAt(room,pt.x,pt.y)) spawnSquid(g, pt); } }
   // electric eels in the water
   for(const q of room.pools){ const s3 = subWaterSpot(room, q); if(s3) spawnEel(g, s3); }
   for(let i=0;i<3;i++){ const a = i*2.1+0.5, pt = {x:SKP.cx+Math.cos(a)*SKP.rx*0.75, y:SKP.cy+Math.sin(a)*SKP.ry*0.75}; if(subWaterAt(room,pt.x,pt.y)) spawnEel(g, pt); }
   // bats in the vaults
-  for(let i=0;i<7;i++){ const c = land(); if(!c) continue; for(let k=0;k<2+Math.floor(Math.random()*2);k++){ const b = spawnEnemy(g, 'firebat', near(c,60)); if(b){ b.reg = true; b.color = '#3c4a5a'; b.dmgType = null; } } }
+  for(let i=0;i<14;i++){ const c = land(); if(!c) continue; for(let k=0;k<2+Math.floor(Math.random()*2);k++){ const b = spawnEnemy(g, 'firebat', near(c,60)); if(b){ b.reg = true; b.color = '#3c4a5a'; b.dmgType = null; } } }
   for(let i=0;i<2;i++){ const q = room.pools[i*2]; if(q){ const s4 = subWaterSpot(room, q); if(s4) sp('alligator', s4) || spawnEnemy(g,'alligator',s4); } }
   spawnSunkenKraken(g);
 }
@@ -366,7 +369,7 @@ function drawSubWaterLive(room, cam){
     const iso = toIso(t.wx,t.wy), sx = iso.x-cam.x;
     if(sx < -80 || sx > W+80) continue;
     const shim = (Math.floor((t.wx+t.wy)/TS*0.5 + clk*0.7) % 2 + 2) % 2;
-    ctx.fillStyle = (t.checker^shim) ? '#10303e' : '#0c2833'; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
+    ctx.fillStyle = (t.checker^shim) ? '#173f9a' : '#123686'; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
     if(t.hh>0.9){ ctx.fillStyle='rgba(140,200,230,'+(0.10+0.08*Math.sin(clk*1.6+t.hh*30))+')'; ctx.beginPath(); ctx.ellipse(iso.x+(t.hh-0.95)*120, iso.y, 9, 3.4, 0, 0, 7); ctx.fill(); }
   }
 }
@@ -404,7 +407,7 @@ function drawSubFloor(room, cam){
         if(wet && hh>0.93){ ctx.fillStyle='rgba(190,255,130,'+(0.25+0.2*Math.sin(clk*2+hh*40))+')'; ctx.beginPath(); ctx.ellipse(iso.x+(hh-0.96)*160, iso.y, 6, 2.8, 0, 0, 7); ctx.fill(); }
       } else if(wet){
         const shim = (Math.floor((wx+wy)/TS*0.5 + clk*0.7) % 2 + 2) % 2;
-        fill = (checker^shim) ? '#10303e' : '#0c2833';
+        fill = (checker^shim) ? '#173f9a' : '#123686';   /* v548: deep blue, easy to tell from the paths */
         ctx.fillStyle = fill; drawDiamond(iso.x, iso.y, TS*ISO_KX, TS*ISO_KY);
         if(hh>0.9){ ctx.fillStyle='rgba(140,200,230,'+(0.10+0.08*Math.sin(clk*1.6+hh*30))+')'; ctx.beginPath(); ctx.ellipse(iso.x+(hh-0.95)*120, iso.y, 9, 3.4, 0, 0, 7); ctx.fill(); }
       }

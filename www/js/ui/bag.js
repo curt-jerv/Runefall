@@ -283,6 +283,12 @@ function unequipSlot(p, slot){
 // equipItem() enforces, silently declining (no showMsg) rather than
 // surfacing a "can't wear this" message during ordinary pickup/purchase.
 // Returns true if it equipped the item, false if it left it in the bag.
+// v548: take a loot item: into the bag (then onto an empty slot if it fits), or -- with a full bag -- straight onto an empty slot it can be worn in.
+// Returns 'equipped', 'bag' or null (no room anywhere).
+function lootTake(p, item){
+  if(addToBag(p, item)) return tryAutoEquip(p, item) ? 'equipped' : 'bag';
+  return tryAutoEquip(p, item) ? 'equipped' : null;
+}
 function tryAutoEquip(p, item){
   if(!item || !item.slotType) return false;
   const hasWeaponsSpec = !!(p.skills && effectiveRank(p,'weaponsSpecialist')>0);

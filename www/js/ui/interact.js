@@ -110,13 +110,13 @@ function nearestDroppedItem(){
 function pickupNearbyDropped(){
   const g = game, p = g.player, l = nearestDroppedItem();
   if(!l) return;
-  if(addToBag(p, l.item)){ const eq = tryAutoEquip(p, l.item); showMsg(eq ? 'Equipped: '+l.item.name : l.item.name, 1.2); bagPulse(); const i=g.loot.indexOf(l); if(i>=0) g.loot.splice(i,1); }
+  const took = lootTake(p, l.item); if(took){ const eq = took==='equipped'; showMsg(eq ? 'Equipped: '+l.item.name : l.item.name, 1.2); bagPulse(); const i=g.loot.indexOf(l); if(i>=0) g.loot.splice(i,1); }
   else showMsg(fullMsgFor(l.item), 1.0);
 }
 function updateInteractPrompt(kind){
+  if(nearestDroppedItem()) kind = 'pickupItem';   // v548: an item in reach always wins, so the button never says Teleport while an item name is up
   if(!kind && game && typeof roadEvKind==='function') kind = roadEvKind(game);   // v529 road encounters
   if(!kind && game && typeof tpKind==='function'){ kind = tpKind(game); if(kind) tpLabels(); }   // v546 town portal
-  if(!kind && nearestDroppedItem()) kind = 'pickupItem';
   interactKind = kind;
   if(!kind){ btnInteract.style.display = 'none'; return; }
   // v492: a fat, bold down-arrow for pick-up (a drawn shape, so it stays heavy on every phone font)

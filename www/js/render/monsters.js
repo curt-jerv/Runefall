@@ -40,7 +40,9 @@ function drawDefiler(e){
   const s = e.r/15*1.05;
   const F = (c)=>flash ? '#fff' : c;
   drawShadow(iso.x, iso.y, 15*s, 6*s);
-  ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(face*s, s);
+  const lift = e.dfLift||0;   // v548: below 25% life he floats
+  if(lift>0){ ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gl = ctx.createRadialGradient(iso.x, iso.y-lift, 2, iso.x, iso.y-lift, 40*s); gl.addColorStop(0,'rgba(150,90,255,0.35)'); gl.addColorStop(1,'rgba(150,90,255,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(iso.x, iso.y-lift-14*s, 40*s, 0, 7); ctx.fill(); ctx.restore(); }
+  ctx.save(); ctx.translate(iso.x, iso.y - lift - (lift>0 ? Math.sin((e.animT||0)*2.4)*3 : 0)); ctx.scale(face*s, s);
   const walk = moving ? Math.sin(t*9) : 0, bob = moving ? Math.abs(Math.sin(t*9))*1.6 : Math.sin(t*2)*0.6;
   // boots
   ctx.fillStyle = F('#16110c');

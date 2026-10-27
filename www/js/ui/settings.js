@@ -102,8 +102,7 @@ document.getElementById('toggleAutoMagic').addEventListener('click', ()=>{ setti
 document.getElementById('toggleAutoRare').addEventListener('click', ()=>{ settings.autoPickRare = !(settings.autoPickRare===true); saveSettings(settings); refreshAutoPickToggles(); });
 // v452: standing on an item you have to pick up by hand shows its name (same popup as picking it up)
 function lootHoverName(g, p){
-  let on = null;
-  for(const l of (g.loot||[])){ if(l.type==='item' && l.item && lootIsManual(l) && dist(l,p) < (l.r||10)+p.r+10){ on = l; break; } }
+  const on = nearestDroppedItem();   // v548: the name shows exactly when the pick-up button does (same item, same reach)
   if(on && g._hoverLoot!==on) showMsg(on.item.unidentified ? 'Unidentified '+itemBaseName(on.item) : on.item.name, 1.6, on.item.color||'');
   g._hoverLoot = on;
 }

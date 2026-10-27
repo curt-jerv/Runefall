@@ -79,7 +79,7 @@ function spawnFhtFloor(g, f){
       if(i%2===1) sp('fhcleric', {x:c.x+rand(-60,60), y:c.y+rand(-60,60)});   // v462
     }
   } else if(f===4){
-    if(!g.player.fhtRuneTaken){
+    { /* v548: the Champions are back on every visit, like the bosses */
       // seven Templars in a wide arc around the chest spot
       const cs = room.chestSpot;
       for(let i=0;i<7;i++){
@@ -136,7 +136,7 @@ function enterFhTower(floor, opts){
   updateInteractPrompt(null);
   saveGame();
 }
-function fhtStairsUp(){ const g = game; if(g.tower && g.tower.fht && g.lighthouseFloor < FHT_FLOORS){ if(g.lighthouseFloor===4 && !g.player.fhtRuneTaken){ showMsg('The Frosthold Champions bar the stairs. Defeat them first.', 2.4); return; } enterFhTower(g.lighthouseFloor+1); } }
+function fhtStairsUp(){ const g = game; if(g.tower && g.tower.fht && g.lighthouseFloor < FHT_FLOORS){ if(g.lighthouseFloor===4 && game.enemies.some(x=>x.isFhtTemplar && x.hp>0)){ showMsg('The Frosthold Champions bar the stairs. Defeat them first.', 2.4); return; } enterFhTower(g.lighthouseFloor+1); } }
 function fhtStairsDown(){ const g = game; if(g.tower && g.tower.fht && g.lighthouseFloor > 1) enterFhTower(g.lighthouseFloor-1, {fromBelow:true}); }
 function makeFrostRunestoneItem(){
   return { id:'it'+Math.random().toString(36).slice(2,9), slotType:'questitem', rarity:'rare',
@@ -153,6 +153,10 @@ function openTemplarChest(g){
     p.gold += 500;
     showMsg('The Frosthold Champions are defeated \u2014 the stairs to the summit are open', 3.0);
     g.particles.push({type:'burst', x:g.chest.x, y:g.chest.y, t:0.5, max:0.5, color:'#9fe4ff'});
+    bagPulse(); saveGame();
+  } else {   // v548: a re-kill pays out a rare and some gold
+    const it = classRewardItem(p, Math.max(p.level, 42), 'rare'); if(it) forceAddToBag(p, it);
+    p.gold += 250; showMsg('The Frosthold Champions fall again', 2.4);
     bagPulse(); saveGame();
   }
 }
