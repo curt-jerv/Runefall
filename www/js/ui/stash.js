@@ -34,6 +34,7 @@ function renderStashTabs(){
 }
 function renderStash(){
   const p = game.player;
+  renderPaperdollInto(document.getElementById('stashPaperdoll'), p, 'stashPdSlot-', true);   // v558: worn gear -- drag to and from the stash or the bag
   document.getElementById('stashGoldNum').textContent = stash.gold||0;
   document.getElementById('bagGoldNum').textContent = p.gold||0;
   const CELL = 32;

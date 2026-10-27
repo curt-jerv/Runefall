@@ -12,7 +12,7 @@ function setupFit(ovId){
   wrap.appendChild(body); card.appendChild(wrap);
   fitOverlays.push({ov, card, hdr, wrap, body});
 }
-const FIT_FIXED_W = {shopOverlay:960, stashOverlay:700};
+const FIT_FIXED_W = {shopOverlay:960, stashOverlay:1000};   // v558: the stash also shows your worn gear
 function fitScreens(){
   for(const f of fitOverlays){
     if(getComputedStyle(f.ov).display==='none') continue;

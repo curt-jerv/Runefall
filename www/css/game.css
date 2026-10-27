@@ -926,9 +926,10 @@
     #shopOverlay .shopColRight > :nth-child(4){ grid-column:2; grid-row:2; }
     #shopOverlay .shopColRight > :nth-child(n+5){ grid-column:2; }
     /* stash: stash left, bag right */
-    #stashOverlay .modalCard{ max-width:770px; }
+    #stashOverlay .modalCard{ max-width:1040px; }
     #stashOverlay .stashCols{ display:flex; gap:22px; align-items:flex-start; }
     #stashOverlay .stashColL, #stashOverlay .stashColR{ flex:1 1 0; min-width:0; }
+    #stashOverlay .stashColM{ flex:0 0 255px; width:255px; }   /* v558: what you are wearing, between the stash and the bag */
     #stashOverlay .invDivider{ margin-top:2px; }
     /* skill tree / anything else full-screen: centred, a bit narrower */
     #skillTreeOverlay .modalCard{ max-width:980px; }
