@@ -180,6 +180,7 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
         } }
       return;
     } }
+  if(stormWardEvade(g, p, srcEnemy)) return;   // v564 Storm Ward: melee, arrows and spells from monsters may be turned aside
   if(Math.random()<evasionChance(p)){
     showMsg('Dodged!', 0.5);
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.25, max:0.25, color:'#9ae6b4'});
@@ -245,6 +246,7 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
     const rsk = Math.min(p.recallShield, reduced); p.recallShield -= rsk; reduced -= rsk;
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.2, max:0.2, color:'#9fe07a'});
   }
+  if(p.manaShieldOn) reduced = manaShieldSoak(g, p, reduced);   // v564 Mana Shield: after Ice Armor, part of the hit is paid in mana
   if(uq(p,'uq_defender') && !(p.uqCd>0) && p.hp - reduced <= 0){   // v383 Undying Bastion: Last Stand
     p.hp = Math.max(1, Math.ceil(p.maxHp*0.4)); p.invuln = Math.max(p.invuln||0, 3); p.uqCd = 90; p.hitFlash = 0.25;
     showMsg('Last Stand!', 1.6, '#f2a31b'); sfxPlay('banner', 0.8);
@@ -335,7 +337,7 @@ function shatterIceArmor(g, p){
 function clearWantFlags(){
   wantAimedShot=wantAnchor=wantAssault=wantAttack=wantBanner=wantBattlecry=wantBeastFury=wantBlizzard=wantBloodrage=wantBulwark=wantConsecrate=wantCripplingShot=wantDeathBolt=wantDodge=wantExplosiveShot=wantExplosiveTrap=wantFear=wantFieldDress=wantFireball=wantFlameVortex=wantFrostTrap=wantGuardian=wantHuntersMark=wantHurricane=wantIceArmor=wantIceBolt=wantImmolate=wantJudgment=wantLeap=wantLightningArc=wantMeteor=wantMirror=wantMultiShot=wantNova=wantPackTactics=wantPermafrost=wantPlague=wantPoisonTrap=wantPyroTorrent=wantRainOfArrows=wantRaiseDead=wantRally=wantRapidShot=wantReave=wantRecall=wantSeismic=wantShadowStep=wantShieldBash=wantSmite=wantSoulFire=wantSoulGate=wantStance=wantStorm=wantStormcall=wantStunShot=wantSurvivalFieldDress=wantThrow=wantTornado=wantTrap=wantUnbreak=wantVanish=wantVengeance=wantWhirlwind=false;
 }
-const SKILL_TIMER_KEYS = ['anchorPendT','assaultT','battlecryT','beastFuryT','bloodrageT','bulwarkT','bulwarkStore','cleaveT','furyHandT','guardianT','hungerT','hurricaneT','immolateT','juggBlockT','juggRingT','juggT','juggWindT','leapT','mirrorT','oppT','pyroTorrentT','rallyT','rampageT','recallShieldT','recall','recallT','riposteT','skyShotT','skyT','tsLandT','tsRegenT','unbreakT','vanishT','vanishEvaT','whirlwindT','fieldDressT','windT','windReady','_wrCostWin','recallShield','fieldDressFx'];
+const SKILL_TIMER_KEYS = ['stormWardT','manaShieldOn','anchorPendT','assaultT','battlecryT','beastFuryT','bloodrageT','bulwarkT','bulwarkStore','cleaveT','furyHandT','guardianT','hungerT','hurricaneT','immolateT','juggBlockT','juggRingT','juggT','juggWindT','leapT','mirrorT','oppT','pyroTorrentT','rallyT','rampageT','recallShieldT','recall','recallT','riposteT','skyShotT','skyT','tsLandT','tsRegenT','unbreakT','vanishT','vanishEvaT','whirlwindT','fieldDressT','windT','windReady','_wrCostWin','recallShield','fieldDressFx'];
 function clearWarriorRangerState(g, p){
   for(const k of SKILL_TIMER_KEYS) if(p[k]) p[k] = (typeof p[k]==='boolean') ? false : 0;
   p.furyQ = []; p.rainOfArrowsPending = null; p.anchorX = p.anchorY = undefined; p.blocking = false; p.shieldBashing = false;

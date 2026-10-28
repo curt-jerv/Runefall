@@ -185,10 +185,10 @@ function fireballBurnChance(p, e){
   return Math.min(0.9, c);
 }
 const HEAVY_SPELL_MULT = 1.3;   // Pyro Torrent / Blizzard / Plague / Hurricane: +30%
-function polarityBonus(rank){ return rank>0 ? 0.20 + 0.0625*(rkSpread5(Math.min(MAX_EFF_RANK,rank))-1) : 0; }   // v489: +20% -> +45% at rank 10 (was 10% -> 25%)
+function polarityBonus(rank){ return rank>0 ? 0.25 + 0.35*(Math.min(10,rank)-1)/9 + 0.02*Math.max(0, rank-10) : 0; }   // v564: part of Elemental Mastery now, +25% -> +60% at rank 10 (was 20% -> 45%)
 // Call when a damaging spell is cast: returns the damage multiplier (opposite element to the previous spell) and remembers this element.
 function polarityCast(p, el){
-  const r = (p.skills && effectiveRank(p,'elementalPolarity')) || 0;
+  const r = (p.skills && effectiveRank(p,'elementalMastery')) || 0;   // v564: Elemental Polarity lives in Elemental Mastery
   let m = 1;
   if(r>0 && p.lastElem && p.lastElem!==el){ m = 1 + polarityBonus(r); if(game && game.particles) game.particles.push({type:'ring', x:p.x, y:p.y, t:0.3, max:0.3, r:36, color:el==='fire'?'#ff9a4a':'#9fe0ff'}); }
   p.lastElem = el;
@@ -255,7 +255,7 @@ function iceArmorSlowPct(rank){ return Math.max(0.05, 0.10 - 0.0125*(Math.max(1,
 function iceArmorSlowMult(p){ return 1; if(!(p.iceArmorHp>0)) return 1; const r = (p.skills && effectiveRank(p,'iceArmor'))||1; return 1 - iceArmorSlowPct(r); }
 const NOVA_DMG_MULT = 1.8, NOVA_PUSH = 55;
 const THUNDERSTEP_DIST = 170;
-function thunderstepRegenBonus(rank){ return 0.30 + 0.05*(Math.max(1,rank)-1); }
+function thunderstepRegenBonus(rank){ return 0.5 + 0.5*(Math.min(10,Math.max(1,rank))-1)/9 + 0.03*Math.max(0, rank-10); }   // v564 Stormstrider: +50% -> +100% mana regeneration for 4s after a dodge
 const THUNDERSTEP_R = 35;   // v445: half the old 70 radius
 function thunderstepCharge(g, p, x, y, rank){
   const dmg = wpnDmg(p) * swd('thunderstep', rank) * assaultDealtMult(p) * weaponDmgMult(p);
@@ -273,7 +273,7 @@ function thunderstepDodge(g, p){
   const rank = (p.skills && effectiveRank(p,'thunderstep')) || 0;
   if(rank<=0 || !g || !g.room || !p.dodgeDir) return false;
   // v445: keep the normal dodge roll (the blink felt laggy) -- a charge goes off where you start, and another where the roll ends
-  p.tsRegenT = 3; p.tsRegenBonus = thunderstepRegenBonus(rank);
+  p.tsRegenT = STORMSTRIDER_REGEN_T; p.tsRegenBonus = thunderstepRegenBonus(rank);
   p.tsHit = new Set();
   thunderstepCharge(g, p, p.x, p.y, rank);
   p.tsLandT = Math.max(0.05, p.dodgeDur||0.25); p.tsLandRank = rank;

@@ -18,7 +18,7 @@ function newGame(saved, cls){
     blocking:false,
     invuln:0, hitFlash:0,
     animT:0, moving:false, faceSign:1, atkAnimT:0, castAnimT:0, movementStopT:0,
-    skillPoints:0, skills:{leap:0,soulFire:0,  unbreakable:0, ironSkin:0, shieldBash:0, riposte:0, shieldThrow:0, guardian:0, weaponsSpecialist:0, bloodlust:0, whirlwind:0, cleave:0, fury:0, assault:0, squire:0, commander:0, rally:0, offensiveStance:0, templarDefensiveStance:0, battlecry:0, companionWolf:0, companionBear:0, trap:0, sap:0, evasion:0, execute:0, shadowStep:0, vanish:0, bowExpert:0, rapidShot:0, multiShot:0, arrowEye:0, trueShot:0, preciseShot:0, cripplingShot:0, stunShot:0, packTactics:0, fieldDress:0, lightningArc:0, lightningChain:0, nova:0, tornado:0, storm:0, hurricane:0, elementalPolarity:0, fireball:0, iceBolt:0, immolate:0, flameVortex:0, permafrost:0, thunderstep:0, elementalExplosions:0, fireBomb:0, iceArmor:0, pyroTorrent:0, blizzard:0, fear:0, raiseDead:0, soulSap:0, sacrifice:0, demonBind:0, plague:0, survivalFieldDress:0, aimedShot:0, longshot:0, deadeye:0, huntersBond:0, beastFury:0, huntersMark:0, markedPrey:0, explosiveTrap:0, trapMastery:0, survivalInstinct:0, opportunist:0, poisonTrap:0, frostTrap:0, finesse:0, rainOfArrows:0, recall:0},
+    skillPoints:0, skills:{leap:0,soulFire:0,  unbreakable:0, ironSkin:0, shieldBash:0, riposte:0, shieldThrow:0, guardian:0, weaponsSpecialist:0, bloodlust:0, whirlwind:0, cleave:0, fury:0, assault:0, squire:0, commander:0, rally:0, offensiveStance:0, templarDefensiveStance:0, battlecry:0, companionWolf:0, companionBear:0, trap:0, sap:0, evasion:0, execute:0, shadowStep:0, vanish:0, bowExpert:0, rapidShot:0, multiShot:0, arrowEye:0, trueShot:0, preciseShot:0, cripplingShot:0, stunShot:0, packTactics:0, fieldDress:0, lightningArc:0, lightningChain:0, nova:0, tornado:0, storm:0, hurricane:0, manaShield:0, stormWard:0, fireball:0, iceBolt:0, immolate:0, flameVortex:0, permafrost:0, thunderstep:0, elementalExplosions:0, fireBomb:0, iceArmor:0, pyroTorrent:0, blizzard:0, fear:0, raiseDead:0, soulSap:0, sacrifice:0, demonBind:0, plague:0, survivalFieldDress:0, aimedShot:0, longshot:0, deadeye:0, huntersBond:0, beastFury:0, huntersMark:0, markedPrey:0, explosiveTrap:0, trapMastery:0, survivalInstinct:0, opportunist:0, poisonTrap:0, frostTrap:0, finesse:0, rainOfArrows:0, recall:0},
     // v74: which active skill fires from each of the 4 generic buttons --
     // Main defaults to the basic Strike attack (same as the pre-v74 behavior
     // of the STRIKE button); 1/2/3 default unassigned. Dodge is intentionally
@@ -330,6 +330,11 @@ function newGame(saved, cls){
         let rf = 0; for(const id of ['explosiveTrap','trapMastery']){ rf += player.skills[id]||0; player.skills[id] = 0; for(const sk of Object.keys(player.skillSlots||{})) if(player.skillSlots[sk]===id) player.skillSlots[sk] = (sk==='main' ? 'strike' : null); }
         if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Explosive Trap is now a capstone -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3400); }
       }
+    }
+    if(!saved.skillsV564 && (saved.cls||cls)==='mystic'){   // v564: Windrunner (now Storm Ward) and Elemental Polarity (now Mana Shield) are gone -- refund their points
+      let rf = 0; for(const id of ['windrunner','elementalPolarity']){ rf += player.skills[id]||0; delete player.skills[id]; }
+      for(const sk of Object.keys(player.skillSlots||{})) if(['windrunner','elementalPolarity'].indexOf(player.skillSlots[sk])>=0) player.skillSlots[sk] = (sk==='main' ? 'strike' : null);
+      if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Windrunner and Elemental Polarity were replaced -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3600); }
     }
     if(!saved.skillsV481 && (saved.cls||cls)==='mystic'){   // v481: Windrunner / Tornado / Storm moved
       const ids = DJINN_NODE_IDS; let rf = 0;

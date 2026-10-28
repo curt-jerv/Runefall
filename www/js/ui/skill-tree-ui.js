@@ -1095,7 +1095,7 @@ function hunterSkillNodeIconSvg(nodeId){
 // base-icon-shape idea as every other tree's icon set -- every node draws
 // the same bolt, then adds its own accent (see each branch below).
 const LIGHTNING_ICON_PATH = 'M23 2 L9 21 L18 21 L14 38 L31 17 L20 17 Z';
-const DJINN_NODE_IDS = ['lightningArc','lightningChain','nova','tornado','storm','hurricane','thunderstep','staticBuildup','stormcall','windrunner'];
+const DJINN_NODE_IDS = ['lightningArc','lightningChain','nova','tornado','storm','hurricane','thunderstep','staticBuildup','stormcall','stormWard'];
 function djinnSkillNodeIconSvg(nodeId){
   let extra = '';
   if(nodeId==='thunderstep'){
@@ -1150,7 +1150,7 @@ function iceShardSvg(cx, cy, scale, opacity){
   s += '</g>';
   return s;
 }
-const ELEMENTALIST_NODE_IDS = ['elementalMastery','elementalPolarity','elementalExplosions','iceArmor','pyroTorrent','blizzard','fireball','iceBolt','immolate','flameVortex','permafrost','meteor'];
+const ELEMENTALIST_NODE_IDS = ['elementalMastery','manaShield','elementalExplosions','iceArmor','pyroTorrent','blizzard','fireball','iceBolt','immolate','flameVortex','permafrost','meteor'];
 function elementalistSkillNodeIconSvg(nodeId){
   if(nodeId==='fireball' || nodeId==='iceBolt') return virtualSkillIconSvg(nodeId);
   let extra = '';
@@ -1260,6 +1260,8 @@ function necromancerSkillNodeIconSvg(nodeId){
 }
 // v272: one unique hand-drawn glyph per skill (all classes)
 const V459_ICONS = {
+  stormWard:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20 A12 12 0 0 1 32 16"></path><path d="M32 20 A12 12 0 0 1 8 24"></path><path d="M12 12 A11 11 0 0 1 28 10"></path><path d="M28 30 A11 11 0 0 1 12 30"></path><circle cx="20" cy="20" r="3"></circle></g>',   // v564
+  manaShield:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 5 L32 10 L31 22 Q29 31 20 35 Q11 31 9 22 L8 10 Z"></path><path d="M20 12 L24 19 L20 28 L16 19 Z"></path></g>',
   elementalMastery:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C8 24 10 16 16 11 C16 17 19 19 21 19 C19 14 22 9 26 6 C26 13 31 16 31 23 C31 28 27 32 22 33"/><path d="M24 33 L24 22 M19.5 24.5 L28.5 30.5 M28.5 24.5 L19.5 30.5" stroke-width="1.8"/><circle cx="24" cy="27.5" r="1.3" fill="currentColor"/></g>',
   staticBuildup:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="20" cy="20" r="13" stroke-dasharray="3 4"/><path d="M22 9 L15 21 L21 21 L17 31" /><circle cx="8" cy="12" r="1.5" fill="currentColor"/><circle cx="33" cy="27" r="1.5" fill="currentColor"/></g>',
   stormcall:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12 Q8 5 16 6 Q19 1 26 4 Q34 4 33 12 Z" fill="currentColor" fill-opacity="0.3"/><path d="M21 12 L16 22 L22 22 L18 32"/><ellipse cx="18" cy="35" rx="10" ry="3"/></g>',

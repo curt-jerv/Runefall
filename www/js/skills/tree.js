@@ -263,7 +263,7 @@ const RANGER_SKILL_TREES = {
 // (Mystic's 1st tree), Elementalist second (2nd tree).
 const MYSTIC_SKILL_TREES = {
   // v466: Djinn laid out as a lightning bolt -- it slants down to the left, juts right through the middle, then drops to the Hurricane tip
-  djinn: { name:'Djinn', layout:'sword', straight:true, links:[['lightningArc','staticBuildup'],['lightningChain','nova'],['windrunner','thunderstep'],['thunderstep','stormcall'],['tornado','storm']], nodes:[
+  djinn: { name:'Djinn', layout:'sword', straight:true, links:[['lightningArc','staticBuildup'],['lightningChain','nova'],['stormWard','thunderstep'],['thunderstep','stormcall'],['tornado','storm']], nodes:[
     // v475 layout: Lightning Arc + Static Buildup on top; Lightning Chain under Arc, Nova under Static; then Tornado | Thunderstep | Stormcall
     {id:'lightningArc', name:'Lightning Arc', type:'active', reqLevel:1, row:0, col:3, prereq:[],
       desc:'Loose a crackling arc of lightning at your foes.'},
@@ -273,16 +273,16 @@ const MYSTIC_SKILL_TREES = {
       desc:'Let your lightning leap from enemy to enemy.'},
     {id:'nova', name:'Nova', type:'active', reqLevel:7, row:1, col:3, prereq:['staticBuildup'],
       desc:'Unleash a ring of lightning that charges everything it touches.'},
-    {id:'tornado', name:'Tornado', type:'active', reqLevel:21, row:3, col:1, prereq:['windrunner'],
+    {id:'tornado', name:'Tornado', type:'active', reqLevel:21, row:3, col:1, prereq:['stormWard'],
       desc:'Hurl a howling tornado at your enemy.'},
-    {id:'thunderstep', name:'Thunderstep', type:'passive', reqLevel:14, row:2, col:2, prereq:['lightningChain'],
+    {id:'thunderstep', name:'Stormstrider', type:'passive', reqLevel:14, row:2, col:2, prereq:['lightningChain'],
       desc:'Your dodge becomes a blink of lightning, and your mana flows faster after it.'},
     {id:'stormcall', name:'Stormcall', type:'active', reqLevel:14, row:2, col:3, prereq:['nova'],
       desc:'Mark the ground, then call a bolt of lightning down onto it. Charged enemies conduct the strike to their neighbours.'},
     {id:'storm', name:'Storm', type:'passive', reqLevel:21, row:3, col:2, prereq:['thunderstep'],
       desc:'A small storm gathers above you, sharpening your strikes.'},
-    {id:'windrunner', name:'Windrunner', type:'passive', reqLevel:14, row:2, col:1, prereq:['thunderstep'],
-      desc:'Moving quickly gathers storm energy for your next lightning spell.'},
+    {id:'stormWard', name:'Storm Ward', type:'active', reqLevel:14, row:2, col:1, prereq:['thunderstep'],   // v564: replaces Windrunner
+      desc:'Wrap yourself in a howling ward of wind that turns blows and missiles aside.'},
     {id:'hurricane', name:'Hurricane', type:'active', reqLevel:28, row:4, col:0, prereq:['tornado','storm'], prereqMode:'or', capstone:true,
       desc:'Conjure a raging hurricane that batters and slows everything nearby.'},
   ] },
@@ -310,8 +310,8 @@ const MYSTIC_SKILL_TREES = {
       desc:'Hurl quick balls of fire. Each rank adds another ball, up to three.'},
     {id:'iceBolt', name:'Ice Bolt', type:'active', reqLevel:1, row:0, col:2, prereq:[],
       desc:'Hurl a big, slow, heavy bolt of ice that chills and freezes.'},
-    {id:'elementalPolarity', name:'Elemental Polarity', type:'passive', reqLevel:3, row:1, col:1, prereq:['fireball','iceBolt'],
-      desc:'Follow fire with ice, or ice with fire, for bonus damage.'},
+    {id:'manaShield', name:'Mana Shield', type:'active', reqLevel:3, row:1, col:1, prereq:['fireball','iceBolt'],   // v564: replaces Elemental Polarity (folded into Elemental Mastery)
+      desc:'Let your mana take the blows meant for your flesh.'},
     {id:'immolate', name:'Immolate', type:'active', reqLevel:3, row:1, col:0, prereq:['fireball'],
       desc:'Set yourself ablaze: hit harder and make fireballs explode, at the cost of your own life.'},
     {id:'iceArmor', name:'Ice Armor', type:'active', reqLevel:3, row:1, col:2, prereq:['iceBolt'],
@@ -320,7 +320,7 @@ const MYSTIC_SKILL_TREES = {
       desc:'Freeze the ground: foes inside are slowed and frozen by the next hit, and you move faster.'},
     {id:'pyroTorrent', name:'Pyro Torrent', type:'active', reqLevel:14, row:2, col:0, prereq:['immolate'],
       desc:'Channel a searing torrent of fire through every enemy in its path.'},
-    {id:'elementalMastery', name:'Elemental Mastery', type:'passive', reqLevel:21, row:3, col:1, prereq:['elementalPolarity'],
+    {id:'elementalMastery', name:'Elemental Mastery', type:'passive', reqLevel:21, row:3, col:1, prereq:['manaShield'],
       desc:'Master fire and ice: your fire and cold spells hit harder and burn through enemy resistances. At rank 5, Fireball and Ice Bolt explode on hit.'},
     {id:'meteor', name:'Meteor', type:'active', reqLevel:28, row:4, col:0, prereq:['pyroTorrent'], capstone:true, capstoneShare:'elementalist',
       desc:'Call a burning meteor down from the sky. It crashes into your enemies after a moment and leaves the ground ablaze.'},

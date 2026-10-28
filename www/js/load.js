@@ -1,4 +1,4 @@
-// Runefall loader (v563). The game is split into the files below; their ORDER matters (a file may use things
+// Runefall loader (v564). The game is split into the files below; their ORDER matters (a file may use things
 // set up by an earlier one). All files are fetched first and then run back-to-back in one go, exactly like the
 // old single-file game, so no tap or timer can reach a function that hasn't loaded yet.
 // Adding a file: put it in www/js/<folder>/, add its path to this list, run `node scripts/check-js.js`.
@@ -35,6 +35,7 @@ const RUNEFALL_FILES = [
   'zones/redridge-towers.js',
   'zones/highward.js',
   'skills/mystic-extra.js',
+  'skills/mystic-defense.js',
   'monsters/highward-and-bandits.js',
   'quests/quest-chain.js',
   'ui/town-menus.js',

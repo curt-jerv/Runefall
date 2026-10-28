@@ -85,6 +85,8 @@ const ACTIVE_SKILL_REGISTRY = {
   pyroTorrent:   { oldBtnId:null,              trigger(){ wantPyroTorrent=true; },   getCd(p){ return {cur:p.pyroTorrentCd, max:p.pyroTorrentCdMax}; } },
   blizzard:      { oldBtnId:null,              trigger(){ wantBlizzard=true; },      getCd(p){ return {cur:p.blizzardCd, max:p.blizzardCdMax}; } },
   immolate:      { oldBtnId:null,              trigger(){ wantImmolate=true; },      getCd(p){ return {cur:p.immolateCd||0, max:p.immolateCdMax||IMMOLATE_CD}; } },
+  stormWard:     { oldBtnId:null,              trigger(){ wantStormWard=true; },     getCd(p){ return {cur:p.stormWardCd||0, max:p.stormWardCdMax||STORM_WARD_CD}; } },   // v564
+  manaShield:    { oldBtnId:null,              trigger(){ wantManaShield=true; },    getCd(p){ return {cur:p.manaShieldCd||0, max:p.manaShieldCdMax||MANA_SHIELD_CD}; } },
   flameVortex:   { oldBtnId:null,              trigger(){ wantFlameVortex=true; },   getCd(p){ return {cur:p.flameVortexCd||0, max:p.flameVortexCdMax||FLAME_VORTEX_CD}; } },
   permafrost:    { oldBtnId:null,              trigger(){ wantPermafrost=true; },    getCd(p){ return {cur:p.permafrostCd||0, max:p.permafrostCdMax||PERMAFROST_CD}; } },
   // Necromancer tree (v78): same "brand-new active skill, one more entry"
@@ -162,7 +164,7 @@ const ACTIVE_SKILL_REGISTRY = {
 const CAST_FX_SKILLS = {
   fear:'#c89bff', raiseDead:'#8fe6c8', soulGate:'#8fe6c8', plague:'#8dff6a', soulFire:'#ff9a4a',
   nova:'#9adfff', tornado:'#cfd8e8', hurricane:'#cfd8e8', iceArmor:'#9adfff', pyroTorrent:'#ff9a4a', blizzard:'#9adfff',
-  immolate:'#ff9a4a', flameVortex:'#ff9a4a', permafrost:'#9adfff', stormcall:'#9adfff', meteor:'#ff9a4a',
+  immolate:'#ff9a4a', stormWard:'#d8f4ff', manaShield:'#7ea8ff', flameVortex:'#ff9a4a', permafrost:'#9adfff', stormcall:'#9adfff', meteor:'#ff9a4a',
   battlecry:'#ffd070', banner:'#ffd070', commander:'#ffd070', rally:'#ffd070', guardian:'#cfe0ff', bulwark:'#cfe0ff', mirrorSteel:'#cfe0ff',
   consecrate:'#ffe9a0', judgment:'#ffe9a0', bloodrage:'#ff6a5a', seismicAnchor:'#cfe0ff',
   packTactics:'#9ad88a', fieldDress:'#9ad88a', survivalFieldDress:'#9ad88a', huntersMark:'#e8c25a', beastFury:'#ffb05a', recall:'#9ad88a', vanish:'#bfc8d8', shadowStep:'#bfc8d8'
@@ -197,7 +199,7 @@ for(const id in ACTIVE_SKILL_REGISTRY){
 // their own Assign buttons directly from elementalPolarity's own popup
 // (see openSkillNodePopup's elementalPolarity special-case) instead of the
 // normal single Assign button this exclusion list suppresses.
-const ASSIGN_EXCLUDE_IDS = ['elementalPolarity'];
+const ASSIGN_EXCLUDE_IDS = [];
 // Elementalist's Fireball/Ice Bolt (v76) are "virtual" active skills: they
 // have no skill-tree node of their own (see elementalPolarity's node
 // comment) so nodeDisplayName's normal tree lookup would just fall back to
@@ -265,6 +267,7 @@ const RESOURCE_SKILLS = {
   // (v152) Lightning Arc / Fireball / Ice Bolt / Soul Sap no longer cost mana -- they REWARD it on hit (MANA_ON_HIT_PCT).
   // Everything else costs a lot more, against a much smaller pool.
   // v562: the four big spells (Hurricane, Meteor, Blizzard, Plague) cost 95 mana at rank 1 (v563: +8% a rank, like every Mana/Stamina skill)
+  stormWard:{cost:30}, manaShield:{cost:20},   // v564
   plague:{cost:95}, soulGate:{cost:40}, immolate:{cost:35}, flameVortex:{cost:45}, permafrost:{cost:21, step:-1.8},
   nova:{cost:26}, tornado:{cost:35}, hurricane:{cost:95}, iceArmor:{cost:0}, pyroTorrent:{cost:20}, blizzard:{cost:95}, meteor:{cost:95}, stormcall:{cost:32}, raiseDead:{cost:12}, fear:{cost:25},  /* pyroTorrent cost is PER SECOND while channelling */
   shieldThrow:{cost:25, minCd:1.0}, bulwark:{cost:30}, mirrorSteel:{cost:25, step:-10/9}, seismicSlam:{cost:25}, seismicAnchor:{cost:25, step:-10/9}, whirlwind:{cost:15, minCd:1.0}, unbreakable:{cost:0, minCd:8},
