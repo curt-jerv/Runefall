@@ -35,7 +35,9 @@ For Claude and anyone reading the code. Plain conventions; keep them as the proj
 - Heroes and humanoid monsters share the **Quaternius universal rig** (65 bones: `root, pelvis, spine_01..03, neck_01, Head, clavicle/upperarm/lowerarm/hand_l/_r, fingers, thigh/calf/foot/ball_l/_r`). Any Universal Animation Library or retargeted Mixamo clip plays on any of them.
 - Animations keep their Blender names; Godot drops a trailing `_Loop` and makes those loop (`Idle`, `Jog_Fwd`, `Walk`, `Sprint`...). One-shots: `Pistol_Shoot`, `Roll`, `Death01`, `Sword_Attack`, `Spell_Simple_Shoot`, `Hit_Chest`...
 - Run speed is matched by `speed_scale = speed / 5.26` (the jog's own speed) so feet don't slide.
-- Weapons are separate `.glb` files attached with a `BoneAttachment3D` on `hand_r` (bow, sword) or `hand_l` (shield).
+- Weapons are separate `.glb` files attached with `CharacterRig.attach(model, scene, "hand_r")` (bow, sword) or `hand_l` (shield).
+- Models without their own animations (bandit, NPCs) get the shared library with `CharacterRig.animations(model)`: same `Hero/Skeleton3D` path, so every clip plays on every humanoid.
+- The bow rides the hand bone but its rotation is set in world space each frame (limbs up, belly toward the facing, string toward the body), so it looks right in every animation. Blender's Z (up) arrives as Godot's local Y.
 - Blender → Godot: `tools/blender/export_godot.py` (textures at most 1024 px, JPEG; every action exported as an NLA track so it arrives as a named animation).
 
 ## Data

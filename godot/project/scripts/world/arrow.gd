@@ -35,6 +35,6 @@ func _physics_process(delta: float) -> void:
 		var flat: Vector3 = (e as Node3D).global_position - global_position
 		flat.y = 0.0
 		if flat.length() < 0.6:
-			e.take_hit(damage)
+			e.call("take_hit", damage)
 			queue_free()
 			return

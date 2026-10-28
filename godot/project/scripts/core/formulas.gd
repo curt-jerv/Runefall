@@ -87,3 +87,14 @@ static func dex_evasion_pct(dex: float, level: int) -> float:
 ## Convert an HTML distance or speed (world units) to metres.
 static func m(world_units: float) -> float:
 	return world_units / WORLD_UNITS_PER_METRE
+
+
+## Monster Attack Rating against your Defense (items/items.js enemyAttackRating / playerHitChance).
+static func enemy_attack_rating(ml: int) -> float:
+	return 40.0 + 25.0 * maxi(1, ml)
+
+
+static func player_hit_chance(defense: float, player_level: int, ml: int) -> float:
+	var ar := enemy_attack_rating(ml)
+	var c := clampf(ar / (ar + maxf(0.0, defense)), 0.25, 0.90) * hit_level_factor(player_level, ml)
+	return clampf(c, 0.12, 0.95)

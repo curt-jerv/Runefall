@@ -10,6 +10,8 @@ var _shot_path := ""
 var _shot_frames := 90
 var _frame := 0
 var _auto_move := Vector2.ZERO
+var _auto_shoot := false
+var _move_frames := 999999
 
 
 func _ready() -> void:
@@ -26,10 +28,10 @@ func _ready() -> void:
 	cam.make_current()
 	player.cam = cam
 	player.shot_fired.connect(_on_shot)
-	for i in 3:
-		var d := TrainingDummy.new()
-		add_child(d)
-		d.global_position = Vector3(5 + i * 1.6, 0, -3 + i * 2.2)
+	var d := TrainingDummy.new()
+	add_child(d)
+	d.global_position = Vector3(-2.5, 0, 5.5)
+	_spawn_pack()
 	_build_hud()
 	_read_args()
 
@@ -42,6 +44,15 @@ func _read_args() -> void:
 			_shot_frames = int(a.trim_prefix("--frames="))
 		elif a == "--cutscene":
 			play_tower_cutscene.call_deferred()
+		elif a == "--closeup":
+			cam.distance = 4.5
+			cam.pitch_deg = 18.0
+			cam.cur_distance = 4.5
+			cam.cur_pitch = 18.0
+		elif a == "--autoshoot":
+			_auto_shoot = true
+		elif a.begins_with("--move-frames="):
+			_move_frames = int(a.trim_prefix("--move-frames="))
 		elif a.begins_with("--move="):
 			var p := a.trim_prefix("--move=").split(",")
 			_auto_move = Vector2(float(p[0]), float(p[1]))
@@ -49,7 +60,9 @@ func _read_args() -> void:
 
 func _process(_delta: float) -> void:
 	if _auto_move != Vector2.ZERO:
-		player.joystick = _auto_move
+		player.joystick = _auto_move if _frame < _move_frames else Vector2.ZERO
+	if _auto_shoot and _frame >= _move_frames:
+		player.attack()
 	if Input.is_action_just_pressed("cutscene"):
 		play_tower_cutscene()
 	if _shot_path != "":
@@ -69,10 +82,34 @@ func play_tower_cutscene() -> void:
 	])
 
 
+## A bandit pack (3 bandits and a brute with a club) up the road; a new pack comes when they all fall.
+var _pack_alive := 0
+
+
+func _spawn_pack() -> void:
+	var at := Vector3(12, 0, -12)
+	var kinds := ["bandit", "bandit", "bandit", "banditbrute"]
+	_pack_alive = kinds.size()
+	for i in kinds.size():
+		var m := Monster.new()
+		m.monster_type = kinds[i]
+		m.level = 1
+		m.position = at + Vector3(cos(i * 1.7) * 2.2, 0.1, sin(i * 1.7) * 2.2)
+		m.died.connect(_on_monster_died)
+		add_child(m)
+
+
+func _on_monster_died(_m: Monster) -> void:
+	_pack_alive -= 1
+	if _pack_alive <= 0:
+		get_tree().create_timer(5.0).timeout.connect(_spawn_pack)
+
+
 func _on_shot(from: Vector3, dir: Vector3) -> void:
 	var a := Arrow.new()
 	a.dir = dir
-	a.damage = 12.0
+	# a typical same-level weapon hit (the HTML game's par hit) with a little spread
+	a.damage = Formulas.par_hit(player.level) * randf_range(0.8, 1.2)
 	add_child(a)
 	a.global_position = from
 
@@ -205,6 +242,14 @@ func _build_ground() -> void:
 func _build_hud() -> void:
 	var hud := CanvasLayer.new()
 	add_child(hud)
+	var life := Globe.new()
+	life.position = Vector2(20, 20)
+	life.size = Vector2(92, 92)
+	life.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(life)
+	var upd := func(v: float, mx: float) -> void: life.set_value(v / mx, str(int(ceil(v))))
+	player.life_changed.connect(upd)
+	upd.call(player.life, player.max_life)
 	var joy := TouchJoystick.new()
 	joy.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 	joy.anchor_right = 0.45

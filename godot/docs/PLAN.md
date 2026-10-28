@@ -35,6 +35,17 @@ The HTML version (v570) is finished for the **closed beta**. The Godot version i
 
 ## Phase 1 — Foundation (≈ weeks 1–3 on the laptop)
 
+Already working in `project/` (built and checked before the laptop; screenshots in `docs/screenshots/`):
+- [x] Ranger with 42 animations, run speed-matched, roll, shoot, death; the bow held upright in the fist
+- [x] Fixed isometric camera + tower cutscene
+- [x] Touch joystick, Strike, Dodge; keyboard too
+- [x] Bandit pack (3 bandits + a brute) that notices, chases, swings, can miss (Defense roll), dies and comes back
+- [x] Life globe; death, then respawn at the start point with the bell toll
+- [x] Rules ported and tested against the HTML numbers (XP, monster life/damage, attributes, monster level, hit chance, evasion)
+- [ ] On a real phone (needs the laptop)
+
+Still to do in Phase 1:
+
 - Player hero (start with the Ranger) moving with the touch joystick on a test ground.
 - Fixed isometric camera following the player; cutscene camera that can fly to a point and back.
 - Animations: idle, run (speed-matched), shoot, dodge roll, death; animation blending.
