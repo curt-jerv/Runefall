@@ -3,7 +3,7 @@ let wantStormWard = false, wantManaShield = false;
 // Storm Ward: a ring of wind for a few seconds; every melee blow, arrow or spell from a monster may be turned aside (like evasion)
 const STORM_WARD_CD = 16;
 function stormWardDur(r){ r = Math.max(1, r||1); return 6 + 4*(Math.min(10,r)-1)/9; }
-function stormWardChance(r){ r = Math.max(1, r||1); return Math.min(0.6, 0.25 + 0.25*(Math.min(10,r)-1)/9 + 0.01*Math.max(0, r-10)); }
+function stormWardChance(r){ r = Math.max(1, r||1); return Math.min(0.5, 0.20 + 0.20*(Math.min(10,r)-1)/9 + 0.01*Math.max(0, r-10)); }   // v565: 20% -> 40% (was 25% -> 50%)
 // Mana Shield: while on, part of every hit is paid from mana instead of life (after Ice Armor has soaked what it can)
 const MANA_SHIELD_CD = 1;
 function manaShieldPct(r){ r = Math.max(1, r||1); return Math.min(0.75, 0.30 + 0.30*(Math.min(10,r)-1)/9 + 0.015*Math.max(0, r-10)); }

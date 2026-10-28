@@ -310,7 +310,7 @@ const MYSTIC_SKILL_TREES = {
       desc:'Hurl quick balls of fire. Each rank adds another ball, up to three.'},
     {id:'iceBolt', name:'Ice Bolt', type:'active', reqLevel:1, row:0, col:2, prereq:[],
       desc:'Hurl a big, slow, heavy bolt of ice that chills and freezes.'},
-    {id:'manaShield', name:'Mana Shield', type:'active', reqLevel:3, row:1, col:1, prereq:['fireball','iceBolt'],   // v564: replaces Elemental Polarity (folded into Elemental Mastery)
+    {id:'manaShield', name:'Mana Shield', type:'active', reqLevel:14, row:2, col:1, prereq:['immolate','iceArmor'], prereqMode:'or',   // v564: replaces Elemental Polarity; v565: on the Permafrost / Pyro Torrent row, after Immolate or Ice Armor, leads to Elemental Mastery
       desc:'Let your mana take the blows meant for your flesh.'},
     {id:'immolate', name:'Immolate', type:'active', reqLevel:3, row:1, col:0, prereq:['fireball'],
       desc:'Set yourself ablaze: hit harder and make fireballs explode, at the cost of your own life.'},

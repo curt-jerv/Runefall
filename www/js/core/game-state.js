@@ -331,6 +331,13 @@ function newGame(saved, cls){
         if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Explosive Trap is now a capstone -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3400); }
       }
     }
+    if(!saved.skillsV565 && (saved.cls||cls)==='mystic' && (player.skills.manaShield||0)>0){   // v565: Mana Shield moved to the Lv.14 row after Immolate / Ice Armor -- refund it if it no longer fits
+      if((player.level||1) < 14 || !((player.skills.immolate||0)>0 || (player.skills.iceArmor||0)>0)){
+        const rf = player.skills.manaShield; player.skills.manaShield = 0;
+        for(const sk of Object.keys(player.skillSlots||{})) if(player.skillSlots[sk]==='manaShield') player.skillSlots[sk] = (sk==='main' ? 'strike' : null);
+        player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Mana Shield moved -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3800);
+      }
+    }
     if(!saved.skillsV564 && (saved.cls||cls)==='mystic'){   // v564: Windrunner (now Storm Ward) and Elemental Polarity (now Mana Shield) are gone -- refund their points
       let rf = 0; for(const id of ['windrunner','elementalPolarity']){ rf += player.skills[id]||0; delete player.skills[id]; }
       for(const sk of Object.keys(player.skillSlots||{})) if(['windrunner','elementalPolarity'].indexOf(player.skillSlots[sk])>=0) player.skillSlots[sk] = (sk==='main' ? 'strike' : null);
