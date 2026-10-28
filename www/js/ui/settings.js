@@ -137,7 +137,7 @@ function syncGraphicsUI(){
   document.querySelectorAll('#fpsSeg button').forEach(b=>b.classList.toggle('on', +b.dataset.v===(+settings.fpsCap===30 ? 30 : 60)));
   { const bs = document.getElementById('brightSlider'), bv = Math.round(brightSetting()*100); if(bs){ bs.value = bv; document.getElementById('brightValueLabel').textContent = bv+'%'; } }
   setToggleUI(document.getElementById('toggleGrain'), settings.grain!==false);
-  setToggleUI(document.getElementById('toggleHeroSprites'), settings.heroSprites!==false);   // v569
+  setToggleUI(document.getElementById('toggleHeroSprites'), settings.heroSprites===true);   // v569
   { const o = settings.orient || 'auto'; document.querySelectorAll('#orientSeg button').forEach(b=>b.classList.toggle('on', b.dataset.v===o)); }
 }
 document.getElementById('settingsGraphicsBtn').addEventListener('click', ()=>{ syncGraphicsUI(); settingsOverlay.style.display='none'; graphicsOverlay.style.display='flex'; });
@@ -168,7 +168,7 @@ document.querySelectorAll('#gfxSeg button').forEach(b=>b.addEventListener('click
 document.querySelectorAll('#fpsSeg button').forEach(b=>b.addEventListener('click', ()=>{ settings.fpsCap = +b.dataset.v; saveSettings(settings); syncGraphicsUI(); }));
 // v522: the old Atmosphere switch is now a plain Brightness slider (70-140%), applied in the canvas CSS filter (render/mood.js)
 document.getElementById('brightSlider').addEventListener('input', e=>{ settings.bright = (+e.target.value)/100; document.getElementById('brightValueLabel').textContent = e.target.value+'%'; try{ moodCssKey = ''; }catch(err){} saveSettings(settings); });
-document.getElementById('toggleHeroSprites').addEventListener('click', ()=>{ settings.heroSprites = (settings.heroSprites===false); saveSettings(settings); syncGraphicsUI(); });   // v569
+document.getElementById('toggleHeroSprites').addEventListener('click', ()=>{ settings.heroSprites = (settings.heroSprites!==true); saveSettings(settings); syncGraphicsUI(); });   // v569
 document.getElementById('toggleGrain').addEventListener('click', ()=>{ settings.grain = (settings.grain===false); settings.atmosChosen = true; saveSettings(settings); syncGraphicsUI(); });
 const combatOverlay = document.getElementById('combatOverlay');
 document.getElementById('settingsCombatBtn').addEventListener('click', ()=>{ try{ refreshDamageNumbersToggle(); }catch(e){} settingsOverlay.style.display='none'; combatOverlay.style.display='flex'; });

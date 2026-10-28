@@ -22,7 +22,7 @@ function heroSpriteSet(cls){
   }).catch(()=>{});
   return set;
 }
-function heroSpritesOn(cls){ return cls==='ranger' && !(typeof settings!=='undefined' && settings && settings.heroSprites===false); }
+function heroSpritesOn(cls){ return cls==='ranger' && typeof settings!=='undefined' && !!settings && settings.heroSprites===true; }   // v572: off unless turned on in Settings > Graphics
 function heroSpriteDir(p){
   const f = p.facing || {x:0, y:1};
   return ((Math.round(Math.atan2(f.y||0, f.x||0)/(Math.PI/4)) % 8) + 8) % 8;
