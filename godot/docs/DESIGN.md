@@ -146,5 +146,5 @@ Named NPCs: **Aldric the Elder, Hobbs the Barkeeper, Brom the Blacksmith, Garric
 
 - Thornbacks: not in the Withered Crossroads, and their damage a bit lower.
 - Run animation: shorter strides for the hero's speed.
-- The respawn sound should fit the dark theme.
+- ~~The respawn sound should fit the dark theme.~~ Done in v571 (a distant bell toll).
 - A balance pass for the attribute system (skills, monster life and damage) — planned after the core systems are in.

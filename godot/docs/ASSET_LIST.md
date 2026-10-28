@@ -75,4 +75,4 @@ Monster animations: idle, move, attack (1–2), hit, death, plus one special per
 
 - **VFX:** in Godot (GPU particles, shaders) for fire, ice, lightning, poison, soul, telegraphs and light shafts.
 - **UI:** frames, globes, buttons and icons in B / painted; Cinzel and Alegreya fonts (already in the HTML game).
-- **Audio:** carried over from the HTML game (`www/audio/`). Still to replace: the **respawn** sound.
+- **Audio:** carried over from the HTML game (`www/audio/`). The respawn sound was replaced in v571 by a bell toll made for the game (`scripts/make-respawn.py` in the HTML repo).
