@@ -1,5 +1,0 @@
-# Godot's import cache and editor state (rebuilt on open)
-.godot/
-*.tmp
-export/
-android/build/
