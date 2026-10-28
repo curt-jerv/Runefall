@@ -310,7 +310,7 @@ const MYSTIC_SKILL_TREES = {
       desc:'Hurl quick balls of fire. Each rank adds another ball, up to three.'},
     {id:'iceBolt', name:'Ice Bolt', type:'active', reqLevel:1, row:0, col:2, prereq:[],
       desc:'Hurl a big, slow, heavy bolt of ice that chills and freezes.'},
-    {id:'manaShield', name:'Mana Shield', type:'active', reqLevel:14, row:2, col:1, prereq:['immolate','iceArmor'], prereqMode:'or',   // v564: replaces Elemental Polarity; v565: on the Permafrost / Pyro Torrent row, after Immolate or Ice Armor, leads to Elemental Mastery
+    {id:'manaShield', name:'Mana Shield', type:'active', reqLevel:21, row:3, col:1, prereq:['immolate','iceArmor'],   // v564: replaces Elemental Polarity; v566: Lv.21 spot, needs Immolate AND Ice Armor, leads to Elemental Mastery
       desc:'Let your mana take the blows meant for your flesh.'},
     {id:'immolate', name:'Immolate', type:'active', reqLevel:3, row:1, col:0, prereq:['fireball'],
       desc:'Set yourself ablaze: hit harder and make fireballs explode, at the cost of your own life.'},
@@ -320,7 +320,7 @@ const MYSTIC_SKILL_TREES = {
       desc:'Freeze the ground: foes inside are slowed and frozen by the next hit, and you move faster.'},
     {id:'pyroTorrent', name:'Pyro Torrent', type:'active', reqLevel:14, row:2, col:0, prereq:['immolate'],
       desc:'Channel a searing torrent of fire through every enemy in its path.'},
-    {id:'elementalMastery', name:'Elemental Mastery', type:'passive', reqLevel:21, row:3, col:1, prereq:['manaShield'],
+    {id:'elementalMastery', name:'Elemental Mastery', type:'passive', reqLevel:32, row:4, col:1, prereq:['manaShield'],   // v566: bottom row beside Meteor and Blizzard
       desc:'Master fire and ice: your fire and cold spells hit harder and burn through enemy resistances. At rank 5, Fireball and Ice Bolt explode on hit.'},
     {id:'meteor', name:'Meteor', type:'active', reqLevel:28, row:4, col:0, prereq:['pyroTorrent'], capstone:true, capstoneShare:'elementalist',
       desc:'Call a burning meteor down from the sky. It crashes into your enemies after a moment and leaves the ground ablaze.'},
@@ -446,7 +446,7 @@ function effectiveRank(p, nodeId){
 }
 const MAX_SKILL_RANK = 10, BASE_MAX_RANK = 5, SKILL_RANK_STEP = 0.05;
 const MASTERY_LEVEL_REQ = {6:40, 7:40, 8:40, 9:60, 10:60};   // v306: two gates -- ranks 6-8 at Lv.40, ranks 9-10 at Lv.60
-const CAPSTONE_LEVEL_REQ = 28;
+const CAPSTONE_LEVEL_REQ = 32;   // v566: the bottom row (capstones) unlocks at Lv.32 (was 28)
 const MAX_EFF_RANK = 25;   // v420: gear +skills may push ranks well past 10; formulas keep scaling to here
 const SKILL_BONUS_GEAR_CAP = 5;   // v420: cap removed (display + scaling handle stacked +skills)   // v219: up to +3 from gear (mods roll from item level 30)
 function gearSkillBonus(p, nodeId){

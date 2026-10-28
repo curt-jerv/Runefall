@@ -8,9 +8,9 @@ const stCost = (id, r)=> resCost((game&&game.player&&game.player.cls==='ranger')
 // simple max -- whichever is higher wins -- so a node's own reqLevel is
 // never weakened by this, only ever potentially raised.
 // v219: ONE requirement ladder for every class and tree -- purely by row (the node's own reqLevel is ignored)
-const SKILL_ROW_LEVEL_REQ = [1, 7, 14, 21, 28, 35];
+const SKILL_ROW_LEVEL_REQ = [1, 7, 14, 21, 32, 35];   // v566: bottom row Lv.32 (was 28)
 function nodeLevelReq(node){
-  if(node.capstone) return CAPSTONE_LEVEL_REQ;   // v304: every capstone unlocks at Lv.28
+  if(node.capstone) return CAPSTONE_LEVEL_REQ;   // v304: every capstone unlocks at Lv.28; v566: Lv.32
   return SKILL_ROW_LEVEL_REQ[Math.min(node.row||0, SKILL_ROW_LEVEL_REQ.length-1)] || 1;
 }
 // v304: ranks 6-10 are "mastery ranks", gated by character level.

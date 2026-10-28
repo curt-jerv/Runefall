@@ -331,6 +331,14 @@ function newGame(saved, cls){
         if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Explosive Trap is now a capstone -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3400); }
       }
     }
+    if(!saved.skillsV566){   // v566: bottom row needs Lv.32, Mana Shield moved and needs Immolate AND Ice Armor -- refund any rank that no longer fits (repeat so children of refunded nodes go too)
+      const TR = treesForClass(player.cls); let rf = 0, again = true;
+      while(again){ again = false;
+        for(const k of Object.keys(TR)) for(const n of TR[k].nodes){ const r = player.skills[n.id]||0;
+          if(r>0 && ((player.level||1) < nodeLevelReq(n) || !prereqSatisfied(player, n))){ rf += r; player.skills[n.id] = 0; again = true;
+            for(const sk of Object.keys(player.skillSlots||{})) if(player.skillSlots[sk]===n.id) player.skillSlots[sk] = (sk==='main' ? 'strike' : null); } } }
+      if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Skill trees changed -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 4000); }
+    }
     if(!saved.skillsV565 && (saved.cls||cls)==='mystic' && (player.skills.manaShield||0)>0){   // v565: Mana Shield moved to the Lv.14 row after Immolate / Ice Armor -- refund it if it no longer fits
       if((player.level||1) < 14 || !((player.skills.immolate||0)>0 || (player.skills.iceArmor||0)>0)){
         const rf = player.skills.manaShield; player.skills.manaShield = 0;
