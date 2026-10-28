@@ -135,6 +135,7 @@ function elementalPolarityDmg(p, base, extraRank, skillId){
   return wpnDmg(p) * swd(skillId||'fireball', epRank) * assaultDealtMult(p) * weaponDmgMult(p);
 }
 // ---- v269 Elementalist / Djinn rework ----
+const FIREBALL_CD_PER_RANK = 0.08, PYRO_MOVE_MULT = 0.6;   // v545
 const FIREBALL_ATKCD_MULT = 0.7, FIREBALL_BALL_MULT = 0.7, FIREBALL_VOLLEY_GAP = 0.19, FIREBALL_VOLLEY_PAUSE = 0.45, FIREBALL_SPEED_MULT = 0.8, FIREBALL_SIDE_OFFSET = 9;
 const ICE_BOLT_ATKCD_MULT = 1.686, ICE_BOLT_DMG_MULT = 4.05;   // v442: 1.15s base cast (was 1.23s), damage ~89% of Fireball's DPS
 const PERMAFROST_ICEBOLT_SPEED = 1.25;   // v442: Ice Bolt casts 25% faster while you stand in your Permafrost
@@ -184,10 +185,10 @@ function fireballBurnChance(p, e){
   return Math.min(0.9, c);
 }
 const HEAVY_SPELL_MULT = 1.3;   // Pyro Torrent / Blizzard / Plague / Hurricane: +30%
-function polarityBonus(rank){ return rank>0 ? 0.20 + 0.0625*(rkSpread5(Math.min(MAX_EFF_RANK,rank))-1) : 0; }   // v489: +20% -> +45% at rank 10 (was 10% -> 25%)
+function polarityBonus(rank){ return rank>0 ? 0.25 + 0.35*(Math.min(10,rank)-1)/9 + 0.02*Math.max(0, rank-10) : 0; }   // v564: part of Elemental Mastery now, +25% -> +60% at rank 10 (was 20% -> 45%)
 // Call when a damaging spell is cast: returns the damage multiplier (opposite element to the previous spell) and remembers this element.
 function polarityCast(p, el){
-  const r = (p.skills && effectiveRank(p,'elementalPolarity')) || 0;
+  const r = (p.skills && effectiveRank(p,'elementalMastery')) || 0;   // v564: Elemental Polarity lives in Elemental Mastery
   let m = 1;
   if(r>0 && p.lastElem && p.lastElem!==el){ m = 1 + polarityBonus(r); if(game && game.particles) game.particles.push({type:'ring', x:p.x, y:p.y, t:0.3, max:0.3, r:36, color:el==='fire'?'#ff9a4a':'#9fe0ff'}); }
   p.lastElem = el;
@@ -229,7 +230,8 @@ function pushEnemy(g, e, ang, dist0){
 }
 const IMMOLATE_CD = 20, IMMOLATE_SELF_PCT = 0.05, IMMOLATE_MIN_HP = 0.25, IMMOLATE_EXPLODE_R = 85, IMMOLATE_EXPLODE_PCT = 0.6;
 function immolateDuration(rank){ return 6 + 1*(Math.max(1,rank)-1); }
-function immolateBoost(rank){ const r = Math.max(1, rank||1); return r<=5 ? 0.5 + 0.125*(r-1) : 1.0 + 0.2*(Math.min(10,r)-5) + 0.05*Math.max(0, r-10); }   // v489: +50% / +100% at rank 5 / +200% at rank 10
+const IMMOLATE_BOOST_K = 0.75;   // v559: Immolate's fire boost x0.75 (+37.5% at rank 1 / +75% at rank 5 / +150% at rank 10)
+function immolateBoost(rank){ const r = Math.max(1, rank||1); return IMMOLATE_BOOST_K*(r<=5 ? 0.5 + 0.125*(r-1) : 1.0 + 0.2*(Math.min(10,r)-5) + 0.05*Math.max(0, r-10)); }   // v489: +50% / +100% at rank 5 / +200% at rank 10
 const FLAME_VORTEX_CD = 14, FLAME_VORTEX_R = 75, FLAME_VORTEX_PULL = 0, FLAME_VORTEX_SELF_PCT = 0.12, FLAME_VORTEX_BLAST_MULT = 4;
 function flameVortexDur(rank){ return 4 + 0.5*(Math.max(1,rank)-1); }
 // v490: Pyre Heart (amber stone): while Immolate burns, a Flame Vortex swirls around you. It uses your Flame Vortex
@@ -253,7 +255,7 @@ function iceArmorSlowPct(rank){ return Math.max(0.05, 0.10 - 0.0125*(Math.max(1,
 function iceArmorSlowMult(p){ return 1; if(!(p.iceArmorHp>0)) return 1; const r = (p.skills && effectiveRank(p,'iceArmor'))||1; return 1 - iceArmorSlowPct(r); }
 const NOVA_DMG_MULT = 1.8, NOVA_PUSH = 55;
 const THUNDERSTEP_DIST = 170;
-function thunderstepRegenBonus(rank){ return 0.30 + 0.05*(Math.max(1,rank)-1); }
+function thunderstepRegenBonus(rank){ return 0.5 + 0.5*(Math.min(10,Math.max(1,rank))-1)/9 + 0.03*Math.max(0, rank-10); }   // v564 Stormstrider: +50% -> +100% mana regeneration for 4s after a dodge
 const THUNDERSTEP_R = 35;   // v445: half the old 70 radius
 function thunderstepCharge(g, p, x, y, rank){
   const dmg = wpnDmg(p) * swd('thunderstep', rank) * assaultDealtMult(p) * weaponDmgMult(p);
@@ -271,7 +273,7 @@ function thunderstepDodge(g, p){
   const rank = (p.skills && effectiveRank(p,'thunderstep')) || 0;
   if(rank<=0 || !g || !g.room || !p.dodgeDir) return false;
   // v445: keep the normal dodge roll (the blink felt laggy) -- a charge goes off where you start, and another where the roll ends
-  p.tsRegenT = 3; p.tsRegenBonus = thunderstepRegenBonus(rank);
+  p.tsRegenT = STORMSTRIDER_REGEN_T; p.tsRegenBonus = thunderstepRegenBonus(rank);
   p.tsHit = new Set();
   thunderstepCharge(g, p, p.x, p.y, rank);
   p.tsLandT = Math.max(0.05, p.dodgeDur||0.25); p.tsLandRank = rank;
@@ -459,7 +461,8 @@ function soulHungerInterval(rank){ return (1.6 - 0.2*(Math.max(1,rank)-1))/5; } 
 function soulHungerMult(p){ const r = (p.skills && effectiveRank(p,'soulHunger'))||0; return r>0 ? 1 + SOUL_HUNGER_DMG_PER_SOUL*Math.min(SOUL_CAP,(p.souls||0)) : 1; }
 const SOULSHIELD_PER_SOUL = 0.012;
 // v489 Soul Shield: a chance to block per soul held (0.4% at rank 1 -> 0.7% at rank 10), instead of Defence
-function soulShieldBlockPerSoul(r){ r = Math.max(1, r||1); return 0.004 + 0.003*(Math.min(10,r)-1)/9 + 0.0002*Math.max(0, r-10); }
+const SOUL_SHIELD_K = 1.15;   // v560: Soul Shield turns aside 15% more
+function soulShieldBlockPerSoul(r){ r = Math.max(1, r||1); return SOUL_SHIELD_K*(0.004 + 0.003*(Math.min(10,r)-1)/9 + 0.0002*Math.max(0, r-10)); }
 function soulShieldBlock(p){ const r = (p && p.skills && effectiveRank(p,'soulShield'))||0; return r>0 ? Math.min(0.5, soulShieldBlockPerSoul(r)*Math.min(SOUL_CAP, p.souls||0)) : 0; }
 function soulShieldFrac(rank){ return 0.40 + 0.05*(Math.max(1,rank)-1); }
 // v413: Soul Shield is a free passive defence -- souls held give damage reduction, nothing is drained
@@ -498,7 +501,7 @@ function soulFireExplode(g, p, pr){
 function soulFireDmg(p, rank){ return wpnDmg(p) * swd('soulFire', rank) * soulHungerMult(p); }
 const DEMON_LINK_SHARE = 0.5, DEMON_SIZE_PER_10 = 0.04, DEMON_DMG_PER_10 = 0.10;   // v507: +20% size at 50 souls (4% per 10)
 function demonSoulMult(p, per){ return 1 + per*Math.min(SOUL_CAP,(p.souls||0))/10; }
-function necroSkeletonCount(rank){ return rank>0 ? [0,2,2,3,4,5][Math.min(5,rank)] : 0; }
+function necroSkeletonCount(rank){ return rank>0 ? [0,1,2,3,4,5][Math.min(5,rank)] : 0; }
 const NECRO_RESPAWN_SOULS = 1;
 // v460 Raise Skeletons: passive + active. A fallen skeleton stays down until you press Raise Skeletons --
 // unless you hold a soul: then one soul is spent automatically to raise it after a short delay.

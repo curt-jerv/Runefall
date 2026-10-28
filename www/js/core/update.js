@@ -1,8 +1,11 @@
 // v487: each simulation step gets fresh obstacle grids (see obsGrid)
+const ATK_BUFFER = 0.3;
 function update(dt){ OBS_FRAME++; OBS_IN_UPDATE = true; try{ updateStep(dt); } finally { OBS_IN_UPDATE = false; } }
 function updateStep(dt){
   const g = game, p = g.player, room = g.room;
   try{ dungeonPersist(g); }catch(err){}
+  try{ tpCastTick(g, dt); }catch(err){}   // v548
+  try{ playerKnockTick(g, dt); }catch(err){}   // v550: Hookbeak kicks slide you back
   if(showBigMsg._hold && g.scene!=='darkcrypt') bigMsgRelease();   // v536: a held crypt banner goes when you leave
   if(p.wellRestedT>0) wellRestedTick(p, dt);
   try{ wmMark(g, p); }catch(err){}
@@ -243,7 +246,7 @@ function updateStep(dt){
         p.juggPX = p.x; p.juggPY = p.y;
       }
       if(mv.x!==0||mv.y!==0){
-        const webMult = (p.juggT>0 ? JUGG_SPEED*(1 + JUGG_SPEED_PER_SEC*(p.juggClock||0)) : 1) * (p.webSlowT>0 ? 0.45 : 1) * whirlSlowMult(p) * (p.bulwarkT>0 ? BULWARK_SLOW : 1) * iceArmorSlowMult(p) * permafrostSpeedMult(p) * (p.chillT>0 ? PLAYER_CHILL_MULT : 1);
+        const webMult = (p.juggT>0 ? JUGG_SPEED*(1 + JUGG_SPEED_PER_SEC*(p.juggClock||0)) : 1) * (p.webSlowT>0 ? 0.45 : 1) * whirlSlowMult(p) * (p.bulwarkT>0 ? BULWARK_SLOW : 1) * iceArmorSlowMult(p) * permafrostSpeedMult(p) * (p.chillT>0 ? PLAYER_CHILL_MULT : 1) * (p.pyroTorrentT>0 ? PYRO_MOVE_MULT : 1);
         p.x += mv.x*p.speed*webMult*dt;
         p.y += mv.y*p.speed*webMult*dt;
         if(p.juggT>0) p.juggExp = Math.hypot(mv.x,mv.y)*p.speed*webMult*dt;
@@ -290,6 +293,9 @@ function updateStep(dt){
   // attack
   const isBow = !!(p.equipment.mainhand && p.equipment.mainhand.slotType==='bow');
   const staffItem = (p.equipment.mainhand && p.equipment.mainhand.slotType==='staff') ? p.equipment.mainhand : null;
+  if(wantAttack && p.atkCd>0){ if(!(p._atkBuf>0)) p._atkBuf = ATK_BUFFER; else p._atkBuf -= dt; }   // v548: a press during the cooldown is held a moment instead of lost
+  else p._atkBuf = 0;
+  const atkKeep = wantAttack && p.atkCd>0 && p._atkBuf>0;
   if(wantAttack && p.atkCd<=0 && !preciseShotActive(p)){
     p.atkCd = p.atkCdMax;
     // Melee range bump: base reach 62->74 (~20%), a modest bump to feel
@@ -336,16 +342,16 @@ function updateStep(dt){
           const isF = spell==='fire';
           const sd = elementalPolarityDmg(p, isF?FIREBALL_BASE_DMG:ICE_BOLT_BASE_DMG, stN, isF?'fireball':'iceBolt') * (isCrit?critMultOf(p):1);
           g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*ELEMENTAL_BOLT_SPEED, vy:Math.sin(ang)*ELEMENTAL_BOLT_SPEED,
-            r:7, dmg:sd, from:'player', life:1.4, color:isF?'#ff7a3d':'#7ad0ff', isArrow:true, crit:isCrit, isFireball:isF, isIceBolt:!isF});
+            r:7, dmg:sd, from:'player', life:1.9, color:isF?'#ff7a3d':'#7ad0ff', isArrow:true, crit:isCrit, isFireball:isF, isIceBolt:!isF});
         }
       } else   // v454: Strike is a plain purple arcane bolt for every Mystic (no element, no ailment)
       g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*STAFF_BOLT_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*STAFF_BOLT_SPEED*projectileSpeedMult(p),
-        r:6, dmg, from:'player', life:1.4, color:'#b57bff', isArrow:true, isArcaneBolt:true, crit:isCrit});
+        r:6, dmg, from:'player', life:1.9, color:'#b57bff', isArrow:true, isArcaneBolt:true, crit:isCrit});
     } else if(isBow){
       if(p.cls==='ranger') gainResource(p, STAMINA_ON_SHOT);
       // Ranger basic attack: one arrow (v495: Multi Shot is its own button now and no longer changes Strike)
       g.projectiles.push({x:p.x, y:p.y, vx:Math.cos(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p), vy:Math.sin(ang)*BOW_ARROW_SPEED*projectileSpeedMult(p),
-        r:5, dmg, from:'player', life:1.4, color:'#e8c44a', isArrow:true, crit:isCrit});
+        r:5, dmg, from:'player', life:1.9, color:'#e8c44a', isArrow:true, crit:isCrit});
     } else {
       // Cleave (Berserker, v56): while wielding a two-handed weapon AND
       // ranked, the basic Strike auto-becomes the wide-arc Cleave sweep
@@ -416,6 +422,7 @@ function updateStep(dt){
                 if(isCrit) hitStop(g, 0.04);
                 checkExecute(g, e);
                 applyOffensiveStanceBleed(p, e, hitDmg);
+                if(e.thorns) meleeThorns(g, p, e);   // v550: Thornback quills
                 const kb=8; e.x += Math.cos(eang)*kb; e.y += Math.sin(eang)*kb;
               }
             }
@@ -427,7 +434,7 @@ function updateStep(dt){
       }
     }
   }
-  wantAttack=false;
+  wantAttack = atkKeep;
   lastHitCrit = false;
 
   // shield bash / Slam (Defender skill): a plain active trigger on its own
@@ -588,7 +595,7 @@ function updateStep(dt){
     wantPackTactics=false;
     const ptRank = effectiveRank(p,'packTactics')||0;
     if(ptRank>0 && p.packTacticsCd<=0){
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
       if(target && g.followers && g.followers.length){
         const packFollowers = g.followers.filter(f=>f.kind==='wolf'||f.kind==='bear');
         if(packFollowers.length){
@@ -671,7 +678,7 @@ function updateStep(dt){
     wantRapidShot=false;
     const rsRank = effectiveRank(p,'rapidShot')||0;
     if(rsRank>0 && isBow && p.atkCd<=0 && !p.rapidShotBurst && !p.dodging){   // v489: a free basic shot on the Strike timer
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -713,7 +720,7 @@ function updateStep(dt){
     else {
       wantCripplingShot=false;
       if(csRank>0 && p.atkCd<=0 && !p.dodging && !(p.cripplingShotCd>0) && resourceAffordable(p,'cripplingShot')){
-        const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+        const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
         const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
         p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
         p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -738,7 +745,7 @@ function updateStep(dt){
         p.atkAnimT = 0.22; p.atkAnimMax = 0.22; p.atkCd = p.atkCdMax;
         gainResource(p, STAMINA_ON_SHOT);
         const msCrit = Math.random()*100 < (p.critChance||0) + (p.rallyT>0 ? RALLY_CRIT_BONUS : 0) + arrowEyeCritBonus(p);
-        const msDmg = wpnDmg(p) * MARKSMAN_DMG_TUNE * assaultDealtMult(p) * weaponDmgMult(p) * (msCrit ? critMultOf(p) : 1);
+        const msDmg = wpnDmg(p) * swd('multiShot', msRank) * assaultDealtMult(p) * weaponDmgMult(p) * (msCrit ? critMultOf(p) : 1);   // v545: +5%
         const count = multiShotCount(msRank);
         for(let k=0;k<count;k++){
           const kAng = ang + (k-(count-1)/2) * (MULTI_SHOT_SPREAD/(count-1));
@@ -790,7 +797,7 @@ function updateStep(dt){
     else {
       wantStunShot=false;
       if(ssRank2>0 && p.atkCd<=0 && !p.dodging && !(p.stunShotCd>0) && resourceAffordable(p,'stunShot')){
-        const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+        const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
         const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
         p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
         p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -810,14 +817,14 @@ function updateStep(dt){
     wantAimedShot=false;
     const asRank = effectiveRank(p,'aimedShot')||0;
     if(asRank>0 && isBow && p.aimedShotCd<=0){
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0));
       const ang = holdAimShotDir ? Math.atan2(holdAimShotDir.y, holdAimShotDir.x) : (target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x));
       holdAimShotDir = null;
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
       p.atkAnimT = 0.25; p.atkAnimMax = 0.25;
       const asFull = aimShotFull; aimShotFull = true;   // v267: held aim = 3x..4x, a quick tap = 1.5x
-      p.aimedShotCdMax = applyCdr(p, AIMED_SHOT_CD); p.aimedShotCd = p.aimedShotCdMax;
+      p.aimedShotCdMax = applyCdr(p, aimedShotCooldown(asRank)); p.aimedShotCd = p.aimedShotCdMax;
       const asCrit = Math.random()*100 < (p.critChance||0) + (p.rallyT>0 ? RALLY_CRIT_BONUS : 0) + arrowEyeCritBonus(p) + (asFull ? AIMED_SHOT_CRIT_BONUS : 0);
       let asDmg = wpnDmg(p) * (asFull ? swd('aimedShot', asRank) : SKILL_WD.aimedShot.tap/100) * assaultDealtMult(p) * weaponDmgMult(p);
       if(asCrit) asDmg *= critMultOf(p);
@@ -831,7 +838,7 @@ function updateStep(dt){
     wantHuntersMark=false;
     const hmRank = effectiveRank(p,'huntersMark')||0;
     if(hmRank>0 && p.huntersMarkCd<=0){
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0)+60);
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0)+60);
       if(target){
         for(const e2 of g.enemies){ if(e2!==target && e2.markT>0) e2.markT = 0; }
         target.markT = HMARK_DUR + (hmRank-1); target.markBonus = HMARK_BONUS + HMARK_BONUS_STEP*(hmRank-1);
@@ -1072,12 +1079,14 @@ function updateStep(dt){
           // the same generic full-immobilize field Blizzard uses) every
           // enemy in radius for a brief rank-scaled duration, then Chill
           // (e.chillT) afterward so they're slowed once the freeze lifts.
-          const freezeDur = skDur(p, frostTrapFreezeDuration(tt.rank));
+          const freezeDur = skDur(p, frostTrapFreezeDuration(tt.rank)), chillDur = skDur(p, frostTrapChillDuration(tt.rank));
           const frDmg = wpnDmg(p) * swd('frostTrap', tt.rank) * trapDmgMult(p);   // v237: the burst of cold also hurts
           for(const e of g.enemies){
             if(dist(tt,e) < tt.r+e.r){
-              e.frozenT = Math.max(e.frozenT||0, freezeDur);
-              e.chillT = Math.max(e.chillT||0, ICE_CHILL_DUR);
+              // v540: freeze (shorter on elites/brutes, none on bosses/heavy or a monster still immune from its last freeze), then a rank-scaled chill
+              let fz = 0;
+              if(!freezeImmune(e) && !(e.freezeImmT>0)){ fz = freezeDur*(isEliteOrBrute(e) ? FROST_TRAP_TOUGH : 1); e.frozenT = Math.max(e.frozenT||0, fz); e.freezeImmT = fz + FREEZE_IMMUNE; e.coldHits = 0; e.coldHitT = 0; }
+              e.chillT = Math.max(e.chillT||0, fz + chillDur*((e.isBoss || e.isLairBoss) ? 0.5 : 1));
               e.hp -= applyEnemyArmor(p, e, frDmg, 0, 'cold'); e.hitT = 0.15;
               g.particles.push({type:'iceImpact', x:e.x, y:e.y, t:0.42, max:0.42, seed:Math.random()});
               checkExecute(g, e);
@@ -1118,7 +1127,7 @@ function updateStep(dt){
     wantRainOfArrows=false;
     const roaRank = effectiveRank(p,'rainOfArrows')||0;
     if(roaRank>0 && p.rainOfArrowsCd<=0){
-      const target = nearestEnemy(g, p, BOW_RANGE+(p.weaponReachBonus||0)*2);
+      const target = nearestEnemyOnScreen(g, p, BOW_RANGE+(p.weaponReachBonus||0)*2);
       const tx = target ? target.x : p.x+p.facing.x*160, ty = target ? target.y : p.y+p.facing.y*160;
       p.rainOfArrowsCdMax = applyCdr(p, RAIN_OF_ARROWS_CD);
       p.rainOfArrowsCd = p.rainOfArrowsCdMax;
@@ -1541,7 +1550,7 @@ function updateStep(dt){
     const tRank = effectiveRank(p,'tornado')||0;
     if(tRank>0 && p.tornadoCd<=0){
       p.movementStopT = 0.2;
-      const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -1613,7 +1622,7 @@ function updateStep(dt){
     wantFireball=false;
     const fbRank = effectiveRank(p,'fireball')||0;
     if(fbRank>0 && p.atkCd<=0 && !(p.fbQueue && p.fbQueue.length)){
-      const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -1625,6 +1634,7 @@ function updateStep(dt){
       p.fbQueue = p.fbQueue || [];
       for(let k=0;k<n;k++) p.fbQueue.push({t:k*FIREBALL_VOLLEY_GAP, ang, off:(k%2===0?-1:1)*FIREBALL_SIDE_OFFSET, dmg:bdmg});
       p.atkCd = Math.max(p.atkCd, (n-1)*FIREBALL_VOLLEY_GAP + FIREBALL_VOLLEY_PAUSE);   // v310: a short beat after each volley (3 balls, pause, 3 balls)
+      { const cut = FIREBALL_CD_PER_RANK*(Math.min(10, fbRank)-1); p.atkCd = Math.max((n-1)*FIREBALL_VOLLEY_GAP + 0.12, p.atkCd - cut); }   // v545: casts come 0.08s sooner per rank
     }
   }
   if(p.fbQueue && p.fbQueue.length){
@@ -1644,7 +1654,7 @@ function updateStep(dt){
     const ibRank = effectiveRank(p,'iceBolt')||0;
     const orbMode = uq(p,'uq_elementalist');   // v499 Crystalline Prism: Ice Bolt becomes Frozen Orb
     if(ibRank>0 && p.atkCd<=0 && !(orbMode && p.frozenOrbCd>0)){
-      const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)};
       p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -1686,7 +1696,7 @@ function updateStep(dt){
     wantDeathBolt=false;
     const dbRank = effectiveRank(p,'deathBolt')||0;
     if(dbRank>0 && p.atkCd<=0){
-      const target = nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
+      const target = nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y, p.facing.x);
       p.atkCd = p.atkCdMax;
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)}; p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
@@ -1719,7 +1729,7 @@ function updateStep(dt){
   if(wantSoulSap){
     wantSoulSap=false;
     const ssRank = effectiveRank(p,'soulSap')||0;   // v460: Staff of Souls
-    const ssTarget = ssRank>0 ? nearestEnemy(g, p, STAFF_RANGE+(p.weaponReachBonus||0)) : null;
+    const ssTarget = ssRank>0 ? nearestEnemyOnScreen(g, p, STAFF_RANGE+(p.weaponReachBonus||0)) : null;
     const ssTargets = []; if(ssTarget){ ssTargets.push(ssTarget); for(let k=1;k<soulSapTargets(ssRank);k++){ const t2 = nearestEnemy(g, ssTarget, SOUL_SAP_SPLASH_R, ssTargets); if(!t2 || !enemyOnScreen(g,t2)) break; ssTargets.push(t2); } }   // v497: rank 1 hits one enemy, rank 3 two, rank 5 three -- all on screen
     // (v106) Soul Sap is a targeted, instant drain: it needs an enemy in range
     // (no target = no cast, cooldown untouched). No outbound projectile -- a
@@ -1804,7 +1814,7 @@ function updateStep(dt){
     setAimStickVisible(p.pyroTorrentT>0);
     if(p.dodging){ p.pyroTorrentT = 0; }
     else {
-      p.movementStopT = Math.max(p.movementStopT||0, 0.12); // channelled in place
+      // v545: you can walk while channelling, 40% slower (PYRO_MOVE_MULT in the movement block)
       const ptRank = effectiveRank(p,'pyroTorrent')||0;
       const frac = clamp((p.pyroTorrentElapsed||0)/PYRO_RAMP_TIME, 0, 1);   // v489: ramps over the first 5s of channelling
       let ang = p.pyroTorrentAng!=null ? p.pyroTorrentAng : Math.atan2(p.facing.y,p.facing.x);
@@ -2301,7 +2311,7 @@ function updateStep(dt){
     // screen. A small margin keeps them from freezing dead at the exact edge.
     const onScreen = isOnScreen(g, e, 90);
     // v520: a telegraph / roll / leap that has begun always finishes, even if the player walks away (no frozen circles)
-    const midAct = e.tState==='tele' || e.tState==='swing' || e.tState==='air' || e.tState==='lash' || e.tState==='pull' || e.lungeState==='tele' || e.lungeState==='lunge' || (e.dwc && e.cState && e.cState!=='chase') || (e.mastodon && (e.mSt==='avaPhase' || (e.mRocks && e.mRocks.length>0)));
+    const midAct = e.tState==='tele' || e.tState==='swing' || e.tState==='air' || e.tState==='lash' || e.tState==='pull' || e.lungeState==='tele' || e.lungeState==='lunge' || ((e.dwc || e.fhCmd) && e.cState && e.cState!=='chase') || (e.mastodon && (e.mSt==='avaPhase' || (e.mRocks && e.mRocks.length>0)));
     // Forest (and Mountain Pass) packs hold their ground until the player
     // wanders close, rather than beelining in on sight the way dungeon
     // enemies do -- and give up the chase (going back to idle) if it
@@ -2596,6 +2606,9 @@ function updateStep(dt){
       updateFhTurret(g, e, dt, target, d);
     } else if(e.type==='windigo'){
       updateWindigo(g, e, dt, target, d, isFollowerTarget, chillMult, room);
+    } else if(e.type==='thornback'){ updateThornback(g, e, dt, target, d, isFollowerTarget, chillMult, room);   // v550
+    } else if(e.type==='hookbeak'){ updateHookbeak(g, e, dt, target, d, isFollowerTarget, chillMult, room);
+    } else if(e.type==='plaguedoc'){ updatePlagueDoc(g, e, dt, target, d, isFollowerTarget, chillMult, room);
     } else if(e.type==='lavabeetle'){
       updateLavaBeetle(g, e, dt, target, d, isFollowerTarget, chillMult, room);
     } else if(e.type==='vulture'){
@@ -3040,6 +3053,7 @@ function updateStep(dt){
         if(best){ best.markT = Math.max(dead.markT, 4); best.markBonus = dead.markBonus; g.particles.push({type:'ring', x:best.x, y:best.y, t:0.4, max:0.4, r:best.r+22, color:'#ff4a4a'}); }
       }
       if(g.enemies[i].markT>0 && ((g.player.skills && effectiveRank(g.player,'markedPrey'))||0)>0){ g.player.huntersMarkCd = 0; g.particles.push({type:'ring', x:g.enemies[i].x, y:g.enemies[i].y, t:0.35, max:0.35, r:40, color:'#ff5a5a'}); }
+      if(g.enemies[i].cAdd && !g.enemies[i]._cleared && g.enemies[i].type==='fhdwarf' && !g.enemies[i]._globeDead){ g.enemies[i]._globeDead = true; if(Math.random()<0.5) dropGlobes(g, g.enemies[i], 1); }   // v545: the Commander's dwarves drop a health globe half the time
       if(g.enemies[i].noReward){ g.enemies.splice(i,1); continue; }
       try{ moraleBreak(g, g.enemies[i]); }catch(e){}
       // v62: flag a boss/lair-boss death separately from a full floor
@@ -3064,10 +3078,11 @@ function updateStep(dt){
       if(g.enemies[i].campEnemy) bridgeCampKilled(g.enemies[i]);
       if(g.enemies[i].roadEv) try{ roadEvKilled(g, g.enemies[i]); }catch(err){}
       if(g.enemies[i].fhCmd && !g.enemies[i].brBoss) fhCommanderSlain(g, g.enemies[i]);
-      if(g.enemies[i].brBoss && !g.enemies[i].dboss && !g.enemies[i].balrog){ for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; } demonBossSlain(g, g.enemies[i]); }
+      if(g.enemies[i].brBoss && !g.enemies[i].dboss && !g.enemies[i].balrog){ for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; x._cleared = true; } demonBossSlain(g, g.enemies[i]); }
       if(g.enemies[i].dwc) dwConstructSlain(g, g.enemies[i]);
       if(g.enemies[i].colossus) colossusSlain(g.enemies[i]);
       if(g.enemies[i].type==='magmagolem') golemDeath(g, g.enemies[i]);
+      if(g.enemies[i].type==='plaguedoc') plagueDocDeath(g, g.enemies[i]);   // v550: three bats burst out
       if(g.enemies[i].type==='poisonwalker') walkerDeath(g, g.enemies[i]);
       if(g.enemies[i].sapMarked && !g.enemies[i].soulTaken){ g.enemies[i].soulTaken = true; p.souls = Math.min(SOUL_CAP, (p.souls||0) + SOUL_SAP_SOULS_PER_KILL); checkDemonBindThreshold(g); }
       if(g.enemies[i].deathNova) specialDeathNova(g, g.enemies[i]);
@@ -3075,7 +3090,7 @@ function updateStep(dt){
       if(g.enemies[i].ftMapCarrier && !p.ftMapFound){ p.ftMapFound = true; showMsg('Forgotten Tower map found \u2014 every floor is now charted', 3.4, '#e8c44a'); saveGame(); }   // v490
       if(g.enemies[i].hwMapCarrier && !p.hwMapFound){ p.hwMapFound = true; showMsg('Highward map found — every floor is now charted', 3.4, '#e8c44a'); saveGame(); }
       if(g.enemies[i].mapBrute && room.subzone==='keep'){ p.keepMaps = p.keepMaps || {}; if(!p.keepMaps[room.kpArea]){ p.keepMaps[room.kpArea] = true; showMsg('Floor map found \u2014 this floor is now charted', 3.4, '#e8c44a'); saveGame(); } }
-      if((room.floorRects || room.maze) && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; showMsg('Dungeon map found', 2.8, '#e8c44a'); }
+      if((room.floorRects || room.maze) && room.subzone!=='highward' && !room.mapFound && g.enemies[i].mapCarrier){ room.mapFound = true; if(room.ft){} else if(room.maze && room.lhSeed!=null){ g.lhMapTrip = g._tripBase; showMsg('Tower map found \u2014 every floor is now charted', 3.4, '#e8c44a'); } else showMsg('Dungeon map found', 2.8, '#e8c44a'); }   // v552: the Lighthouse's one bearer charts the whole climb
       { const dp = (g.enemies[i].swimmer && room.nearestDry) ? room.nearestDry(g.enemies[i].x, g.enemies[i].y) : g.enemies[i];
         dropLoot(g, dp.x, dp.y, g.enemies[i].type, g.enemies[i].isLairBoss, g.enemies[i]);
         partsMaybeDrop(g, g.enemies[i]);
@@ -3363,15 +3378,15 @@ function updateStep(dt){
     if(l.dropGrace>0){ l.dropGrace-=dt; continue; }
     if(lootIsManual(l)) continue;
     if(dist(l,p) < l.r+p.r+6){
-      if(l.type==='potion'){ p.hp = Math.min(p.maxHp, p.hp+p.maxHp*0.3); showMsg('+Health', 0.6); g.loot.splice(i,1); }
+      if(l.type==='potion'){ p.hp = Math.min(p.maxHp, p.hp+p.maxHp*0.3); showMsg('+Health', 0.6); g.loot.splice(i,1); try{ sfxPlay('potion', 1); }catch(err){} }   // v543: a gulp for health globes too
       else if(l.type==='gold'){ p.gold += l.amt; goldPop(g, l.x, l.y, l.amt); g.loot.splice(i,1); }
       else if(l.type==='item'){
-        if(addToBag(p, l.item)){
-          const eq = tryAutoEquip(p, l.item);
+        { const took = lootTake(p, l.item); if(took){   // v548: a full bag no longer stops an item you can wear right away
+          const eq = took==='equipped';
           showMsg(eq ? 'Equipped: '+l.item.name : l.item.name, 1.5);
           bagPulse(); g.loot.splice(i,1);
         }
-        else { if(!(p._fullMsgT>0)){ showMsg(fullMsgFor(l.item), 1.0); p._fullMsgT = 1.2; } } // leave it on the ground until there's room
+        else { if(!(p._fullMsgT>0)){ showMsg(fullMsgFor(l.item), 1.0); p._fullMsgT = 1.2; } } }   // leave it on the ground until there's room
       }
       else g.loot.splice(i,1);
     }
@@ -3552,11 +3567,12 @@ function updateStep(dt){
     updatePortalChoice(false);
     const t = g.tower;
     if(g.fhtStore) g.fhtStore[t.floor] = g.enemies;
+    fhtTick(g, p, dt);   // v554: stashes, the Commander's sealing door, turret respawns
     let fkind = null;
     if(dist(p, t.entrance) < t.entrance.r + p.r + 22) fkind = t.floor===1 ? 'fhtToKeep' : 'fhtDown';
     else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) fkind = 'fhtUp';
     updateInteractPrompt(fkind);
-    if(t.floor===4 && !p.fhtRuneTaken && !g.chest && !g.enemies.some(x=>x.isFhtTemplar && x.hp>0)){
+    if(t.floor===4 && !g.chest && !t._chmpChest && !g.enemies.some(x=>x.isFhtTemplar && x.hp>0)){ t._chmpChest = true;
       g.chest = {x:t.chestSpot.x, y:t.chestSpot.y, r:24, opened:false, templar:true};
       showMsg('The Frosthold Champions have fallen — a chest appears', 3.0);
     }
@@ -3580,6 +3596,9 @@ function updateStep(dt){
     else if(t.floor>1 && dist(p, t.entrance) < t.entrance.r + p.r + 22) lhKind = 'lighthouseStairsDown';
     else if(t.stairs && dist(p, t.stairs) < t.stairs.r + p.r + 22) lhKind = 'lighthouseStairsUp';
     if(t.maze && t.stairs && !t.stairsSeen && dist(p, t.stairs) < 520) t.stairsSeen = true;
+    if(t.lhCache) lhCacheTick(g, p);   // v552
+    if(t.openRoof){ const c = t.roofC, lim = t.roofR - 6;   // v552: nobody goes over the railing
+      for(const e of [p, ...(g.followers||[]), ...g.enemies]){ const d = Math.hypot(e.x-c.x, e.y-c.y); if(d > lim + 10){ e.x = c.x + (e.x-c.x)/d*lim; e.y = c.y + (e.y-c.y)/d*lim; } } }
     else if(t.waypoint && dist(p, t.waypoint) < t.waypoint.r + p.r + 24){ if(t.ft){ lhKind = 'waypointForgottenTower'; } else { lhKind = 'waypointLighthouse1'; } }
     // v94 (quest feature): the rooftop's beacon starts off (p.lighthouseBeaconOn
     // false) -- while it's off, walking up to it shows the same small
@@ -3609,6 +3628,7 @@ function updateStep(dt){
       showMsg('A portal to the Withered Crossroads opens.', 2.6, '#9fd8ff');
     }
     if(t.rooftop && !t.ft && g.enemies.length===0){
+      if(t.beacon && !p.lighthouseBeaconOn && !t._beaconMsg){ t._beaconMsg = true; showBigMsg('LIGHT THE BEACON', 'The rooftop is yours', 3.4, true); }   // v546
       if(!p.lighthouseChestLooted && !g.chest){ const at = t.bkDeath || {x:t.beacon.x + 70, y:t.beacon.y + 60}; g.chest = fixLootSpot(g, {x:clamp(at.x, 60, t.w-60), y:clamp(at.y, 60, t.h-60), r:20, opened:false}); }
       if(!p.lighthouseFloor5Cleared){
         p.lighthouseFloor5Cleared = true;
@@ -3704,6 +3724,7 @@ function updateStep(dt){
     const nearCemeteryGate = dist(p, g.crypt.cemeteryGate) < g.crypt.cemeteryGate.r + p.r + 22;
     const nearCryptWaypoint = dist(p, g.crypt.waypoint) < g.crypt.waypoint.r + p.r + 24;
     // (v120) once the chest is looted a portal appears beside it, leading back to the cemetery
+    if(!g.crypt.bossDone && p.defilerSlain && !p.inscriptionTaken) g.crypt.bossDone = true;   // v548: slain on an earlier visit but the tomb never read -- he stays down and the tomb can be read
     if(g.crypt.bossDone && p.defilerSlain && !p.inscriptionTaken) bigMsgHold('Inspect the opened tomb', ''); else bigMsgRelease();   // v536
     if(g.crypt.bossDone && p.inscriptionTaken && !g.crypt.returnPortal){   // v326: the portal only opens once the sarcophagus has been searched for the Templar Inscription
       g.crypt.returnPortal = {x:g.crypt.chestSpot.x+70, y:g.crypt.chestSpot.y, r:26};
@@ -3722,9 +3743,10 @@ function updateStep(dt){
     { const df = g.enemies.find(x=>x.defiler && x.hp>0);
       if(df){
         const f = df.hp/df.maxHp, ph = f<0.33 ? 2 : f<0.66 ? 1 : 0;
+        defilerPhases(g, df, f, dt);   // v548
         if(ph>df.dfPhase){
           df.dfPhase = ph;
-          for(let i=0;i<4;i++){ const a = i*1.5708; const sk = spawnEnemy(g, 'skeleton', {x:df.x+Math.cos(a)*100, y:df.y+Math.sin(a)*100}); if(sk) sk.noReward = true; }
+          for(let i=0;i<2;i++){ const a = i*3.1416 + 0.8;   /* v548: two risen dead per phase (was four) */ const sk = spawnEnemy(g, 'skeleton', {x:df.x+Math.cos(a)*100, y:df.y+Math.sin(a)*100}); if(sk) sk.noReward = true; }
           g.particles.push({type:'ring', x:df.x, y:df.y, t:0.7, max:0.7, r:210, color:'#9a6aff'});
           showMsg('The dead claw up from the floor...', 1.8, '#b9a8ff');
         }

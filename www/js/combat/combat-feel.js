@@ -145,7 +145,7 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
   // Block roll: base (shield equipped) + Riposte + Defensive Stance, all
   // folded into blockChance()'s own overall cap (see its definition).
   if((p.blocking || p.rallyT>0) && Math.random()<blockChance(p)){
-    showMsg('Blocked!', 0.5);
+    showMsg('Blocked!', 0.5); try{ sfxPlay('block', 1); }catch(e){}
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.25, max:0.25, color:'#cdd8e6'});
     // v189 Riposte: a block feeds Rage and counter-strikes the attacker
     const fRank = (p.skills && effectiveRank(p,'riposte')) || 0;
@@ -161,10 +161,10 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
     return;
   }
   { const sb = soulShieldBlock(p);   // v489 Soul Shield: the souls you hold turn blows aside
-    if(sb>0 && Math.random()<sb){ showMsg('Blocked!', 0.5); g.particles.push({type:'burst', x:p.x, y:p.y-18, t:0.25, max:0.25, color:'#f4f0ff'}); return; } }
+    if(sb>0 && Math.random()<sb){ showMsg('Blocked!', 0.5); try{ sfxPlay('block', 1); }catch(e){} g.particles.push({type:'burst', x:p.x, y:p.y-18, t:0.25, max:0.25, color:'#f4f0ff'}); return; } }
   { const pc = parryChance(p);
     if(pc>0 && Math.random()<pc){
-      showMsg('Parried!', 0.5);
+      showMsg('Parried!', 0.5); try{ sfxPlay('parry', 1); }catch(e){}
       p.riposteT = RIPOSTE_DUR;
       g.particles.push({type:'burst', x:p.x, y:p.y, t:0.25, max:0.25, color:'#ffe27a'});
       // v419: Riposte also works with Parry -- a parry counter-strikes and feeds Rage just like a shield block
@@ -181,13 +181,13 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
       return;
     } }
   if(Math.random()<evasionChance(p)){
-    showMsg('Dodged!', 0.5);
+    showMsg('Evaded!', 0.5);
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.25, max:0.25, color:'#9ae6b4'});
     return;
   }
   // v346 Defense: ordinary (non-telegraphed, non-elemental) enemy swings and arrows must first hit; Defense lowers that chance
   if(canMiss && srcEnemy && (!srcEnemy.dmgType || srcEnemy.dmgType==='normal') && (Math.random() >= playerHitChance(p, monsterLevel(g)) || (srcEnemy.blindT>0 && Math.random() < JUDG_BLIND_MISS))){
-    showMsg('Miss!', 0.5);
+    showMsg('Miss!', 0.5); try{ sfxPlay('miss', 0.8); }catch(e){}
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.2, max:0.2, color:'#c9d4e0'});
     return;
   }
@@ -245,6 +245,7 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
     const rsk = Math.min(p.recallShield, reduced); p.recallShield -= rsk; reduced -= rsk;
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.2, max:0.2, color:'#9fe07a'});
   }
+  reduced = manaShieldSoak(g, p, reduced);   // v564 Mana Shield (passive since v567): after Ice Armor, part of the hit is paid in mana
   if(uq(p,'uq_defender') && !(p.uqCd>0) && p.hp - reduced <= 0){   // v383 Undying Bastion: Last Stand
     p.hp = Math.max(1, Math.ceil(p.maxHp*0.4)); p.invuln = Math.max(p.invuln||0, 3); p.uqCd = 90; p.hitFlash = 0.25;
     showMsg('Last Stand!', 1.6, '#f2a31b'); sfxPlay('banner', 0.8);

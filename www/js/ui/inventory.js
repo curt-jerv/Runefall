@@ -12,7 +12,7 @@ function setupFit(ovId){
   wrap.appendChild(body); card.appendChild(wrap);
   fitOverlays.push({ov, card, hdr, wrap, body});
 }
-const FIT_FIXED_W = {shopOverlay:960, stashOverlay:700};
+const FIT_FIXED_W = {shopOverlay:960, stashOverlay:1000};   // v558: the stash also shows your worn gear
 function fitScreens(){
   for(const f of fitOverlays){
     if(getComputedStyle(f.ov).display==='none') continue;
@@ -94,7 +94,7 @@ function statInfoText(key, p){
     AREA: '+'+pc(p.aoeRadiusPct||0)+'% area size for area skills (gear cap '+AOE_AFFIX_CAP_PCT+'%).',
     COOLDOWN: pc((p.cdrPct||0)*100)+'% shorter skill cooldowns (cap 30%).',
     'PROJ SPD': 'Projectiles fly '+pc(p.projectileSpeedPct||0)+'% faster.',
-    BLEED: pc(p.bleedChancePct||0)+'% chance for your hits to cause Bleed.',
+    BLEED: pc(p.bleedChancePct||0)+'% chance for each hit to cause Bleed (gear, cap 60%). A Bleed makes the enemy lose '+pc(BLEED_DPS_PCT*partBleedMult()*100)+'% of that hit\u2019s damage every second for '+BLEED_DUR+'s. Bleeds from different sources (this chance, Splinter Shot, Crippling Shot, Reave, wolves) stack, up to '+BLEED_MAX_STACKS+' at once; a new Bleed from the same source refreshes it and keeps the stronger one.',
     'AILMENT DUR': 'Your ailments last '+pc((p.statusDurPct||0)*100)+'% longer (gear cap 75%).',
     'LIGHT RADIUS': 'Your circle of light is '+pc((p.lightRadiusPct||0)*100)+'% wider (gear cap 60%).',
     'SKILL DUR': 'Your skill effects last '+pc((p.skillDurPct||0)*100)+'% longer: ailments, ground effects (Blizzard, Meteor fire, Consecrate, Plague, trap clouds), Hurricane, Tornado, Flame Vortex, banners and the Mirage decoy (gear cap 50%).',
@@ -107,8 +107,10 @@ function statInfoText(key, p){
     HIT: 'Chance an ordinary enemy attack in this area hits you: '+hitNow+'% (floor 15%). Raise Defense to lower it.',
     BLK: 'Block chance: '+Math.round(blockChance(p)*100)+'% (needs a shield, cap 50%). A block stops the whole hit.',
     PARRY: 'Parry chance: '+Math.round(parryChance(p)*100)+'% (two-hander or dual swords with Weapon Specialization). A parry stops the whole hit.',
-    EVA: 'Evasion: '+Math.round(evasionChance(p)*100)+'% to dodge a hit completely (cap '+Math.round(EVASION_CAP*100)+'%).',
-    DEX: 'Dexterity '+Math.round(p.dexterity||0)+': each point adds '+DEF_PER_DEX+' Defense.',
+    EVA: 'Evasion chance: '+Math.round(evasionChance(p)*100)+'% to avoid a hit completely (cap '+Math.round(EVASION_CAP*100)+'%). It comes from Dexterity and skills like Evasion and Storm Ward. Not the same as the Dodge button, which is the roll you press yourself.',
+    STR: 'Strength '+Math.round(p.strength||0)+': +'+LIFE_PER_STR+' life per point and +1% physical damage per '+STR_PER_DMG_PCT+' (now +'+Math.round(((p.strength||0)/STR_PER_DMG_PCT)*10)/10+'%). Plate, swords and shields need it. Grows by '+(CLASS_MAIN_ATTR[p.cls]==='strength'?ATTR_MAIN_PER_LV:ATTR_OTHER_PER_LV)+' a level.',
+    DEX: 'Dexterity '+Math.round(p.dexterity||0)+': +'+DEF_PER_DEX+' Defense per point, +1% bow damage per '+DEX_PER_BOW_PCT+', and evasion chance (now '+Math.round((p.dexDodge||0)*10)/10+'%; full up to '+DEX_EVA_SOFT+'%, then it tapers off, max '+DEX_DODGE_CAP+'%)'+(p.cls==='ranger' ? ', and Stamina' : '')+'. Leather and bows need it. Grows by '+(CLASS_MAIN_ATTR[p.cls]==='dexterity'?ATTR_MAIN_PER_LV:ATTR_OTHER_PER_LV)+' a level.',
+    INT: 'Intelligence '+Math.round(p.intelligence||0)+': +1% spell damage (fire, cold, lightning, poison) per '+INT_PER_DMG_PCT+' (now +'+Math.round(((p.intelligence||0)/INT_PER_DMG_PCT)*10)/10+'%)'+(p.cls==='mystic' ? ' and '+MANA_PER_INT+' mana per point' : '')+'. Robes and staves need it. Grows by '+(CLASS_MAIN_ATTR[p.cls]==='intelligence'?ATTR_MAIN_PER_LV:ATTR_OTHER_PER_LV)+' a level.',
     'DMG RED': 'Take '+pc((p.itemDmgReductionPct||0)*100)+'% less damage from everything (gear cap 25%).',
     REGEN: 'Regenerate '+pc((p.lifeRegenPct||0)*100)+'% of max life per second'+(p.cls==='warrior' ? ' (Warriors start with '+WARRIOR_BASE_REGEN+'%).' : '.'),
     RESREGEN: p.cls==='mystic' ? 'Mana refills by '+pc(MANA_REGEN_PCT*100)+'% of the bar every second on its own.' : 'Stamina refills by '+pc(STAMINA_REGEN_PCT*100)+'% of the bar every second on its own (more with Predator\'s Instinct).',
@@ -167,6 +169,9 @@ function statSummaryHtml(p){
   return (
     head('Character')+
     cell('LVL','LEVEL',(p.level||1))+
+    cell('STR','STRENGTH',Math.round(p.strength||0))+
+    cell('DEX','DEXTERITY',Math.round(p.dexterity||0))+
+    cell('INT','INTELLIGENCE',Math.round(p.intelligence||0))+
     cell('HP','LIFE',Math.round(p.maxHp))+
     cell('RES',rn,Math.round((p.mpReserved>0 ? p.maxMpFull : p.maxMp)||0))+
     pct('SPD','MOVE SPD',p.gearSpeedPct||0,true)+
@@ -190,7 +195,7 @@ function statSummaryHtml(p){
     pct('AREA','AREA',p.aoeRadiusPct||0,true)+
     pct('COOLDOWN','COOLDOWN',(p.cdrPct||0)*100)+
     pct('PROJ SPD','PROJ SPD',p.projectileSpeedPct||0,true)+
-    pct('BLEED','BLEED',p.bleedChancePct||0)+
+    pct('BLEED','BLEED CHANCE',p.bleedChancePct||0)+
     pct('AILMENT DUR','AILMENT DUR',(p.statusDurPct||0)*100,true)+
     pct('SKILL DUR','SKILL DUR',(p.skillDurPct||0)*100,true)+
     pct('LIGHT RADIUS','LIGHT RADIUS',(p.lightRadiusPct||0)*100,true)+
@@ -204,7 +209,6 @@ function statSummaryHtml(p){
     cell('HIT','ENEMY HIT',hitNow+'%')+
     (showParry ? cell('PARRY','PARRY',par+'%') : cell('BLK','BLOCK',blk>0?(blk+'%'):'0%', !(blk>0)))+
     pct('EVA','EVASION',evasionChance(p)*100)+
-    num('DEX','DEX',p.dexterity||0)+
     pct('DMG RED','DMG RED',(p.itemDmgReductionPct||0)*100)+
     cell('REGEN','LIFE REGEN',r1((p.lifeRegenPct||0)*100)+'%/s', !((p.lifeRegenPct||0)>0))+
     (p.cls==='mystic' ? cell('RESREGEN','MANA REGEN',r1(MANA_REGEN_PCT*100)+'%/s') : p.cls==='ranger' ? cell('RESREGEN','STAMINA REGEN',r1(STAMINA_REGEN_PCT*100*(1+0.03*((p.skills&&effectiveRank(p,'steadyBreathing'))||0)))+'%/s') : '')+
@@ -413,6 +417,7 @@ function uniqSvgIds(str){
 }
 function bagArtSvg(it){
   if(it && it.questId){ const qa = questArtSvg(it); if(qa) return qa; }
+  if(it && !it.questId && typeof tierArtSvg==='function'){ const ta = tierArtSvg(it); if(ta) return ta; }   // v557: tiered gear art (ui/item-art.js)
   const [w,h] = itemShape(it), W = w*20, H = h*20, acc = it.color || '#c9b6ff', st = it.slotType, bi = baseBracketIdx(it.ilvl||1);
   const steel='#cfd8e2', steelD='#6f7b8a', gold='#d8b04a', wood='#7a5230', dark='#1a1620';
   const mat = ART_MAT[it.material] || '#aab4c0';
@@ -531,7 +536,7 @@ function renderPaperdollInto(containerEl, p, idPrefix, interactive){
     const blocked = !it && slot==='offhand' && p.equipment.mainhand && p.equipment.mainhand.twoHanded;
     const label = (slot==='offhand' && it && it.slotType==='weapon1h') ? 'Off-Hand' : SLOT_LABELS[slot];
     const el = document.createElement('div');
-    el.className = 'pdSlot'+(it?' filled':'');
+    el.className = 'pdSlot'+(it?' filled':'')+(it && p.inactiveSlots && p.inactiveSlots[slot] ? ' pdInactive' : '');   // v563: worn without its Strength / Dexterity / Intelligence
     el.id = idPrefix+slot;
     el.dataset.slot = slot;
     const pos = PD_SLOT_POS[slot];

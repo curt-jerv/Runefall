@@ -59,7 +59,7 @@ window.onerror = function(msg, src, line, col, err){
 
 <!-- v489: bottom HUD dock -- life globe, menu buttons + XP, resource globe (Diablo style); the old top bars stay hidden but are still updated -->
 <div id="hudDock">
-  <div class="globe" id="hpGlobe"><div class="gfill" id="hpGlobeFill"></div><div class="gice" id="hpGlobeIce"></div><div class="gshine"></div><span class="gnum" id="hpGlobeNum"></span></div>
+  <div class="globe" id="hpGlobe"><div class="gfill" id="hpGlobeFill"></div><div class="gice" id="hpGlobeIce"></div><div class="gshine"></div><span class="gnum" id="hpGlobeNum"></span><span class="gia" id="hpGlobeIa"></span></div>
   <div id="dockMid">
     <div id="topBtns">
     <div id="goldPlaque" style="display:none !important;"><span id="goldNum">0</span>g</div>
@@ -68,12 +68,8 @@ window.onerror = function(msg, src, line, col, err){
     <div id="skillsBtn">TREE<div id="skillsBadge">!</div></div>
     <div id="questBtn">QUEST<div id="questBadge">!</div></div>
     <div id="menuBtn">MENU</div>
-    <div id="mapBtn" title="Region Map">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M3 6.5l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/>
-    <path d="M9 4.5v14M15 6.5v14"/>
-  </svg>
-</div>
+    <div id="mapBtn" title="Region Map">MAP</div>
+    <div id="tpBtn" title="Town Portal"><span class="tpOrb"></span></div>
   </div>
     <div id="dockXp"><div id="dockXpFill"></div><span id="dockXpTxt"></span></div>
   </div>
@@ -548,14 +544,14 @@ window.onerror = function(msg, src, line, col, err){
       <button id="teleportIcySummit" class="skillChoice" style="justify-content:center;">
         <div class="schName">Icy Summit</div>
       </button>
+      <button id="teleportDeep" class="skillChoice" style="justify-content:center;">
+        <div class="schName">Ember Caverns</div>
+      </button>
       <button id="teleportFrosthold" class="skillChoice" style="justify-content:center;">
         <div class="schName">Frosthold Keep</div>
       </button>
       <button id="teleportMine" class="skillChoice" style="justify-content:center;">
         <div class="schName">Frosthold Boiler Halls</div>
-      </button>
-      <button id="teleportDeep" class="skillChoice" style="justify-content:center;">
-        <div class="schName">Ember Caverns</div>
       </button>
       <button id="teleportRedridge" class="skillChoice" style="justify-content:center;">
         <div class="schName">Redridge Canyon</div>
@@ -600,8 +596,19 @@ window.onerror = function(msg, src, line, col, err){
     <div id="stashTabs" class="treeTabs" style="display:none;"></div>
     <div id="stashGrid" class="bagGrid"></div>
     </div>
+    <div class="stashColM">
+    <div class="invDivider">Equipped</div>
+    <div class="shopPdFrame">
+      <div id="stashPaperdoll" class="paperdoll">
+        <div class="pdHead"></div>
+        <div class="pdTorso"></div>
+        <div class="pdLegL"></div>
+        <div class="pdLegR"></div>
+      </div>
+    </div>
+    </div>
     <div class="stashColR">
-    <div class="invDivider">Your Bag &mdash; drag items between the two</div>
+    <div class="invDivider">Your Bag &mdash; drag items between them</div>
     <div id="stashBagGrid" class="bagGrid"></div>
     </div>
     </div>
@@ -719,9 +726,9 @@ window.onerror = function(msg, src, line, col, err){
     </div>
     <div class="toggleRow segRow">
       <div class="toggleRowBody">
-        <div class="schName">Brightness <b id="brightValueLabel">100%</b></div>
+        <div class="schName">Brightness <b id="brightValueLabel">70%</b></div>
         <div class="schDesc">Makes the whole picture lighter or darker.</div>
-        <input type="range" id="brightSlider" class="settingsSlider" min="70" max="140" step="5" value="100">
+        <input type="range" id="brightSlider" class="settingsSlider" min="50" max="120" step="5" value="70">
       </div>
     </div>
     <div id="toggleGrain" class="toggleRow">

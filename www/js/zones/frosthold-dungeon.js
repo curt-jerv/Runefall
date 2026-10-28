@@ -68,7 +68,14 @@ function makeFhdFloor(floor){
       for(const r of dressed){ add(r.x+100, r.y-150, 100, 150); for(const [px,py] of corners(r)) if(awayFromDoors(px+50,py+50)) prop(px,py,100,100,FHD_ICE,42); }
     } else if(floor===2){
       for(const r of dressed){ for(const [px,py] of corners(r)) if(Math.random()<0.75 && awayFromDoors(px+60,py+60)) prop(px,py,150,150,FHD_FURN,46);
-        for(let k=0;k<2;k++) haz.push({kind:'vent', x:r.x+r.w*rand(0.3,0.7), y:r.y+r.h*rand(0.3,0.7), r:62, t:Math.random()*5}); }
+        for(let k=0;k<2;k++) haz.push({kind:'vent', x:r.x+r.w*rand(0.3,0.7), y:r.y+r.h*rand(0.3,0.7), r:62, t:Math.random()*5});
+        // v548: fire pillars along the way -- most rooms get one that blasts a Pyro Torrent, about half get one that casts a Flame Vortex
+        const pil = (kind)=>{ for(let tr=0; tr<40; tr++){ const px = snap(r.x+r.w*rand(0.15,0.8)), py = snap(r.y+r.h*rand(0.15,0.8));
+            if(!awayFromDoors(px+25,py+25) || haz.some(h=>Math.hypot(h.x-(px+25), h.y-(py+25)) < 110) || props.some(o=>px+50>o.x-40 && px<o.x+o.w+40 && py+50>o.y-40 && py<o.y+o.h+40)) continue;
+            prop(px, py, 50, 50, FHD_FURN, 74); haz.push({kind, x:px+25, y:py+25, t:Math.random()*7, ang:0}); return; } };
+        if(Math.random() < 0.8) pil('pyro');
+        if(Math.random() < 0.5) pil('fvortex');
+      }
     } else if(floor===3){
       for(const r of dressed){
         const [px,py] = corners(r)[Math.floor(Math.random()*4)];
@@ -98,23 +105,31 @@ function makeFhdFloor(floor){
   return { w:W, h:H, obstacles, floorRects:rects, rooms, entranceRoom, exitRoom, floor, entrance, waypoint:fhdWaypoint, stairsDown, chestSpot:null, mazeN:0,
     fhd:true, pal:FHD_PAL[floor], wallPal:FHD_WALL[floor], haz, decor, spawnRects, bossArena };
 }
-// Floor hazards: steam vents (burst), storm coils (call a lightning circle on you), acid pools (damage over time)
+// Floor hazards: steam vents (burst), storm coils (call a lightning circle on you), acid pools (damage over time),
+// v548: fire pillars that blast a Pyro Torrent beam or send Flame Vortexes after you (Boiler Halls)
+const FHD_PYRO_CYCLE = 6.5, FHD_PYRO_LEN = 330, FHD_VORTEX_CD = 7, FHD_VORTEX_R = 58;
+function segDist(px, py, ax, ay, bx, by){ const vx = bx-ax, vy = by-ay, l2 = vx*vx+vy*vy || 1, t = clamp(((px-ax)*vx+(py-ay)*vy)/l2, 0, 1); return Math.hypot(ax+vx*t-px, ay+vy*t-py); }
 function updateFhdHazards(g, dt){
   const R = g.ruins, p = g.player; if(!R || !R.haz) return;
   const dep = g.depth;
+  if(R.vortices) for(let i=R.vortices.length-1;i>=0;i--){
+    const v = R.vortices[i]; v.life -= dt; if(v.life<=0){ R.vortices.splice(i,1); continue; }
+    const a = Math.atan2(p.y-v.y, p.x-v.x); v.x += Math.cos(a)*85*dt; v.y += Math.sin(a)*85*dt;
+    v.tick -= dt; if(v.tick<=0 && dist(p,v) < FHD_VORTEX_R + p.r*0.5){ v.tick = 0.45; playerDamage(g, (18+dep*2.6)*0.35*TELE_DMG_MULT*hazardScale(dep), {dmgType:'fire', hp:0, x:v.x, y:v.y, r:0}); }
+  }
   for(const h of R.haz){
     if(h.kind==='vent'){
       h.t += dt; const ph = h.t % 5;
       if(ph>=4 && !h.fired){
         h.fired = true;
-        if(dist(p,h) < h.r + p.r) playerDamage(g, (18+dep*2.6)*TELE_DMG_MULT, {dmgType:'fire', hp:0, x:h.x, y:h.y, r:0});
+        if(dist(p,h) < h.r + p.r) playerDamage(g, (18+dep*2.6)*TELE_DMG_MULT*hazardScale(dep), {dmgType:'fire', hp:0, x:h.x, y:h.y, r:0});
         g.particles.push({type:'burst', x:h.x, y:h.y, t:0.5, max:0.5, color:'#ffd9a0'});
       } else if(ph<4) h.fired = false;
     } else if(h.kind==='coil'){
       if(h.tT>0){
         h.tT -= dt;
         if(h.tT<=0){
-          if(dist(p,h.tp) < 115 + p.r*0.5) playerDamage(g, (22+dep*2.8)*TELE_DMG_MULT, {dmgType:'lightning', hp:0, x:h.tp.x, y:h.tp.y, r:0});
+          if(dist(p,h.tp) < 115 + p.r*0.5) playerDamage(g, (22+dep*2.8)*TELE_DMG_MULT*hazardScale(dep), {dmgType:'lightning', hp:0, x:h.tp.x, y:h.tp.y, r:0});
           g.particles.push({type:'ring', x:h.tp.x, y:h.tp.y, t:0.4, max:0.4, r:115, color:'#8fd8ff'});
           g.particles.push({type:'burst', x:h.tp.x, y:h.tp.y, t:0.35, max:0.35, color:'#cfeaff'});
           shakeScreen(g, 3, 0.15); h.tp = null;
@@ -123,16 +138,38 @@ function updateFhdHazards(g, dt){
         h.cd -= dt;
         if(h.cd<=0 && dist(p,h) < 720){ h.tp = {x:p.x, y:p.y}; h.tT = 1.1; h.cd = 4.2 + Math.random()*1.6; }
       }
+    } else if(h.kind==='pyro'){   // v548: 1s glow + aim, then a 2s fire beam
+      h.t += dt; const ph = h.t % FHD_PYRO_CYCLE;
+      if(ph < 1 && !h.aimed){ h.aimed = true; h.ang = Math.atan2(p.y-h.y, p.x-h.x); }
+      if(ph >= 1 && ph < 3 && dist(p,h) < 900){
+        h.aimed = false; h.tick = (h.tick||0) - dt;
+        if(h.tick<=0){ h.tick = 0.3;
+          const ex = h.x + Math.cos(h.ang)*FHD_PYRO_LEN, ey = h.y + Math.sin(h.ang)*FHD_PYRO_LEN;
+          if(segDist(p.x, p.y, h.x, h.y, ex, ey) < 34 + p.r*0.5) playerDamage(g, (18+dep*2.6)*0.3*TELE_DMG_MULT*hazardScale(dep), {dmgType:'fire', hp:0, x:h.x, y:h.y, r:0});
+        }
+      } else if(ph >= 3) h.aimed = false;
+    } else if(h.kind==='fvortex'){   // v548: every few seconds a Flame Vortex drifts out toward you
+      h.t += dt;
+      if(h.t > FHD_VORTEX_CD && dist(p,h) < 760){ h.t = 0; (R.vortices || (R.vortices = [])).push({x:h.x, y:h.y, life:4.5, tick:0}); }
     } else if(h.kind==='acid'){
       if(dist(p,h) < h.r - 10){
         h.tick -= dt;
-        if(h.tick<=0){ h.tick = 0.5; playerDamage(g, (6+dep*1.0)*TELE_DMG_MULT, {dmgType:'poison', hp:0, x:h.x, y:h.y, r:0}); }
+        if(h.tick<=0){ h.tick = 0.5; playerDamage(g, (6+dep*1.0)*TELE_DMG_MULT*hazardScale(dep), {dmgType:'poison', hp:0, x:h.x, y:h.y, r:0}); }
       } else h.tick = 0;
     }
   }
 }
 function drawFhdFx(R, clk){
   const tilt = ISO_KY/ISO_KX;
+  for(const v of (R.vortices||[])){   // v548: a spinning column of flame
+    const iso = toIso(v.x, v.y), fade = Math.min(1, v.life*2, (4.5-v.life)*3), rr = FHD_VORTEX_R*ISO_KX*Math.SQRT2;
+    ctx.save(); ctx.translate(iso.x, iso.y); ctx.globalCompositeOperation = 'lighter';
+    ctx.save(); ctx.scale(1, tilt); const gr = ctx.createRadialGradient(0,0,4,0,0,rr); gr.addColorStop(0,'rgba(255,170,60,'+(0.5*fade)+')'); gr.addColorStop(1,'rgba(255,60,10,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0,0,rr,0,7); ctx.fill(); ctx.restore();
+    for(let k=0;k<5;k++){ const hgt = 14 + k*16, w = rr*(0.55 + k*0.12), a = clk*7 + k*1.3;
+      ctx.strokeStyle = 'rgba(255,'+(130+k*20)+',40,'+(0.55*fade)+')'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.ellipse(0, -hgt, w, w*0.32, 0, a, a+4.2); ctx.stroke(); }
+    ctx.restore();
+  }
   for(const dc of (R.decor||[])){
     if(dc.kind==='gear'){
       const iso = toIso(dc.x,dc.y), rr = dc.r*ISO_KX*Math.SQRT2;
@@ -170,10 +207,32 @@ function drawFhdFx(R, clk){
     } else if(h.kind==='coil' && h.tp && h.tT>0){
       const ti = toIso(h.tp.x,h.tp.y), fr = clamp(1-h.tT/1.1,0,1);
       ctx.save(); ctx.translate(ti.x, ti.y); ctx.scale(1, tilt);
-      ctx.strokeStyle='rgba(150,220,255,'+(0.5+fr*0.5)+')'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(0,0,115*ISO_KX*Math.SQRT2,0,7); ctx.stroke();
-      ctx.fillStyle='rgba(140,210,255,'+(0.08+fr*0.28)+')'; ctx.beginPath(); ctx.arc(0,0,115*ISO_KX*Math.SQRT2*fr,0,7); ctx.fill();
+      { const Rpx = 115*ISO_KX*Math.SQRT2;   // v548: drawn like the Kraken's big strike -- yellow ring, filling disc, crackling bolts
+        ctx.strokeStyle='rgba(255,224,70,'+(0.55+fr*0.45)+')'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(0,0,Rpx,0,7); ctx.stroke();
+        ctx.fillStyle='rgba(255,214,60,'+(0.10+fr*0.30)+')'; ctx.beginPath(); ctx.arc(0,0,Rpx*fr,0,7); ctx.fill();
+        drawZapBolts(Rpx, fr, h.tp.x*0.013+h.tp.y*0.007); }
       ctx.restore();
       ctx.save(); ctx.strokeStyle='rgba(180,230,255,'+(0.3+fr*0.5)+')'; ctx.lineWidth=2; const hi = toIso(h.x,h.y); ctx.beginPath(); ctx.moveTo(hi.x, hi.y-64); ctx.lineTo(ti.x, ti.y-10); ctx.stroke(); ctx.restore();
+    } else if(h.kind==='pyro'){
+      const ph = h.t % FHD_PYRO_CYCLE, warn = ph < 1 ? ph : 0, on = ph >= 1 && ph < 3;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const glow = on ? 0.9 : warn>0 ? 0.25+warn*0.55 : 0.18;
+      const gl = ctx.createRadialGradient(iso.x, iso.y-74, 2, iso.x, iso.y-74, 30); gl.addColorStop(0,'rgba(255,170,60,'+glow+')'); gl.addColorStop(1,'rgba(255,90,20,0)');
+      ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(iso.x, iso.y-74, 30, 0, 7); ctx.fill();
+      if(warn>0 || on){
+        const ex = h.x + Math.cos(h.ang)*FHD_PYRO_LEN, ey = h.y + Math.sin(h.ang)*FHD_PYRO_LEN, e2 = toIso(ex, ey);
+        if(warn>0){ ctx.strokeStyle = 'rgba(255,140,50,'+(0.2+warn*0.5)+')'; ctx.lineWidth = 3; ctx.setLineDash([10,8]); ctx.beginPath(); ctx.moveTo(iso.x, iso.y-12); ctx.lineTo(e2.x, e2.y); ctx.stroke(); ctx.setLineDash([]); }
+        else {
+          const fl = 0.75 + 0.25*Math.sin(clk*30);
+          for(const [w,c] of [[30,'rgba(255,90,20,0.35)'],[18,'rgba(255,170,60,0.6)'],[7,'rgba(255,240,190,0.85)']]){ ctx.strokeStyle = c; ctx.lineWidth = w*fl; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(iso.x, iso.y-12); ctx.lineTo(e2.x, e2.y-6); ctx.stroke(); }
+        }
+      }
+      ctx.restore();
+    } else if(h.kind==='fvortex'){
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const k = clamp(h.t/FHD_VORTEX_CD, 0, 1), gl = ctx.createRadialGradient(iso.x, iso.y-74, 2, iso.x, iso.y-74, 26);
+      gl.addColorStop(0,'rgba(255,120,40,'+(0.2+0.7*k)+')'); gl.addColorStop(1,'rgba(255,60,10,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(iso.x, iso.y-74, 26, 0, 7); ctx.fill();
+      ctx.restore();
     } else if(h.kind==='acid'){
       ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(1, tilt);
       const rr = h.r*ISO_KX*Math.SQRT2;

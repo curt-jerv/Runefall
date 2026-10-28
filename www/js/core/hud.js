@@ -135,11 +135,11 @@ function updateTown(dt){
     if(lootIsManual(l)) continue;
     if(dist(l,p) < l.r+p.r+6){
       if(l.type==='item'){
-        if(addToBag(p, l.item)){
-          const eq = tryAutoEquip(p, l.item);
+        { const took = lootTake(p, l.item); if(took){   // v548: a full bag no longer stops an item you can wear right away
+          const eq = took==='equipped';
           showMsg(eq ? 'Equipped: '+l.item.name : l.item.name, 1.2);
           bagPulse(); g.loot.splice(i,1);
-        } else { showMsg(fullMsgFor(l.item), 1.0); }
+        } else { showMsg(fullMsgFor(l.item), 1.0); } }
       } else g.loot.splice(i,1);
     }
   }
@@ -178,7 +178,9 @@ function updateDockHud(p){
   st('hpGlobeIce', 'height', ((p.iceArmorMax>0 && p.iceArmorHp>0) ? clamp(p.iceArmorHp/p.iceArmorMax,0,1)*100 : 0).toFixed(1)+'%');
   const rf = document.getElementById('resGlobeFill'); if(rf && rf.dataset.res!==p.cls) rf.dataset.res = p.cls;
   tx('hpGlobeNum', Math.ceil(Math.max(0,p.hp))+'');
+  tx('hpGlobeIa', (p.iceArmorMax>0 && p.iceArmorHp>0) ? Math.ceil(p.iceArmorHp)+'' : '');   // v546: Ice Armor left, under the life number
   tx('resGlobeNum', Math.floor(p.mp||0)+'');
+  { const tb = document.getElementById('tpBtn'), off = !townPortalAllowed(game); if(tb && tb.classList.contains('off')!==off) tb.classList.toggle('off', off); }   // v546: dimmed in town
   st('dockXpFill', 'width', clamp(p.xp/p.xpNext*100,0,100).toFixed(1)+'%');
   { const xt = document.getElementById('dockXpTxt'); const html = '<b class="dLv">Lv '+(p.level||1)+'</b> \u00b7 '+Math.floor(clamp(p.xp/p.xpNext,0,1)*100)+'%'; if(xt && xt.dataset.h!==html){ xt.dataset.h = html; xt.innerHTML = html; } }   // v492: the level is the big gold number
   // the skill-point flag always shows the real number of unspent points (it used to keep an old count outside town)

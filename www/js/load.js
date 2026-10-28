@@ -1,4 +1,4 @@
-// Runefall loader (v537). The game is split into the files below; their ORDER matters (a file may use things
+// Runefall loader (v568). The game is split into the files below; their ORDER matters (a file may use things
 // set up by an earlier one). All files are fetched first and then run back-to-back in one go, exactly like the
 // old single-file game, so no tap or timer can reach a function that hasn't loaded yet.
 // Adding a file: put it in www/js/<folder>/, add its path to this list, run `node scripts/check-js.js`.
@@ -28,13 +28,14 @@ const RUNEFALL_FILES = [
   'monsters/minotaur.js',
   'items/mods.js',
   'ui/bag.js',
-  'ui/inventory.js',
+  'ui/inventory.js', 'ui/item-art.js',
   'ui/stash.js',
   'ui/region-map.js',
   'quests/side-quests.js',
   'zones/redridge-towers.js',
   'zones/highward.js',
   'skills/mystic-extra.js',
+  'skills/mystic-defense.js',
   'monsters/highward-and-bandits.js',
   'quests/quest-chain.js',
   'ui/town-menus.js',
@@ -47,6 +48,7 @@ const RUNEFALL_FILES = [
   'ui/witch-menu.js',
   'ui/quest-log.js',
   'ui/skill-tree-ui.js',
+  'ui/skill-tips.js',
   'core/game-state.js',
   'zones/frosthold-tower.js',
   'zones/cliffside.js',
@@ -70,6 +72,7 @@ const RUNEFALL_FILES = [
   'zones/mountain-depths.js',
   'monsters/fire-and-colossus.js',
   'monsters/windigo.js',
+  'monsters/wildlife.js',
   'zones/black-marsh.js',
   'render/mood.js',
   'zones/cemetery.js',
@@ -79,6 +82,7 @@ const RUNEFALL_FILES = [
   'monsters/elites.js',
   'zones/frosthold-dungeon.js',
   'combat/combat-feel.js',
+  'zones/town-portal.js',
   'zones/tavern.js',
   'audio/audio.js',
   'audio/music.js',
@@ -90,6 +94,7 @@ const RUNEFALL_FILES = [
   'render/town.js',
   'monsters/mastodon.js',
   'render/mountain-scenery.js',
+  'render/zone-edges.js',
   'render/town-art.js',
   'render/doorways.js',
   'render/skill-fx.js',

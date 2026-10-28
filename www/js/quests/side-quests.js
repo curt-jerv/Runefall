@@ -26,11 +26,37 @@ function spawnDefiler(g){
   const e = spawnEnemy(g, 'bandit', {x:TR.x+TR.w/2, y:TR.y+TR.h*0.55});   // v310: mid-room, well clear of the door
   if(!e) return;
   e.defiler = true; e.possessed = true; e.isLairBoss = true; e.bossName = 'The Possessed Graverobber'; e.engaged = true;
-  e.r = Math.round(e.r*1.1); e.baseR = e.r; e.maxHp = Math.round(e.maxHp*14); e.hp = e.maxHp; e.dmg *= 1.5; e.speed *= 1.0;
+  e.r = Math.round(e.r*1.375); e.baseR = e.r;   /* v548: 25% bigger */ e.maxHp = Math.round(e.maxHp*14); e.hp = e.maxHp; e.dmg *= 1.5; e.speed *= 1.0;
   e.atkCdMax = 1.9;   // v310: slower, heavier swings
   e.dfPhase = 0; e.aggroRange = 99999; e.leashRange = 99999;
-  showMsg('“You’re all going to die.”', 2.6, '#c8b8ff');
+  // v548: the tomb is his alone -- the packs that wandered in are gone (only his own risen dead join him)
+  g.enemies = g.enemies.filter(x=>x===e || x.hp<=0 || !(x.x>TR.x-40 && x.x<TR.x+TR.w+40 && x.y>TR.y-40 && x.y<TR.y+TR.h+40));
   shakeScreen(g, 5, 0.5);
+}
+// v548: 75% -- his line; 50% -- he swells another 25% and moves/swings 1.3x faster; 25% -- he lifts off the ground and casts Death Bolts
+function defilerPhases(g, df, f, dt){
+  const p = g.player;
+  if(f<0.75 && !df.dfSaid){ df.dfSaid = true; voicePlay('defiler_die'); showMsg('“You’re all going to die.”', 2.6, '#c8b8ff'); shakeScreen(g, 4, 0.4); }
+  if(f<0.5 && !df.dfGrow){
+    df.dfGrow = true; df.r = Math.round(df.r*1.25); df.baseR = df.r; df.speed *= 1.3; df.atkCdMax /= 1.3;
+    g.particles.push({type:'ring', x:df.x, y:df.y, t:0.6, max:0.6, r:160, color:'#9a6aff'});
+    showMsg('The possession tightens its grip...', 1.8, '#b9a8ff');
+  }
+  if(f<0.25 && !df.dfFly){ df.dfFly = true; df.dfBoltT = 1.0; df.dfVolley = 0; df.speed *= 0.55; showMsg('He rises from the ground...', 1.8, '#b9a8ff'); }
+  if(df.dfFly){
+    df.dfLift = Math.min(34, (df.dfLift||0) + dt*45);
+    df.atkCd = Math.max(df.atkCd||0, 0.5);   // no more shovel swings: he fights from the air
+    df.dfBoltT -= dt;
+    if(df.dfBoltT<=0 && p && !g.over){
+      const ang = Math.atan2(p.y-df.y, p.x-df.x);
+      df.dfVolley = (df.dfVolley||0) + 1;
+      if(df.dfVolley % 3 === 0){ for(const o of [-0.3, 0, 0.3]) fireDeathBolt(g, df, ang+o, p, df.dmg*0.7); }   // every third cast: a fan of three
+      else fireDeathBolt(g, df, ang, p, df.dmg*0.85);
+      df.atkAnimT = 0.3; df.dfBoltT = 1.15;
+      try{ sfxPlay('enemyCast', 0.8); }catch(e){}
+    }
+    if(Math.random() < dt*10) g.particles.push({type:'burst', x:df.x+rand(-18,18), y:df.y+rand(-8,8), t:0.5, max:0.5, color:'#7a4aff'});
+  }
 }
 function defilerSlain(g, e){
   const p = g.player;
@@ -54,8 +80,8 @@ function inspectSarcophagus(){
   const p = game.player;
   if(!p.inscriptionTaken){
     p.inscriptionTaken = true; forceAddToBag(p, makeTemplarInscriptionItem()); bagPulse();
-    if(!getQuest(p, 'scholar_templar') && !p.scholarMeet){ if(!p.quests) p.quests = []; p.quests.push({id:'scholar_templar', name:'Templar Research', desc:'You found an inscription in a Templar crypt. The scholar in the Tavern may be able to read it.', status:'active', progress:0, total:1}); npcMark(p, 'scholar', true); updateQuestBadge(); }   // v456
-    showNpcText('The Sarcophagus', 'The lid was shoved aside from the inside. The stone is scored with deep claw marks and the Templar seal on its rim is shattered outward -- whatever slept here did not stay dead. It clawed its way out, long ago. Carved into the inner wall is an inscription, still legible. You take a rubbing.', 'Take the rubbing');
+    if(!getQuest(p, 'scholar_templar') && !p.scholarMeet){ if(!p.quests) p.quests = []; p.quests.push({id:'scholar_templar', name:'Templar Research', desc:'You found an inscription in a Templar crypt. Corwin the Scholar in the Tavern may be able to read it.', status:'active', progress:0, total:1}); npcMark(p, 'scholar', true); updateQuestBadge(); }   // v456
+    showNpcText('The Sarcophagus', 'The lid was shoved aside from the inside. The stone is scored with deep claw marks and the Templar seal on its rim is shattered outward -- whatever slept here did not stay dead. It crawled its way out very recently. Carved into the inner wall is an inscription, still legible. You take a rubbing.', 'Take the rubbing');
     showMsg('Obtained: Templar Inscription', 2.6, '#c8b0ff'); saveGame();
     setTimeout(()=>{ try{ showBigMsg('Return to the graverobbers', '', 4.0, true); }catch(err){} }, 400);   // v490
   } else showNpcText('The Sarcophagus', 'Empty. The Templar seal is broken outward -- something escaped.', 'Close');
@@ -122,39 +148,39 @@ function talkScholar(){
   const p = game.player;
   updateQuestBadge();   // v514: keep The Scholar's Theory in step with the runestone you carry
   if(hasInscription(p) && !p.scholarMeet){
-    showNpcText('Scholar', '"A Templar crypt inscription... yes! Meet me at the Lakeside Ruins. I will wait at the entrance."', 'Give him the rubbing', ()=>{
+    voicePlay('scholar_inscription'); showNpcText('Corwin the Scholar', '"A Templar crypt inscription... yes! Meet me at the Lakeside Ruins. I will wait at the entrance."', 'Give him the rubbing', ()=>{
       // v410: he only reads it -- you keep the inscription until the ruins are actually open
       p.scholarLeft = true; p.scholarMeet = true;
       p.ruinsEvent = 0;
-      const q1 = getQuest(p, 'scholar_templar'); if(q1){ q1.status = 'complete'; q1.rewarded = true; q1.progress = q1.total; q1.desc = 'The scholar read the inscription.'; }
-      if(!getQuest(p, 'scholar_ruins')) p.quests.push({id:'scholar_ruins', name:"The Scholar's Theory", desc:'Meet the scholar at the Lakeside Ruins, on the island in the middle of the lake.', status:'active', progress:0, total:1});
+      const q1 = getQuest(p, 'scholar_templar'); if(q1){ q1.status = 'complete'; q1.rewarded = true; q1.progress = q1.total; q1.desc = 'Corwin read the inscription.'; }
+      if(!getQuest(p, 'scholar_ruins')) p.quests.push({id:'scholar_ruins', name:"The Scholar's Theory", desc:'Meet Corwin the Scholar at the Lakeside Ruins, on the island in the middle of the lake.', status:'active', progress:0, total:1});
       npcMark(p, 'scholar', false);
       showMsg('New quest: The Scholar\'s Theory', 3.0); updateQuestBadge(); saveGame();
     });
   } else if((p.shrineStage||0)>=3 && !p.scholarEast){
-    showNpcText('Scholar', '"You did it. The Runestone is activated, and it seems to be pulling east. Perhaps Frosthold can answer some questions. Go and explore the newly revealed keep. Be wary -- the dwarves are friendly to none."', 'To Frosthold', ()=>{
+    voicePlay('scholar_activated'); showNpcText('Corwin the Scholar', '"You did it. The Runestone is activated, and it seems to be pulling east. Perhaps Frosthold can answer some questions. Go and explore the newly revealed keep. Be wary -- the dwarves are friendly to none."', 'To Frosthold', ()=>{
       p.scholarEast = true;
-      { const sq = getQuest(p, 'shrine_stone'); if(sq){ sq.status='complete'; sq.rewarded=true; sq.progress=sq.total; sq.desc='The mountain judged you worthy, and the scholar read the awakened runestone.'; } }   // v456: completes here
+      { const sq = getQuest(p, 'shrine_stone'); if(sq){ sq.status='complete'; sq.rewarded=true; sq.progress=sq.total; sq.desc='The mountain judged you worthy, and Corwin read the awakened runestone.'; } }   // v456: completes here
       if(!getQuest(p, 'frost_east')) p.quests.push({id:'frost_east', name:'The Stone Draws East', desc:'The awakened runestone pulls east. The avalanche revealed the western gate of Frosthold Keep -- climb the Frosthold Tower and see what the dwarves guard.', status:'active', progress:0, total:1});
       npcMark(p, 'scholar', false);
       showMsg('New quest: The Stone Draws East', 3.0); updateQuestBadge(); saveGame();
     });
   } else if(p.hwRuneTaken && !p.scholarThirdRead){   // v490: the third runestone
-    showNpcText('Scholar', '"So the legends seem true. When the world needs it, these stones come alive, to hold back some unknown evil of the world. If it\'s as you say, that the Shadow Keep is occupied again, that must be the answer. Good luck, adventurer."', 'Close', ()=>{
+    voicePlay('scholar_legends'); showNpcText('Corwin the Scholar', '"So the legends seem true. When the world needs it, these stones come alive, to hold back some unknown evil of the world. If it\'s as you say, that the Shadow Keep is occupied again, that must be the answer. Good luck, adventurer."', 'Close', ()=>{
       p.scholarThirdRead = true; p.scholarWarnedRR = true; npcMark(p, 'scholar', false); saveGame();
     });
   } else if(p.fhDungeonDone && !p.scholarWarnedRR){   // v490: the second runestone
-    showNpcText('Scholar', '"Amazing -- it seems the shrine in the mountain activated this runestone as well. The ancient Highward fortress, built into the side of Redridge Canyon, can tell us more about what these runestones are."', 'Close', ()=>{
+    voicePlay('scholar_rune2'); showNpcText('Corwin the Scholar', '"Amazing -- it seems the shrine in the mountain activated this runestone as well. The ancient Highward fortress, built into the side of Redridge Canyon, can tell us more about what these runestones are."', 'Close', ()=>{
       p.scholarWarnedRR = true; npcMark(p, 'scholar', false); saveGame();
     });
   } else if(p.fhDungeonKey && !p.fhDungeonDone && !p.scholarKeyTalk){   // v490: after the Commander's key
-    showNpcText('Scholar', '"So it seems the dwarves might have a runestone of their own, locked away in their dungeon. Descend through their fortress and recover it. Perhaps it will reveal more secrets about their purpose."', 'Close', ()=>{
+    voicePlay('scholar_dwarves'); showNpcText('Corwin the Scholar', '"So it seems the dwarves might have a runestone of their own, locked away in their dungeon. Descend through their fortress and recover it. Perhaps it will reveal more secrets about their purpose."', 'Close', ()=>{
       p.scholarKeyTalk = true; npcMark(p, 'scholar', false); saveGame();
     });
   } else if(p.scholarMeet){
     const rs = findRunestone(p);
     if(rs && !p.scholarRead){
-      showNpcText('Scholar', '"The runestone has a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
+      voicePlay('scholar_rune1'); showNpcText('Corwin the Scholar', '"The runestone has a cryptic message: \u2018From stone to stone, the Mountain will judge its bearer.\u2019 There is an ancient altar atop the mountain summit -- the legends say it empowers the runestones. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way. Good luck, adventurer."', 'Continue', ()=>{
         { const si = classRewardItem(p, Math.max(p.level||1, 23), 'reward'); if(!giveRewardIfRoom(p, [si])) return; p.gold += 300; }   // v492: asks again until there is room
         p.scholarRead = true; bagPulse();
         const q = getQuest(p, 'scholar_ruins'); if(q){ q.status = 'complete'; q.rewarded = true; q.progress = q.total; q.desc = 'You found the first runestone below the lake.'; }
@@ -162,20 +188,20 @@ function talkScholar(){
         npcMark(p, 'scholar', false);
         showMsg('New quest: The Mountain Judges (+ class gear and 300 gold)', 3.0); updateQuestBadge(); saveGame();
       });
-    } else if(p.scholarRead && (p.shrineStage||0)>=3) showNpcText('Scholar', '"The stone pulls east. Climb the Frosthold Tower and see what the dwarves guard."', 'Close');
-    else if(p.scholarRead) showNpcText('Scholar', '"There is an ancient altar atop the mountain summit. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way."', 'Close');
-    else showNpcText('Scholar', '"Descend through the ancient ruins and share any findings with me."', 'Close');
+    } else if(p.scholarRead && (p.shrineStage||0)>=3) { voicePlay('scholar_east', {gap:8}); showNpcText('Corwin the Scholar', '"The stone pulls east. Climb the Frosthold Tower and see what the dwarves guard."', 'Close'); }
+    else if(p.scholarRead) showNpcText('Corwin the Scholar', '"There is an ancient altar atop the mountain summit. Continue through the Black Marsh and the Highlands to the Mountain Pass to find the way."', 'Close');
+    else { voicePlay('scholar_waiting', {gap:8}); showNpcText('Corwin the Scholar', '"Descend through the ancient ruins and share any findings with me."', 'Close'); }
   } else if(!p.scholarMet){
-    showNpcText('Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close', ()=>{
+    voicePlay('scholar_meet'); showNpcText('Corwin the Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close', ()=>{
       p.scholarMet = true; saveGame();   // v456: no quest yet -- Templar Research starts when you find the Crypt Inscription
     });
   } else if(false){
-    showNpcText('Scholar', '', 'Accept', ()=>{
+    showNpcText('Corwin the Scholar', '', 'Accept', ()=>{
       if(!p.quests) p.quests = [];
-      if(!getQuest(p, 'scholar_templar')) p.quests.push({id:'scholar_templar', name:'Templar Research', desc:'The scholar in the Tavern wants an inscription from a Templar crypt. The graverobbers at the Cursed Cemetery speak of a hidden tomb below the Dark Crypt.', status:'active', progress:0, total:1});
+      if(!getQuest(p, 'scholar_templar')) p.quests.push({id:'scholar_templar', name:'Templar Research', desc:'Corwin the Scholar in the Tavern wants an inscription from a Templar crypt. The graverobbers at the Cursed Cemetery speak of a hidden tomb below the Dark Crypt.', status:'active', progress:0, total:1});
       showMsg('New quest: Templar Research', 2.6); updateQuestBadge(); saveGame();
     });
-  } else showNpcText('Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close');
+  } else { voicePlay('scholar_meet', {gap:8}); showNpcText('Corwin the Scholar', '"I\'m here to study the Lakeside Ruins. If you find anything that could help my research, please let me know."', 'Close'); }
 }
 // generic townsperson art (graverobbers, scholar): hood or hat, robe, one handheld prop
 // v519: The Silver Locket. Mirelle arrives on the ship (she stands about the dock once the tavern re-opens). State lives in the quest itself:
@@ -198,13 +224,13 @@ function takeSilverLocket(p){
 function talkLocketWoman(){
   const p = game.player, q = getQuest(p, LOCKET_QUEST);
   if(!q){
-    showNpcText('Mirelle', '"I came in on the evening ship. My family lies in the Dark Crypt, and my grandmother\'s silver locket was buried with them -- it is all I have left of her. Please, search the crypt\'s side chambers for it."', 'I will look for it', ()=>{
+    voicePlay('mirelle_offer'); showNpcText('Mirelle', '"I came in on the evening ship. My family lies in the Dark Crypt, and my grandmother\'s silver locket was buried with them -- it is all I have left of her. Please, search the crypt\'s side chambers for it."', 'I will look for it', ()=>{
       addQuestOnce(p, LOCKET_QUEST, 'The Silver Locket', "Search the Dark Crypt for Mirelle's silver locket.", 1);
       npcMark(p, 'mirelle', false);
       showMsg('New quest: The Silver Locket', 3.0); updateQuestBadge(); saveGame();
     });
   } else if(q.status==='active' && q.progress>=q.total){
-    showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. I will keep it close to my heart. And here: my grandfather had this old tome, I can\'t learn anything from it. Please, take it."', 'Thank you', ()=>{
+    voicePlay('mirelle_done'); showNpcText('Mirelle', '"That is her locket... the flower is still inside. Thank you, truly. I will keep it close to my heart. And here: my grandfather had this old tome, I can\'t learn anything from it. Please, take it."', 'Thank you', ()=>{
       const tome = makeSkillTomeItem(); tome.questDesc = "Mirelle's grandfather's old tome. Read it (Use, or right-click) to gain +1 skill point.";
       if(!giveRewardIfRoom(p, [tome])) return;
       takeSilverLocket(p);
@@ -212,9 +238,9 @@ function talkLocketWoman(){
       p.gold += 250; showMsg('Quest complete: The Silver Locket (+250 gold, Tome of Skill)', 3.4); try{ bagPulse(); }catch(e){} updateQuestBadge(); saveGame();
     });
   } else if(q.status==='active'){
-    showNpcText('Mirelle', '"Any sign of the locket? It is in the Dark Crypt, in one of the quiet side chambers. Be careful down there."', 'Close');
+    voicePlay('mirelle_waiting', {gap:8}); showNpcText('Mirelle', '"Any sign of the locket? It is in the Dark Crypt, in one of the quiet side chambers. Be careful down there."', 'Close');
   } else {
-    showNpcText('Mirelle', '"The ship leaves with the tide, but I think I will stay a while. Thank you again."', 'Close');
+    voicePlay('mirelle_after', {gap:8}); showNpcText('Mirelle', '"The ship leaves with the tide, but I think I will stay a while. Thank you again."', 'Close');
   }
 }
 function drawSimpleNpcIso(n, clock, o){
@@ -249,16 +275,16 @@ const RUINS_EVENT_T = 60, RUINS_EVENT_MAX_ENEMIES = 30;   // v456: 60s (was 120)
 function talkScholarRuins(){
   const p = game.player;
   if(!p.ruinsEvent){
-    showNpcText('Scholar', '"The ring is a lock. Stand at the center stone and I will decipher it -- it will take some time. Stay close."', 'Understood', ()=>{
+    voicePlay('scholar_decipher'); showNpcText('Corwin the Scholar', '"The ring is a lock. Stand at the center stone and I will decipher it -- it will take some time. Stay close."', 'Understood', ()=>{
       p.ruinsEvent = 1; showMsg('Step to the center stone to begin deciphering.', 3.0, '#9fd8ff'); updateQuestBadge(); saveGame();
     });
-  } else showNpcText('Scholar', '\"The center stone, whenever you are ready. I will start the moment you do.\"', 'Close');
+  } else { voicePlay('scholar_center', {gap:8}); showNpcText('Corwin the Scholar', '\"The center stone, whenever you are ready. I will start the moment you do.\"', 'Close'); }
 }
 function startRuinsEvent(g){
   const p = g.player;
   p.ruinsEvent = 2;
   g.lake.event = {active:true, t:RUINS_EVENT_T, spawnT:1.2, slowed:false, warned:false, spawned:0};
-  showBigMsg('THE STONES STIR', 'Stay by the scholar', 3.6);
+  showBigMsg('THE STONES STIR', 'Stay by Corwin', 3.6);
   shakeScreen(g, 5, 0.8);
   g.particles.push({type:'ring', x:g.lake.ruinsSpot.x, y:g.lake.ruinsSpot.y, t:0.9, max:0.9, r:200, color:'#3ad4ff'});
 }
@@ -278,7 +304,7 @@ function updateRuinsEvent(g, dt){
   let near = 0, alive = 0;
   for(const e of g.enemies){ if(e.ruinsZ && e.hp>0){ alive++; if(dist(e, sc) < 85) near++; } }
   ev.slowed = near>0;
-  if(ev.slowed && !ev.warned){ ev.warned = true; showMsg('The scholar is under attack! The deciphering slows.', 2.6, '#ff5a4a'); }
+  if(ev.slowed && !ev.warned){ ev.warned = true; showMsg('Corwin is under attack! The deciphering slows.', 2.6, '#ff5a4a'); }
   if(!ev.slowed) ev.warned = false;
   const rate = Math.max(0.65, 1 - 0.05*near);   // v413: attackers at the scholar only slow the deciphering a little
   ev.t -= dt*rate; ev.spawnT -= dt;
@@ -307,9 +333,9 @@ function finishRuinsEvent(g){
   g.flashT = 1.2;
   g.particles.push({type:'burst', x:g.lake.ruinsSpot.x, y:g.lake.ruinsSpot.y, t:0.7, max:0.7, color:'#3ad4ff'});
   g.particles.push({type:'ring', x:g.lake.ruinsSpot.x, y:g.lake.ruinsSpot.y, t:0.8, max:0.8, r:260, color:'#3ad4ff'});
-  const q = getQuest(p, 'scholar_ruins'); if(q) q.desc = 'Descend through the ancient ruins and share any findings with the scholar.';
+  const q = getQuest(p, 'scholar_ruins'); if(q) q.desc = 'Descend through the ancient ruins and share any findings with Corwin.';
   updateQuestBadge(); saveGame();
-  showNpcText('Scholar', '"At last, I\'ve opened it! I\'m only a researcher, but you descend to the bottom of that place and bring me anything of interest."', 'Continue');
+  voicePlay('scholar_opened'); showNpcText('Corwin the Scholar', '"At last, I\'ve opened it! I\'m only a researcher, but you descend to the bottom of that place and bring me anything of interest."', 'Continue');
 }
 function drawRuinsEventHud(g){
   const ev = g.lake.event, frac = clamp(1 - ev.t/RUINS_EVENT_T, 0, 1), bw = Math.min(W-40, 340), x0 = (W-bw)/2, y0 = hudBottomPx()+34;
@@ -317,7 +343,7 @@ function drawRuinsEventHud(g){
   ctx.fillStyle = 'rgba(8,16,26,0.72)'; ctx.fillRect(x0-6, y0-18, bw+12, 40);
   ctx.font = "bold 12px Cinzel, Georgia, serif"; ctx.textAlign = 'center'; ctx.fillStyle = ev.slowed ? '#ff4a3a' : '#9fe0ff';
   const left = Math.max(0, Math.ceil(ev.t));
-  ctx.fillText((ev.slowed ? 'SCHOLAR UNDER ATTACK  —  SLOWED  —  ' : 'DECIPHERING THE STONES  —  ')+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'), W/2, y0-3);
+  ctx.fillText((ev.slowed ? 'CORWIN UNDER ATTACK  —  SLOWED  —  ' : 'DECIPHERING THE STONES  —  ')+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'), W/2, y0-3);
   ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(x0, y0+4, bw, 9);
   ctx.fillStyle = ev.slowed ? '#e8703a' : '#3ad4ff'; ctx.fillRect(x0, y0+4, bw*frac, 9);
   ctx.restore();
@@ -328,7 +354,7 @@ function spawnSquid(g, pos){
   e.aggroRange = 480; e.leashRange = 800; e.wanderRadius = 0; e.armor = 2;
   return e;
 }
-const TEMPLE_W = 4600, TEMPLE_H = 2600, TEMPLE_DEPTH = 25;
+const TEMPLE_W = 6900, TEMPLE_H = 3470, TEMPLE_DEPTH = 25;   // v548: twice the area (was 4600x2600, a 4x3 grid)
 // v490: the Flooded Temple is no longer one straight line of halls. Each visit it is a new warren of flooded chambers
 // (a 4x3 grid with a few cells left as solid rock) joined by winding passages: a random spanning tree plus a couple of
 // loops. You arrive on the west side; the stair down waits in one of the chambers furthest from the entrance.
@@ -347,13 +373,13 @@ function makeFloodedTemple(){
   Math.random = rnd;
   let room, waypoint = null;
   try{
-    const COLS = 4, ROWS = 3, cw = w/COLS, ch = h/ROWS, ri = (a,b)=>a+Math.floor(rnd()*(b-a+1));
+    const COLS = 6, ROWS = 4, cw = w/COLS, ch = h/ROWS, ri = (a,b)=>a+Math.floor(rnd()*(b-a+1));
     const entRow = ri(0, ROWS-1), entId = entRow*COLS;
     const nb = i=>{ const c = i%COLS, r = (i/COLS)|0, o = []; if(c>0) o.push(i-1); if(c<COLS-1) o.push(i+1); if(r>0) o.push(i-COLS); if(r<ROWS-1) o.push(i+COLS); return o; };
     // leave 2-3 cells as solid rock, as long as the rest stays connected
     const keep = new Set(Array.from({length:COLS*ROWS}, (_,i)=>i));
     const connected = ()=>{ const seen = new Set([entId]), q = [entId]; while(q.length){ const i = q.pop(); for(const n of nb(i)) if(keep.has(n) && !seen.has(n)){ seen.add(n); q.push(n); } } return seen.size===keep.size; };
-    for(let k=0, t=0, drop=ri(2,3); k<drop && t<60; t++){ const i = ri(0, COLS*ROWS-1); if(i===entId || !keep.has(i)) continue; keep.delete(i); if(connected()) k++; else keep.add(i); }
+    for(let k=0, t=0, drop=ri(4,6); k<drop && t<120; t++){ const i = ri(0, COLS*ROWS-1); if(i===entId || !keep.has(i)) continue; keep.delete(i); if(connected()) k++; else keep.add(i); }
     const ids = [entId, ...[...keep].filter(i=>i!==entId)];
     const idx = new Map(ids.map((id,k)=>[id,k]));
     const chs = ids.map(id=>{
@@ -366,7 +392,7 @@ function makeFloodedTemple(){
     const links = [], linked = new Set(), lk = (a,b)=>Math.min(a,b)+'-'+Math.max(a,b);
     { const seen = new Set([entId]), stack = [entId];
       while(stack.length){ const cur = stack[stack.length-1], nx = nb(cur).filter(n=>keep.has(n) && !seen.has(n)); if(!nx.length){ stack.pop(); continue; } const n = nx[ri(0,nx.length-1)]; seen.add(n); stack.push(n); links.push([idx.get(cur), idx.get(n)]); linked.add(lk(cur,n)); } }
-    for(let k=0, t=0; k<2 && t<60; t++){ const a = ids[ri(0,ids.length-1)], ns = nb(a).filter(n=>keep.has(n)), b = ns[ri(0, Math.max(0,ns.length-1))]; if(b==null || linked.has(lk(a,b))) continue; linked.add(lk(a,b)); links.push([idx.get(a), idx.get(b)]); k++; }
+    for(let k=0, t=0; k<3 && t<90; t++){ const a = ids[ri(0,ids.length-1)], ns = nb(a).filter(n=>keep.has(n)), b = ns[ri(0, Math.max(0,ns.length-1))]; if(b==null || linked.has(lk(a,b))) continue; linked.add(lk(a,b)); links.push([idx.get(a), idx.get(b)]); k++; }
     // the stair down: a chamber at (or next to) the greatest passage distance from the entrance
     const depth = new Array(chs.length).fill(-1); depth[0] = 0;
     { const q = [0]; while(q.length){ const i = q.shift(); for(const [a,b] of links){ const o = a===i ? b : b===i ? a : -1; if(o>=0 && depth[o]<0){ depth[o] = depth[i]+1; q.push(o); } } } }
@@ -473,7 +499,7 @@ function spawnFloodedTemple(g){
   // v490: packs land on open cave floor (the temple is a cave-style floor mask now, not one open box)
   const room = g.room, av = [{x:room.entrance.x, y:room.entrance.y, r:380}];
   const okAt = (pt)=> mineOpenAt(room,pt.x,pt.y) && !subWaterAt(room,pt.x,pt.y) && !posBlockedByObstacles(pt.x,pt.y,18,room.obstacles);
-  for(let i=0;i<16;i++){
+  for(let i=0;i<32;i++){   // v548: twice the packs for twice the temple
     const c = deepMineSpot(room, av, 80); if(!c) continue;
     for(let k=0;k<3+Math.floor(Math.random()*2);k++){ const pt = {x:c.x+rand(-70,70), y:c.y+rand(-70,70)}; if(okAt(pt)) spawnEnemy(g, 'zombie', pt); }
   }
@@ -481,6 +507,6 @@ function spawnFloodedTemple(g){
   for(const q of room.pools){
     for(let k=0;k<2;k++){ const sp = subWaterSpot(room, q); if(sp) spawnSquid(g, sp); }
   }
-  if(room.pools.length) for(let i=0;i<3;i++){ const q = room.pools[(i*2)%room.pools.length], sp = subWaterSpot(room, q); if(sp) spawnEnemy(g, 'alligator', sp); }
+  if(room.pools.length) for(let i=0;i<6;i++){ const q = room.pools[(i*2)%room.pools.length], sp = subWaterSpot(room, q); if(sp) spawnEnemy(g, 'alligator', sp); }
 }
 

@@ -39,14 +39,20 @@ const MATERIAL_ARMOR_BASE = {
 const ARMOR_SPREAD = 5;   // legacy, unused since v346
 // (v346) Defense replaces flat armor: it lowers the CHANCE an enemy attack lands (Diablo 2 style), never the damage of a hit that lands.
 const DEF_SCALE = 9;                 // item Defense numbers are 9x the old armor numbers; p.armor keeps the old scale for skills that scale off it
-const DEF_AR_BASE = 330, DEF_AR_PER_ML = 9;   // enemy Attack Rating by monster level
+const DEF_AR_BASE = 40, DEF_AR_PER_ML = 25;   // enemy Attack Rating by monster level. v542: grows with gear Defense, so at your own level monsters land ~85% on a Mystic, ~78% on a Ranger, ~60% on a Warrior at every level (was 330+9/lvl: plate became nearly unhittable late)
 const DEF_HIT_MIN = 0.25, DEF_HIT_MAX = 0.90;
-const DEF_PER_DEX = 1.5;               // each Dexterity point adds Defense
+const DEF_PER_DEX = 1.0;   // v563: was 1.5 when only gear gave Dexterity
+// v563 what the attributes do (balance pass still to come)
+const LIFE_PER_LEVEL = 8, LIFE_PER_STR = 2, STR_PER_DMG_PCT = 5, INT_PER_DMG_PCT = 5, DEX_PER_BOW_PCT = 5, MANA_BASE = 20, MANA_PER_INT = 1.3, STAMINA_PER_DEX = 2/3, DEX_DODGE_CAP = 15, DEX_EVA_SOFT = 8, DEX_EVA_TAPER = 0.4;   // v568: Dexterity's evasion tapers off past 8% (only 40% of the rest counts), max 15%               // each Dexterity point adds Defense
 function enemyAttackRating(ml){ return DEF_AR_BASE + DEF_AR_PER_ML*Math.max(1, ml||1); }
 const IRON_STILL_PER_S = 0.10, IRON_STILL_MAX = 5;
 function ironStillMult(p){ return (p && p.cls==='warrior' && p.skills && (p.skills.ironSkin||0)>0 && p.stillT>0) ? 1 + IRON_STILL_PER_S*Math.floor(Math.min(IRON_STILL_MAX, p.stillT)) : 1; }
 function effectiveDefense(p){ return ironStillMult(p)*((p.defense||0) + soulShieldDefense(p))*(p.bulwarkT>0 ? BULWARK_ARMOR : 1)*(p.juggT>0 ? 1+juggDef(p.juggRank||1) : 1); }
-function playerHitChance(p, ml){ const ar = enemyAttackRating(ml), d = effectiveDefense(p); return clamp(ar/(ar+d), DEF_HIT_MIN, DEF_HIT_MAX); }
+// v538: Diablo 2 style level factor -- a monster below your level misses more. v541: only once you are more than
+// HIT_LEVEL_GRACE levels above it (2*ML/(ML + your level - grace)), and never more than 1 (a higher monster hits no more often)
+const HIT_LEVEL_GRACE = 5;
+function hitLevelFactor(p, ml){ const pl = Math.max(1, (p && p.level) || 1), m = Math.max(1, ml||1); return pl - m <= HIT_LEVEL_GRACE ? 1 : 2*m/(m + pl - HIT_LEVEL_GRACE); }
+function playerHitChance(p, ml){ const ar = enemyAttackRating(ml), d = effectiveDefense(p); return clamp(clamp(ar/(ar+d), DEF_HIT_MIN, DEF_HIT_MAX)*hitLevelFactor(p, ml), 0.12, 0.95); }
 const RARITY_ARMOR_MULT = {common:1.0, magic:1.2, rare:1.5}, RARITY_RESIST_MULT = {common:1.0, magic:1.0, rare:1.25};
 const MAGIC_SINGLE_MOD_CHANCE = 0.25;
 // (v120) Area-of-Effect % from gear is capped at +30% total; it enlarges every
@@ -475,7 +481,7 @@ function itemClassRestriction(item){
   if(item.slotType==='staff') return 'Mystic';
   if(item.slotType==='bow') return 'Ranger';
   if(item.slotType==='weapon2h') return 'Warrior';
-  if((item.slotType==='helm'||item.slotType==='armor'||item.slotType==='gloves'||item.slotType==='boots') && item.material) return MATERIAL_CLASS_NAME[Object.keys(MATERIAL_FOR_CLASS).find(k=>MATERIAL_FOR_CLASS[k]===item.material)]||null;
+  // v563: armor of any material can be worn by any class (it needs Strength / Dexterity / Intelligence instead)
   return null;
 }
 
@@ -520,7 +526,8 @@ function weaponDamageAffix(cat, ilvl){
   const min = Math.max(1, Math.round(avg*(1-sh.spread))), max = Math.max(min+1, Math.round(avg*(1+sh.spread)));
   return {key:'wpnDmg', label:'Damage', min, max, value:Math.round((min+max)/2), base:true, v458:true};
 }
-function baseStatValue(category, material, ilvl){
+function baseStatValue(category, material, ilvl){ return Math.max(1, Math.round(baseStatMean(category, material, ilvl)*rand(0.9,1.1))); }
+function baseStatMean(category, material, ilvl){
   const L0 = Math.max(1, ilvl||1), fl = BASE_BRACKETS[baseBracketIdx(L0)];
   const L = fl + 0.5*(L0 - fl);
   const wpn = 4 + 1.05*L, arm = (2 + 0.3*L)*DEF_SCALE;
@@ -530,8 +537,43 @@ function baseStatValue(category, material, ilvl){
   else if(category==='bow') v = wpn*1.2;
   else if(category==='shield') v = arm*ARMOR_SLOT_WEIGHT.shield;
   else if(ARMOR_SLOT_WEIGHT[category]) v = arm*ARMOR_SLOT_WEIGHT[category]*(ARMOR_MATERIAL_WEIGHT[material]||1);
-  return Math.max(1, Math.round(v*rand(0.9,1.1)));
+  return v;
 }
+// ---- v563 attributes: Strength / Dexterity / Intelligence ----
+// Every character gets them from level (its class's main one +3 a level, the other two +1) plus gear mods.
+// Plate / swords / shields need Strength, leather / bows Dexterity, robes / staves Intelligence: about what a
+// character of that class has at the item's level (x0.86-0.98 for an ordinary roll, more for a strong
+// Defense or damage roll, a magic or rare item or Defense % mods). Gear whose need isn't met stays worn but does nothing.
+const ATTR_KEYS = ['strength','dexterity','intelligence'];
+const ATTR_NAME = {strength:'Strength', dexterity:'Dexterity', intelligence:'Intelligence'};
+const CLASS_MAIN_ATTR = {warrior:'strength', ranger:'dexterity', mystic:'intelligence'};
+const ATTR_MAIN_START = 20, ATTR_MAIN_PER_LV = 3, ATTR_OTHER_START = 10, ATTR_OTHER_PER_LV = 1;
+function attrMainAtLevel(L){ return ATTR_MAIN_START + ATTR_MAIN_PER_LV*(Math.max(1,L||1)-1); }
+function attrBase(cls, key, L){ return CLASS_MAIN_ATTR[cls]===key ? attrMainAtLevel(L) : ATTR_OTHER_START + ATTR_OTHER_PER_LV*(Math.max(1,L||1)-1); }
+const REQ_ATTR_BY_MATERIAL = {plate:'strength', leather:'dexterity', robe:'intelligence'};
+const REQ_ATTR_BY_SLOT = {weapon1h:'strength', weapon2h:'strength', shield:'strength', bow:'dexterity', staff:'intelligence'};
+function itemReqAttrKey(it){
+  if(!it || !it.slotType || it.questId) return null;
+  if(it.material && REQ_ATTR_BY_MATERIAL[it.material]) return REQ_ATTR_BY_MATERIAL[it.material];
+  return REQ_ATTR_BY_SLOT[it.slotType] || null;
+}
+function itemAttrReq(it){
+  const key = itemReqAttrKey(it); if(!key) return null;
+  if(it.attrReq && it.attrReq.key===key) return it.attrReq;
+  const L = Math.max(1, it.ilvl || it.levelReq || 1);
+  let ratio = 1;
+  const base = (it.affixes||[]).find(a=>a.base);
+  if(base){
+    if(base.key==='wpnDmg'){ const sh = WPN_SHAPE[it.slotType]; if(sh) ratio = ((base.min+base.max)/2)/(sh.a+sh.b*L); }
+    else { const m = baseStatMean(it.slotType, it.material, L); if(m>0) ratio = base.value/m; }
+  }
+  let f = 0.86 + 0.6*(clamp(ratio, 0.85, 1.15) - 0.9) + ({magic:0.03, rare:0.06}[it.rarity] || 0);
+  f += (it.affixes||[]).filter(a=>a.key==='defensePct').reduce((t,a)=>t+(a.value||0), 0)/400;
+  it.attrReq = {key, value:Math.max(1, Math.round(attrMainAtLevel(L)*clamp(f, 0.82, 1.15)))};
+  return it.attrReq;
+}
+function itemReqMet(p, it, attrs){ const r = itemAttrReq(it); if(!r) return true; const a = attrs || (p && p.attrs) || {}; return (a[r.key]||0) >= r.value; }
+function itemReqText(it){ const r = itemAttrReq(it); return r ? 'Requires '+r.value+' '+ATTR_NAME[r.key] : ''; }
 // (v346) Base-type implicits: every slot has one. Values scale with item level (+-12% roll); mods roll on top.
 const ELEM_RES_IMPLICIT = (key,label)=>({key, label, f:L=>Math.min(MAX_SINGLE_RESIST_PER_ITEM, 8+0.25*L)});
 const IMPLICIT_FORMULA = {

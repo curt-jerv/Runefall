@@ -8,9 +8,9 @@ const stCost = (id, r)=> resCost((game&&game.player&&game.player.cls==='ranger')
 // simple max -- whichever is higher wins -- so a node's own reqLevel is
 // never weakened by this, only ever potentially raised.
 // v219: ONE requirement ladder for every class and tree -- purely by row (the node's own reqLevel is ignored)
-const SKILL_ROW_LEVEL_REQ = [1, 7, 14, 21, 28, 35];
+const SKILL_ROW_LEVEL_REQ = [1, 7, 14, 21, 32, 35];   // v566: bottom row Lv.32 (was 28)
 function nodeLevelReq(node){
-  if(node.capstone) return CAPSTONE_LEVEL_REQ;   // v304: every capstone unlocks at Lv.28
+  if(node.capstone) return CAPSTONE_LEVEL_REQ;   // v304: every capstone unlocks at Lv.28; v566: Lv.32
   return SKILL_ROW_LEVEL_REQ[Math.min(node.row||0, SKILL_ROW_LEVEL_REQ.length-1)] || 1;
 }
 // v304: ranks 6-10 are "mastery ranks", gated by character level.
@@ -59,7 +59,7 @@ function canRankUp(p, treeKey, idx){
 // each rank adds. Rank>0 lines are left to nodeEffectText's own branches
 // unless overridden here.
 const SKILL_R0_TEXT = {
-  ironSkin: ()=>'Passive: harden your body. Each rank: more Defense (+10% up to +25%), damage reduction (2% up to 8%) and, with a shield equipped, +2% Block Chance. Rank 5 also grants +4% max life.',
+  ironSkin: ()=>'Passive: harden your body. Each rank: more Defense (+'+fmtNum(IRON_SKIN_DEFENSE_PCT_BY_RANK[1]*100)+'% up to +'+fmtNum(IRON_SKIN_DEFENSE_PCT_BY_RANK[5]*100)+'%), damage reduction ('+fmtNum(IRON_SKIN_DR_BY_RANK[1]*100)+'% up to '+fmtNum(IRON_SKIN_DR_BY_RANK[5]*100)+'%) and, with a shield equipped, +2% Block Chance. Rank 5 also grants +4% max life.',
   shieldBash: ()=>'Unlocks the SLAM button: damage, a brief stagger, and a chance to stun. Each rank: +5% damage & speed, longer stun, higher stun chance. Rank 5 knocks enemies down.',
   shieldThrow: ()=>'Hurl your shield through several enemies. Each rank: +5% damage, longer stun, higher stun chance (2% up to 10% at Rank 10), +1 chain and a slightly shorter cooldown.',
   guardian: ()=>'Roar and fill your Rage, then charge nonstop while it drains ('+juggDrain(1)+'/s). Enemies you run through take double Slam damage and are knocked back; +'+Math.round(juggDef(1)*100)+'% defence. Cooldown '+GUARDIAN_CD+'s.',
@@ -75,7 +75,7 @@ const SKILL_R0_TEXT = {
   rally: ()=>'New RALLY button: re-summon your followers beside you, heal them, and raise block chance and defence for you and them. Each rank: bigger heal, stronger defence, longer buff. Cooldown '+RALLY_CD+'s.',
   survivalFieldDress: ()=>'Bandage yourself: heal '+Math.round(SURV_FIELD_DRESS_REGEN_BASE*100)+'% max HP per second for '+SURV_FIELD_DRESS_DUR+'s while still moving; companions heal half. Each rank: +1% per second and the cooldown drops 3s ('+SURV_FIELD_DRESS_CD_BASE+'s at Rank 1, '+SURV_FIELD_DRESS_CD_MIN+'s at Rank 5).',
   evasion: ()=>'Passive: +5% chance to fully dodge a hit at Rank 1, +2% more per rank after Rank 4 (+32% at Rank 10). Stacks with Dexterity from gear (cap 60%). Every dodge also restores '+evasionDodgeStamina({skills:{evasion:1}})+' Stamina (up to '+evasionDodgeStamina({skills:{evasion:10}})+' at Rank 10).',
-  frostTrap: ()=>'Lay a trap that stays where it lands. When an enemy steps near it, it freezes everything in a wide area, then chills them. Up to 3 traps at once. Each rank: +0.1s freeze.',
+  frostTrap: ()=>'Lay a trap that stays where it lands. When an enemy steps near it, it freezes everything in a wide area, then chills them. Up to 3 traps at once. Each rank: +0.2s freeze, +0.5s chill. Elites and brutes are frozen for less; bosses are only chilled.',
   vanish: ()=>'Become untargetable for 1s; dealing damage ends it early. Each rank: +1s duration. Cooldown 30s.',
   stunShot: ()=>'New STUN button (requires Crippling Shot): a heavy shot that stuns on hit. Each rank: +5% damage and +0.075s stun. Cooldown 6s.',
   companionBear: ()=>'Summons a bear companion, your hardest-hitting follower. Each rank after the first: +15% bear damage & HP.',
@@ -227,6 +227,7 @@ function skillPreviewExtra(node, rank){
   return '';
 }
 function nodeEffectText(node, rank){
+  if(typeof skillTipHtml==='function'){ const h = skillTipHtml(node, rank); if(h) return h; }   // v561: one layout for every skill (ui/skill-tips.js)
   let t = tidySkillText(node, rank, nodeEffectTextBase(node, rank));
   if(SKILL_WD[node.id]) t = wdHeader(node.id, rank) + stripOldDmgText(t);
   else try{
@@ -264,7 +265,7 @@ const RV227_TEXT = {
   markedPrey:(r)=> r===0 ? 'Passive: marked enemies take +6% more damage per rank from you and your pets, and killing a marked enemy resets Hunter\'s Mark.' : 'Marked enemies: +'+Math.round(MARKED_PREY_PER_RANK*r*100)+'% more damage &middot; Killing a marked enemy resets Hunter\'s Mark',
   explosiveTrap:(r)=> r===0 ? 'Active: throw a trap that arms after a moment and detonates in a fire blast when enemies come near, igniting them. Costs Stamina.' : 'Fire blast dmg ~'+Math.round(EXPLOSIVE_TRAP_BASE_DMG*skillMult(r))+' (base, scales with level/gear) plus burning &middot; Cooldown '+trapCdText(6),
   trapMastery:(r)=> r===0 ? 'Passive: Poison and Explosive Traps deal +8% damage per rank, all traps have +6% radius per rank, and all three traps recharge 5% faster per rank.' : 'Trap damage +'+Math.round(TRAP_MASTERY_DMG*r*100)+'% &middot; Radius +'+Math.round(TRAP_MASTERY_RADIUS*r*100)+'% &middot; Trap cooldowns -'+Math.round(TRAP_MASTERY_CD*r*100)+'%',
-  survivalInstinct:(r)=> r===0 ? 'Passive: +5% max life and +2% movement speed per rank. Wounded prey cannot hide from you: +10% damage to enemies suffering any ailment (bleed, poison, burn, chill, freeze, charge, stun), up to +30% at Rank 10.'
+  survivalInstinct:(r)=> r===0 ? 'Passive: +5% max life and +2% movement speed per rank. +15% damage with ailments at rank 1, up to +50% at rank 10 (against enemies that are bleeding, poisoned, burning, chilled, frozen, charged or stunned).'
     : 'Max life +'+Math.round(INSTINCT_HP_PER_RANK*r*100)+'% &middot; Move speed +'+Math.round(INSTINCT_SPEED_PER_RANK*r*100)+'% &middot; +'+Math.round(predInstinctPct(r)*100)+'% damage vs ailing enemies',
   opportunist:(r)=> r===0 ? 'Passive: after you dodge, deal +5% more damage per rank for 3 seconds.' : 'After a dodge: +'+Math.round(OPPORTUNIST_PER_RANK*r*100)+'% damage for '+OPPORTUNIST_DUR+'s',
 };
@@ -273,8 +274,8 @@ const RV266_TEXT = {
     : 'Damage: +'+Math.round((skillMult(r)-1)*100)+'% &middot; Rage gained: +'+(SLAM_RAGE_PER_TARGET+SLAM_RAGE_STEP*(r-1))+' per foe (up to '+SLAM_RAGE_TARGETS+') &middot; '+Math.round(slamStunChance(r)*100)+'% chance of a '+fmtNum(shieldBashStunDuration(r))+'s stun',
   unbreakable:(r)=> r===0 ? 'Passive: pain feeds you (+20% Rage from hits taken per rank). Below '+Math.round(UNBREAK_LOW_HP*100)+'% life you take '+Math.round(UNBREAK_LOW_DR*100)+'% less damage (+'+Math.round(UNBREAK_LOW_DR_STEP*100)+'% per rank). A killing blow leaves you at 20% life instead, once every '+UNBREAK_SAVE_CD+'s (shorter per rank).'
     : 'Rage from hits taken: +'+Math.round(UNBREAK_HURT_RAGE*r*100)+'% &middot; Below '+Math.round(UNBREAK_LOW_HP*100)+'% life: '+Math.round((UNBREAK_LOW_DR+UNBREAK_LOW_DR_STEP*(r-1))*100)+'% less damage &middot; Survive a killing blow every '+(UNBREAK_SAVE_CD-UNBREAK_SAVE_STEP*(r-1))+'s',
-  bulwark:(r)=> r===0 ? 'Active: for '+BULWARK_DUR+'s your armor rises 75% and your speed falls 50%. Every point of damage you take is stored and released as a knockback shockwave when it ends (tap again to release early). Costs '+resCost(null,'bulwark')+' Rage. Cooldown '+BULWARK_CD+'s. Each rank: +'+BULWARK_DUR_STEP+'s.'
-    : 'Duration '+fmtNum(BULWARK_DUR+BULWARK_DUR_STEP*(r-1))+'s &middot; Armor +75% &middot; Speed -50% &middot; Cost '+resCost(null,'bulwark')+' Rage &middot; Releases '+Math.round(BULWARK_REL*100)+'% of stored damage as a shockwave &middot; Cooldown '+BULWARK_CD+'s',
+  bulwark:(r)=> r===0 ? 'Active: for '+BULWARK_DUR+'s your armor rises '+Math.round((BULWARK_ARMOR-1)*100)+'% and your speed falls 50%. Every point of damage you take is stored and released as a knockback shockwave when it ends (tap again to release early). Costs '+resCost(null,'bulwark')+' Rage. Cooldown '+BULWARK_CD+'s. Each rank: +'+BULWARK_DUR_STEP+'s.'
+    : 'Duration '+fmtNum(BULWARK_DUR+BULWARK_DUR_STEP*(r-1))+'s &middot; Armor +'+Math.round((BULWARK_ARMOR-1)*100)+'% &middot; Speed -50% &middot; Cost '+resCost(null,'bulwark')+' Rage &middot; Releases '+Math.round(BULWARK_REL*100)+'% of stored damage as a shockwave &middot; Cooldown '+BULWARK_CD+'s',
   guardian:(r)=> r===0 ? 'Capstone: let out a war cry, fill your Rage meter and charge. You cannot stop moving until the Rage runs out ('+juggDrain(1)+' Rage per second), but you steer freely. Every enemy you run into takes '+JUGG_DMG_MULT+'x your Shield Slam damage and is knocked back, and your defence rises '+Math.round(juggDef(1)*100)+'%. You cannot attack or use skills while charging. You also speed up 1% every second, and when the Rage runs out you erupt in a burst for '+JUGG_BURST_MULT+'x Slam damage (the speed ramp and burst do not scale with rank). Cooldown '+GUARDIAN_CD+'s. Each rank: less Rage lost per second (down to 10), more damage and defence.'
     : 'Rage loss: '+fmtNum(juggDrain(r))+'/s &middot; Damage: '+fmtNum(juggDmgMult(r))+'x Slam &middot; Defence +'+Math.round(juggDef(r)*100)+'% &middot; Cooldown '+GUARDIAN_CD+'s',
   weaponsSpecialist:(r)=> r===0 ? 'Two-handed swords already deal +'+Math.round((TWOHAND_BASE_DMG_MULT-1)*100)+'% damage. This unlocks the Longsword line (Longsword &rarr; Greatsword &rarr; Demonblade) with bonus damage and armor penetration per rank, and dual-wielding with bonus attack speed.'
@@ -336,11 +337,11 @@ const RV269_TEXT = {
   fireball:(r)=> r===0 ? 'Active, Main attack: fast fire balls that sometimes set the target alight. Casts quickly and never roots you. A 2nd ball unlocks at rank 3 and a 3rd at rank 5, fired in a spaced left/right volley. Restores mana per hit.' : 'Balls per cast: '+fireballCount(r)+' &middot; each ball '+_pc(FIREBALL_BALL_MULT)+' of a full hit, '+Math.round((0.25+0.075*Math.max(1,r))*100)+'% Burn chance (lower vs elites and bosses) &middot; fires '+_pc(1-FIREBALL_ATKCD_MULT)+' faster than Strike. Assign it to Main/1/2/3.',
   iceBolt:(r)=> r===0 ? 'Active, Main attack: a big, slow, heavy bolt of ice. It chills; '+FREEZE_HITS_NORMAL+' cold hits in a row FREEZE a regular enemy for a moment ('+FREEZE_HITS_TOUGH+' for brutes and elites, shorter freeze, bosses are only chilled). Assign it to Main/1/2/3.' : 'Heavy bolt: about '+fmtNum(ICE_BOLT_DMG_MULT)+'x a normal hit, but slower to cast &middot; '+FREEZE_HITS_NORMAL+' hits freeze regular enemies, '+FREEZE_HITS_TOUGH+' freeze brutes/elites. Each rank adds damage.',
   elementalPolarity:(r)=> r===0 ? 'Passive: if your next damaging spell is the OPPOSITE element of your last one (fire after ice, ice after fire), it deals +'+Math.round(polarityBonus(1)*100)+'% damage (up to +'+Math.round(polarityBonus(10)*100)+'% at rank 10).' : 'Opposite-element spell bonus: +'+Math.round(polarityBonus(r)*100)+'% damage.',
-  immolate:(r)=> r===0 ? 'Active: set yourself on fire. You deal +'+Math.round(immolateBoost(1)*100)+'% more damage (+100% at rank 5, +200% at rank 10) and your Fireballs explode on impact, but you burn for '+fmtNum(IMMOLATE_SELF_PCT*100)+'% of your max life per second (reduced by fire resistance; your Ice Armor soaks it first; never kills you). It burns until you press it again or fall to '+Math.round(IMMOLATE_MIN_HP*100)+'% life.' : 'No duration limit &middot; +'+Math.round(immolateBoost(r)*100)+'% damage dealt &middot; Ends at '+Math.round(IMMOLATE_MIN_HP*100)+'% life &middot; Fireballs explode for '+Math.round(IMMOLATE_EXPLODE_PCT*100)+'% damage around the target &middot; Self-burn '+Math.round(IMMOLATE_SELF_PCT*100)+'% max life/s &middot; Cooldown '+IMMOLATE_CD+'s',
+  immolate:(r)=> r===0 ? 'Active: set yourself on fire. You deal +'+Math.round(immolateBoost(1)*100)+'% more damage (+'+Math.round(immolateBoost(5)*100)+'% at rank 5, +'+Math.round(immolateBoost(10)*100)+'% at rank 10) and your Fireballs explode on impact, but you burn for '+fmtNum(IMMOLATE_SELF_PCT*100)+'% of your max life per second (reduced by fire resistance; your Ice Armor soaks it first; never kills you). It burns until you press it again or fall to '+Math.round(IMMOLATE_MIN_HP*100)+'% life.' : 'No duration limit &middot; +'+Math.round(immolateBoost(r)*100)+'% damage dealt &middot; Ends at '+Math.round(IMMOLATE_MIN_HP*100)+'% life &middot; Fireballs explode for '+Math.round(IMMOLATE_EXPLODE_PCT*100)+'% damage around the target &middot; Self-burn '+Math.round(IMMOLATE_SELF_PCT*100)+'% max life/s &middot; Cooldown '+IMMOLATE_CD+'s',
   flameVortex:(r)=> r===0 ? 'Active: a spiralling ring of fire that follows you, burns everything inside it. When it ends it EXPLODES, hurting enemies and you ('+Math.round(FLAME_VORTEX_SELF_PCT*100)+'% max life, cut by fire resistance). Bosses are not pulled.' : 'Lasts '+fmtNum(flameVortexDur(r))+'s &middot; radius '+FLAME_VORTEX_R+' &middot; explosion '+FLAME_VORTEX_BLAST_MULT+'x a tick &middot; self-damage '+Math.round(FLAME_VORTEX_SELF_PCT*100)+'% max life &middot; Cooldown '+FLAME_VORTEX_CD+'s',
   permafrost:(r)=> r===0 ? 'Active: freeze a large patch of ground. Enemies inside are slowed 25% (50% at rank 10) and take +20% cold damage (+50% at rank 10). Chilled or frozen enemies that die inside shatter, hurting enemies around them. Standing inside, you move 10% faster and your Ice Bolt casts '+Math.round((PERMAFROST_ICEBOLT_SPEED-1)*100)+'% faster. Cooldown 12s, down to 8s at rank 10.' : 'Lasts '+permafrostDur(r)+'s &middot; radius '+PERMAFROST_R+' &middot; enemies -'+Math.round(permafrostSlowPct(r)*100)+'% speed, +'+Math.round(permafrostColdAmp(r)*100)+'% cold damage taken &middot; chilled/frozen kills shatter &middot; you +10% speed, Ice Bolt '+Math.round((PERMAFROST_ICEBOLT_SPEED-1)*100)+'% faster &middot; Cooldown '+fmtNum(permafrostCd(r))+'s',
   iceArmor:(r)=> r===0 ? 'Put Ice Armor on a skill button to use it. While it is there, it reserves 25% of your mana to keep a barrier of ice around you that soaks incoming damage. The barrier holds 25% of your max life (50% at Rank 10) and refills on its own once you go 5 seconds without being hit (3 seconds at Rank 10). Press the ICE ARMOR button to explode it: a cold blast around you that deals the barrier you are holding as damage and FREEZES nearby enemies (bosses are only chilled), then the barrier recharges.' : 'Barrier: '+Math.round(iceArmorScale(r)*100)+'% of your max life ('+iceArmorBarrierMax((game&&game.player)||{maxHp:0}, r)+') &middot; Recharges after '+fmtNum(iceArmorRecharge(r))+'s without being hit &middot; Explosion: the barrier you hold, as cold damage; freezes nearby enemies &middot; Reserves 25% mana',
-  pyroTorrent:(r)=> r===0 ? 'Channel a torrent of fire that pierces every enemy in its path, burning them. Costs mana per second. Keeps going until you press it again, run out of mana or dodge; no cooldown.' : 'Channels until stopped &middot; hits every enemy along the beam &middot; ramps up to double damage over '+PYRO_RAMP_TIME+'s &middot; no cooldown',
+  pyroTorrent:(r)=> r===0 ? 'Channel a torrent of fire that pierces every enemy in its path, burning them. Costs mana per second. Keeps going until you press it again, run out of mana or dodge; no cooldown. You can walk while channelling, 40% slower.' : 'Channels until stopped &middot; hits every enemy along the beam &middot; ramps up to double damage over '+PYRO_RAMP_TIME+'s &middot; no cooldown',
   blizzard:(r)=> r===0 ? 'Capstone (requires Permafrost). Call down a blizzard of ice shards on a large area. Chills everything inside and counts toward freezing. +30% damage.' : 'Ice shards for '+BLIZZARD_DUR+'s over a radius of '+BLIZZARD_RADIUS+' &middot; damage +30% &middot; chills, freezes after repeated hits',
   nova:(r)=> r===0 ? 'Active: a ring of lightning bursts from you. Adds a Charge and shoves non-boss enemies back a little.' : 'Damage 180% of a basic nova (+'+Math.round((skillMult(r)-1)*100)+'%) &middot; +1 Charge &middot; knocks regular enemies back (bosses and heavy enemies stay put) &middot; Radius '+NOVA_RADIUS+' &middot; Cooldown '+NOVA_CD+'s',
   tornado:(r)=> r===0 ? 'Active: hurl a big, slow, piercing tornado at your enemy. It hits every enemy inside it 3 times per second for as long as they stay in it. Each rank adds damage.' : 'Hit damage x'+fmtNum(skillMult(r))+' &middot; 3 hits per second on each enemy inside &middot; Pierces &middot; Cooldown '+fmtNum(tornadoCdForRank(r))+'s',
@@ -594,7 +595,7 @@ function nodeEffectTextBase(node, rank){
   if(node.id==='frostTrap'){
     if(rank===0) return 'Throw a frost trap at an enemy; after .5s it bursts with cold, damaging and freezing all enemies nearby briefly, then slows them.';
     const freezeDur = frostTrapFreezeDuration(rank);
-    return 'Cold burst dmg ~'+Math.round(10*mult)+' &middot; Freeze: '+fmtNum(freezeDur)+'s &middot; Slow (Chill) after: '+ICE_CHILL_DUR+'s &middot; Radius '+SURV_TRAP_RADIUS+' &middot; Fuse '+SURV_TRAP_FUSE+'s &middot; Cooldown '+trapCdText(FROST_TRAP_CD);
+    return 'Cold burst dmg ~'+Math.round(10*mult)+' &middot; Freeze: '+fmtNum(freezeDur)+'s (elites '+fmtNum(freezeDur*FROST_TRAP_TOUGH)+'s) &middot; Slow (Chill) after: '+fmtNum(frostTrapChillDuration(rank))+'s &middot; Radius '+SURV_TRAP_RADIUS+' &middot; Fuse '+SURV_TRAP_FUSE+'s &middot; Cooldown '+trapCdText(FROST_TRAP_CD);
   }
   if(node.id==='finesse'){
     if(rank===0) return 'Passive (requires Evasion): gain a 2nd Dodge charge before its cooldown is triggered. Each rank shortens Dodge\'s cooldown by 0.1s up to Rank 5, then 0.03s per rank (0.40s at Rank 10).';
@@ -1094,7 +1095,7 @@ function hunterSkillNodeIconSvg(nodeId){
 // base-icon-shape idea as every other tree's icon set -- every node draws
 // the same bolt, then adds its own accent (see each branch below).
 const LIGHTNING_ICON_PATH = 'M23 2 L9 21 L18 21 L14 38 L31 17 L20 17 Z';
-const DJINN_NODE_IDS = ['lightningArc','lightningChain','nova','tornado','storm','hurricane','thunderstep','staticBuildup','stormcall','windrunner'];
+const DJINN_NODE_IDS = ['lightningArc','lightningChain','nova','tornado','storm','hurricane','thunderstep','staticBuildup','stormcall','stormWard'];
 function djinnSkillNodeIconSvg(nodeId){
   let extra = '';
   if(nodeId==='thunderstep'){
@@ -1149,7 +1150,7 @@ function iceShardSvg(cx, cy, scale, opacity){
   s += '</g>';
   return s;
 }
-const ELEMENTALIST_NODE_IDS = ['elementalMastery','elementalPolarity','elementalExplosions','iceArmor','pyroTorrent','blizzard','fireball','iceBolt','immolate','flameVortex','permafrost','meteor'];
+const ELEMENTALIST_NODE_IDS = ['elementalMastery','manaShield','elementalExplosions','iceArmor','pyroTorrent','blizzard','fireball','iceBolt','immolate','flameVortex','permafrost','meteor'];
 function elementalistSkillNodeIconSvg(nodeId){
   if(nodeId==='fireball' || nodeId==='iceBolt') return virtualSkillIconSvg(nodeId);
   let extra = '';
@@ -1259,6 +1260,8 @@ function necromancerSkillNodeIconSvg(nodeId){
 }
 // v272: one unique hand-drawn glyph per skill (all classes)
 const V459_ICONS = {
+  stormWard:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20 A12 12 0 0 1 32 16"></path><path d="M32 20 A12 12 0 0 1 8 24"></path><path d="M12 12 A11 11 0 0 1 28 10"></path><path d="M28 30 A11 11 0 0 1 12 30"></path><circle cx="20" cy="20" r="3"></circle></g>',   // v564
+  manaShield:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 5 L32 10 L31 22 Q29 31 20 35 Q11 31 9 22 L8 10 Z"></path><path d="M20 12 L24 19 L20 28 L16 19 Z"></path></g>',
   elementalMastery:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C8 24 10 16 16 11 C16 17 19 19 21 19 C19 14 22 9 26 6 C26 13 31 16 31 23 C31 28 27 32 22 33"/><path d="M24 33 L24 22 M19.5 24.5 L28.5 30.5 M28.5 24.5 L19.5 30.5" stroke-width="1.8"/><circle cx="24" cy="27.5" r="1.3" fill="currentColor"/></g>',
   staticBuildup:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="20" cy="20" r="13" stroke-dasharray="3 4"/><path d="M22 9 L15 21 L21 21 L17 31" /><circle cx="8" cy="12" r="1.5" fill="currentColor"/><circle cx="33" cy="27" r="1.5" fill="currentColor"/></g>',
   stormcall:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12 Q8 5 16 6 Q19 1 26 4 Q34 4 33 12 Z" fill="currentColor" fill-opacity="0.3"/><path d="M21 12 L16 22 L22 22 L18 32"/><ellipse cx="18" cy="35" rx="10" ry="3"/></g>',
@@ -1534,8 +1537,19 @@ function drawShieldConnectors(tree){
     });
   }
   let linesHtml = '';
+  // v567: a crossing -- the 'from' nodes run into one point (an empty grid spot) and the 'to' nodes branch out of it
+  const J = tree.junction, jEl = J && wrap.querySelector('.treeJunction');
+  if(J && jEl){
+    const jr = jEl.getBoundingClientRect(), jx = jr.left+jr.width/2-wrapRect.left, jy = jr.top+jr.height/2-wrapRect.top;
+    const sk = game.player.skills||{}, allFrom = J.from.every(id=>(sk[id]||0)>0);
+    const cen = id=>{ const el = wrap.querySelector('.treeNode[data-nodeid="'+id+'"]'); if(!el) return null; const r = el.getBoundingClientRect(); return [r.left+r.width/2-wrapRect.left, r.top+r.height/2-wrapRect.top]; };
+    J.from.forEach(id=>{ const c = cen(id); if(c) linesHtml += '<line class="'+((sk[id]||0)>0?'lit':'')+'" x1="'+c[0]+'" y1="'+c[1]+'" x2="'+jx+'" y2="'+jy+'"></line>'; });
+    J.to.forEach(id=>{ const c = cen(id); if(c) linesHtml += '<line class="'+(allFrom?'lit':'')+'" x1="'+jx+'" y1="'+jy+'" x2="'+c[0]+'" y2="'+c[1]+'"></line>'; });
+    linesHtml += '<polygon class="'+(allFrom?'lit':'')+'" points="'+jx+','+(jy-7)+' '+(jx+7)+','+jy+' '+jx+','+(jy+7)+' '+(jx-7)+','+jy+'" style="fill:#1a140d"></polygon>';
+  }
   tree.nodes.forEach(node=>{
     (node.prereq||[]).forEach(reqId=>{
+      if(J && J.to.indexOf(node.id)>=0 && J.from.indexOf(reqId)>=0) return;   // drawn through the crossing above
       const fromEl = wrap.querySelector('.treeNode[data-nodeid="'+reqId+'"]');
       const toEl = wrap.querySelector('.treeNode[data-nodeid="'+node.id+'"]');
       if(!fromEl || !toEl) return;
@@ -1607,7 +1621,7 @@ function renderSkillTree(){
     const gridClass = (tree.layout==='sword' || tree.layout==='cascade') ? 'treeSwordGrid' : 'treeShieldGrid';
     treeColsEl.innerHTML = '<div class="treeShieldWrap" id="treeShieldWrap">'+
       '<svg class="treeShieldLines" id="treeShieldLines"></svg>'+
-      '<div class="'+gridClass+'">'+nodesHtml+'</div>'+
+      '<div class="'+gridClass+'">'+nodesHtml+(tree.junction ? '<div class="treeJunction" style="grid-column:'+(tree.junction.col+1)+';grid-row:'+(tree.junction.row+1)+';"></div>' : '')+'</div>'+
     '</div>';
     drawShieldConnectors(tree);
     treeColsEl.querySelectorAll('.treeNode.iconNode').forEach(el=>{

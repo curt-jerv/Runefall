@@ -56,6 +56,7 @@ const DARKCRYPT_PLAYER_LIGHT_R = 213;  // v222: 1.5x // (v120) a little larger: 
 const DARKCRYPT_TORCH_LIGHT_R = 70;
 // v224: every underground dungeon gets the crypt's black screen + lit circle, at 2x the crypt's radius
 const UNDERGROUND_LIGHT_R = DARKCRYPT_PLAYER_LIGHT_R*2;
+const CAVE_CORE_DIM = {minotaurcave:0.3, spiderlair:0.42, bearcave:0.5};   // v547: the caves off the Forest and River Valley stay darker than the woods outside
 function isUndergroundScene(g){
   const sc = g.scene;
   return sc==='dungeon'||sc==='spiderlair'||sc==='bearcave'||sc==='minotaurcave'||sc==='ancientruins'||sc==='raptorlair'||(sc==='lighthouse' && !!(g.room && (g.room.subzone==='sunken' || g.room.subzone==='temple' || g.room.subzone==='rrtower' || g.room.subzone==='cellar' || g.room.subzone==='highward' || g.room.deep===1 || g.room.deep===3)));
@@ -270,7 +271,7 @@ function hudBottomPx(){
   if(t-_hudBT > 600){ _hudBT = t; const el = document.getElementById('topWrap'); if(el){ const b = el.getBoundingClientRect().bottom; if(b>0 && b<H*0.4) _hudB = b; } }   // v493: the top HUD stack (region name, buffs)
   return _hudB;
 }
-function losShadowScene(g){ return !!(g && g.started && g.player && (g.scene==='darkcrypt' || isUndergroundScene(g) || (g.scene==='lighthouse' && g.room && g.room.subzone!=='pool' && !kpOutdoor(g)))); }   // v492: every tower and hall (not the Shadow Keep's open courtyard) hides what is behind walls
+function losShadowScene(g){ return !!(g && g.started && g.player && (g.scene==='darkcrypt' || isUndergroundScene(g) || (g.scene==='lighthouse' && g.room && g.room.subzone!=='pool' && !kpOutdoor(g) && !lhRoofOpen(g)))); }   // v492: every tower and hall (not the Shadow Keep's open courtyard) hides what is behind walls
 function losEnemyHidden(g, e){
   if(!losShadowScene(g) || e===g.player) return false;
   if(dist(g.player, e) < 60) return false;
@@ -344,6 +345,21 @@ function drawLosMask(g, pts, defer){
     for(let i=0;i<pts.length;i++){ const io = toIso(pts[i][0], pts[i][1]); const x = (io.x-cam.x)*LS, y = (io.y-cam.y-lift)*LS; if(i===0) m.moveTo(x,y); else m.lineTo(x,y); }
     m.closePath(); m.fill();
   }
+  // v544: anyone you can see keeps their whole figure (head and life bar too) even where the shadow behind a wall rises up the screen
+  const cut = (wx, wy, rr, hh)=>{
+    const io = toIso(wx, wy), x = (io.x-cam.x)*LS, y = (io.y-cam.y)*LS;
+    if(x < -60 || x > lw+60 || y < -60 || y > lh+120) return;
+    const w = Math.max(16, rr*1.9)*LS, h = hh*LS, cy = y - h/2 + 3*LS;
+    m.globalAlpha = 0.5; m.beginPath(); m.ellipse(x, cy, w+3, h/2+4, 0, 0, Math.PI*2); m.fill();
+    m.globalAlpha = 1; m.beginPath(); m.ellipse(x, cy, w, h/2, 0, 0, Math.PI*2); m.fill();
+  };
+  const p = g.player; if(p) cut(p.x, p.y, 16, 92);
+  if(g.followers) for(const f of g.followers) if(f.hp>0 && dist(f, p) < LOS_RANGE && enemyLOS(g, f, p)) cut(f.x, f.y, f.r||14, Math.max(70, (f.r||14)*4.6));
+  if(g.enemies) for(const e of g.enemies){
+    if(!(e.hp>0) || dist(e, p) > LOS_RANGE || losEnemyHidden(g, e)) continue;
+    cut(e.x, e.y, e.r||14, Math.max(70, (e.r||14)*(e.isBoss||e.isLairBoss ? 5.5 : 4.6)) + 24);
+  }
+  m.globalAlpha = 1;
   losPending = true;
   if(!defer) flushLosPending();
 }
@@ -356,7 +372,8 @@ function lightRadiusMult(p){ return 1 + ((p && p.lightRadiusPct)||0); }
 function lightVeilScene(g){
   if(!g || !g.started || !g.player) return false;
   // v515: the dark ring is for towers and dungeons only (every overworld zone, town included, is plainly lit); the player's warm glow still shows (drawPlayerGlowOnly)
-  if(g.scene!=='lighthouse' || isUndergroundScene(g) || kpOutdoor(g)) return false;
+  if(g.scene!=='lighthouse' || isUndergroundScene(g) || kpOutdoor(g) || lhRoofOpen(g)) return false;   // v552: the Lighthouse roof is open air
+  if(g.room && g.room.fht) return false;   // v554: the Frosthold Tower is lit by its own braziers -- no dark veil
   if(g.room && g.room.subzone==='pool') return false;   // v521: the Marsh Pool is open ground, not underground -- plain lit with the edge ring
   if(typeof wlDarkFight==='function' && wlDarkFight(g)) return false;
   return true;
@@ -369,15 +386,17 @@ function drawLightVeil(g){
   drawDarkCryptOverlay(g, (wet ? 315 : th ? VEIL_THEME_R : indoor ? VEIL_INDOOR_R : VEIL_LIGHT_R*(sun ? 0.9 : 1))*lightRadiusMult(g.player), false, null, wet ? 0.72 : th ? VEIL_THEME_A : indoor ? VEIL_INDOOR_A : sun ? 0.93 : VEIL_MAX_A, th ? VEIL_THEME_DIM : indoor ? VEIL_INDOOR_DIM : VEIL_CORE_DIM);
 }
 // v512: lights cast by skills (screen coords): fire = orange, lightning = blue-white. Capped so a crowded fight stays cheap.
+const SKILL_LIGHT_K = 0.5;   // v544: skill lights at half their old strength
 function skillLights(g, cam){
   const out = [], p = g.player, W2 = W+260, H2 = H+260;
   const add = (wx, wy, r, c, a, lift)=>{
     if(out.length >= 14 || a <= 0.02) return;
     const io = toIso(wx, wy), x = io.x - cam.x, y = io.y - cam.y - (lift==null ? 10 : lift);
     if(x < -260 || x > W2 || y < -260 || y > H2) return;
-    out.push({x, y, r, c, a});
+    out.push({x, y, r, c, a:a*SKILL_LIGHT_K});
   };
   const FIRE = '255,140,50', BOLT = '160,215,255';
+  if(g.room && g.room.bonfires) for(const b of g.room.bonfires) add(b.x, b.y, 230, FIRE, 1.7, 8);   // v552: tower bonfires light their rooms
   if(g.projectiles) for(const pr of g.projectiles){
     if(pr.isFireball) add(pr.x, pr.y, 150, FIRE, 0.95, 18);
     else if(pr.isLightningArc) add(pr.x, pr.y, 150, BOLT, 0.95, 18);
@@ -400,7 +419,7 @@ function skillLights(g, cam){
   }
   return out;
 }
-const LIGHT_SOFT = 1.6;   // v517: how far past the old edge the light fades out
+const LIGHT_SOFT = 1.6, LIGHT_SOFT_TOWER = 2.4;   // v517: how far past the old edge the light fades out (v544: towers fade out further)
 const LIGHT_X = 1.15, LIGHT_Y = 0.575;   // v511: light shape = isometric ellipse (wider than tall, 2:1)
 const PLAYER_GLOW_FRAC = 0.64;   // the warm glow reaches this share of the light radius (v510: back to the v508 size)
 // v515: overworld zones have no dark ring, but your own warm light is still there
@@ -448,9 +467,11 @@ function drawDarkCryptOverlay(g, LR, useLights, tint, maxA, coreDim, glow){
   const cl = 1 - (coreDim||0);   // v493: coreDim keeps a faint haze even at the centre of the light
   grdStops.push([0, 'rgba(0,0,0,'+cl+')']);
   // v517: the lit area keeps its size (clear to 0.62 of LR, half dark at 0.8 LR) but the fade now runs on out to LIGHT_SOFT x LR in a long, smooth tail instead of cutting to dark
-  const SO = LIGHT_SOFT, LRm = LR*SO;
+  // v544: in the towers and halls the dark fades out over a much longer tail (out to 2.4 x LR) so you can see a little further
+  const longTail = g.scene==='lighthouse' && !isUndergroundScene(g);
+  const SO = longTail ? LIGHT_SOFT_TOWER : LIGHT_SOFT, LRm = LR*SO;
   grdStops.push([0, 'rgba(0,0,0,'+cl+')']);
-  for(const [f,al] of [[0.62,0.92],[0.8,0.5],[1.0,0.36],[1.2,0.24],[1.4,0.12],[1.6,0]]) grdStops.push([f/SO, 'rgba(0,0,0,'+(al*cl)+')']);
+  for(const [f,al] of (longTail ? [[0.62,0.92],[0.8,0.58],[1.0,0.45],[1.3,0.33],[1.6,0.22],[2.0,0.1],[2.4,0]] : [[0.62,0.92],[0.8,0.5],[1.0,0.36],[1.2,0.24],[1.4,0.12],[1.6,0]])) grdStops.push([f/SO, 'rgba(0,0,0,'+(al*cl)+')']);
   // v511: every light is a flattened ellipse (3/4 isometric view, same 2:1 look as the ground tiles); the upper half still stops under the HUD
   const sy0 = clamp((py - hudBottomPx()) / LRm, 0.3, 1);
   for(const up of [false, true]){

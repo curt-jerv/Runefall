@@ -926,9 +926,10 @@
     #shopOverlay .shopColRight > :nth-child(4){ grid-column:2; grid-row:2; }
     #shopOverlay .shopColRight > :nth-child(n+5){ grid-column:2; }
     /* stash: stash left, bag right */
-    #stashOverlay .modalCard{ max-width:770px; }
+    #stashOverlay .modalCard{ max-width:1040px; }
     #stashOverlay .stashCols{ display:flex; gap:22px; align-items:flex-start; }
     #stashOverlay .stashColL, #stashOverlay .stashColR{ flex:1 1 0; min-width:0; }
+    #stashOverlay .stashColM{ flex:0 0 255px; width:255px; }   /* v558: what you are wearing, between the stash and the bag */
     #stashOverlay .invDivider{ margin-top:2px; }
     /* skill tree / anything else full-screen: centred, a bit narrower */
     #skillTreeOverlay .modalCard{ max-width:980px; }
@@ -1273,6 +1274,7 @@
 #hudDock .gres{ position:absolute; left:0; right:0; top:0; height:0%; background:rgba(40,40,48,.75); }
 #hudDock .gshine{ position:absolute; left:16%; top:9%; width:38%; height:26%; border-radius:50%; background:radial-gradient(ellipse, rgba(255,255,255,.35), rgba(255,255,255,0) 70%); pointer-events:none; }
 #hudDock .gnum{ position:absolute; left:0; right:0; bottom:20%; text-align:center; font:italic 700 17px 'Alegreya',Georgia,serif; letter-spacing:.02em; color:#f4ead8; text-shadow:0 1px 2px #000, 0 0 3px #000; pointer-events:none; }
+#hudDock .gia{ position:absolute; left:0; right:0; bottom:9%; text-align:center; font:italic 700 11px 'Alegreya',Georgia,serif; color:#1c3d8c; text-shadow:0 0 2px #cfe8ff, 0 0 3px #cfe8ff; pointer-events:none; }   /* v546: Ice Armor value */
 #dockMid{ display:flex; flex-direction:column; gap:5px; width:250px; pointer-events:auto; padding-bottom:4px; }
 #dockMid #topBtns{ display:flex !important; gap:4px !important; justify-content:stretch !important; pointer-events:auto; margin:0 !important; }
 #dockMid #topBtns > div{ height:26px !important; font-size:11px !important; pointer-events:auto; }
@@ -1361,3 +1363,25 @@ body.noPotionBtn #actionCluster .interactBtn{ right:127px !important; bottom:127
 
 /* v514: NPC dialogue text a little bigger and easier to read */
 #npcText, #questGiverText{ font-size:16px !important; line-height:1.5; max-height:56vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+
+/* v546: town portal button (dimmed in town) */
+#dockMid #topBtns #tpBtn{ color:#9ad0ff; }
+#dockMid #topBtns #tpBtn.off{ opacity:.45; }
+#dockMid{ width:280px; }
+#dockMid #topBtns > div{ flex:1 1 auto !important; letter-spacing:0 !important; padding:0 3px !important; }
+#dockMid #topBtns #mapBtn{ flex:1 1 auto !important; min-width:0 !important; }
+@media (orientation:portrait){ #dockMid{ width:auto; } #dockMid #topBtns{ gap:3px !important; } #dockMid #topBtns > div{ font-size:9.5px !important; padding:0 2px !important; } }
+#dockMid #topBtns #tpBtn{ flex:0 0 34px !important; }
+#tpBtn .tpOrb{ display:block; width:16px; height:16px; border-radius:50%; background:radial-gradient(circle at 40% 38%, #e8f6ff 0, #6ab8ff 35%, #1a4ab8 75%, #0a1a5a 100%); box-shadow:0 0 6px 1px rgba(90,170,255,.85), inset 0 0 3px rgba(255,255,255,.6); }   /* v548: a blue portal orb instead of the word */
+/* v561: skill tooltips -- one layout for every skill (www/js/ui/skill-tips.js) */
+.tipFx{ color:#ddd3bd; margin-bottom:4px; }
+.tipRow{ margin-top:1px; }
+.tipLab{ color:#c9a86a; }
+.tipNext{ color:#8f9aa3; }
+/* v563: gear worn without the Strength / Dexterity / Intelligence it needs */
+.pdSlot.pdInactive{ box-shadow:inset 0 0 0 2px #c0392b, 0 0 6px rgba(192,57,43,.6) !important; }
+.pdSlot.pdInactive .slotItem{ opacity:.55; filter:grayscale(.6); }
+/* v567: an empty grid spot where two skill lines cross (Elementalist: Immolate + Ice Armor -> Mana Shield / Elemental Mastery) */
+.treeJunction{ min-height:64px; pointer-events:none; }
+.treeShieldLines polygon{ stroke:#3b3124; stroke-width:3; }
+.treeShieldLines polygon.lit{ stroke:#c7843a; }

@@ -186,15 +186,25 @@ function drawCraterTerrain(R, cam){
       if(!R.isMtn && k===0 && h>0.9){ ctx.strokeStyle='rgba(255,120,40,0.55)'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo((X0+X3)/2,(Y0+Y3)/2); ctx.lineTo((X1+X2)/2+2,(Y1+Y2)/2-1); ctx.lineTo((X1+X3)/2,(Y1+Y3)/2+3); ctx.stroke(); ctx.lineWidth=1; }
     }
   }
-  if(edgeSegs.length){   // v516: bold lip lines, drawn after every tile so no neighbour paints over them
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = 'rgba(14,8,3,0.9)'; ctx.lineWidth = 4.6; ctx.beginPath();
-    for(let q=0;q<edgeSegs.length;q+=4){ ctx.moveTo(edgeSegs[q],edgeSegs[q+1]); ctx.lineTo(edgeSegs[q+2],edgeSegs[q+3]); }
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,240,205,0.6)'; ctx.lineWidth = 1.5; ctx.beginPath();
-    for(let q=0;q<edgeSegs.length;q+=4){ ctx.moveTo(edgeSegs[q],edgeSegs[q+1]-2.4); ctx.lineTo(edgeSegs[q+2],edgeSegs[q+3]-2.4); }
-    ctx.stroke();
-    ctx.lineCap = 'butt'; ctx.lineWidth = 1;
+  if(edgeSegs.length){   // v548: the cliff lips are lined with boulders (was a bold line), drawn after every tile so no neighbour paints over them
+    const pal = R.edgeRockPal || ['#6e665c','#8f887c','#3a342e'];
+    const rocks = [];
+    for(let q=0;q<edgeSegs.length;q+=4){
+      const x0 = edgeSegs[q], y0 = edgeSegs[q+1], x1 = edgeSegs[q+2], y1 = edgeSegs[q+3];
+      for(const t0 of [0.22, 0.7]){
+        const hh = Math.abs(Math.sin(x0*12.9898 + y0*78.233 + t0*37.7)*43758.5453)%1, t = t0 + (hh-0.5)*0.18;
+        rocks.push([x0+(x1-x0)*t, y0+(y1-y0)*t, 7 + hh*8, hh]);
+      }
+    }
+    rocks.sort((a,b)=>a[1]-b[1]);
+    for(const [x,y,s,hh] of rocks){
+      ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.beginPath(); ctx.ellipse(x+2, y+2, s*1.15, s*0.55, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = pal[2]; ctx.beginPath();
+      ctx.moveTo(x-s, y); ctx.lineTo(x-s*0.75, y-s*0.75); ctx.lineTo(x-s*0.1, y-s*(0.95+hh*0.3)); ctx.lineTo(x+s*0.7, y-s*0.7); ctx.lineTo(x+s, y-s*0.05); ctx.lineTo(x+s*0.5, y+s*0.35); ctx.lineTo(x-s*0.6, y+s*0.32); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = pal[0]; ctx.beginPath();
+      ctx.moveTo(x-s*0.8, y-s*0.1); ctx.lineTo(x-s*0.65, y-s*0.7); ctx.lineTo(x-s*0.1, y-s*(0.88+hh*0.3)); ctx.lineTo(x+s*0.6, y-s*0.62); ctx.lineTo(x+s*0.75, y-s*0.15); ctx.lineTo(x, y+s*0.1); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = pal[1]; ctx.beginPath(); ctx.moveTo(x-s*0.55, y-s*0.6); ctx.lineTo(x-s*0.1, y-s*(0.82+hh*0.3)); ctx.lineTo(x+s*0.35, y-s*0.62); ctx.lineTo(x-s*0.1, y-s*0.45); ctx.closePath(); ctx.fill();
+    }
   }
 }
 

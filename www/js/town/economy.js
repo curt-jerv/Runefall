@@ -701,6 +701,13 @@ const TOWN_TIPS = [
   "Don't forget to have proper resistance gear for certain enemies.",
   "Sleeping at a bed in the tavern will make you a well rested adventurer!",
   "You can't remove perfect parts from your gear without damaging it, ya know.",
+  // v546
+  "Don't forget to store your gold in a safe place, like the stash in town. You don't want to lose it!",
+  "I used to be an adventurer like you, until I took an arrow to the knee.",
+  "The barkeep sells helpful drinks, but everything has its downsides.",
+  "The legend of the mountain shrine says if you can't defeat the protectors in one attempt, they reset until you can.",
+  "You can reset your skills at the well in town here.",
+  "Long ago, a Templar of the Demon Hold became corrupted and his order had to lock him away. The legend says his tormented spirit lives on.",
 ];
 let lastTownTip = -1;
 // the tip-givers standing in town right now (none until the tavern re-opens and the ship is back)

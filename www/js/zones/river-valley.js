@@ -6,7 +6,7 @@
 // from north to south. The Minotaur Cave is tucked into the north-east corner.
 const RV_W = 8800, RV_H = 7200, RV_CY = 3600, RV_BX = 4400;   // v526: 4x the area (was 4400x3600)
 const RV_SLICE = 40, RV_BRIDGE_HW = 80, RV_CLIFF_W = 280, RV_ROAD_HW = 46, RV_CLIFF_H = 120;
-const RV_CAMP_TOTAL = 13, RV_PACK_COUNT = 115;
+const RV_CAMP_TOTAL = 13, RV_PACK_COUNT = 200;   // v550: twice the packs (the valley measured ~4.4 monsters per million square units, the Forest ~11)
 function rvRiverY(x){ return RV_CY + 170*Math.sin((x-RV_BX)/640) + 60*Math.sin((x-RV_BX)/210); }
 function rvRiverHW(x){ const t = clamp((x-RV_CLIFF_W)/(RV_W-RV_CLIFF_W),0,1); return 62 + 150*Math.pow(t,1.15); }
 function rvWaterAt(x,y){
@@ -170,15 +170,31 @@ function makeRiverValley(){
       if(clear) flush(x); else if(run0==null) run0 = x;
     }
     flush(B.x1);
-    for(let x=B.x0+40; x<B.x1; x+=rand(70,110)){
-      if(rvOnRoad(x, B.y, 110) || rvWaterNear(x, B.y, 60)) continue;
-      const q = Math.random(), y = B.y + rand(-14,14);
-      if(q < 0.22){ if(!rvOnRoad(x+70, B.y, 110)){ obstacles.push({x:x-10, y:y-26, w:120, h:52, isProp:true, kind:'rvwagon', flip:Math.random()<0.5, seed:Math.random()}); x += 80; } }
-      else if(q < 0.6) obstacles.push({x:x-16, y:y-16, w:32, h:32, isProp:true, kind:'bigtree', s:rand(1.0,1.4)});
-      else if(q < 0.8) obstacles.push({x:x-20, y:y-13, w:Math.round(rand(120,170)), h:26, isProp:true, kind:'log', seed:Math.random()});
-      else obstacles.push({x:x-23, y:y-19, w:46, h:38, isProp:true, kind:'boulder', s:rand(0.95,1.3)});
+    // v551: dressed as a thick, ragged belt of old trees (four staggered rows) instead of one line of wagons and logs,
+    // so you can't see through to the far side
+    for(let r=0;r<4;r++){
+      for(let x=B.x0+20+r*20; x<B.x1; x+=rand(44,60)){
+        const y = B.y - 105 + r*68 + Math.sin(x*0.0042 + r*1.7 + B.y)*34 + rand(-12,12);
+        if(rvOnRoad(x, y, 120) || rvOnRoad(x, B.y, 120) || rvWaterNear(x, y, 60) || rvTrailDist(x, y) < 90 || rvTrailDist(x, B.y) < 90) continue;
+        trees.push({x, y, dark:Math.random()<0.7, s:rand(1.35,2.1)});
+        obstacles.push({x:x-15, y:y-15, w:30, h:30, isProp:true, kind:'rvwall'});
+      }
     }
   }
+  // v551: organic clumps of old trees out in the open -- a few overlapping blobs each, solid (an invisible trunk under each tree)
+  { const clumpOk = (x,y)=>!rvWaterNear(x,y,70) && !rvOnRoad(x,y,130) && rvTrailDist(x,y) > 100 && gates.every(gt=>dist({x,y},gt)>(gt===caveGate?360:260)) && !campZone(x,y) && x>RV_CLIFF_W+90 && x<w-60 && y>60 && y<h-60;
+    for(let i=0, n=0; i<900 && n<46; i++){
+      const cx = rand(RV_CLIFF_W+320, w-320), cy = rand(260, h-260);
+      if(!clumpOk(cx,cy) || !gapOk(cx,cy,200) || RV_BARRIERS.some(B=>Math.abs(cy-B.y)<320)) continue;
+      n++;
+      const blobs = []; for(let k=0;k<3+Math.floor(Math.random()*3);k++) blobs.push({x:cx+rand(-170,170), y:cy+rand(-130,130), r:rand(90,175)});
+      for(let gx=cx-360; gx<=cx+360; gx+=50) for(let gy=cy-320; gy<=cy+320; gy+=46){
+        const x = gx + rand(-12,12), y = gy + rand(-10,10), inB = blobs.find(b=>Math.hypot(x-b.x, (y-b.y)*1.15) < b.r);
+        if(!inB || !clumpOk(x,y)) continue;
+        trees.push({x, y, dark:Math.random()<0.6, s:rand(1.2,2.0)});
+        if(Math.hypot(x-inB.x, (y-inB.y)*1.15) < inB.r-25) obstacles.push({x:x-15, y:y-15, w:30, h:30, isProp:true, kind:'rvwall'});
+      }
+    } }
   // collidable big props: big trees/logs in the north, boulders scattered
   const boxOk = (x,y,ww,hh,m)=>[[x,y],[x+ww,y],[x,y+hh],[x+ww,y+hh],[x+ww/2,y+hh/2]].every(pt=>gapOk(pt[0],pt[1],m));
   for(let i=0,n=0;i<3600 && n<104;i++){
@@ -226,19 +242,19 @@ function makeRiverValley(){
 
   // ---- pack anchors ----
   const packAnchors = [];
-  for(let tries=0; packAnchors.length<260 && tries<30000; tries++){
+  for(let tries=0; packAnchors.length<420 && tries<40000; tries++){   // v550: room for twice the packs
     const x=rand(RV_CLIFF_W+140,w-140), y=rand(140,h-140);
     if(rvOnRoad(x,y,110) || rvWaterNear(x,y,90) || campZone(x,y)) continue;
     if(gates.some(gt=>dist({x,y},gt)<(gt===caveGate?340:260))) continue;
     if(nearObs(x,y,50)) continue;
-    if(packAnchors.some(a=>dist(a,{x,y})<300)) continue;
+    if(packAnchors.some(a=>dist(a,{x,y})<240)) continue;
     packAnchors.push({x,y});
   }
   return { w, h, obstacles, decor, trees, rocks, grassTufts, northGate, southGate, caveGate, caveExit, trail:RV_TRAIL, waypoint, bridge, bridgeC, waterfall,
     campAnchors, packAnchors, waterAt:rvWaterAt };
 }
-const RV_NORTH_PACKS = [ {type:'wolf',countMin:2,countMax:4}, {type:'wolf',countMin:1,countMax:3}, {type:'spider',countMin:1,countMax:3}, {type:'boar',countMin:1,countMax:2} ];
-const RV_SOUTH_PACKS = [ {type:'bandit',countMin:2,countMax:3}, {type:'banditarcher',countMin:1,countMax:2}, {type:'boar',countMin:1,countMax:3}, {type:'wolf',countMin:1,countMax:3} ];
+const RV_NORTH_PACKS = [ {type:'wolf',countMin:2,countMax:4}, {type:'wolf',countMin:1,countMax:3}, {type:'spider',countMin:1,countMax:3}, {type:'boar',countMin:1,countMax:2}, {type:'thornback',countMin:2,countMax:3} ];
+const RV_SOUTH_PACKS = [ {type:'bandit',countMin:2,countMax:3}, {type:'banditarcher',countMin:1,countMax:2}, {type:'boar',countMin:1,countMax:3}, {type:'wolf',countMin:1,countMax:3}, {type:'thornback',countMin:2,countMax:3} ];
 function spawnRiverValleyPack(g, anchor){
   const pool = anchor.y < RV_CY ? RV_NORTH_PACKS : RV_SOUTH_PACKS;
   const t = pool[Math.floor(Math.random()*pool.length)];
@@ -291,6 +307,7 @@ function grantBridgeReward(p, q){
   const xp = Math.round((p.xpNext||100)*mult);
   p.gold += 80; bagPulse();
   gainXp(game, xp);
+  voicePlay('aldric_bridge_reward');   // v555
   showMsg('"You cleared the bridge! Take this for the road." '+bi.name+' + 80 gold, +'+xp+' XP', 3.6);
   updateQuestBadge(); saveGame();
 }
@@ -338,8 +355,17 @@ function enterRiverValley(from){
   else { g.player.x = rv.northGate.x; g.player.y = rv.northGate.y + 120; }
   g.enemies = []; g.projectiles=[]; g.loot=[]; g.portal=null; g.chest=null; g.shieldThrow=null; g.portalIsBoss=false; g.traps=[]; g.lastKillPos=null;
   showMsg('The River Valley', 1.4);
-  const anchors = shuffle(breatheAnchors(rv.packAnchors, {gap:380}));
+  const anchors = shuffle(breatheAnchors(rv.packAnchors, {gap:300, calm:0.12}));
   for(let i=0;i<Math.min(RV_PACK_COUNT, anchors.length);i++) spawnRiverValleyPack(g, anchors[i]);
+  // v550: packs waiting along the road itself, every ~600 px, just off the verge
+  for(let i=12; i<RV_ROAD.length-12; i+=9){
+    if(Math.random() < 0.35) continue;
+    const a = RV_ROAD[i], b = RV_ROAD[i+1], ux = b.x-a.x, uy = b.y-a.y, l = Math.hypot(ux,uy)||1, sd = Math.random()<0.5 ? -1 : 1, off = rand(150, 230);
+    const pt = {x:a.x - uy/l*off*sd, y:a.y + ux/l*off*sd};
+    if(pt.x<RV_CLIFF_W+120 || pt.x>rv.w-120 || pt.y<120 || pt.y>rv.h-120 || rvWaterNear(pt.x, pt.y, 80) || posBlockedByObstacles(pt.x, pt.y, 30, rv.obstacles)) continue;
+    if([rv.northGate, rv.southGate, rv.waypoint].some(q=>q && dist(q,pt) < 450)) continue;
+    spawnRiverValleyPack(g, pt);
+  }
   spawnRiverValleyCamp(g);
   roadEvRoll(g);   // v529: one random road encounter
   g.followers = [];

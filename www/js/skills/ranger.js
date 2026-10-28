@@ -61,7 +61,12 @@ function poisonTrapCooldown(rank){
 // does NOT scale with rank, exactly as the brief specifies ("not the slow
 // duration").
 const FROST_TRAP_CD = 6;
-const FROST_TRAP_FREEZE_BASE = 0.1, FROST_TRAP_FREEZE_STEP = 0.1; // 0.1s at Rank1 -> 0.5s at Rank5
+// v540: a real freeze at every rank -- 1.0s at Rank1 -> 1.8s at Rank5 (elites/brutes 60% of that, bosses and heavy monsters
+// are only chilled), then a chill that also grows with rank: 3s at Rank1 -> 5s at Rank5. A monster just thawed from any
+// freeze can't be frozen again for FREEZE_IMMUNE seconds, so three traps in a row can't lock a pack forever.
+const FROST_TRAP_FREEZE_BASE = 1.0, FROST_TRAP_FREEZE_STEP = 0.2, FROST_TRAP_TOUGH = 0.6;
+const FROST_TRAP_CHILL_BASE = 3, FROST_TRAP_CHILL_STEP = 0.5;
+function frostTrapChillDuration(rank){ return FROST_TRAP_CHILL_BASE + FROST_TRAP_CHILL_STEP*(Math.max(1, rank||1)-1); }
 function frostTrapFreezeDuration(rank){ return rank>0 ? FROST_TRAP_FREEZE_BASE + FROST_TRAP_FREEZE_STEP*(rank-1) : FROST_TRAP_FREEZE_BASE; }
 // Finesse (passive, requires Evasion): a brand-new "extra charge" mechanic
 // for Dodge -- no skill in the game had multiple charges-before-cooldown
@@ -101,13 +106,16 @@ function bowExpertDmgMult(p){
   const mh = p && p.equipment && p.equipment.mainhand;
   if(!(mh && mh.slotType==='bow')) return 1;
   const rank = (p.skills && effectiveRank(p,'bowExpert')) || 0;
+  const dexK = 1 + (p.dexBowPct||0)/100;   // v563: +1% bow damage per 5 Dexterity
   // v227: the Multi Shot tuning now lives on the basic-attack arrows only (see the multiShot fan below)
-  if(rank<=0) return 1;
-  return 1 + tblAt(BOW_EXPERT_DMG_PCT, rank)/100;
+  if(rank<=0) return dexK;
+  return dexK * (1 + tblAt(BOW_EXPERT_DMG_PCT, rank)/100);
 }
 // ---- v227 Ranger redesign helpers ----
 const AIMED_SHOT_DMG_MULT = 2.2, AIMED_SHOT_CRIT_BONUS = 15, AIMED_SHOT_FALLOFF = 0.8, AIMED_SHOT_CD = 2.5;   // v489: a real cooldown again (was a 0.4s lockout)
-const AIMED_HELD_MULT_BASE = 3, AIMED_HELD_MULT_STEP = 0.25, AIMED_TAP_MULT = 1.5, AIMED_HOLD_MS = 280;   // v267: hold = 3x..4x, tap = 1.5x
+const AIMED_HELD_MULT_BASE = 3, AIMED_HELD_MULT_STEP = 0.25, AIMED_TAP_MULT = 1.5, AIMED_HOLD_MS = 500;   // v545: a half-second draw (the aim line grows out to full length as it loads)
+   // v267: hold = 3x..4x, tap = 1.5x
+function aimedShotCooldown(rank){ return AIMED_SHOT_CD - (AIMED_SHOT_CD - 1.5)*(Math.min(10, Math.max(1, rank||1))-1)/9; }   // v545: 2.5s at rank 1 -> 1.5s at rank 10
 function aimedShotMult(rank, full){ return full===false ? AIMED_TAP_MULT : AIMED_HELD_MULT_BASE + AIMED_HELD_MULT_STEP*(Math.max(1,rank)-1); }
 function aimedShotPierce(rank){ return 3 + Math.floor((Math.max(1,rank)-1)/2); }
 const LONGSHOT_DIST = 220, LONGSHOT_PER_RANK = 0.05;
@@ -154,7 +162,7 @@ function rapidShotCooldown(rank){
 const RAPID_SHOT_ARMORPEN_PER_RANK = 0.05;
 // ---- v454 Marksman additions ----
 function favouredFoePierce(r){ r = Math.max(1, r||1); return Math.min(0.75, 0.25 + 0.5*(r-1)/9); }   // final Rapid Shot arrow pierces: 25% -> 75%
-function predInstinctPct(r){ r = r||0; return r<=0 ? 0 : r<=10 ? 0.10 + 0.20*(r-1)/9 : Math.min(0.40, 0.30 + 0.01*(r-10)); }
+function predInstinctPct(r){ r = r||0; return r<=0 ? 0 : r<=10 ? 0.15 + 0.35*(r-1)/9 : Math.min(0.60, 0.50 + 0.01*(r-10)); }   // v545: 15% at rank 1 -> 50% at rank 10
 function enemyAiling(e){ return !!(e && (e.bleedT>0 || e.poisonT>0 || e.burnT>0 || e.chillT>0 || e.frozenT>0 || e.stunT>0 || e.charges>0 || e.trapRootT>0 || e.fearT>0)); }
 const EXPSHOT_R = 62, EXPSHOT_BLAST = 0.6;   // v455 Explosive Shot: blast radius, blast damage as a share of the arrow hit
 function expShotBurnDur(r){ r = Math.max(1, r||1); return 2 + 0.3*(Math.min(10,r)-1) + 0.05*Math.max(0,r-10); }   // 2s -> 4.7s
@@ -193,6 +201,7 @@ function splinterBurst(g, p, pr, e){
 // pattern Shield Bash's Rank-5 knockdown already established.
 const MULTI_SHOT_SPREAD = 0.4; // total fan spread, radians
 const MULTI_SHOT_ATKSPD_PER_RANK = 0.04;
+const MULTI_SHOT_DMG_MULT = 1.2;   // v545: 1.05; v559: 1.2
 function multiShotCount(rank){ return rank>=5 ? 5 : 3; }   // v499: Phantom Quiver no longer adds arrows (it makes projectiles pierce)
 // v499 Phantom Quiver: every player projectile rolls ONCE for a 50% chance to pass through the enemies it hits (shots that detonate or bounce keep their own rules)
 function quiverPierce(p, pr){
@@ -444,7 +453,7 @@ const FOLLOWER_FOLLOW_DIST = 55; // Attack stance: idle follow distance behind t
 const TAUNT_RANGE = 170;
 const FOLLOWER_RESPAWN_TIME = 10; // a fallen follower rejoins after this many seconds, not just on level clear
 // v211: a fallen Squire knight is re-summoned after 10s; Commander ranks shorten that to 5s at rank 5. Squire life -10%.
-const KNIGHT_RESPAWN_MIN = 5, SQUIRE_HP_MULT = 0.9;
+const KNIGHT_RESPAWN_MIN = 5, SQUIRE_HP_MULT = 0.8, SQUIRE_DMG_K = 0.88;   // v559: squires a little softer and weaker (were 0.9 life, full damage)
 function knightRespawnTime(p){
   const r = clamp((p && p.skills && effectiveRank(p,'squire')) || 0, 0, 5);
   return r>0 ? FOLLOWER_RESPAWN_TIME - (FOLLOWER_RESPAWN_TIME-KNIGHT_RESPAWN_MIN)*(r-1)/4 : FOLLOWER_RESPAWN_TIME;
@@ -698,14 +707,14 @@ function followerDmg(p, f){
   // Wolf/Bear -- see this tree's own top comment for why.
   if(f.kind==='skeleton'){
     const rank = (p.skills && effectiveRank(p,'raiseDead')) || 0;
-    return (NECRO_SKELETON_BASE_DMG + p.level*1.0) * hunterFollowerStatMult(rank) * fdMult * (1 + NECRO_SKEL_SOUL_DMG*Math.min(SOUL_CAP,p.souls||0)/SOUL_CAP) * (rank>=BASE_MAX_RANK ? SUMMON_MAX_RANK_DMG : 1);
+    return (NECRO_SKELETON_BASE_DMG + p.level*1.0) * hunterFollowerStatMult(rank) * fdMult * (rank>=BASE_MAX_RANK ? SUMMON_MAX_RANK_DMG : 1);
   }
   if(f.kind==='demon'){
     const rank = (p.skills && effectiveRank(p,'demonBind')) || 0;
     return (NECRO_DEMON_BASE_DMG + p.level*1.4) * hunterFollowerStatMult(rank) * fdMult * demonSoulMult(p, DEMON_DMG_PER_10) * (rank>=BASE_MAX_RANK ? SUMMON_MAX_RANK_DMG : 1);
   }
   const squireRank = (p.skills && effectiveRank(p,'squire')) || 0;
-  let dmg = (FOLLOWER_BASE_DMG + p.level*1.1) * offensiveStanceFollowerDmgMult(p) * templarFollowerMult(p, f); // (v124) Squire ranks add life only; damage comes from Offensive Stance
+  let dmg = (FOLLOWER_BASE_DMG + p.level*1.1) * SQUIRE_DMG_K * offensiveStanceFollowerDmgMult(p) * templarFollowerMult(p, f); // (v124) Squire ranks add life only; damage comes from Offensive Stance
   // Rally/Rallying Cry: while the post-rally buff window is active, followers
   // get a flat chance (same for everyone, not rank-scaled) to land a
   // bonus-damage crit.

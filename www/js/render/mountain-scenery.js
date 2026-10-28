@@ -433,8 +433,9 @@ function drawTownPerimeter(room){
   drawBlock({x:room.w,y:0,w:wt,h:roadY-gap}, hz, top,right,front);
   drawBlock({x:room.w,y:roadY+gap,w:wt,h:room.h-(roadY+gap)}, hz, top,right,front);
 }
+const TREE_GROW = 0.6;   // v548: every tree is bigger -- the old largest size is about the new smallest
 function drawTreeIso(t){
-  const iso = toIso(t.x,t.y), sc = t.s||1, dk = !!t.dark;
+  const iso = toIso(t.x,t.y), sc = (t.s||1) + TREE_GROW, dk = !!t.dark;
   drawShadow(iso.x, iso.y, 15*sc, 6.5*sc);
   ctx.save(); ctx.translate(iso.x, iso.y); if(sc!==1) ctx.scale(sc,sc);
   ctx.fillStyle='#4a3220'; ctx.fillRect(-3,-20,6,20);
@@ -457,7 +458,7 @@ function drawTreeIso(t){
 // brief's explicit "old dead trees... no leafy canopy" ask.
 function drawDeadTreeIso(t){
   const iso = toIso(t.x,t.y);
-  const s = t.s||1;
+  const s = (t.s||1) + TREE_GROW;
   drawShadow(iso.x, iso.y, 14*s, 6*s);
   ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(s,s);
   // gnarled trunk -- a slightly bent silhouette rather than a plain

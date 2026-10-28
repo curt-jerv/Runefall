@@ -59,7 +59,7 @@ function drawChargeFx(ent, iso){
   ctx.restore();
 }
 // v437: gear elemental damage (+Fire/Cold/Lightning/Poison Damage) rides on every player hit as a flat typed bonus: it ignores armor, is cut by the
-// target's resist to that element, and each 20 points of an element gives a 5% chance per hit to inflict that element's ailment.
+// target's resist to that element; v539: every hit applies that element's ailment (see gearElemHit).
 // v457 damage model: a weapon roll is the base of every attack and spell; skills multiply it
 // ===== v458 skill damage table =====
 // Every damaging skill deals a percentage of your WEAPON damage roll (r: [Rank 1 %, Rank 10 %], linear, and it keeps
@@ -87,7 +87,8 @@ const SKILL_WD = {
   // --- Ranger ---
   trap:         {t:'physical', c:'weapon', r:[43,62],   per:'when sprung'},
   rapidShot:    {t:'physical', c:'weapon', r:[60,85],   per:'per arrow (3 arrows)'},   // v489: free basic shot now
-  splinterShot: {t:'physical', c:'weapon', r:[90,130],  per:'per arrow (splinters 70%)'},   // v489: free basic shot now
+  multiShot:    {t:'physical', c:'weapon', r:[60,85],   per:'per arrow'},   // v561: was a flat 60% at every rank
+  splinterShot: {t:'physical', c:'weapon', r:[94.5,136.5], per:'per arrow (splinters 70%)'},   // v489: free basic shot now. v545: +5%
   cripplingShot:{t:'physical', c:'weapon', r:[180,260], per:'per arrow (plus Bleed)'},   // v489: big boost, costs more + cooldown
   explosiveShot:{t:'physical', c:'weapon', r:[150,215], per:'arrow hit', x:{n:'blast', t:'fire', r:[95,140]}},
   stunShot:     {t:'physical', c:'weapon', r:[200,290], per:'per arrow'},
@@ -115,6 +116,15 @@ const SKILL_WD = {
   soulFire:     {t:'physical', c:'spell',  r:[230,330], per:'explosion, half physical / half poison', split:{t:'poison', f:0.5}},   // v489
   // v489: sacrifice is life-based now (sacrificeLifePct), not weapon damage
 };
+// v559 balance (sim: packs of 8 at your own level, typical gear, no stones; target ~8s a pack): Defender down, Berserker's late
+// skills, traps and the Marksman/Hunter shots up (Immolate's fire boost is trimmed in skills/mystic.js).
+// Scaling the table itself keeps the skill tooltips in step with what the skills really do.
+const SKILL_WD_TUNE = { shieldBash:0.8, shieldThrow:0.8, seismicSlam:0.8, guardian:0.8,
+  fury:1.3, assault:1.3, cleave:1.3, whirlwind:1.3,
+  trap:1.3, poisonTrap:1.3, frostTrap:1.3, explosiveTrap:1.3,
+  rapidShot:1.15, splinterShot:1.15, rainOfArrows:1.15, aimedShot:1.15,
+  cripplingShot:1.35, explosiveShot:1.35, stunShot:1.35 };
+for(const id in SKILL_WD_TUNE){ const d = SKILL_WD[id], k = SKILL_WD_TUNE[id]; if(d) d.r = d.r.map(v=>Math.round(v*k)); }
 function swdPct(arr, rank){ const r = Math.max(1, rank||1); return arr[0] + (arr[1]-arr[0])/9*(r-1); }
 function swd(id, rank){ const d = SKILL_WD[id]; return d ? swdPct(d.r, rank)/100 : 1; }
 function swdX(id, rank){ const d = SKILL_WD[id]; return (d && d.x) ? swdPct(d.x.r, rank)/100 : 0; }
@@ -156,21 +166,22 @@ function flatElemActive(p){
   const mh = p.equipment && p.equipment.mainhand;
   return !!(mh && FLAT_ELEM_WEAPON[mh.slotType]) && p.cls!=='mystic' && !p._spellHit;
 }
+// v539: Diablo 2 style -- elemental damage added by gear always applies its ailment on every hit that lands:
+// cold always chills (2s, elites 1.5s, bosses 1s; gear cold never builds toward a freeze -- freezing is for cold spells),
+// fire always burns lightly (20% of the fire dealt over 3s), poison is dealt over 3s instead of up front (stacks as 'gear'),
+// lightning adds a Charge (lightningCharge does that on every lightning hit). All of it after +% element / +% elemental and the monster's resistance.
+const GEAR_CHILL_DUR = 2, GEAR_CHILL_ELITE = 1.5, GEAR_CHILL_BOSS = 1, GEAR_BURN_SHARE = 0.20, GEAR_ELEM_DOT_DUR = 3;
 function gearElemHit(p, e, mainEl){
   let sum = 0;
   if(!flatElemActive(p)) return 0;
   for(const el of ['fire','cold','lightning','poison']){
     const v = p[el+'Dmg'] || 0; if(v<=0) continue;
     let d = Math.max(1, v*typedPctMult(p, el)*dmgVar()*(1-enemyResist(e, el)));
+    if(el==='poison'){ addPoison(e, d/GEAR_ELEM_DOT_DUR, 'gear', GEAR_ELEM_DOT_DUR); continue; }
     if(el==='lightning' && mainEl!=='lightning') d = lightningCharge(game, e, d, 'enemy');
     sum += d;
-    if(Math.random() < Math.min(0.75, 0.05*Math.floor(v/20))){
-      if(el==='fire'){ e.burnT = Math.max(e.burnT||0, FIRE_DOT_DUR); e.burnDps = Math.max(e.burnDps||0, v*BURN_DPS_PCT*2); }
-      else if(el==='cold'){ coldHit(e, 1); }
-      else if(el==='lightning'){ if((e.charges||0) < CHARGE_MAX) e.charges = (e.charges||0)+1; e.chgT = CHARGE_DECAY; }   // v454: Charged replaces the old shock DoT
-      else { addPoison(e, v*POISON_DOT_PCT, 'gear'); }
-      if(game && game.particles) game.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:({fire:'#ff9a4a',cold:'#9fe0ff',lightning:'#f2ee6a',poison:'#8fe05a'})[el]});
-    }
+    if(el==='fire'){ e.burnT = Math.max(e.burnT||0, GEAR_ELEM_DOT_DUR); e.burnDps = Math.max(e.burnDps||0, d*GEAR_BURN_SHARE/GEAR_ELEM_DOT_DUR); }
+    else if(el==='cold'){ const dur = (e.isBoss || e.isLairBoss) ? GEAR_CHILL_BOSS : (e.elite || e.magic) ? GEAR_CHILL_ELITE : GEAR_CHILL_DUR; e.chillT = Math.max(e.chillT||0, dur); }
   }
   return sum;
 }

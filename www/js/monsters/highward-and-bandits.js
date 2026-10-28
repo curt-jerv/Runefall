@@ -260,7 +260,7 @@ function drawHwStatusFx(e){
 // ---- v461 The Bandit King: Lighthouse Tower rooftop boss ----
 const BK_LEAP_R = 115, BK_LEAP_WIND = 0.55, BK_LEAP_AIR = 0.6, BK_FAN_WIND = 0.6;
 function updateBanditKing(g, e, dt, target, d, isFT, chill, room){
-  bossGreet(g, e, '\u201cThis lighthouse is mine, and so is everything you carry!\u201d');   // v490
+  if(!e._greeted){ bossGreet(g, e, '\u201cThis lighthouse is mine, and so is everything you carry!\u201d'); if(e._greeted) voicePlay('bk_greet'); }   // v490 (v556: voiced, with his 'Kill him, boys!')
   const p = g.player, reach = e.r+target.r+6;
   // v480: the opening -- he watches from behind the beacon, untouchable, until his crew is dead
   if(e.bkHold){
@@ -274,7 +274,7 @@ function updateBanditKing(g, e, dt, target, d, isFT, chill, room){
     }
     if(e.bkShout && g.enemies.filter(o=>o.bkCrew && o.hp>0).length <= 2){   // v486: he jumps in while two of his men still stand
       e.bkHold = false; e.invulnT = 0; e.aggroed = true; e.bkLeapCd = rand(8,10); e.bkFanCd = 3;
-      showMsg('\u201CFine, I\u2019ll finish this myself.\u201D', 2.8, '#ffd27a');
+      showMsg('\u201CFine, I\u2019ll finish this myself.\u201D', 2.8, '#ffd27a'); voicePlay('bk_finish');
       const lx = clamp(p.x, 60, room.w-60), ly = clamp(p.y, 60, room.h-60);
       e.bkLeap = {phase:'wind', t:0, x:lx, y:ly};
     }
@@ -288,7 +288,7 @@ function updateBanditKing(g, e, dt, target, d, isFT, chill, room){
   const frac = e.hp/e.maxHp;
   if((e.bkCall||0) < 2 && frac < (e.bkCall ? 0.34 : 0.67)){
     e.bkCall = (e.bkCall||0) + 1;
-    showMsg('“To me, lads! Cut them down!”', 2.4, '#ffd27a');
+    showMsg('“To me, lads! Cut them down!”', 2.4, '#ffd27a'); voicePlay('bk_cut');   // v555
     const kinds = ['bandit','bandit','banditarcher'].concat(e.bkCall===2 ? ['banditbrute'] : []);
     kinds.forEach((k,i)=>{ const a = i*2.2+Math.random(); const x = clamp(e.x+Math.cos(a)*220, 60, room.w-60), y = clamp(e.y+Math.sin(a)*220, 60, room.h-60); const a2 = spawnEnemy(g, k, {x, y}); if(a2){ a2.aggroed = true; a2.engaged = true; a2.xpMul = 0.5; g.particles.push({type:'burst', x, y, t:0.4, max:0.4, color:'#c9a25a'}); } });
   }

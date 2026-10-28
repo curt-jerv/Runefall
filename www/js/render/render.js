@@ -151,6 +151,7 @@ function render(){
     if(room.deep){ drawDeepFloor(room, cam); }
     else if(room.subzone==='keep'){ if(room.hell) drawHellFloor(room, cam); else { drawSubFloor(room, cam); drawKeepWalls(room); } }
     else if(room.subzone){ drawSubFloor(room, cam); if(room.subzone==='sunken' || room.subzone==='temple' || room.subzone==='rrtower' || room.subzone==='cellar') drawWalls(room); }
+    else if(room.openRoof) drawLhRoof(room, cam);   // v552
     else {
     cachedFloor(room, cam, c=>drawFloor(room, c));
     drawWalls(room);
@@ -406,6 +407,7 @@ function render(){
       if(iz.altar){
         drawables.push({depth:iz.altar.x+iz.altar.y, draw:()=>drawShrineAltarIso(iz.altar, g.clock||0)});
         drawables.push({depth:iz.altar.x+iz.altar.y+1, draw:()=>drawEdgeLabelIso(iz.altar, 'SHRINE')});
+        { const sst = g.player.shrineStage||0; if(sst>=2 ? sst<3 : (sst===0 && findRunestone(g.player))) drawables.push({depth:iz.altar.x+iz.altar.y+400, draw:()=>drawInteractHintIso(iz.altar, 120, g.clock||0)}); }   // v546: the altar wants you
         if(iz.homePortal){ const hp = iz.homePortal; drawables.push({depth:hp.x+hp.y-1, draw:()=>drawBluePortalIso(hp, g.clock||0)}); drawables.push({depth:hp.x+hp.y, draw:()=>drawEdgeLabelIso(hp, 'MISTFALL')}); }   // v490
       }
       if(iz.chestSpot) drawables.push({depth:iz.chestSpot.x+iz.chestSpot.y, draw:()=>drawChestIso(iz.chestSpot)});
@@ -425,13 +427,7 @@ function render(){
       for(const o of rv.obstacles){ if(!o.isProp) continue; const cx=o.x+o.w/2, cy=o.y+o.h/2; if(visR(cx,cy)) drawables.push({depth:cx+cy, draw:()=>drawRvProp(o, clkR)}); }
       for(const d of rv.decor) if(visR(d.x,d.y)) drawables.push({depth:d.x+d.y-(d.k==='lily'?4:2), draw:()=>{ if(RV_DECOR_KINDS[d.k]) drawRvDecor(d, clkR); else drawDecorIso(d, clkR); }});
       drawables.push({depth:rv.northGate.x+rv.northGate.y, draw:()=>drawEdgeLabelIso(rv.northGate, 'DARK FOREST')});
-      drawables.push({depth:rv.southGate.x+rv.southGate.y, draw:()=>drawSunArchIso(rv.southGate, clkR)});
-      for(const sd of [-1,1]){
-        const sg = rv.southGate;
-        drawables.push({depth:sg.x+sd*170+sg.y-10+(sd<0?-75:75), draw:()=>drawSunArchFlank(sg, sd, clkR)});
-        const bz = {k:'brazier', x:sg.x+sd*95, y:sg.y-60, s:1.3}; drawables.push({depth:bz.x+bz.y, draw:()=>drawMtnDeco(bz)});
-        const bn = {k:'banner', x:sg.x+sd*140, y:sg.y-80, s:1.2}; drawables.push({depth:bn.x+bn.y, draw:()=>drawMtnDeco(bn)});
-      }
+      drawables.push({depth:rv.southGate.x+rv.southGate.y-2, draw:()=>drawWitheredGateIso({x:rv.southGate.x, y:rv.southGate.y-30}, clkR)});   // v551: the same weathered gate as on the Crossroads side (was a bright sunlit arch)
       drawables.push({depth:rv.southGate.x+rv.southGate.y+1, draw:()=>drawEdgeLabelIso(rv.southGate, 'WITHERED CROSSROADS')});
       drawables.push({depth:rv.caveGate.x+rv.caveGate.y, draw:()=>drawMinotaurCaveIso(rv.caveGate, clkR)});
       drawables.push({depth:rv.caveGate.x+rv.caveGate.y+2, draw:()=>drawEdgeLabelIso(rv.caveGate, 'MINOTAUR CAVE')});
@@ -594,6 +590,7 @@ function render(){
         drawables.push({depth:g.crypt.chestSpot.x+g.crypt.chestSpot.y, draw:()=>drawChestIso(g.crypt.chestSpot)});
       }
       if(g.crypt.tomb) drawables.push({depth:g.crypt.tomb.x+g.crypt.tomb.y+40, draw:()=>drawCryptTomb(g.crypt.tomb, g.clock||0)});
+      if(g.crypt.tomb && (g.crypt.bossDone || g.player.defilerSlain) && !g.player.inscriptionTaken) drawables.push({depth:g.crypt.tomb.x+g.crypt.tomb.y+400, draw:()=>drawInteractHintIso(g.crypt.tomb, 110, g.clock||0)});   // v546: inspect the sarcophagus
       for(const pe of g.enemies) if(pe.possessed && pe.hp>0) drawables.push({depth:pe.x+pe.y-1, draw:()=>drawPossessedAura(pe, g.clock||0)});
     }
     for(const l of g.loot) drawables.push({depth:l.x+l.y-1, draw:()=>drawLootIso(l, g.clock||0)});
@@ -748,6 +745,7 @@ function render(){
       for(const e of g.enemies) if(e.balrog && e.brBoss) drawables.push({depth:-100000+e.x*0.001, draw:()=>drawBalrogTelegraph(e)});
       if(t.beacons) for(const bc of t.beacons) if(vis(bc.x,bc.y)){ drawables.push({depth:bc.x+bc.y, draw:()=>drawRRBeaconIso(bc, g.clock||0, bc.lit)}); drawables.push({depth:bc.x+bc.y+1, draw:()=>drawEdgeLabelIso(bc, bc.lit?'BEACON LIT':'BEACON')}); }
       for(const pr of t.props) if(vis(pr.x,pr.y)) drawables.push({depth:pr.x+pr.y+(pr.kind==='sigil'||pr.kind==='breach'||pr.kind==='carpet'?-500:0)+((pr.kind==='pew'||pr.kind==='machine'||KP_BLK[pr.kind])?(pr.w+pr.h)/2:0), draw:()=>drawKeepProp(pr, g.clock||0)});
+      if(t.lore) for(const l of t.lore) if(l.id && !(g.player.keepLore && g.player.keepLore[l.id]) && vis(l.x,l.y)) drawables.push({depth:l.x+l.y+300, draw:()=>drawQuestMarkIso(l.x, l.y, g.clock||0, 92)});   // v546: '!' over unread lore
     }
     if(t.subzone==='rrtower'){
       const lit = !!(g.player.rrBeacons && g.player.rrBeacons[t.rrId]);
@@ -772,6 +770,7 @@ function render(){
     if(g.shieldThrow) drawables.push({depth:g.shieldThrow.x+g.shieldThrow.y, draw:()=>drawShieldThrowIso(g.shieldThrow)});
   } else if(g.scene==='lighthouse' && g.tower && g.tower.fht){
     const t = g.tower;
+    pushLhDecorDrawables(g, drawables);   // v554
     if(t.floor===1){
       drawables.push({depth:t.entrance.x+t.entrance.y, draw:()=>drawLighthouseDoorIso(t.entrance, g.clock||0)});
       drawables.push({depth:t.entrance.x+t.entrance.y+1, draw:()=>drawEdgeLabelIso(t.entrance, 'FROSTHOLD KEEP')});
@@ -816,10 +815,12 @@ function render(){
         drawables.push({depth:t.stairs.x+t.stairs.y-1, draw:()=>drawStairsDownIso(t.stairs, g.clock||0)});
         drawables.push({depth:t.stairs.x+t.stairs.y, draw:()=>drawEdgeLabelIso(t.stairs, 'STAIRS UP')});
       }
+      pushLhDecorDrawables(g, drawables); pushLhRoofDrawables(g, drawables);   // v552
       if(t.witch) drawables.push({depth:t.witch.x+t.witch.y, draw:()=>drawWitchIso(t.witch, g.clock||0, !game.enemies.some(e=>e.hp>0 && e.ftGuard))});
       if(t.beacon){
         // The rooftop's big light-feature centerpiece.
-        drawables.push({depth:t.beacon.x+t.beacon.y, draw:()=>drawLighthouseBeaconIso(t.beacon, g.clock||0, !!g.player.lighthouseBeaconOn)});
+        drawables.push({depth:t.beacon.x+t.beacon.y, draw:()=>{ if(t.openRoof){ const q = toIso(t.beacon.x, t.beacon.y); ctx.save(); ctx.translate(q.x, q.y); ctx.scale(1.5, 1.5); ctx.translate(-q.x, -q.y); } drawLighthouseBeaconIso(t.beacon, g.clock||0, !!g.player.lighthouseBeaconOn); if(t.openRoof) ctx.restore(); }});   // v552: bigger on the open roof
+        if(!g.player.lighthouseBeaconOn && !g.enemies.some(e=>e.hp>0 && (e.bkBoss||e.isBoss))) drawables.push({depth:t.beacon.x+t.beacon.y+400, draw:()=>drawInteractHintIso(t.beacon, 140, g.clock||0)});   // v546: click me
       }
       if(t.waypoint){
         drawables.push({depth:t.waypoint.x+t.waypoint.y-1, draw:()=>drawWaypointIso(t.waypoint, g.clock||0, waypointLit())});
@@ -977,6 +978,9 @@ function render(){
   if(g.banner && g.banner.fx) drawables.push({depth:g.banner.x+g.banner.y, draw:()=>drawParticlesIso([g.banner.fx], 'pole')});
   pushOwPoiDrawables(g, drawables);   // v525
   pushRoadEvDrawables(g, drawables);   // v529
+  pushTownPortalDrawables(g, drawables);   // v546
+  pushBanditCampDrawables(g, drawables);   // v550
+  pushOuterScenery(g, drawables);   // v551: trees past the edge, the Crossroads gate
   drawables.sort((a,b)=>a.depth-b.depth);
   moodSoftStroke = moodOn() && !moodLow() && !MOOD_DBG.noSoft;   // v470: soft outlines while the world and characters are drawn
   try{ for(const d of drawables) d.draw(); } finally { moodSoftStroke = false; }
@@ -999,13 +1003,13 @@ function render(){
     ctx.restore();
   }
   if(g.scene==='darkcrypt') drawDarkCryptOverlay(g, DARKCRYPT_PLAYER_LIGHT_R, true);
-  else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3, sunk = g.scene==='lighthouse' && g.room && g.room.subzone==='sunken'; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*UNDERGROUND_LIGHT_SCALE*lightRadiusMult(g.player)*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : sunk ? 1.05 : 1), false, hrt ? '#1c0503' : null, sunk ? 0.92 : null, sunk ? 0.12 : UNDERGROUND_CORE_DIM); }   // v507: the Sunken Depths are lit a good deal brighter   // v493: +Light Radius
+  else if(isUndergroundScene(g)){ const hrt = g.scene==='lighthouse' && g.room && g.room.deep===3, sunk = g.scene==='lighthouse' && g.room && g.room.subzone==='sunken'; drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*UNDERGROUND_LIGHT_SCALE*lightRadiusMult(g.player)*(hrt && heartEllD(g.player.x,g.player.y)<1.1 ? 1.45 : sunk ? 1.05 : 1), false, hrt ? '#1c0503' : null, sunk ? 0.92 : null, sunk ? 0.12 : (CAVE_CORE_DIM[g.scene] || UNDERGROUND_CORE_DIM)); }   // v507: the Sunken Depths are lit a good deal brighter   // v493: +Light Radius
   else if(wlDarkFight(g)) drawDarkCryptOverlay(g, UNDERGROUND_LIGHT_R*0.9*lightRadiusMult(g.player), false);   // v434: darkness closes in during the Wraith Lord fight (10% tighter than the caves)
   else if(lightVeilScene(g)) drawLightVeil(g);   // v492/v493: the dark around towers and halls, lit by your own light
   else if(playerGlowScene(g)) drawOverworldRing(g);   // v516: overworld zones: a gentle edge ring and your warm glow
   flushLosPending();   // (v501) normally already folded into the veil above
   if(g.enemies && g.enemies.some(x=>x.dwc && (x.cState==='laser' || x.cState==='flatten'))){ ctx.save(); ctx.translate(-cam.x+shX, -cam.y+shY); for(const x of g.enemies) if(x.dwc) drawDwBeam(x); ctx.restore(); }   // v490: Construct's Furnace Beam glows over the dark
-  else if(g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g)) drawDungeonVignette(g);
+  else if(g.scene==='lighthouse' && !(g.room && g.room.subzone==='pool') && !kpOutdoor(g) && !lhRoofOpen(g) && !(g.room && g.room.fht)) drawDungeonVignette(g);
   if(g.scene==='lighthouse' && g.room && g.room.bridge) drawBridgeGlow(g);
   drawRegionDarkening(g);
   if(isCliff(g) || kpOutdoor(g)) drawCliffStorm(g);

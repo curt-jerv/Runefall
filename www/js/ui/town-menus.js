@@ -115,7 +115,7 @@ function openTeleportMenu(from){
   teleportLighthouse5Btn.style.display = 'none'; // rooftop waypoint removed
   // v71: Lakeside Ruins gets its own waypoint, gated on reachedLakesideRuins,
   // same rule as reachedSunlitPlains above.
-  teleportLakesideBtn.style.display = 'none';   // v489: Lakeside waypoint removed
+  teleportLakesideBtn.style.display = (from!=='lakeside' && game.player.reachedLakesideRuins) ? '' : 'none';   // v551: the Lakeside waypoint is back, beside the bridge
   teleportDeepBtn.style.display = (from!=='deep' && game.player.reachedDeepWp) ? '' : 'none';   // v489: Ember Caverns
   teleportBlackMarshBtn.style.display = (from!=='marsh' && game.player.reachedBlackMarsh) ? '' : 'none';
   teleportForgottenTowerBtn.style.display = (from!=='forgottentower' && game.player.reachedForgottenTower) ? '' : 'none';   // v340: listed right under Black Marsh
@@ -334,6 +334,7 @@ const SMITH_TEXT = {
 };
 function openBlacksmithMenu(){
   const p = game.player, st = smithState(p);
+  if(smithOverlay.style.display!=='flex'){ if(st==='turnin') voicePlay('brom_hammer'); else voiceBrom(); }   // v555: Brom greets you (only when the menu first opens)
   game.modalOpen = true;
   { let stx = SMITH_TEXT[st]; if(st==='offer'){ const hq0 = getQuest(p, QUEST_FIND_HUNTERS.id); if(!(hq0 && hq0.status==='complete')) stx = stx.replace(/^"You brought those hunters home -- good\. Then you can hear/, '"Listen, traveler, and hear'); } document.getElementById('smithText').textContent = stx; }
   const qb = document.getElementById('smithQuestBtn');
@@ -567,6 +568,7 @@ function openShop(vendor){
     t.stock = t.hunterStock;
     document.getElementById('shopTitle').textContent = 'Garrick the Hunter \u2014 restocks in '+restockLabel();
   } else if(vendor==='bar'){
+    { AUD.hobbsN = ((AUD.hobbsN==null ? Math.floor(Math.random()*3) : AUD.hobbsN) + 1) % 3; voicePlay('hobbs_shop'+(AUD.hobbsN+1)); }   // v556: Hobbs greets you
     t.stock = refreshBarStock(game.player);
     document.getElementById('shopTitle').textContent = 'Hobbs the Barkeeper \u2014 restocks in '+restockLabel();
     saveGame();
@@ -579,10 +581,10 @@ function openShop(vendor){
     document.getElementById('shopTitle').textContent = ROAD_MERCHANT_NAME+' \u2014 the Wandering Peddler';
   } else if(vendor==='runeforge'){
     t.stock = t.blacksmithStock;
-    document.getElementById('shopTitle').textContent = 'Obsidian Forge';
+    document.getElementById('shopTitle').textContent = 'Obsidian Forge'; voicePlay('brom_forge', {gap:8});
   } else if(vendor==='socket'){
     t.stock = t.blacksmithStock;
-    document.getElementById('shopTitle').textContent = 'Brom \u2014 Socketing';
+    document.getElementById('shopTitle').textContent = 'Brom \u2014 Socketing'; voicePlay('brom_socket', {gap:8});
   } else {
     t.stock = t.blacksmithStock;
     document.getElementById('shopTitle').textContent = 'Brom \u2014 restocks in '+restockLabel();

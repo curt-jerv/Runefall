@@ -186,8 +186,18 @@ function mapFit(box){
   const dpr = Math.min(2, window.devicePixelRatio||1);
   return {W:Math.max(200,Math.floor(r.width)), H:Math.max(160,Math.floor(r.height)), dpr};
 }
+// v546: road encounters, shrines, caches and guarded hoards of this visit show on the region map
+const MAP_ROAD_EV = {caravan:['Caravan','\u2605'], scarecrow:['Scarecrow','!'], merchant:['Peddler\u2019s Camp','C'], cellar:['Sealed Cellar','\u25BC'], herd:['Feral Herd','!'], feast:['Carrion Feast','!']};
+const MAP_OW_POI = {cache:['Hidden Cache','\u2605'], shrine:['Shrine','+'], hoard:['Guarded Hoard','\u2605']};
+function mapEventPts(g){
+  const out = [];
+  for(const ev of roadEvList(g)) if(ev && g.roadEvRoom===g.room && ev.state!=='done' && MAP_ROAD_EV[ev.kind]){ const d = MAP_ROAD_EV[ev.kind]; out.push({pos:ev.kind==='cellar' && ev.door ? ev.door : ev, label:d[0], icon:d[1]}); }   // v550: every encounter of the visit
+  if(g.owPoi && g.owPoiRoom===g.room) for(const c of g.owPoi){ if(c.opened || c.used || !MAP_OW_POI[c.kind]) continue; const d = MAP_OW_POI[c.kind]; out.push({pos:c, label:d[0], icon:d[1]}); }
+  return out;
+}
 function plotRegionMapPoints(box, pts, w, h, p){
   box.classList.remove('genericMode');
+  pts = pts.concat(mapEventPts(game));
   const g = game, R = g.room || {};
   const fit = mapFit(box), PAD = 14;
   // pick canvas shape: same aspect as the zone, fitted to the box
@@ -214,6 +224,7 @@ function plotRegionMapPoints(box, pts, w, h, p){
   for(const lm of pts){
     if(!lm.pos) continue;
     const x = mx(lm.pos.x), y = my(lm.pos.y), col = mapMarkStyle(lm);
+    if(lm.nameOnly){ c.fillStyle = '#e8c44a'; c.strokeStyle = '#000'; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 3.5, 0, 7); c.fill(); c.stroke(); labels.push({x, y:y-rad+6, t:lm.label}); continue; }   // v546: townsfolk are just named
     mapBadge(c, x, y, lm.icon, col, lm.label, rad);
     labels.push({x,y,t:lm.label});
   }
@@ -290,9 +301,9 @@ function renderKeepMap(g, p, box){
 function renderLhMazeMap(g, p, box){
   const R = g.tower;
   box.classList.remove('genericMode');
-  if(!R.mapFound){   // v505: charted by this floor's Map Bearer
+  if(!R.fht && !R.mapFound && !(g.lhMapTrip!=null && g._tripFam==='lh' && g.lhMapTrip===g._tripBase)){   // v505: charted by this floor's Map Bearer (v552: the ground floor's bearer charts every floor)
     box.classList.add('genericMode');
-    box.innerHTML = '<div style="padding:28px 12px;text-align:center;color:var(--bone-dim);font-family:Alegreya,Georgia,serif;line-height:1.6;">No map of this floor yet.<br>Slay the Map Bearer (ringed in gold) to find it.</div>';
+    box.innerHTML = '<div style="padding:28px 12px;text-align:center;color:var(--bone-dim);font-family:Alegreya,Georgia,serif;line-height:1.6;">No map of this floor yet.<br>Slay the Map Bearer (ringed in gold) on the ground floor to find it.</div>';
     return;
   }
   const cv = document.createElement('canvas'); const S = 640, fit = mapFit(box), side = Math.min(fit.W, fit.H);
@@ -305,7 +316,11 @@ function renderLhMazeMap(g, p, box){
   c.strokeStyle = '#8a6e40'; c.lineWidth = 2; c.strokeRect(ox, oy, R.w*k, R.h*k);
   const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 12); };
   mark(R.entrance, R.floor===1 ? 'E' : '\u25BC', '#7fd87f'); mark(R.waypoint, 'W', '#5fd0ff');
-  if(R.stairsSeen) mark(R.stairs, '\u25B2', '#e8c44a');
+  if(R.cmdDoor){ const cs = g.enemies.find(e=>e.fhCmd && e.hp>0); if(cs) mark(cs, '!', '#e05a5a'); }   // v554
+  if(R.chestSpot && R.floor===4) mark(R.chestSpot, '\u2605', '#e8c44a');
+  mark(R.stairs, '\u25B2', '#e8c44a');   // v552: the map always shows the way up
+  for(const b of (R.bonfires||[])){ c.fillStyle = '#ff9a3a'; c.beginPath(); c.arc(ox+b.x*k, oy+b.y*k, 4, 0, 7); c.fill(); }
+  if(R.lhCache && !R.lhCache.opened) mark(R.lhCache, '\u25A0', '#e8c44a');
   if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(ox+p.x*k, oy+p.y*k, 9, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, ox+p.x*k, oy+p.y*k, S); }
 }
 function renderHwMap(g, p, box){
@@ -343,10 +358,10 @@ function renderHwMap(g, p, box){
 }
 // v490: floor plan for the cave-style sub-zones (Sunken Depths, Flooded Temple): the real floor-mask cells with a bronze
 // rim, water in blue, and the landmarks. Charted once the floor's Map Bearer is slain, like the other dungeon maps.
-function renderSubCaveMap(g, p, box){
-  const R = g.tower, m = R.floorMask;
+function renderSubCaveMap(g, p, box, R0){
+  const R = R0 || g.tower, m = R.floorMask, ice = R.organic==='ice';   // v546: R0 = the Icy Cellar (charted from the start)
   box.classList.remove('genericMode');
-  if(!R.mapFound){
+  if(!R.mapFound && !R0){
     box.classList.add('genericMode');
     box.innerHTML = '<div style="padding:28px 12px;text-align:center;color:var(--bone-dim);font-family:Alegreya,Georgia,serif;line-height:1.6;">No map of this floor yet.<br>Slay the Map Bearer (ringed in gold) to find it.</div>';
     return;
@@ -363,14 +378,15 @@ function renderSubCaveMap(g, p, box){
   const g2 = Math.max(1.5, 14*k);
   c.fillStyle = '#9c7f4a'; cells((x,y,w,h)=>c.fillRect(X(x)-g2, Y(y)-g2, w*k+g2*2, h*k+g2*2));   // rim
   c.fillStyle = '#2a2219'; cells((x,y,w,h)=>c.fillRect(X(x)-g2*0.45, Y(y)-g2*0.45, w*k+g2*0.9, h*k+g2*0.9));
-  c.fillStyle = R.subzone==='temple' ? '#56605a' : '#4f5a5c'; cells((x,y,w,h)=>c.fillRect(X(x), Y(y), w*k+0.6, h*k+0.6));
+  c.fillStyle = ice ? '#7d93a6' : R.subzone==='temple' ? '#56605a' : '#4f5a5c'; cells((x,y,w,h)=>c.fillRect(X(x), Y(y), w*k+0.6, h*k+0.6));
   c.fillStyle = '#2f5f86';
   for(const o of R.obstacles){ if(!o.isWater) continue; c.fillRect(X(o.x), Y(o.y), Math.max(1.5,o.w*k), Math.max(1.5,o.h*k)); }
   for(const o of R.obstacles){ if(o.templeCol || (o.isProp && !o.organic)){ c.fillStyle = '#8a8070'; c.fillRect(X(o.x), Y(o.y), Math.max(2,o.w*k), Math.max(2,o.h*k)); } }
   if(R.woodBridge){ const b = R.woodBridge; c.fillStyle = '#9a7444'; c.fillRect(X(b.x0), Y(b.y-b.half), (b.x1-b.x0)*k, b.half*2*k); }
   if(R.island){ c.fillStyle = '#4f5a5c'; c.beginPath(); c.arc(X(R.island.x), Y(R.island.y), R.island.r*k, 0, 7); c.fill(); }
   const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=X(pt.x), y=Y(pt.y); mapBadge(c, x, y, ch, col, lb, 11); };
-  if(R.subzone==='temple'){ mark(R.entrance, 'E', '#7fd87f'); mark(R.waypoint, 'W', '#5fd0ff'); mark(R.stairsDown, '▼', '#e8c44a'); }
+  if(ice){ for(const gt of (R.gates||[])) mark(gt, '>', '#7fd87f', 'Icy Summit'); if(R.bossSpot) mark(R.bossSpot, '!', '#e05a5a', 'Mastodon\u2019s Lair'); }
+  else if(R.subzone==='temple'){ mark(R.entrance, 'E', '#7fd87f'); mark(R.waypoint, 'W', '#5fd0ff'); mark(R.stairsDown, '▼', '#e8c44a'); }
   else {
     mark(R.entrance, '▲', '#7fd87f');
     const kr = (g.enemies||[]).find(e=>e.kraken && e.hp>0);
@@ -404,6 +420,8 @@ function renderFtMap(g, p, box){
   c.strokeStyle = '#9c7f4a'; c.lineWidth = 2; c.strokeRect(ox, oy, R.w*k, R.h*k);
   const mark = (pt, ch, col, lb)=>{ if(!pt) return; const x=ox+pt.x*k, y=oy+pt.y*k; mapBadge(c, x, y, ch, col, lb, 12); };
   mark(R.entrance, R.floor===1 ? 'B' : '▼', '#7fd87f'); mark(R.stairs, '▲', '#e8c44a'); mark(R.waypoint, 'W', '#5fd0ff');
+  for(const b of (R.bonfires||[])){ c.fillStyle = '#ff9a3a'; c.beginPath(); c.arc(ox+b.x*k, oy+b.y*k, 3, 0, 7); c.fill(); }   // v553
+  if(R.lhCache && !R.lhCache.opened) mark(R.lhCache, '\u25A0', '#e8c44a');
   if(R.witch) mark(R.witch, '?', '#e8c44a');
   if(R.clearPortal) mark(R.clearPortal, 'M', '#5fd0ff');
   if(p && typeof p.x==='number'){ c.fillStyle='#ff7a3d'; c.beginPath(); c.arc(ox+p.x*k, oy+p.y*k, 9, 0, 7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=2.5; c.stroke(); mapYouLabel(c, ox+p.x*k, oy+p.y*k, CW); }
@@ -438,9 +456,10 @@ function renderRegionMap0(){
   if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='keep' && g.tower.kpArea<=3){ renderKeepMap(g, p, box); return; }
   if(g.scene==='lighthouse' && g.tower && g.tower.deep){ renderDeepMap(g, p, box); return; }
   if(g.scene==='lighthouse' && g.tower && g.tower.subzone==='highward'){ renderHwMap(g, p, box); return; }
-  if(g.scene==='lighthouse' && g.tower && g.tower.maze){ renderLhMazeMap(g, p, box); return; }
+  if(g.scene==='lighthouse' && g.tower && g.tower.maze && !g.tower.ft){ renderLhMazeMap(g, p, box); return; }
   if(g.scene==='lighthouse' && g.tower && (g.tower.subzone==='sunken' || g.tower.subzone==='temple') && g.tower.floorMask){ renderSubCaveMap(g, p, box); return; }   // v490
   if(g.scene==='lighthouse' && g.tower && g.tower.ft && !g.tower.subzone){ renderFtMap(g, p, box); return; }   // v490
+  if(g.scene==='icyzone' && g.iz && g.iz.kind==='cellar' && g.iz.floorMask){ renderSubCaveMap(g, p, box, g.iz); return; }   // v546
   // (v147/148) Layout-style maps: real floor plans for maze/room dungeons.
   const LAYOUT = {
     ancientruins: ()=>g.ruins && ({R:g.ruins, marks:[[g.ruins.entrance,'E','#7fd87f'],[g.ruins.stairsDown,'\u25BC','#e8c44a'],[g.ruins.waypoint,'W','#5fd0ff'],...(g.bossKilled?[[g.ruins.chestSpot,'\u2605','#e8c44a']]:[])]}),
@@ -498,15 +517,15 @@ function renderRegionMap0(){
     const t = g.town;
     const pts = [
       {pos:t.waypoint, label:'Waypoint', icon:'W'},
-      {pos:t.blacksmith, label:'Brom', icon:'B'},
+      {pos:t.blacksmith, label:'Brom', nameOnly:true},
       {pos:t.stashChest, label:'Stash', icon:'S'},
-      {pos:t.questGiver, label:'Aldric the Elder', icon:'!'},
+      {pos:t.questGiver, label:'Aldric', nameOnly:true},
       {pos:t.well, label:'Well', icon:'O'},
       {pos:t.gate, label:'Forest Gate', icon:'G'},
     ];
     const huntersQuest = typeof getQuest==='function' && typeof QUEST_FIND_HUNTERS!=='undefined' ? getQuest(p, QUEST_FIND_HUNTERS.id) : null;
     if(huntersQuest && huntersQuest.status==='complete'){
-      pts.push({pos:t.bonfire, label:'Bonfire', icon:'F'});
+      pts.push({pos:{x:t.bonfire.x+26, y:t.bonfire.y+14}, label:'Garrick', nameOnly:true});   // v546: the hunter by his fire
     }
     plotRegionMapPoints(box, pts, t.w, t.h, p);
   } else if(g.scene==='forest' && g.forest){

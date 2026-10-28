@@ -15,98 +15,114 @@ function fhtWall(list, x0, y0, x1, y1, gaps){
     o.col = FHT_WALL_COL; o.hz = 66; o.fhWall = true; list.push(o);
   }
 }
+// v554: floors 1-3 are 24 small rooms (6x4) on the shared room builder (towerMaze in zones/lighthouse.js) with benches,
+// barrels, crates and statues; floor 4 is 16 rooms then the Champions' hall with the stairs at its far wall; floor 5 is
+// an entrance room with the stairs, a side room above and below it, and the Commander's chamber behind a narrow door
+// that seals once you are through (fhtTick).
+const FHT_CELL_W = 480, FHT_CELL_H = 430, FHT_TURRET_RESPAWN = 10;
 function makeFhtFloor(f){
-  const boss = f>=4, cmd = f===FHT_FLOORS;
-  const w = boss ? 2100 : 1700, h = boss ? 1400 : 1100;
-  const es = (f%2===1) ? 'left' : 'right', ss = (f%2===1) ? 'right' : 'left';
-  const entrance = {x: es==='left' ? 70 : w-70, y:h/2, r:34};
-  const stairs = cmd ? null : {x: ss==='left' ? 70 : w-70, y:h/2, r:30};
-  let seed = (tripSeed('fht') + f*6151) & 0x7fffffff;   // v525: new rooms every trip
-  const rnd = ()=>{ seed = (seed*1103515245 + 12345) & 0x7fffffff; return seed/0x7fffffff; };
-  const obstacles = [];
-  let bossRoom = null, turretSpots = null;
-  if(cmd){
-    // the Commander's hall is walled off from the rest of the floor: one gateway, side chambers in the antechamber
-    const bx0 = Math.round(w*0.36);
-    fhtWall(obstacles, bx0, 0, bx0, h, [{c:h/2, half:140}]);
-    fhtWall(obstacles, 300, Math.round(h*0.27), bx0, Math.round(h*0.27), [{c:520, half:100}]);
-    fhtWall(obstacles, 300, Math.round(h*0.73), bx0, Math.round(h*0.73), [{c:520, half:100}]);
-    bossRoom = {x0:bx0+30, x1:w-60, y0:60, y1:h-60};
-    const bcx = (bossRoom.x0+bossRoom.x1)/2, bcy = h/2;
-    turretSpots = [{x:bcx-250,y:bcy-230},{x:bcx-250,y:bcy+230},{x:bcx+250,y:bcy-230},{x:bcx+250,y:bcy+230}];   // v355: closer to the fight
-  } else if(boss){
-    fhtWall(obstacles, Math.round(w*0.42), 0, Math.round(w*0.42), h, [{c:h*0.5, half:230}]);
-    fhtWall(obstacles, Math.round(w*0.7), 0, Math.round(w*0.7), h, [{c:h*0.3, half:170},{c:h*0.78, half:150}]);
-  } else {
-    const xA = Math.round(w*0.31), xB = Math.round(w*0.65);
-    fhtWall(obstacles, xA, 0, xA, h, [{c:h*(0.28+0.44*rnd()), half:150}]);
-    fhtWall(obstacles, xB, 0, xB, h, [{c:h*(0.28+0.44*rnd()), half:150}]);
-    const my = Math.round(h*(0.42+0.16*rnd()));
-    fhtWall(obstacles, xA, my, xB, my, [{c:(xA+xB)/2+(rnd()-0.5)*120, half:130}]);
+  const seed = (tripSeed('fht') + f*6151) & 0x7fffffff;   // v525: new rooms every trip
+  let R;
+  if(f===FHT_FLOORS) R = makeFhtTop(seed);
+  else {
+    const champ = f===4;
+    R = towerMaze(f, {seed, C:champ ? 4 : 6, R:4, cw:FHT_CELL_W, ch:FHT_CELL_H, door:140, hall:champ, hallW:1300, fireP:0, theme:'fht', wallPal:FHT_WALL_COL, pillarCol:FHT_WALL_COL});
+    if(champ){ R.stairs = {x:R.w-80, y:R.h/2, r:30}; R.chestSpot = {x:(R.mw+R.w)/2 - 80, y:R.h/2, r:24}; R.rooftop = false; }
   }
-  const walls = obstacles.slice();
-  const chestSpot = boss ? {x: es==='left' ? w*0.82 : w*0.18, y:h/2, r:24} : null;
-  const cols = boss ? 5 : 4, rows = 3;
-  for(let cx=1; cx<=cols; cx++) for(let cy=1; cy<=rows; cy++){
-    if(rnd() < 0.45) continue;
-    const px = w*(cx/(cols+1)) + (rnd()-0.5)*90, py = h*(cy/(rows+1)) + (rnd()-0.5)*90;
-    const sz = 54 + Math.floor(rnd()*44);
-    if(dist({x:px,y:py}, entrance) < 230 || (stairs && dist({x:px,y:py}, stairs) < 230)) continue;
-    if(turretSpots && turretSpots.some(t=>dist({x:px,y:py}, t) < 150)) continue;
-    if(chestSpot && dist({x:px,y:py}, chestSpot) < 200) continue;
-    if(walls.some(o=>px>o.x-sz-70 && px<o.x+o.w+sz+70 && py>o.y-sz-70 && py<o.y+o.h+sz+70)) continue;
-    if(cmd && px < w*0.36+90) continue;
-    obstacles.push({x:Math.round(px-sz/2), y:Math.round(py-sz/2), w:sz, h:sz});
-  }
-  return { w, h, obstacles, floor:f, fht:true, mine:false, bossFloor:boss, cmdFloor:cmd, bossRoom, turretSpots, rooftop:false, ft:false, entranceSide:es, entrance, stairs, waypoint:null, beacon:null, witch:null, clearPortal:undefined, chestSpot };
+  Object.assign(R, {floor:f, fht:true, mine:false, bossFloor:f>=4, cmdFloor:f===FHT_FLOORS, ft:false, beacon:null, witch:null, witchSpot:null, clearPortal:undefined, waypoint:null});
+  return R;
 }
+function makeFhtTop(seed){
+  const rnd = subSeeded(seed), w = 2700, h = 1560, T = 34, obstacles = [], decor = [];
+  const wall = (x,y,ww,hh)=>{ if(ww>4 && hh>4) obstacles.push({x:Math.round(x), y:Math.round(y), w:Math.round(ww), h:Math.round(hh), mazeWall:true}); };
+  const ax = 860, y1 = 470, y2 = 1090, sideDoor = 150, cmdDoorW = 84;
+  // the entrance room in the middle of the west side, a side room above and below it
+  wall(ax-T/2, 0, T, h/2-cmdDoorW/2); wall(ax-T/2, h/2+cmdDoorW/2, T, h-(h/2+cmdDoorW/2));
+  const d1 = 200 + rnd()*400, d2 = 200 + rnd()*400;
+  wall(0, y1-T/2, d1-sideDoor/2, T); wall(d1+sideDoor/2, y1-T/2, ax-(d1+sideDoor/2), T);
+  wall(0, y2-T/2, d2-sideDoor/2, T); wall(d2+sideDoor/2, y2-T/2, ax-(d2+sideDoor/2), T);
+  const entrance = {x:200, y:h/2, r:34};
+  const cmdDoor = {x:ax, y:h/2, w:cmdDoorW};
+  const block = (x,y,bw,bh)=>{ obstacles.push({x:Math.round(x-bw/2), y:Math.round(y-bh/2), w:Math.round(bw), h:Math.round(bh), isProp:true, noDraw:true}); };
+  const put = (k, x, y, bw, bh, extra)=>{ block(x, y, bw, bh); decor.push(Object.assign({k, x, y, s:1.15}, extra||{})); };
+  // side rooms: the Commander's guard quarters, benches and stores
+  for(const [ry0, ry1] of [[0, y1], [y2, h]]){
+    for(let k=0;k<3;k++){ const x = 120 + k*95, y = ry0 < 10 ? 70 : h-70; put(k%2 ? 'crate' : 'barrel', x, y, 28, 28); }
+    put('bench', 560, ry0 < 10 ? 80 : h-80, 74, 26);
+  }
+  put('statue', ax-110, h/2-150, 46, 46); put('statue', ax-110, h/2+150, 46, 46);
+  // the chamber: pillars along the walls
+  for(const fx of [0.22, 0.5, 0.78]) for(const fy of [0.12, 0.88]){ const px = ax + (w-ax)*fx; obstacles.push({x:Math.round(px-34), y:Math.round(h*fy-34), w:68, h:68, col:FHT_WALL_COL, hz:80}); }
+  const bcx = ax + (w-ax)*0.55, bcy = h/2;
+  const turretSpots = [];
+  for(let i=0;i<8;i++){ const a = i/8*Math.PI*2 + Math.PI/8; turretSpots.push({x:Math.round(bcx + Math.cos(a)*620), y:Math.round(bcy + Math.sin(a)*560)}); }
+  for(const t of turretSpots){ t.x = clamp(t.x, ax+110, w-90); t.y = clamp(t.y, 90, h-90); }
+  const rooms = [{x0:0, x1:ax, y0:y1, y1:y2, cx:ax/2, cy:h/2, start:true}, {x0:0, x1:ax, y0:0, y1:y1, cx:ax/2, cy:y1/2}, {x0:0, x1:ax, y0:y2, y1:h, cx:ax/2, cy:(y2+h)/2}];
+  const bossRoom = {x0:ax+T, x1:w-40, y0:40, y1:h-40};
+  return {w, h, obstacles, maze:true, entranceSide:'left', entrance, stairs:null, rooms, lhDecor:decor, bonfires:[], lhCache:null, wallPal:FHT_WALL_COL,
+    cmdDoor, bossRoom, turretSpots, chestSpot:{x:bcx, y:bcy, r:24}, cmdSpot:{x:bcx+120, y:bcy}, rooftop:false};
+}
+function fhtGroupSpot(room, r, cx, cy, rad){
+  for(let t=0;t<40;t++){ const x = cx!=null ? cx+rand(-rad,rad) : rand(r.x0+70, r.x1-70), y = cy!=null ? cy+rand(-rad,rad) : rand(r.y0+70, r.y1-70);
+    if(x>r.x0+45 && x<r.x1-45 && y>r.y0+45 && y<r.y1-45 && !posBlockedByObstacles(x,y,24,room.obstacles) && dist({x,y},room.entrance)>240 && (!room.stairs || dist({x,y},room.stairs)>120)) return {x,y}; }
+  return null;
+}
+// a dwarven squad of 4-7: shield dwarves, axe throwers, now and then a brute, a cleric or a frozen thrall
+function fhtSquad(g, room, r, f){
+  const c = fhtGroupSpot(room, r); if(!c) return;
+  const n = 4 + Math.floor(Math.random()*4), types = [];
+  for(let k=0;k<n;k++) types.push(k===0 && Math.random()<0.55 ? 'fhbrute' : k===1 && Math.random()<0.4 ? 'fhcleric' : (f>=2 && k===2 && Math.random()<0.35) ? 'frozenzombie' : Math.random()<0.55 ? 'fhdwarf' : 'fhaxe');
+  for(const tp of types){ const q = fhtGroupSpot(room, r, c.x, c.y, 95) || c; spawnEnemy(g, tp, q); }
+}
+// v554: the seven Champions are each a different elite; their base life and damage are cut so seven of them stay fair
+const FHT_CHAMP_MODS = ['fast','strong','fireEnch','coldEnch','lightEnch','stoneSkin','regen','vampiric','shielded'];
+const FHT_CHAMP_HP = 0.32, FHT_CHAMP_DMG = 0.6;
 function spawnFhtFloor(g, f){
-  const room = g.room, av = [room.entrance, room.stairs];
-  const inWall = (x,y)=>room.obstacles.some(o=>x>o.x-26 && x<o.x+o.w+26 && y>o.y-26 && y<o.y+o.h+26);
-  const sp = (type, pos)=>{   // v355: never spawn inside a wall or pillar
-    if(pos && inWall(pos.x,pos.y)){ for(let k=0;k<30;k++){ const q = {x:pos.x+rand(-140,140), y:pos.y+rand(-140,140)}; if(!inWall(q.x,q.y)){ pos = q; break; } } if(inWall(pos.x,pos.y)) pos = ftOpenSpot(room, av, 200); }
-    return spawnEnemy(g, type, pos);
-  };
+  const room = g.room;
   if(f < 4){
-    const groups = 6 + f;
-    for(let i=0;i<groups;i++){
-      const c = ftOpenSpot(room, av, 300);
-      const nD = 1 + Math.floor(Math.random()*2), nA = 1 + (i%2), nB = (i%2===0 || f>=3) ? 1 : 0, nZ = (f>=2 && i%3===0) ? 1 : 0;
-      for(let k=0;k<nD;k++) sp('fhdwarf', {x:c.x+rand(-80,80), y:c.y+rand(-80,80)});
-      for(let k=0;k<nA;k++) sp('fhaxe', {x:c.x+rand(-90,90), y:c.y+rand(-90,90)});
-      for(let k=0;k<nB;k++) sp('fhbrute', {x:c.x+rand(-40,40), y:c.y+rand(-40,40)});
-      for(let k=0;k<nZ;k++) sp('frozenzombie', {x:c.x+rand(-70,70), y:c.y+rand(-70,70)});
-      if(i%2===1) sp('fhcleric', {x:c.x+rand(-60,60), y:c.y+rand(-60,60)});   // v462
-    }
+    for(const r of room.rooms){ if(r.start) continue; if(Math.random() < 0.6) fhtSquad(g, room, r, f); }
   } else if(f===4){
-    if(!g.player.fhtRuneTaken){
-      // seven Templars in a wide arc around the chest spot
-      const cs = room.chestSpot;
-      for(let i=0;i<7;i++){
-        const a = (i/6-0.5)*2.2 + (room.entranceSide==='left' ? 0 : Math.PI);
-        const px = cs.x + Math.cos(a)*300*(room.entranceSide==='left'?-1:1)*-1, py = cs.y + Math.sin(a)*300;
-        const t = sp('fhtemplar', {x:clamp(px,120,room.w-120), y:clamp(py,120,room.h-120)});
-        t.isFhtTemplar = true;
-      }
-      for(let i=0;i<3;i++){
-        const c = ftOpenSpot(room, av.concat([cs]), 380);
-        sp('fhdwarf', {x:c.x, y:c.y}); sp('fhaxe', {x:c.x+40, y:c.y+30});
-      }
-      sp('fhcleric', {x:cs.x + (room.entranceSide==='left' ? 120 : -120), y:cs.y});   // v462: a cleric tends the Champions
-      showMsg('Seven Frosthold Champions guard the way up...', 2.2, '#dfe8ff');
+    for(const r of room.rooms){ if(r.start) continue; if(Math.random() < 0.55) fhtSquad(g, room, r, f); }
+    const cs = room.chestSpot, mods = shuffle(FHT_CHAMP_MODS.slice()).slice(0, 7);
+    for(let i=0;i<7;i++){
+      const a = (i/7)*Math.PI*2, pos = {x:clamp(cs.x + Math.cos(a)*260, room.mw+120, room.w-120), y:clamp(cs.y + Math.sin(a)*300, 120, room.h-120)};
+      const t = spawnEnemy(g, 'fhtemplar', pos); if(!t) continue;
+      t.isFhtTemplar = true;
+      t.maxHp = Math.round(t.maxHp*FHT_CHAMP_HP); t.hp = t.maxHp; t.dmg *= FHT_CHAMP_DMG;
+      makeElite(t, [mods[i]]);
     }
-  } else {   // v489: the Commander is back on every visit
-    const cs = room.chestSpot;
-    const c = spawnEnemy(g, 'fhtemplar', {x:cs.x - (room.entranceSide==='left'?1:-1)*220, y:cs.y});
-    initFhCommander(c);
-    if(room.bossRoom){   // the antechamber's side chambers hold the Commander's guard
-      const ax = room.w*0.36*0.62;
-      for(const gy of [room.h*0.14, room.h*0.86]){
-        sp('fhdwarf', {x:ax+rand(-60,60), y:gy+rand(-40,40)}); sp('fhdwarf', {x:ax+rand(-60,60), y:gy+rand(-40,40)}); sp('fhaxe', {x:ax+rand(-60,60), y:gy+rand(-40,40)});
-      }
-      sp('fhbrute', {x:room.w*0.36*0.5, y:room.h*0.5+rand(-150,150)});
-    }
+    spawnEnemy(g, 'fhcleric', {x:cs.x + 140, y:cs.y});   // v462: a cleric tends the Champions
+    showMsg('Seven Frosthold Champions guard the way up...', 2.2, '#dfe8ff');
+  } else {   // v489: the Commander is back on every visit; v554: he waits in his chamber until the door seals behind you
+    const c = spawnEnemy(g, 'fhtemplar', room.cmdSpot);
+    initFhCommander(c); c.cmdDormant = true; c.aggroRange = 0;
+    for(const r of room.rooms.slice(1)){ fhtSquad(g, room, r, f); }
     showMsg('The Frosthold Commander waits at the summit...', 2.6, '#ffd9a0');
+  }
+  g.enemies._dense = true;   // exactly these squads
+}
+// v554: floor 5 -- the chamber door seals once you are through it and opens again when the Commander falls;
+// his turrets come back FHT_TURRET_RESPAWN seconds after they are destroyed
+function fhtTick(g, p, dt){
+  const t = g.tower; if(!t) return;
+  if(t.lhCache) lhCacheTick(g, p);
+  if(!t.cmdDoor) return;
+  const cmd = g.enemies.find(e=>e.fhCmd && e.hp>0), d = t.cmdDoor;
+  if(cmd && !t.sealed && p.x > d.x + 70){
+    t.sealed = {x:d.x-17, y:d.y-d.w/2-6, w:34, h:d.w+12, mazeWall:true, fhSeal:true};
+    t.obstacles.push(t.sealed);
+    for(const fl of (g.followers||[])) if(fl.x < d.x){ fl.x = d.x + 80; fl.y = d.y; }
+    shakeScreen(g, 4, 0.3); showMsg('The door slams shut behind you', 2.0, '#bfd8ff');
+    cmd.cmdDormant = false; cmd.cmdWaitT = 3; cmd.aggroRange = 1600; cmd.aggroed = true; cmd.bossWoke = true;
+  }
+  if(cmd && cmd.cmdWaitT>0){ cmd.cmdWaitT -= dt; if(cmd.cmdWaitT <= 0){ cmd._greeted = true; showMsg('\u201cThe mountain\u2019s treasures belong to us!\u201d', 5); cmd.cCd = 1.2; } }
+  if(t.sealed && !cmd){ t.obstacles.splice(t.obstacles.indexOf(t.sealed), 1); t.sealed = null; showMsg('The chamber door grinds open', 2.0); }
+  if(cmd && cmd.cPhase===2 && t.turretSpots){
+    for(const sp of t.turretSpots){
+      if(sp.e && sp.e.hp>0 && g.enemies.includes(sp.e)) continue;
+      if(sp.e){ sp.down = (sp.down||0) + dt; if(sp.down < FHT_TURRET_RESPAWN) continue; }
+      sp.down = 0; sp.e = spawnFhTurret(g, sp);
+    }
   }
 }
 function enterFhTower(floor, opts){
@@ -136,7 +152,7 @@ function enterFhTower(floor, opts){
   updateInteractPrompt(null);
   saveGame();
 }
-function fhtStairsUp(){ const g = game; if(g.tower && g.tower.fht && g.lighthouseFloor < FHT_FLOORS){ if(g.lighthouseFloor===4 && !g.player.fhtRuneTaken){ showMsg('The Frosthold Champions bar the stairs. Defeat them first.', 2.4); return; } enterFhTower(g.lighthouseFloor+1); } }
+function fhtStairsUp(){ const g = game; if(g.tower && g.tower.fht && g.lighthouseFloor < FHT_FLOORS){ if(g.lighthouseFloor===4 && game.enemies.some(x=>x.isFhtTemplar && x.hp>0)){ showMsg('The Frosthold Champions bar the stairs. Defeat them first.', 2.4); return; } enterFhTower(g.lighthouseFloor+1); } }
 function fhtStairsDown(){ const g = game; if(g.tower && g.tower.fht && g.lighthouseFloor > 1) enterFhTower(g.lighthouseFloor-1, {fromBelow:true}); }
 function makeFrostRunestoneItem(){
   return { id:'it'+Math.random().toString(36).slice(2,9), slotType:'questitem', rarity:'rare',
@@ -154,41 +170,59 @@ function openTemplarChest(g){
     showMsg('The Frosthold Champions are defeated \u2014 the stairs to the summit are open', 3.0);
     g.particles.push({type:'burst', x:g.chest.x, y:g.chest.y, t:0.5, max:0.5, color:'#9fe4ff'});
     bagPulse(); saveGame();
+  } else {   // v548: a re-kill pays out a rare and some gold
+    const it = classRewardItem(p, Math.max(p.level, 42), 'rare'); if(it) forceAddToBag(p, it);
+    p.gold += 250; showMsg('The Frosthold Champions fall again', 2.4);
+    bagPulse(); saveGame();
   }
 }
 // ---- Frosthold Commander (floor 5 of the Tower) ----
 //   Solo boss, hits ~25% harder than a Templar. Ground slam (ring), charge (lane), summons dwarf adds.
 //   At 50% life the ancient machine awakens: four stationary dwarven turrets throw fireballs for the rest of the fight.
-const FHC_SLAM_R = 215, FHC_CHARGE_HALF = 62, FHC_CHARGE_LEN = 560, FHC_ADD_CAP = 5;
+// v545: the slam is 10% smaller and lands in two rings -- the inner disc first, then the outer band FHC_SLAM_GAP seconds later
+const FHC_SLAM_R = 194, FHC_SLAM_IN = 0.5, FHC_SLAM_GAP = 0.45, FHC_TELE = 1.2, FHC_CHARGE_HALF = 62, FHC_CHARGE_LEN = 560, FHC_ADD_CAP = 5;
 function initFhCommander(e){
   e.fhCmd = true; e.isLairBoss = true; e.bossName = 'Frosthold Commander'; e.engaged = true; e.aggroed = true;
   e.r = 17;   // v456: half the old size (was 33)
-  e.hp = Math.round(e.hp*3.2); e.maxHp = e.hp; e.dmg = e.dmg*1.25; e.armor = (e.armor||0) + 6; e.baseSpeed = e.speed = 62;   // v490: this line used to sit behind the comment above, so none of it applied
+  e.hp = Math.round(e.hp*3.2); e.maxHp = e.hp; e.dmg = e.dmg*1.25; e.dmgType = 'normal'; e.dmgSplit = 'cold';   // v545: every blow is half cold, half physical
+  e.armor = (e.armor||0) + 6; e.baseSpeed = e.speed = 62;   // v490: this line used to sit behind the comment above, so none of it applied
   e.aggroRange = 900; e.leashRange = 99999; e.wanderRadius = 0;
   e.cState = 'chase'; e.cT = 0; e.cTmax = 1; e.cCd = 2.6; e.cPhase = 1; e.cNext = 0; e.cDir = 0; e.cHit = false;
 }
-function spawnFhTurrets(g, room){
-  for(const sp of (room.turretSpots||[])){
-    const t = spawnEnemy(g, 'fhturret', {x:sp.x, y:sp.y});
-    if(t){ t.fhTurret = true; t.noReward = true; t.engaged = true; t.aggroed = true; }
-    g.particles.push({type:'burst', x:sp.x, y:sp.y, t:0.5, max:0.5, color:'#ffb050'});
-    g.particles.push({type:'ring', x:sp.x, y:sp.y, t:0.6, max:0.6, r:70, color:'#ffb050'});
-  }
+function spawnFhTurret(g, sp){   // v554: half the damage and 40% of the life they had
+  const t = spawnEnemy(g, 'fhturret', {x:sp.x, y:sp.y});
+  if(t){ t.fhTurret = true; t.noReward = true; t.engaged = true; t.aggroed = true; t.dmg *= 0.5; t.maxHp = Math.max(1, Math.round(t.maxHp*0.4)); t.hp = t.maxHp; }
+  g.particles.push({type:'burst', x:sp.x, y:sp.y, t:0.5, max:0.5, color:'#ffb050'});
+  g.particles.push({type:'ring', x:sp.x, y:sp.y, t:0.6, max:0.6, r:70, color:'#ffb050'});
+  return t;
 }
+function spawnFhTurrets(g, room){ for(const sp of (room.turretSpots||[])){ sp.down = 0; sp.e = spawnFhTurret(g, sp); } }
 function fhCmdHit(g, e, tgt, mult){
   const dm = teleDmg(e, mult);
   if(tgt===g.player) playerDamage(g, dm, e); else applyFollowerDamage(g, tgt, dm, e);
 }
 function fhCmdTargets(g){ return [g.player].concat(g.followers||[]); }
+// v545: ice spikes burst up across the band that was just hit
+function fhSlamSpikes(g, e, r0, r1){
+  const n = Math.round(6 + (r1*r1 - r0*r0)/2600);
+  for(let i=0;i<n;i++){ const a = Math.random()*Math.PI*2, rr = Math.sqrt(r0*r0 + Math.random()*(r1*r1 - r0*r0)); g.particles.push({type:'iceSpike', x:e.x+Math.cos(a)*rr, y:e.y+Math.sin(a)*rr, t:0.9, max:0.9, seed:Math.random(), h:26+Math.random()*18}); }
+}
 // v490: a boss speaks once when you first come close
 function bossGreet(g, e, line, r){ if(e._greeted || !g.player || dist(e, g.player) > (r||420) || !enemyLOS(g, e, g.player)) return; e._greeted = true; showMsg(line, 5); }
 function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, room){
   const p = g.player, st = e.cState;
-  bossGreet(g, e, '\u201cThe mountain\u2019s treasures belong to us!\u201d');
+  if(e.cmdDormant || e.cmdWaitT>0){   // v554: he stands his ground until the door seals, then sizes you up for 3 seconds
+    e.moving = false; e.windT = 0; e.atkCd = Math.max(e.atkCd||0, 0.5);
+    if(p){ const a = Math.atan2(p.y-e.y, p.x-e.x); e.facing = {x:Math.cos(a), y:Math.sin(a)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y); }
+    if(e.cmdDormant) e.hp = Math.max(e.hp, e.maxHp*0.999);
+    return;   // the wait counts down in fhtTick (it must run even while he is off screen)
+  }
+  if(!e.cmdDormant && e.cmdWaitT==null) bossGreet(g, e, '\u201cThe mountain\u2019s treasures belong to us!\u201d');
   const face = a=>{ e.facing = {x:Math.cos(a), y:Math.sin(a)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y); };
   const F = e.cPhase===2 ? 1.6 : 1;   // v490: phase 2 telegraphs/recoveries are twice as long as before (was 0.8 -- far too quick)
   if(e.cPhase===1 && e.hp <= e.maxHp*0.5 && st!=='awaken'){
     e.cPhase = 2; e.cState = 'awaken'; e.cT = e.cTmax = 1.7; e.moving = false;
+    showMsg('\u201cThe runes belong to the dwarves!\u201d', 4);   // v554
     showBigMsg('THE ANCIENT MACHINE AWAKENS', 'Dwarven turrets rise from the floor', 3.4);
     shakeScreen(g, 6, 1.2); spawnFhTurrets(g, room);
     g.particles.push({type:'ring', x:e.x, y:e.y, t:0.7, max:0.7, r:260, color:'#ffb050'});
@@ -198,10 +232,23 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
   if(st==='recover'){ e.cT -= dt; e.moving = false; if(e.cT<=0) e.cState='chase'; return; }
   if(st==='slamTele'){
     e.cT -= dt; e.moving = false; e.atkAnimT = 0.1;
+    if(e.cT<=0){   // inner disc
+      const Ri = FHC_SLAM_R*FHC_SLAM_IN;
+      for(const tg of fhCmdTargets(g)) if(dist(tg,e) < Ri + tg.r*0.5) fhCmdHit(g, e, tg, 1.2);
+      fhSlamSpikes(g, e, 0, Ri);
+      g.particles.push({type:'ring', x:e.x, y:e.y, t:0.5, max:0.5, r:Ri, color:'#bfe6ff'});
+      shakeScreen(g, 5, 0.2);
+      e.cState='slamOuter'; e.cT = e.cTmax = FHC_SLAM_GAP;
+    }
+    return;
+  }
+  if(st==='slamOuter'){   // v545: then the outer band
+    e.cT -= dt; e.moving = false; e.atkAnimT = 0.1;
     if(e.cT<=0){
-      for(const tg of fhCmdTargets(g)) if(dist(tg,e) < FHC_SLAM_R + tg.r*0.5) fhCmdHit(g, e, tg, 1.6);
-      g.particles.push({type:'ring', x:e.x, y:e.y, t:0.5, max:0.5, r:FHC_SLAM_R, color:'#d9a066'});
-      g.particles.push({type:'burst', x:e.x, y:e.y, t:0.4, max:0.4, color:'#b8a078'});
+      const Ri = FHC_SLAM_R*FHC_SLAM_IN;
+      for(const tg of fhCmdTargets(g)){ const dd = dist(tg,e); if(dd >= Ri - tg.r*0.5 && dd < FHC_SLAM_R + tg.r*0.5) fhCmdHit(g, e, tg, 1.2); }
+      fhSlamSpikes(g, e, Ri, FHC_SLAM_R);
+      g.particles.push({type:'ring', x:e.x, y:e.y, t:0.5, max:0.5, r:FHC_SLAM_R, color:'#bfe6ff'});
       shakeScreen(g, 6, 0.25);
       e.cState='recover'; e.cT = 0.8*F;
     }
@@ -218,7 +265,7 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
     const blocked = nx<80 || ny<80 || nx>room.w-80 || ny>room.h-80 || room.obstacles.some(o=> nx>o.x-e.r*0.6 && nx<o.x+o.w+e.r*0.6 && ny>o.y-e.r*0.6 && ny<o.y+o.h+e.r*0.6);
     if(blocked){ shakeScreen(g, 5, 0.25); g.particles.push({type:'burst', x:e.x, y:e.y, t:0.4, max:0.4, color:'#b8a078'}); e.cState='recover'; e.cT = 1.3*F; e.moving = false; return; }
     e.x = nx; e.y = ny;
-    fhCmdTargets(g).forEach((tg, i)=>{ if(!e.cHit[i] && dist(tg,e) < e.r+tg.r+8){ e.cHit[i] = true; fhCmdHit(g, e, tg, 1.5); } });
+    fhCmdTargets(g).forEach((tg, i)=>{ if(!e.cHit[i] && dist(tg,e) < e.r+tg.r+8){ e.cHit[i] = true; fhCmdHit(g, e, tg, 1.125); } });
     if(e.cT<=0){ e.cState='recover'; e.cT = 0.9*F; e.moving = false; }
     return;
   }
@@ -229,7 +276,7 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
       for(let i=0;i<3 && alive+i<FHC_ADD_CAP;i++){
         const a = Math.random()*Math.PI*2, rr = e.r+rand(50,150);
         const pos = {x:clamp(e.x+Math.cos(a)*rr, 100, room.w-100), y:clamp(e.y+Math.sin(a)*rr, 100, room.h-100)};
-        const c = spawnEnemy(g, i%2===0 ? 'fhdwarf' : 'fhaxe', pos);
+        const c = spawnEnemy(g, 'fhdwarf', pos);   // v545: melee dwarves only (they drop a health globe half the time)
         if(c){ c.cAdd = true; c.noReward = true; c.engaged = true; c.aggroed = true; }
         g.particles.push({type:'burst', x:pos.x, y:pos.y, t:0.4, max:0.4, color:'#9fd8ff'});
       }
@@ -246,9 +293,9 @@ function updateFhCommander(g, e, dt, target, d, isFollowerTarget, chillMult, roo
     const seq = e.cPhase===2 ? ['charge','slam','summon','slam','charge'] : ['slam','charge','summon'];
     const mv = seq[e.cNext % seq.length];
     let ok = true;
-    if(mv==='slam'){ if(d < FHC_SLAM_R*0.95 && enemyLOS(g,e,target)){ e.cState='slamTele'; e.cT = e.cTmax = 0.95*F; } else ok = false; }
-    else if(mv==='charge'){ if(d > 130 && d < FHC_CHARGE_LEN && enemyLOS(g,e,target)){ e.cDir = Math.atan2(target.y-e.y, target.x-e.x); e.cState='chargeTele'; e.cT = e.cTmax = 0.8*F; } else ok = false; }
-    else { if(g.enemies.filter(x=>x.cAdd && x.hp>0).length < FHC_ADD_CAP-1){ e.cState='summonTele'; e.cT = e.cTmax = 0.9*F; } else ok = false; }
+    if(mv==='slam'){ if(d < FHC_SLAM_R*0.95 && enemyLOS(g,e,target)){ e.cState='slamTele'; e.cT = e.cTmax = 0.95*F*FHC_TELE; } else ok = false; }
+    else if(mv==='charge'){ if(d > 130 && d < FHC_CHARGE_LEN && enemyLOS(g,e,target)){ e.cDir = Math.atan2(target.y-e.y, target.x-e.x); e.cState='chargeTele'; e.cT = e.cTmax = 0.8*F*FHC_TELE; } else ok = false; }
+    else { if(g.enemies.filter(x=>x.cAdd && x.hp>0).length < FHC_ADD_CAP-1){ e.cState='summonTele'; e.cT = e.cTmax = 0.9*F*FHC_TELE; } else ok = false; }
     if(ok){ e.cNext++; e.cCd = (e.cPhase===2 ? 3.5 : 3.0) + Math.random()*1.0; e.windT = 0; return; }
     e.cCd = 0.45; if(!(mv==='slam' && d>=FHC_SLAM_R*0.95)) e.cNext++;
   }
@@ -277,7 +324,7 @@ function updateFhTurret(g, e, dt, target, d){
 function fhCommanderSlain(g, e){
   const p = g.player;
   p.fhCmdSlain = true;
-  for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; }
+  for(const x of g.enemies) if(x.fhTurret || x.cAdd){ x.hp = 0; x.noReward = true; x._cleared = true; }   /* v545: no globes from the clean-up */
   if(g.tower && g.tower.fht){
     const cx = clamp(e.x,100,g.tower.w-100), cy = clamp(e.y,100,g.tower.h-100);
     if(!p.fhCmdLooted) g.chest = {x:cx, y:cy, r:24, opened:false, cmd:true};   // v489: re-kills drop a rare instead of the chest
@@ -867,7 +914,16 @@ function drawTrollTelegraph(e){
   ctx.restore();
 }
 function drawFhCmdTelegraph(e){
-  const st = e.cState; if(st!=='slamTele' && st!=='chargeTele' && st!=='summonTele') return;
+  const st = e.cState; if(st!=='slamTele' && st!=='chargeTele' && st!=='summonTele' && st!=='slamOuter') return;
+  if(st==='slamTele' || st==='slamOuter'){   // v545: two rings -- the inner disc fills during the wind-up, the outer band right after
+    const frac = clamp(1-e.cT/(e.cTmax||1),0,1), iso = toIso(e.x,e.y), K = ISO_KX*Math.SQRT2, Ri = FHC_SLAM_R*FHC_SLAM_IN*K, Ro = FHC_SLAM_R*K;
+    ctx.save(); ctx.translate(iso.x, iso.y); ctx.scale(1, ISO_KY/ISO_KX); ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'rgba(160,215,255,'+(st==='slamTele' ? 0.5+frac*0.5 : 0.35)+')'; ctx.beginPath(); ctx.arc(0,0,Ri,0,7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(160,215,255,'+(st==='slamOuter' ? 0.6+frac*0.4 : 0.45)+')'; ctx.beginPath(); ctx.arc(0,0,Ro,0,7); ctx.stroke();
+    if(st==='slamTele'){ ctx.fillStyle = 'rgba(150,205,255,'+(0.08+frac*0.26)+')'; ctx.beginPath(); ctx.arc(0,0,Ri*frac,0,7); ctx.fill(); }
+    else { ctx.fillStyle = 'rgba(150,205,255,'+(0.1+frac*0.28)+')'; ctx.beginPath(); ctx.arc(0,0,Ri+(Ro-Ri)*frac,0,7); ctx.arc(0,0,Ri,0,7,true); ctx.fill(); }
+    ctx.restore(); return;
+  }
   const frac = clamp(1-e.cT/(e.cTmax||1),0,1);
   ctx.save();
   if(st==='chargeTele'){
@@ -1132,3 +1188,29 @@ function enterMountainPass(opts){
   updateInteractPrompt(null);
 }
 
+// v554: dwarven furniture -- a heavy stone-legged bench and a statue of an old dwarf king
+function drawFhtDecor(d){
+  const iso = toIso(d.x, d.y);
+  ctx.save(); ctx.translate(iso.x, iso.y);
+  if(d.k==='bench'){
+    drawShadow(0, 3, 34, 8);
+    ctx.fillStyle = '#4a4c52'; ctx.fillRect(-26, -12, 7, 12); ctx.fillRect(19, -12, 7, 12);
+    ctx.fillStyle = '#6a4a2c'; ctx.beginPath(); ctx.moveTo(-32, -12); ctx.lineTo(-20, -20); ctx.lineTo(34, -20); ctx.lineTo(22, -12); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4e3620'; ctx.fillRect(-32, -12, 54, 5);
+    ctx.strokeStyle = '#22170c'; ctx.lineWidth = 1; ctx.strokeRect(-32, -12, 54, 5);
+    ctx.strokeStyle = 'rgba(30,20,10,0.5)'; ctx.beginPath(); ctx.moveTo(-26, -15); ctx.lineTo(28, -15); ctx.moveTo(-23, -17.5); ctx.lineTo(31, -17.5); ctx.stroke();
+  } else {
+    drawShadow(0, 4, 28, 10);
+    const st = ctx.createLinearGradient(-20, 0, 20, 0); st.addColorStop(0, '#9aa4b2'); st.addColorStop(1, '#4a5260');
+    ctx.fillStyle = '#5a6270'; ctx.fillRect(-22, -14, 44, 14); ctx.fillStyle = '#7a8492'; ctx.beginPath(); ctx.ellipse(0, -14, 22, 8, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = st;
+    ctx.beginPath(); ctx.moveTo(-14, -16); ctx.lineTo(-16, -50); ctx.quadraticCurveTo(0, -58, 16, -50); ctx.lineTo(14, -16); ctx.closePath(); ctx.fill();   // body
+    ctx.beginPath(); ctx.moveTo(-12, -46); ctx.quadraticCurveTo(0, -24, 12, -46); ctx.closePath(); ctx.fillStyle = '#8a94a2'; ctx.fill();   // beard
+    ctx.fillStyle = st; ctx.beginPath(); ctx.arc(0, -60, 9, 0, 7); ctx.fill();
+    ctx.fillStyle = '#6a7482'; ctx.beginPath(); ctx.moveTo(-10, -64); ctx.lineTo(-6, -74); ctx.lineTo(0, -66); ctx.lineTo(6, -74); ctx.lineTo(10, -64); ctx.closePath(); ctx.fill();   // crown
+    ctx.strokeStyle = '#5a6270'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(16, -18); ctx.lineTo(18, -58); ctx.stroke();   // hammer haft
+    ctx.fillStyle = '#5a6270'; ctx.fillRect(10, -66, 16, 9);
+    ctx.strokeStyle = 'rgba(20,24,30,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-6, -34); ctx.lineTo(-3, -22); ctx.moveTo(5, -40); ctx.lineTo(8, -28); ctx.stroke();
+  }
+  ctx.restore();
+}

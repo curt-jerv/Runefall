@@ -116,7 +116,7 @@ function updateQuestBadge(){
   const badge = document.getElementById('questBadge');
   const p = game && game.player;
   // v514: holding the Defensive Runestone completes The Scholar's Theory (1/1) -- go back and show it to the scholar
-  if(p){ const sr = getQuest(p, 'scholar_ruins'); if(sr && sr.status==='active' && typeof findRunestone==='function' && findRunestone(p)){ sr.progress = sr.total; sr.desc = 'You found the Defensive Runestone below the lake. Return to the scholar.'; } }
+  if(p){ const sr = getQuest(p, 'scholar_ruins'); if(sr && sr.status==='active' && typeof findRunestone==='function' && findRunestone(p)){ sr.progress = sr.total; sr.desc = 'You found the Defensive Runestone below the lake. Return to Corwin.'; } }
   // v282: Hidden Secrets (the Ruins Map) had no end -- it now completes once you have reached the Ancient Ruins waypoint
   if(p){ const hs = getQuest(p, 'hidden_secrets'); if(hs && hs.status==='active' && hs.stage!=='toOldMan' && (p.reachedAncientRuins || p.ruinsEntranceOpen)){ hs.status='complete'; hs.rewarded=true; hs.progress=hs.total; hs.desc='You found what the map pointed to: the Ancient Ruins.'; } }
   const active = p && (p.quests||[]).some(q=>q.status==='active');

@@ -18,7 +18,7 @@ function newGame(saved, cls){
     blocking:false,
     invuln:0, hitFlash:0,
     animT:0, moving:false, faceSign:1, atkAnimT:0, castAnimT:0, movementStopT:0,
-    skillPoints:0, skills:{leap:0,soulFire:0,  unbreakable:0, ironSkin:0, shieldBash:0, riposte:0, shieldThrow:0, guardian:0, weaponsSpecialist:0, bloodlust:0, whirlwind:0, cleave:0, fury:0, assault:0, squire:0, commander:0, rally:0, offensiveStance:0, templarDefensiveStance:0, battlecry:0, companionWolf:0, companionBear:0, trap:0, sap:0, evasion:0, execute:0, shadowStep:0, vanish:0, bowExpert:0, rapidShot:0, multiShot:0, arrowEye:0, trueShot:0, preciseShot:0, cripplingShot:0, stunShot:0, packTactics:0, fieldDress:0, lightningArc:0, lightningChain:0, nova:0, tornado:0, storm:0, hurricane:0, elementalPolarity:0, fireball:0, iceBolt:0, immolate:0, flameVortex:0, permafrost:0, thunderstep:0, elementalExplosions:0, fireBomb:0, iceArmor:0, pyroTorrent:0, blizzard:0, fear:0, raiseDead:0, soulSap:0, sacrifice:0, demonBind:0, plague:0, survivalFieldDress:0, aimedShot:0, longshot:0, deadeye:0, huntersBond:0, beastFury:0, huntersMark:0, markedPrey:0, explosiveTrap:0, trapMastery:0, survivalInstinct:0, opportunist:0, poisonTrap:0, frostTrap:0, finesse:0, rainOfArrows:0, recall:0},
+    skillPoints:0, skills:{leap:0,soulFire:0,  unbreakable:0, ironSkin:0, shieldBash:0, riposte:0, shieldThrow:0, guardian:0, weaponsSpecialist:0, bloodlust:0, whirlwind:0, cleave:0, fury:0, assault:0, squire:0, commander:0, rally:0, offensiveStance:0, templarDefensiveStance:0, battlecry:0, companionWolf:0, companionBear:0, trap:0, sap:0, evasion:0, execute:0, shadowStep:0, vanish:0, bowExpert:0, rapidShot:0, multiShot:0, arrowEye:0, trueShot:0, preciseShot:0, cripplingShot:0, stunShot:0, packTactics:0, fieldDress:0, lightningArc:0, lightningChain:0, nova:0, tornado:0, storm:0, hurricane:0, manaShield:0, stormWard:0, fireball:0, iceBolt:0, immolate:0, flameVortex:0, permafrost:0, thunderstep:0, elementalExplosions:0, fireBomb:0, iceArmor:0, pyroTorrent:0, blizzard:0, fear:0, raiseDead:0, soulSap:0, sacrifice:0, demonBind:0, plague:0, survivalFieldDress:0, aimedShot:0, longshot:0, deadeye:0, huntersBond:0, beastFury:0, huntersMark:0, markedPrey:0, explosiveTrap:0, trapMastery:0, survivalInstinct:0, opportunist:0, poisonTrap:0, frostTrap:0, finesse:0, rainOfArrows:0, recall:0},
     // v74: which active skill fires from each of the 4 generic buttons --
     // Main defaults to the basic Strike attack (same as the pre-v74 behavior
     // of the STRIKE button); 1/2/3 default unassigned. Dodge is intentionally
@@ -324,6 +324,36 @@ function newGame(saved, cls){
       }
       if(rf495>0){ player.skillPoints = (player.skillPoints||0) + rf495; setTimeout(()=>{ try{ showMsg('Skill trees were rearranged -- '+rf495+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3200); }
     }
+    if(!saved.skillsV545 && (saved.cls||cls)==='ranger'){   // v545: Explosive Trap is now a capstone -- refund it (and Trap Mastery) if another tree's capstone is already ranked
+      const other = ['rainOfArrows','aimedShot'].concat(((RANGER_SKILL_TREES.hunter||{}).nodes||[]).filter(n=>n.capstone).map(n=>n.id)).some(id=>(player.skills[id]||0)>0);
+      if(other && (player.skills.explosiveTrap||0)>0){
+        let rf = 0; for(const id of ['explosiveTrap','trapMastery']){ rf += player.skills[id]||0; player.skills[id] = 0; for(const sk of Object.keys(player.skillSlots||{})) if(player.skillSlots[sk]===id) player.skillSlots[sk] = (sk==='main' ? 'strike' : null); }
+        if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Explosive Trap is now a capstone -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3400); }
+      }
+    }
+    if(!saved.skillsV567){   // v567: Storm Ward and Mana Shield are passives -- take them off any skill button
+      for(const sk of Object.keys(player.skillSlots||{})) if(['stormWard','manaShield'].indexOf(player.skillSlots[sk])>=0) player.skillSlots[sk] = (sk==='main' ? 'strike' : null);
+    }
+    if(!saved.skillsV566 || !saved.skillsV567){   // v566: bottom row needs Lv.32, Mana Shield moved and needs Immolate AND Ice Armor -- refund any rank that no longer fits (repeat so children of refunded nodes go too)
+      const TR = treesForClass(player.cls); let rf = 0, again = true;
+      while(again){ again = false;
+        for(const k of Object.keys(TR)) for(const n of TR[k].nodes){ const r = player.skills[n.id]||0;
+          if(r>0 && ((player.level||1) < nodeLevelReq(n) || !prereqSatisfied(player, n))){ rf += r; player.skills[n.id] = 0; again = true;
+            for(const sk of Object.keys(player.skillSlots||{})) if(player.skillSlots[sk]===n.id) player.skillSlots[sk] = (sk==='main' ? 'strike' : null); } } }
+      if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Skill trees changed -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 4000); }
+    }
+    if(!saved.skillsV565 && (saved.cls||cls)==='mystic' && (player.skills.manaShield||0)>0){   // v565: Mana Shield moved to the Lv.14 row after Immolate / Ice Armor -- refund it if it no longer fits
+      if((player.level||1) < 14 || !((player.skills.immolate||0)>0 || (player.skills.iceArmor||0)>0)){
+        const rf = player.skills.manaShield; player.skills.manaShield = 0;
+        for(const sk of Object.keys(player.skillSlots||{})) if(player.skillSlots[sk]==='manaShield') player.skillSlots[sk] = (sk==='main' ? 'strike' : null);
+        player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Mana Shield moved -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3800);
+      }
+    }
+    if(!saved.skillsV564 && (saved.cls||cls)==='mystic'){   // v564: Windrunner (now Storm Ward) and Elemental Polarity (now Mana Shield) are gone -- refund their points
+      let rf = 0; for(const id of ['windrunner','elementalPolarity']){ rf += player.skills[id]||0; delete player.skills[id]; }
+      for(const sk of Object.keys(player.skillSlots||{})) if(['windrunner','elementalPolarity'].indexOf(player.skillSlots[sk])>=0) player.skillSlots[sk] = (sk==='main' ? 'strike' : null);
+      if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Windrunner and Elemental Polarity were replaced -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3600); }
+    }
     if(!saved.skillsV481 && (saved.cls||cls)==='mystic'){   // v481: Windrunner / Tornado / Storm moved
       const ids = DJINN_NODE_IDS; let rf = 0;
       for(const k of ids){ rf += player.skills[k]||0; player.skills[k] = 0; }
@@ -613,7 +643,8 @@ function spawnEnemy(g, type, pos){
   }
   const depth = g.depth;
   let e;
-  if(type==='grunt'){
+  if(WILDLIFE_TYPES[type]){ e = wildlifeStats(type, x, y, depth); }   // v550: Thornback / Hookbeak / Exiled Plague Doctor (monsters/wildlife.js)
+  else if(type==='grunt'){
     e = {type,x,y,r:15,hp:22+depth*4,maxHp:22+depth*4,speed:rand(85,105),dmg:7+depth*1.6,
          atkCd:0,atkCdMax:0.9,color:'#b4293f',state:'chase',hitT:0};
   } else if(type==='archer'){
@@ -696,7 +727,7 @@ function spawnEnemy(g, type, pos){
     // 13+depth*2.2 dmg, armor 10) so it reads as a tough mid-tier heavy
     // bandit rather than a second boss. Melee-only, no special branch in
     // update() -- same generic chase/attack path as the regular Bandit.
-    e = {type,x,y,r:19,hp:65+depth*7,maxHp:65+depth*7,speed:rand(55,68),dmg:15+depth*2.3,
+    e = {type,x,y,r:17,hp:65+depth*7,maxHp:65+depth*7,speed:rand(55,68),dmg:15+depth*2.3,   /* v545: a little smaller (was 19) */ 
          atkCd:0,atkCdMax:1.15,color:'#6a3424',state:'chase',hitT:0,armor:8};
   } else if(type==='skeleton'){
     // Lakeside Ruins (v71) -- REUSABLE BASE TYPE: the game's first undead
@@ -807,7 +838,7 @@ function spawnEnemy(g, type, pos){
          atkCd:0,atkCdMax:1.0,color:'#6f8fb0',state:'chase',hitT:0,armor:8};
   } else if(type==='fhcleric'){
     // v462 Frosthold Cleric: robed dwarf priest -- mends nearby defenders, lays healing runes, throws frost bolts
-    e = {type,x,y,r:13,hp:26+depth*4.2,maxHp:26+depth*4.2,speed:rand(70,82),dmg:8+depth*1.6,
+    e = {type,x,y,r:14,hp:26+depth*4.2,maxHp:26+depth*4.2,speed:rand(35,41),dmg:8+depth*1.6,   /* v545: dwarf-sized, half the old pace */ 
          atkCd:rand(0.5,1.5),atkCdMax:2.0,color:'#cfe0ee',state:'chase',hitT:0,armor:4};
   } else if(type==='fhaxe'){
     // Frosthold Axe Thrower (v165): lighter-armoured dwarf that kites and hurls axes from range.
@@ -903,7 +934,7 @@ function spawnEnemy(g, type, pos){
          atkCd:rand(0,0.5),atkCdMax:0.42,color:'#c4783a',state:'chase',hitT:0,armor:6,hw:'duelist'};
   } else if(type==='banditking'){
     // v461 The Bandit King: Lighthouse Tower rooftop boss
-    e = {type,x,y,r:30,hp:(65+depth*7)*9,maxHp:(65+depth*7)*9,speed:rand(84,90),dmg:(15+depth*2.3)*1.1,
+    e = {type,x,y,r:27,hp:(65+depth*7)*9,   /* v545: a little smaller (was 30) */ maxHp:(65+depth*7)*9,speed:rand(84,90),dmg:(15+depth*2.3)*1.1,
          atkCd:0,atkCdMax:1.0,color:'#a8282a',state:'chase',hitT:0,armor:14,bkBoss:true,heavy:true,bossName:'The Bandit King',eliteName:'The Bandit King',xpMul:8};
   } else if(type==='hwguardian'){
     // The Highward Ancient Warden: towering gold-rust champion. Slams, raises a shield wall, rains hammers, calls its garrison.
@@ -983,7 +1014,7 @@ function spawnEnemy(g, type, pos){
     e = {type,x,y,r:40,hp:260+depth*30,maxHp:260+depth*30,speed:rand(30,36),dmg:(28+depth*3.8)*0.85,
          atkCd:0,atkCdMax:2.2,color:'#8a7a62',state:'chase',hitT:0,armor:20,tState:'idle',tT:0,tCd:rand(2,4),tPt:null,slamR:95,heavy:true};
   } else if(type==='warg'){
-    e = {type,x,y,r:18,hp:34+depth*4.6,maxHp:34+depth*4.6,speed:rand(165,190),dmg:11+depth*2.1,
+    e = {type,x,y,r:18,hp:34+depth*4.6,maxHp:34+depth*4.6,speed:rand(160,170),   /* v545: about the player's pace (170) */ dmg:11+depth*2.1,
          atkCd:0,atkCdMax:0.75,color:'#4a4440',state:'chase',hitT:0,armor:4};
   } else if(type==='roc'){
     e = {type,x,y,r:22,hp:46+depth*5,maxHp:46+depth*5,speed:rand(160,180),dmg:12+depth*2.2,
@@ -1044,18 +1075,18 @@ function spawnEnemy(g, type, pos){
     e = {type,x,y,r:21,hp:55+depth*7,maxHp:55+depth*7,speed:rand(48,58),dmg:13+depth*2.2,
          atkCd:0,atkCdMax:1.1,color:'#8a3fae',state:'chase',hitT:0,armor:10};
   }
-  // health doubled, damage +50%, relative to the previous +10%-flat balance
   e.ml = monsterLevel(g);
   { const ref = 55 + depth*7; e.hpXp = clamp(Math.sqrt(e.hp/ref), 1, 3); }   // v490: tougher (bigger-life) monsters give more XP -- brutes, treants, giants, trolls
-  e.hp = Math.round(e.hp*ENEMY_HP_MULT*mlEnemyHpMult(e.ml)); e.maxHp = e.hp;
+  // v538: area-level scaling -- the type's own formula only sets its size relative to a standard monster; life comes from monStdLife(ML)
+  e.hp = Math.max(1, Math.round(e.hp/oldStdLife(depth)*monStdLife(e.ml)*(g.scene==='frosthold' ? FROSTHOLD_LIFE_MULT/(e.ml>=LATE_LIFE_LV ? LATE_LIFE_MULT : 1) : 1))); e.maxHp = e.hp;   // v560: Frosthold Keep +15% only (the tower/dungeon beyond get +25% via monStdLife)
   // v228: Dark Forest / Bear Cave bears are softer (smaller life bonus, thinner hide)
   if(type==='bear' && (g.scene==='forest' || g.scene==='bearcave')){ e.hp = Math.round(e.hp*0.65); e.maxHp = e.hp; e.armor = Math.min(e.armor||0, 5); }
-  e.dmg = e.dmg*ENEMY_DMG_MULT*mlDmgMult(e.ml);
+  e.dmg = e.dmg/oldStdDmg(depth)*monStdDmg(e.ml);   // v538: damage likewise from monStdDmg(ML)
   // v515: no under-level softening at all -- a zone's monsters keep their full strength (v490 had 1%/level, v237 4%/level); the over-level taper in monsterLevel() is unchanged
   if(type==='colossus'){   // v354: no over-level scaling for the Colossus (monster level pinned to the area), and its base damage is cut ~40%
     const mlc = Math.min(e.ml, g.depth||e.ml);
-    e.hp = Math.round(e.hp*mlEnemyHpMult(mlc)/mlEnemyHpMult(e.ml)); e.maxHp = e.hp;
-    e.dmg *= mlDmgMult(mlc)/mlDmgMult(e.ml)*0.6; e.ml = mlc;
+    e.hp = Math.round(e.hp*monStdLife(mlc)/monStdLife(e.ml)); e.maxHp = e.hp;
+    e.dmg *= monStdDmg(mlc)/monStdDmg(e.ml)*0.6; e.ml = mlc;
   }
   e.dmgType = ENEMY_DMG_TYPE[type] || 'normal';
   // v484: split hits -- half physical, half an element (resists only cut the elemental half)
@@ -1066,6 +1097,7 @@ function spawnEnemy(g, type, pos){
     // "home" spot + aggro/leash tuning -- only acted on in the Forest (see
     // update()), so this is harmless for dungeon enemies, which always engage
     homeX:x, homeY:y, aggroed:false, wanderTarget:null, wanderCd:rand(0,2)});
+  if(WILDLIFE_TYPES[type]) wildlifeAggro(e);
   if(type==='wolf'){ e.aggroRange=230; e.leashRange=420; e.wanderRadius=60; }
   else if(type==='spider'){ e.aggroRange=210; e.leashRange=380; e.wanderRadius=50; }
   else if(type==='bear'){ e.aggroRange=190; e.leashRange=380; e.wanderRadius=45; }

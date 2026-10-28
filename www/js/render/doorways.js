@@ -912,6 +912,20 @@ function drawChestIso(chest){
   }
   ctx.restore();
 }
+// v546: small potion bottle lying on the ground (round flask, neck, cork, glass shine)
+function drawGroundPotion(col, clock){
+  ctx.save();
+  ctx.shadowColor = col; ctx.shadowBlur = 6 + Math.sin(clock*4)*2;
+  ctx.fillStyle = 'rgba(210,225,235,0.55)'; ctx.fillRect(-2.5,-11,5,5);
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0,0,6.5,0,7); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.arc(1.5,1.5,5,0,7); ctx.fill();
+  ctx.strokeStyle = 'rgba(230,240,250,0.8)'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(0,0,6.5,0,7); ctx.stroke();
+  ctx.strokeRect(-2.5,-11,5,5);
+  ctx.fillStyle = '#8a5a30'; ctx.fillRect(-2,-14,4,3.5);
+  ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.beginPath(); ctx.ellipse(-2.4,-2.2,1.4,2.4,-0.5,0,7); ctx.fill();
+  ctx.restore();
+}
 function drawLootIso(l, clock){
   const iso = toIso(l.x,l.y);
   const bounce = Math.sin(clock*4 + l.x*0.1)*2;
@@ -920,6 +934,8 @@ function drawLootIso(l, clock){
   if(l.type==='potion'){
     ctx.fillStyle='#e0455f'; roundRect(-4,-7,8,12,2); ctx.fill();
     ctx.fillStyle='#7a2030'; ctx.fillRect(-2,-9,4,3);
+  } else if(l.type==='item' && l.item && l.item.slotType==='potion'){
+    drawGroundPotion(l.item.color||'#e2384f', clock);   // v546: a little bottle, not a gem
   } else if(l.type==='item'){
     const glow = 0.5+Math.sin(clock*5)*0.25;
     ctx.save();

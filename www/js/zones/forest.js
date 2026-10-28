@@ -75,6 +75,20 @@ function makeForest(){
   place(45, ()=>{ const x=rand(160,w-160), y=rand(160,h-160); return {x:x-16,y:y-16,w:32,h:32,isProp:true,kind:'bigtree',s:rand(0.95,1.35),pad:30}; }, 500);
   place(42, ()=>{ const len=rand(120,210), horiz=Math.random()<0.5; return {x:rand(160,w-360), y:rand(160,h-360), w:horiz?len:26, h:horiz?26:len, isProp:true, kind:'log', seed:Math.random(), pad:34}; }, 500);
   place(26, ()=>({x:rand(160,w-260), y:rand(160,h-260), w:46, h:38, isProp:true, kind:'boulder', s:rand(0.85,1.25), pad:30}), 400);
+  // v551: organic clumps of old trees in the open glades -- overlapping blobs, solid (an invisible trunk under each inner tree)
+  { const clumpOk = (x,y)=>x>110 && y>110 && x<w-110 && y<h-110 && forestOpenAt(x,y,60) && !nearRoad(x,y,110) && !lairsAndGates.some(gt=>dist({x,y},gt) < 300);
+    for(let i=0, n=0; i<700 && n<26; i++){
+      const cx = rand(300, w-300), cy = rand(300, h-300);
+      if(!clumpOk(cx,cy) || nearRoad(cx,cy,330) || props.some(o=>Math.hypot(cx-(o.x+o.w/2), cy-(o.y+o.h/2)) < 380)) continue;
+      n++;
+      const blobs = []; for(let k=0;k<3+Math.floor(Math.random()*3);k++) blobs.push({x:cx+rand(-150,150), y:cy+rand(-120,120), r:rand(85,160)});
+      for(let gx=cx-330; gx<=cx+330; gx+=50) for(let gy=cy-300; gy<=cy+300; gy+=46){
+        const x = gx + rand(-12,12), y = gy + rand(-10,10), inB = blobs.find(b=>Math.hypot(x-b.x, (y-b.y)*1.15) < b.r);
+        if(!inB || !clumpOk(x,y)) continue;
+        trees.push({x, y, dark:true, s:rand(1.1,1.9)});
+        if(Math.hypot(x-inB.x, (y-inB.y)*1.15) < inB.r-25) props.push({x:x-15, y:y-15, w:30, h:30, isProp:true, noDraw:true, treeClump:true});
+      }
+    } }
   // normal (walk-through) trees stay off roads and props; a few more than before for the darker, denser feel
   for(let i=0;i<340;i++){
     const x = rand(90, w-90), y = rand(90, h-90);

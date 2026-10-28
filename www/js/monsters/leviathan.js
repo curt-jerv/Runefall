@@ -252,11 +252,7 @@ function drawLeviathanTelegraph(e){
 }
 function spawnLakesidePack(g, anchor, template){
   const t = template || LAKE_PACK_TEMPLATES[Math.floor(Math.random()*LAKE_PACK_TEMPLATES.length)];
-  const n = forestPackSize(t);
-  const spread = 100 + n*18;
-  for(let i=0;i<n;i++){
-    spawnEnemy(g, t.type, {x:anchor.x+rand(-spread,spread), y:anchor.y+rand(-spread,spread)});
-  }
+  wildPack(g, anchor, t);   // v550
 }
 function enterLakesideRuins(opts){
   opts = opts || {};
@@ -289,7 +285,14 @@ function enterLakesideRuins(opts){
   showMsg('Lakeside Ruins', 1.4);
   // Same pack-anchor/pool-density approach as Withered Crossroads' own
   // population (see LAKE_PACK_ANCHOR_TARGET/LAKE_PACK_COUNT above).
-  const anchors = shuffle(breatheAnchors(g.lake.packAnchors, {gap:380}));
+  const anchors = shuffle(breatheAnchors(g.lake.packAnchors, {gap:320}));
+  // v550: two bandit camps away from the roads and the water
+  g.lake.banditCamps = [];
+  for(let i=anchors.length-1; i>=0 && g.lake.banditCamps.length<2; i--){
+    const a = anchors[i];
+    if(lakeRoadDist(a.x, a.y) < 280 || lakeNearWaterAt(a.x, a.y, 260) || g.lake.banditCamps.some(c=>dist(c,a) < 1500) || dist(a, g.player) < 900) continue;
+    const c = makeBanditCamp(a); g.lake.banditCamps.push(c); anchors.splice(i,1); spawnBanditCamp(g, c);
+  }
   const count = Math.min(LAKE_PACK_COUNT, anchors.length);
   for(let i=0;i<count;i++){
     spawnLakesidePack(g, anchors[i]);

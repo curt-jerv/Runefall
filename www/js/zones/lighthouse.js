@@ -38,55 +38,12 @@ const FT_W = 2300, FT_H = 1600, FT_TOP_W = 2500, FT_TOP_H = 1700;   // v456: roo
 // v456: every floor is a warren of rooms joined by doorways (3 columns x 2 rows, a door in every dividing wall);
 // the top floor ends in a great hall against the far wall where the witch hangs in her cage, guarded by the trolls.
 function makeForgottenTowerFloor(floor){
-  const top = floor===LIGHTHOUSE_FLOOR_COUNT;
-  const w = top ? FT_TOP_W : FT_W, h = top ? FT_TOP_H : FT_H;
-  const entranceSide = lighthouseEntranceSide(floor);
-  const entrance = {x: entranceSide==='right' ? w-70 : 70, y: h/2, r:34};
-  let stairs = null;
-  if(!top){ const ss = lighthouseStairsSide(floor); stairs = {x: ss==='right' ? w-70 : 70, y: h/2, r:30}; }
-  const rnd = subSeeded(tripSeed('ft') + floor*131);   // v525: new rooms every trip
-  const obstacles = [], T = 34, D = 170;
-  const wall = (x,y,ww,hh)=>{ if(ww>4 && hh>4) obstacles.push({x:Math.round(x), y:Math.round(y), w:Math.round(ww), h:Math.round(hh), mazeWall:true}); };
-  const vWall = (x, y0, y1, doors)=>{ let cur = y0; for(const d of doors.sort((a,b)=>a-b)){ wall(x-T/2, cur, T, d-D/2-cur); cur = d+D/2; } wall(x-T/2, cur, T, y1-cur); };
-  const hWall = (y, x0, x1, doors)=>{ let cur = x0; for(const d of doors.sort((a,b)=>a-b)){ wall(cur, y-T/2, d-D/2-cur, T); cur = d+D/2; } wall(cur, y-T/2, x1-cur, T); };
-  const fromL = entranceSide==='left';
-  const rooms = [];
-  let witch = null, hall = null;
-  if(!top){
-    const xs = [w/3, 2*w/3], my = h/2;
-    // vertical walls: each has one door in the top half and (sometimes) one in the bottom half
-    for(const x of xs){ const d1 = 140+rnd()*(my-320), d2 = my+180+rnd()*(my-320); vWall(x, 0, h, rnd()<0.6 ? [d1,d2] : [rnd()<0.5 ? d1 : d2]); }
-    // horizontal walls per column -- the door is at the outer end in the entrance/stairs columns (they sit on the middle line)
-    const colX = [[0,xs[0]],[xs[0],xs[1]],[xs[1],w]];
-    colX.forEach(([x0,x1],ci)=>{
-      let door = x0 + (x1-x0)*(0.3+rnd()*0.4);
-      const outer = ci===0 ? x0+150 : ci===2 ? x1-150 : null;
-      hWall(my, x0+(ci===0?0:T/2), x1-(ci===2?0:T/2), outer!=null ? [outer, door] : [door]);
-      for(const [ry0,ry1] of [[0,my],[my,h]]) rooms.push({x0, x1, y0:ry0, y1:ry1, cx:(x0+x1)/2, cy:(ry0+ry1)/2});
-    });
-    // a few crates and rubble in the rooms
-    for(const r of rooms){ if(rnd()<0.55){ const sz = 40+rnd()*24; const cx = r.x0+60+rnd()*(r.x1-r.x0-160), cy = r.y0+60+rnd()*(r.y1-r.y0-160);
-      if(dist({x:cx,y:cy}, entrance) > 260 && (!stairs || dist({x:cx,y:cy}, stairs) > 260)) obstacles.push({x:Math.round(cx), y:Math.round(cy), w:Math.round(sz), h:Math.round(sz), col:['#6a5232','#2e2214','#4a3820'], hz:30}); } }
-  } else {
-    // the top floor: two rows of side rooms near the stairs, a corridor, then the great hall against the far wall
-    const split = fromL ? w*0.42 : w*0.58, my = h/2;
-    vWall(split, 0, h, [my-260, my+260]);
-    const nearX0 = fromL ? 0 : split, nearX1 = fromL ? split : w;
-    const midX = (nearX0+nearX1)/2;
-    vWall(midX, 0, h, [my-330, my+330]);
-    hWall(my, nearX0+(fromL?0:T/2), midX-T/2, [fromL ? nearX0+150 : midX-180]);
-    hWall(my, midX+T/2, nearX1-(fromL?T/2:0), [fromL ? midX+180 : nearX1-150]);
-    for(const [a,b] of [[nearX0,midX],[midX,nearX1]]) for(const [ry0,ry1] of [[0,my],[my,h]]) rooms.push({x0:a, x1:b, y0:ry0, y1:ry1, cx:(a+b)/2, cy:(ry0+ry1)/2});
-    const hx0 = fromL ? split : 0, hx1 = fromL ? w : split;
-    hall = {x0:hx0, x1:hx1, y0:0, y1:h, cx:(hx0+hx1)/2, cy:my};
-    // pillars down the hall
-    for(const fx of [0.3, 0.55]) for(const fy of [0.22, 0.78]){ const px = hx0+(hx1-hx0)*(fromL?fx:1-fx); obstacles.push({x:Math.round(px-36), y:Math.round(h*fy-36), w:72, h:72, col:['#7a7f86','#2c3036','#4c5158'], hz:80}); }
-    witch = {x: fromL ? w-150 : 150, y:my, r:22, caged:true};
-  }
-  // (v247) floor 1 has a real waypoint (not a stray portal) just inside the entrance
-  const waypoint = floor===1 ? {x: entranceSide==='right' ? w-190 : 190, y:h/2-110, r:22} : null;
-  return { w, h, obstacles, floor, rooftop:top, ft:true, entranceSide, entrance, stairs, waypoint, beacon:null, witch, witchSpot:witch ? {x:witch.x, y:witch.y} : null, clearPortal:undefined, rooms, hall,
-    wallPal:['#4e5148','#22241f','#363931'] };
+  // v553: the same 18-room build as the Lighthouse (towerMaze), mossier walls; the top floor is 12 rooms then the
+  // great hall where the witch hangs in her cage and the trolls keep watch by two bonfires
+  const top = floor===LIGHTHOUSE_FLOOR_COUNT, seed = tripSeed('ft') + floor*131;   // v525: new rooms every trip
+  const R = towerMaze(floor, {seed, C:top ? 4 : LH_MAZE_C, R:LH_MAZE_R, hall:top, hallFires:true, witch:true, side:top ? 'left' : null, waypoint:floor===1, fireP:0.5, wallPal:['#4e5148','#22241f','#363931']});
+  R.ft = true; R.clearPortal = undefined;
+  return R;
 }
 function ftOpenSpot(room, avoid, minD){
   for(let t=0;t<80;t++){
@@ -98,30 +55,37 @@ function ftOpenSpot(room, avoid, minD){
   return {x:room.w/2, y:room.h/2+200};
 }
 function spawnForgottenTowerFloor(g, floor){
-  const room = g.room, av = [room.entrance, room.stairs];
-  const sp = (type, avoid, d)=> spawnEnemy(g, type, ftOpenSpot(room, avoid||av, d));
-  // v456: goblins hold the rooms in packs
-  const inRoom = (r, m)=>{ for(let t=0;t<40;t++){ const x = rand(r.x0+m, r.x1-m), y = rand(r.y0+m, r.y1-m); if(!posBlockedByObstacles(x,y,26,room.obstacles) && (!av.some(a=>a && dist({x,y},a)<240))) return {x,y}; } return null; };
-  const pack = (r, nG, nA, nT)=>{ const c = inRoom(r, 110); if(!c) return; const around = ()=>{ for(let t=0;t<12;t++){ const pt = {x:c.x+rand(-80,80), y:c.y+rand(-80,80)}; if(pt.x>r.x0+40 && pt.x<r.x1-40 && pt.y>r.y0+40 && pt.y<r.y1-40 && !posBlockedByObstacles(pt.x,pt.y,22,room.obstacles)) return pt; } return c; };
-    for(let k=0;k<nG;k++) spawnEnemy(g, 'goblin', around()); for(let k=0;k<nA;k++) spawnEnemy(g, 'goblinarcher', around()); for(let k=0;k<nT;k++) spawnEnemy(g, 'cavetroll', around()); };
-  if(!room.rooftop){
-    const rs = (room.rooms||[]).filter(r=>!(room.entrance.x>r.x0 && room.entrance.x<r.x1 && room.entrance.y>r.y0-1 && room.entrance.y<r.y1+1 && Math.abs(room.entrance.y-(r.y0+r.y1)/2)<1));
-    (room.rooms||[]).forEach((r,i)=>{ const startRoom = room.entrance.x>r.x0 && room.entrance.x<r.x1; pack(r, startRoom ? 2 : 3+Math.floor(Math.random()*2+floor/2), 1+(i%2), (!startRoom && floor>=2 && i%3===1) ? 1 : 0); });
-  } else {
-    // v354/v456: the hall is held by a pack of elite cave trolls around the witch's cage; goblins fill the side rooms
-    const hl = room.hall, wch = room.witchSpot, dir = wch.x > hl.cx ? -1 : 1;
-    const cx = wch.x + dir*260, cy = wch.y;
-    for(let k=0;k<3;k++){
-      const a = k/3*Math.PI*2+0.6, e = spawnEnemy(g, 'cavetroll', {x:cx+Math.cos(a)*110, y:cy+Math.sin(a)*110});
-      if(e){ makeElite(e, pickMods(2)); e.ftGuard = true; }
+  const room = g.room;
+  // v553: goblins huddle round the bonfires with a snake or two among them; other rooms hold small goblin packs, some a troll; bats roost in a few
+  const spot = (r, cx, cy, rad)=>{ for(let t=0;t<40;t++){ const x = cx!=null ? cx+rand(-rad,rad) : rand(r.x0+80, r.x1-80), y = cy!=null ? cy+rand(-rad,rad) : rand(r.y0+80, r.y1-80); if(x>r.x0+50 && x<r.x1-50 && y>r.y0+50 && y<r.y1-50 && !posBlockedByObstacles(x,y,24,room.obstacles) && dist({x,y},room.entrance)>260 && (!room.waypoint || dist({x,y},room.waypoint)>200)) return {x,y}; } return null; };
+  const ring = (fire, n, types)=>{ for(let k=0;k<n;k++){ const a = (k/n)*Math.PI*2 + rand(-0.3,0.3), rr = rand(74, 108), q = {x:fire.x + Math.cos(a)*rr, y:fire.y + Math.sin(a)*rr*0.9};
+    if(posBlockedByObstacles(q.x, q.y, 22, room.obstacles)) continue; const e = spawnEnemy(g, types(k), q); if(e){ e.homeX = q.x; e.homeY = q.y; e.wanderRadius = 14; } } };
+  for(const r of room.rooms){
+    if(r.start) continue;
+    if(r.fire){
+      const n = 3 + Math.floor(Math.random()*3);
+      ring(r.fire, n, k=>k===0 ? 'goblinarcher' : 'goblin');
+      for(let k=0, ns=Math.random()<0.6 ? 1 : 0; k<ns; k++){ const q = spot(r, r.fire.x, r.fire.y, 160); if(q) spawnEnemy(g, 'poisonsnake', q); }
+    } else if(Math.random() < 0.85){
+      const c = spot(r); if(!c) continue;
+      const nG = 2 + Math.floor(Math.random()*2);
+      for(let k=0;k<nG;k++){ const q = spot(r, c.x, c.y, 80); if(q) spawnEnemy(g, 'goblin', q); }
+      if(Math.random()<0.5){ const q = spot(r, c.x, c.y, 90); if(q) spawnEnemy(g, 'goblinarcher', q); }
+      if(Math.random()<0.3){ const q = spot(r, c.x, c.y, 120); if(q) spawnEnemy(g, 'poisonsnake', q); }
+      if(floor>=2 && Math.random()<0.22){ const q = spot(r, c.x, c.y, 100); if(q) spawnEnemy(g, 'cavetroll', q); }
     }
-    for(let k=0;k<2;k++){ const e = spawnEnemy(g, 'cavetroll', {x:hl.cx+rand(-120,120), y:hl.cy+(k?260:-260)}); if(e) e.ftGuard = true; }
-    for(let k=0;k<4;k++) spawnEnemy(g, 'goblinarcher', {x:hl.cx+rand(-200,200), y:hl.cy+rand(-420,420)});
-    for(let k=0;k<6;k++) spawnEnemy(g, 'goblin', {x:hl.cx+rand(-260,260), y:hl.cy+rand(-380,380)});
-    for(const r of (room.rooms||[])) pack(r, 3+Math.floor(Math.random()*2), 1, 0);
+    if(Math.random() < 0.13 && typeof cryptBat==='function'){ const c = spot(r); if(c) for(let k=0, n=3+Math.floor(Math.random()*2); k<n; k++) cryptBat(g, c.x+rand(-50,50), c.y+rand(-50,50)); }
+  }
+  if(room.hall){
+    // v354/v456: the hall is held by elite cave trolls round the witch's cage, goblins at the bonfires by the door
+    const hl = room.hall, wch = room.witchSpot, cx = wch.x - 260, cy = wch.y;
+    for(let k=0;k<3;k++){ const a = k/3*Math.PI*2+0.6, e = spawnEnemy(g, 'cavetroll', {x:cx+Math.cos(a)*110, y:cy+Math.sin(a)*110}); if(e){ makeElite(e, pickMods(2)); e.ftGuard = true; } }
+    for(let k=0;k<2;k++){ const e = spawnEnemy(g, 'cavetroll', {x:hl.cx+rand(-120,120), y:hl.cy+(k?300:-300)}); if(e) e.ftGuard = true; }
+    for(const b of room.bonfires.filter(b=>b.x>hl.x0)) ring(b, 4, k=>k%2 ? 'goblinarcher' : 'goblin');
+    for(let k=0;k<2;k++){ const e = spawnEnemy(g, 'poisonsnake', {x:hl.cx+rand(-200,200), y:hl.cy+rand(-420,420)}); }
     g.enemies._dense = true;   // the top floor stays exactly these packs (no density top-up)
     showMsg('The witch\'s captors wait in the great hall...', 2.0);
-  }
+  } else g.enemies._dense = true;
 }
 // v490: a Map Bearer (ringed in gold) holds the first floor; slaying it charts every Forgotten Tower floor (p.ftMapFound)
 function ftEnsureMapBearer(g){
@@ -144,7 +108,7 @@ function enterForgottenTower(floor, opts){
   if(floor===LIGHTHOUSE_FLOOR_COUNT && game.player.witchRescued){ g.tower.witch = null; const ws = g.tower.witchSpot || {x:g.tower.w/2, y:g.tower.h/2}; g.tower.clearPortal = {x:ws.x + (ws.x > g.tower.w/2 ? -130 : 130), y:ws.y+60, r:24, toWitch:true}; }
   g.depth = 28 + Math.ceil(floor*0.6); // 29..31
   if(opts.fromAbove && g.tower.stairs){
-    g.player.x = g.tower.stairs.x + (lighthouseStairsSide(floor)==='right' ? -70 : 70); g.player.y = g.tower.stairs.y;
+    g.player.x = g.tower.stairs.x + 70; g.player.y = g.tower.stairs.y;   // v553
   } else {
     g.player.x = g.tower.entrance.x + (g.tower.entranceSide==='right' ? -70 : 70); g.player.y = g.tower.entrance.y;
   }
@@ -190,59 +154,148 @@ function makeLighthouseFloor(floor){
   // starts off, lit only once the player interacts with it (see
   // turnOnBeacon/drawLighthouseBeaconIso's new `on` param).
   if(!rooftop) return makeLighthouseMazeFloor(floor);   // v467: floors 1-4 are a new warren of rooms every visit
-  return { w, h, obstacles:[], floor, rooftop, entranceSide, entrance, stairs, waypoint, beacon };
+  return makeLighthouseRoof(floor, entranceSide);
 }
-// v467: a 3x3 grid of rooms joined by doorways (a random spanning tree plus a couple of extra doors). You arrive in one room
-// and the stairs up wait in the room furthest away, so every floor is a short crawl. Each floor keeps its layout until you reload.
-const LH_MAZE_W = 2000, LH_MAZE_H = 1500;
+// v552: the rooftop is open air -- a round stone deck ringed by a railing, the beacon in the middle, the sea far below
+// to the west and the Withered Crossroads far below to the east (drawLhRoof in render/render.js)
+const LH_ROOF_S = 1500, LH_ROOF_R = 640;
+function makeLighthouseRoof(floor, entranceSide){
+  const w = LH_ROOF_S, h = LH_ROOF_S, cx = w/2, cy = h/2, RR = LH_ROOF_R, obstacles = [];
+  const entrance = {x: cx + (entranceSide==='right' ? 1 : -1)*(RR-90), y: cy, r:34};
+  const beacon = {x:cx, y:cy, r:70};
+  obstacles.push({x:cx-36, y:cy-36, w:72, h:72, isProp:true, noDraw:true});
+  // the railing: a ring of overlapping invisible blocks just outside the deck
+  for(let a=0; a<Math.PI*2; a+=Math.PI*2/180){ const x = cx + Math.cos(a)*(RR+30), y = cy + Math.sin(a)*(RR+30); obstacles.push({x:Math.round(x-30), y:Math.round(y-30), w:60, h:60, isProp:true, noDraw:true, rail:true}); }
+  const posts = []; for(let i=0;i<48;i++){ const a = i/48*Math.PI*2; posts.push({x:cx + Math.cos(a)*(RR+6), y:cy + Math.sin(a)*(RR+6)}); }
+  return { w, h, obstacles, floor, rooftop:true, openRoof:true, roofC:{x:cx, y:cy}, roofR:RR, roofPosts:posts, entranceSide, entrance, stairs:null, waypoint:null, beacon };
+}
+// v552: floors 1-4 are 18 rooms (6x3) joined by doorways along a random spanning tree with no shortcuts; of a few
+// trees the one with the longest walk to the stairs is kept, so the way up crosses most of the floor. Rooms are
+// furnished (barrels, crates, beds, bonfires the bandits gather round) and one dead-end room hides a cache.
+const LH_MAZE_C = 6, LH_MAZE_R = 3, LH_CELL_W = 620, LH_CELL_H = 560;
+const LH_MAZE_W = LH_MAZE_C*LH_CELL_W, LH_MAZE_H = LH_MAZE_R*LH_CELL_H;
 function makeLighthouseMazeFloor(floor){
-  const g = game;
-  const rnd = subSeeded(tripSeed('lh') + floor*977);   // v525: a fresh maze every trip (was: once per play session)
-  const w = LH_MAZE_W, h = LH_MAZE_H, C = 3, R = 3, cw = w/C, ch = h/R, T = 34, D = 150;
+  const seed = tripSeed('lh') + floor*977;   // v525: a fresh maze every trip
+  return towerMaze(floor, {seed, C:LH_MAZE_C, R:LH_MAZE_R, wallPal:['#6a6458','#2c2924','#48443c']});
+}
+// v553: shared by the Lighthouse and the Forgotten Tower. o.hall adds a great hall (LH_HALL_W wide, full height) past
+// the last column, reached by one door from the furthest room of that column; o.side forces the side you come in on.
+const LH_HALL_W = 1400;
+function towerMaze(floor, o){
+  const seed = o.seed, rnd = subSeeded(seed);
+  const C = o.C, R = o.R, cw = o.cw||LH_CELL_W, ch = o.ch||LH_CELL_H, mw = C*cw, w = mw + (o.hall ? (o.hallW||LH_HALL_W) : 0), h = R*ch, T = 34, D = o.door||150;
   const obstacles = [];
   const wall = (x,y,ww,hh)=>{ if(ww>4 && hh>4) obstacles.push({x:Math.round(x), y:Math.round(y), w:Math.round(ww), h:Math.round(hh), mazeWall:true}); };
   const id = (c,r)=>r*C+c, cells = [];
   for(let r=0;r<R;r++) for(let c=0;c<C;c++) cells.push({c, r, x0:c*cw, x1:(c+1)*cw, y0:r*ch, y1:(r+1)*ch, cx:(c+0.5)*cw, cy:(r+0.5)*ch});
-  // random spanning tree (DFS), then two extra doors for loops
-  const open = new Set(), seen = new Set([0]), stack = [0], key = (a,b)=>Math.min(a,b)+'-'+Math.max(a,b);
+  const key = (a,b)=>Math.min(a,b)+'-'+Math.max(a,b);
   const nbrs = (i)=>{ const c = i%C, r = Math.floor(i/C), out = []; if(c>0) out.push(i-1); if(c<C-1) out.push(i+1); if(r>0) out.push(i-C); if(r<R-1) out.push(i+C); return out; };
-  while(stack.length){ const cur = stack[stack.length-1], nx = nbrs(cur).filter(n=>!seen.has(n)); if(!nx.length){ stack.pop(); continue; } const n = nx[Math.floor(rnd()*nx.length)]; open.add(key(cur,n)); seen.add(n); stack.push(n); }
-  for(let k=0, t=0; k<2 && t<40; t++){ const a = Math.floor(rnd()*C*R), ns = nbrs(a), b = ns[Math.floor(rnd()*ns.length)]; if(!open.has(key(a,b))){ open.add(key(a,b)); k++; } }
-  // walls along every inner boundary, with a doorway where two rooms connect
+  // where you come in: floor 1 through the tower door on the east or west wall, higher floors at an end column
+  const side = o.side || (rnd()<0.5 ? 'left' : 'right'), startIdx = id(side==='left' ? 0 : C-1, Math.floor(rnd()*R));
+  let best = null;
+  for(let tr=0; tr<12; tr++){
+    const open = new Set(), seen = new Set([startIdx]), stack = [startIdx];
+    while(stack.length){ const cur = stack[stack.length-1], nx = nbrs(cur).filter(n=>!seen.has(n)); if(!nx.length){ stack.pop(); continue; } const n = nx[Math.floor(rnd()*nx.length)]; open.add(key(cur,n)); seen.add(n); stack.push(n); }
+    const distTo = new Array(C*R).fill(-1), q = [startIdx]; distTo[startIdx] = 0;
+    while(q.length){ const cur = q.shift(); for(const n of nbrs(cur)) if(distTo[n]<0 && open.has(key(cur,n))){ distTo[n] = distTo[cur]+1; q.push(n); } }
+    const far = o.hall ? Math.max(...distTo.filter((d,i)=>i%C===C-1)) : Math.max(...distTo);
+    if(!best || far > best.far) best = {open, distTo, far};
+  }
+  const {open, distTo, far} = best;
+  const doors = [];
   for(let c=1;c<C;c++) for(let r=0;r<R;r++){ const x = c*cw, y0 = r*ch, y1 = (r+1)*ch;
-    if(open.has(key(id(c-1,r), id(c,r)))){ const d = y0 + ch*(0.3 + rnd()*0.4); wall(x-T/2, y0, T, d-D/2-y0); wall(x-T/2, d+D/2, T, y1-(d+D/2)); }
+    if(open.has(key(id(c-1,r), id(c,r)))){ const d = y0 + ch*(0.3 + rnd()*0.4); wall(x-T/2, y0, T, d-D/2-y0); wall(x-T/2, d+D/2, T, y1-(d+D/2)); doors.push({x, y:d}); }
     else wall(x-T/2, y0, T, y1-y0); }
   for(let r=1;r<R;r++) for(let c=0;c<C;c++){ const y = r*ch, x0 = c*cw, x1 = (c+1)*cw;
-    if(open.has(key(id(c,r-1), id(c,r)))){ const d = x0 + cw*(0.3 + rnd()*0.4); wall(x0, y-T/2, d-D/2-x0, T); wall(d+D/2, y-T/2, x1-(d+D/2), T); }
+    if(open.has(key(id(c,r-1), id(c,r)))){ const d = x0 + cw*(0.3 + rnd()*0.4); wall(x0, y-T/2, d-D/2-x0, T); wall(d+D/2, y-T/2, x1-(d+D/2), T); doors.push({x:d, y}); }
     else wall(x0, y-T/2, cw, T); }
-  // where you come in: floor 1 through the tower door on an outer wall, higher floors by the stairs from below
-  let startCell;
-  let entrance, entranceSide;
-  if(floor===1){
-    const side = rnd()<0.5 ? 'left' : 'right', r0 = Math.floor(rnd()*R);
-    startCell = cells[id(side==='left' ? 0 : C-1, r0)];
-    entrance = {x: side==='right' ? w-70 : 70, y: startCell.cy, r:34}; entranceSide = side;
-  } else {
-    startCell = cells[Math.floor(rnd()*cells.length)];
-    entrance = {x: startCell.cx + (rnd()-0.5)*cw*0.3, y: startCell.cy + (rnd()-0.5)*ch*0.3, r:34}; entranceSide = 'left';
+  const startCell = cells[startIdx];
+  let entrance, entranceSide = side;
+  if(floor===1) entrance = {x: side==='right' ? mw-70 : 70, y: startCell.cy, r:34};
+  else entrance = {x: startCell.cx + (rnd()-0.5)*cw*0.25, y: startCell.cy + (rnd()-0.5)*ch*0.25, r:34};
+  const farCells = cells.filter((cl,i)=>distTo[i]===far && (!o.hall || i%C===C-1)), sc = farCells[Math.floor(rnd()*farCells.length)];
+  let stairs = {x: sc.cx + (rnd()-0.5)*cw*0.3, y: sc.cy + (rnd()-0.5)*ch*0.3, r:30}, hall = null, witch = null;
+  if(o.hall){   // the hall's wall, one door from the furthest room; no stairs on this floor
+    const d = sc.cy + (rnd()-0.5)*ch*0.3;
+    wall(mw-T/2, 0, T, d-D/2); wall(mw-T/2, d+D/2, T, h-(d+D/2)); doors.push({x:mw, y:d});
+    hall = {x0:mw, x1:w, y0:0, y1:h, cx:(mw+w)/2, cy:h/2, door:{x:mw, y:d}};
+    if(o.witch) witch = {x:w-150, y:h/2, r:22, caged:true};
+    for(const fx of [0.32, 0.62]) for(const fy of [0.2, 0.8]){ const px = mw + (w-mw)*fx; obstacles.push({x:Math.round(px-36), y:Math.round(h*fy-36), w:72, h:72, col:o.pillarCol||['#7a7f86','#2c3036','#4c5158'], hz:80}); }
+    stairs = null;
   }
-  // the stairs up: the room furthest away through the doors
-  const distTo = new Array(C*R).fill(-1), q = [id(startCell.c, startCell.r)]; distTo[q[0]] = 0;
-  while(q.length){ const cur = q.shift(); for(const n of nbrs(cur)) if(distTo[n]<0 && open.has(key(cur,n))){ distTo[n] = distTo[cur]+1; q.push(n); } }
-  const far = Math.max(...distTo), farCells = cells.filter((cl,i)=>distTo[i]===far);
-  const sc = farCells[Math.floor(rnd()*farCells.length)];
-  const stairs = {x: sc.cx + (rnd()-0.5)*cw*0.4, y: sc.cy + (rnd()-0.5)*ch*0.35, r:30};
-  const waypoint = null;   // v489: the floor-1 waypoint is removed
-  // crates and rubble in the rooms
-  for(const cl of cells){
-    const n = Math.floor(rnd()*3);
-    for(let k=0;k<n;k++){ const sz = 40+rnd()*26, x = cl.x0+90+rnd()*(cw-220), y = cl.y0+90+rnd()*(ch-220);
-      if(dist({x,y}, entrance) < 200 || dist({x,y}, stairs) < 200 || (waypoint && dist({x,y}, waypoint) < 140)) continue;
-      obstacles.push({x:Math.round(x), y:Math.round(y), w:Math.round(sz), h:Math.round(sz), col:['#6a5232','#2e2214','#4a3820'], hz:30}); }
+  const waypoint = o.waypoint ? {x: entrance.x + (side==='right' ? -170 : 170), y: entrance.y - 120, r:22} : null;   // v489: the Lighthouse's floor-1 waypoint is removed; the Forgotten Tower keeps one
+  const deg = (i)=>nbrs(i).filter(n=>open.has(key(i,n))).length;
+  const rooms = cells.map((cl,i)=>({x0:cl.x0, x1:cl.x1, y0:cl.y0, y1:cl.y1, cx:cl.cx, cy:cl.cy, start:i===startIdx, stairsRoom:cl===sc, steps:distTo[i], dead:deg(i)===1 && i!==startIdx && cl!==sc}));
+  // furniture: invisible blockers (isProp) plus a draw list
+  const decor = [], bonfires = [];
+  const avoidPts = [entrance, stairs, waypoint, witch].filter(Boolean);
+  const clear = (x,y,rr)=> x>40 && y>40 && x<mw-40 && y<h-40 && avoidPts.every(a=>dist({x,y}, a) > 170) && doors.every(d=>dist({x,y}, d) > 125+rr) && decor.every(d=>dist({x,y}, d) > (d.rr||20)+rr+8);
+  const block = (x,y,bw,bh)=>{ const o = {x:Math.round(x-bw/2), y:Math.round(y-bh/2), w:Math.round(bw), h:Math.round(bh), isProp:true, noDraw:true, lhProp:true}; obstacles.push(o); return o; };
+  for(const r of rooms){
+    if(r.start) continue;
+    const inner = 58;
+    if(!r.stairsRoom && rnd() < (o.fireP!=null ? o.fireP : 0.42)){   // a bonfire in the middle of the room, bedrolls round it
+      const x = r.cx + (rnd()-0.5)*cw*0.2, y = r.cy + (rnd()-0.5)*ch*0.2;
+      if(clear(x,y,40)){ const b = {k:'bonfire', x, y, rr:40}; decor.push(b); bonfires.push(b); block(x, y, 46, 46); r.fire = b; }
+    }
+    // barrels and crates stacked along the walls
+    const nStack = 1 + Math.floor(rnd()*3);
+    for(let s=0; s<nStack; s++){
+      const wallSide = Math.floor(rnd()*4);
+      let x = wallSide===0 ? r.x0+inner : wallSide===1 ? r.x1-inner : r.x0+inner+rnd()*(cw-inner*2);
+      let y = wallSide===2 ? r.y0+inner : wallSide===3 ? r.y1-inner : r.y0+inner+rnd()*(ch-inner*2);
+      const n = 2 + Math.floor(rnd()*3);
+      for(let k=0;k<n;k++){
+        const px = x + (wallSide>=2 ? k*34 : (rnd()-0.5)*10), py = y + (wallSide<2 ? k*30 : (rnd()-0.5)*10);
+        if(!clear(px,py,18)) continue;
+        const kind = rnd()<0.55 ? 'barrel' : 'crate', s1 = 1.05 + rnd()*0.25;
+        decor.push({k:kind, x:px, y:py, s:s1, rr:18}); block(px, py, 28, 28);
+      }
+    }
+    if(o.theme==='fht'){   // v554: dwarven rooms -- benches along a wall, now and then a statue of an old king
+      if(rnd() < 0.55){ const top = rnd()<0.5, n = 1 + Math.floor(rnd()*2);
+        for(let k=0;k<n;k++){ const x = r.x0 + 100 + k*120 + rnd()*30, y = top ? r.y0 + 60 : r.y1 - 60; if(!clear(x, y, 40)) continue; block(x, y, 74, 26); decor.push({k:'bench', x, y, rr:40}); } }
+      if(!r.stairsRoom && rnd() < 0.3){ const x = r.cx + (rnd()-0.5)*cw*0.3, y = r.cy + (rnd()-0.5)*ch*0.3; if(clear(x, y, 34)){ block(x, y, 46, 46); decor.push({k:'statue', x, y, rr:34}); } }
+    }
+    // beds in about a third of the rooms
+    else if(rnd() < 0.35){
+      const nb = 1 + Math.floor(rnd()*2);
+      for(let k=0;k<nb;k++){
+        const top = rnd()<0.5, x = r.x0 + 90 + k*110 + rnd()*40, y = top ? r.y0 + 62 : r.y1 - 100;
+        if(!clear(x+30, y+19, 44)) continue;
+        const o = block(x+30, y+19, 60, 38); o.noDraw = true;
+        decor.push({k:'bed', x:x+30, y:y+19, rr:44, bed:{x:o.x, y:o.y, w:o.w, h:o.h}});
+      }
+    }
   }
-  const rooms = cells.map(cl=>({x0:cl.x0, x1:cl.x1, y0:cl.y0, y1:cl.y1, cx:cl.cx, cy:cl.cy, start:cl===startCell, steps:distTo[id(cl.c,cl.r)]}));
-  return { w, h, obstacles, floor, rooftop:false, maze:true, entranceSide, entrance, stairs, waypoint, beacon:null, rooms,
-    wallPal:['#6a6458','#2c2924','#48443c'] };
+  // one dead-end room hides a supply cache
+  const deadRooms = rooms.filter(r=>r.dead), cr = deadRooms.length ? deadRooms[Math.floor(rnd()*deadRooms.length)] : null;
+  let cache = null;
+  if(cr){ for(let t=0;t<30;t++){ const x = cr.cx + (rnd()-0.5)*cw*0.4, y = cr.cy + (rnd()-0.5)*ch*0.4; if(clear(x,y,30)){ cache = {x:Math.round(x), y:Math.round(y), r:22, opened:false}; cr.cache = true; break; } } }
+  if(hall && o.hallFires){   // bonfires either side of the hall door, where the trolls keep watch
+    for(const fy of [-1, 1]){ const b = {k:'bonfire', x:mw + 360, y:hall.door.y + fy*230, rr:40}; if(b.y > 120 && b.y < h-120){ decor.push(b); bonfires.push(b); block(b.x, b.y, 46, 46); } }
+  }
+  return { w, h, obstacles, floor, rooftop:!!o.hall, maze:true, entranceSide, entrance, stairs, waypoint, beacon:null, rooms, doors, hall, witch, witchSpot:witch ? {x:witch.x, y:witch.y} : null,
+    lhSeed:seed, lhDecor:decor, bonfires, lhCache:cache, wallPal:o.wallPal, mw };
+}
+// v552: the furniture and the cache
+function pushLhDecorDrawables(g, drawables){
+  const t = g.tower; if(!t || !t.lhDecor) return;
+  const cam = g.camera, clk = g.clock||0;
+  for(const d of t.lhDecor){
+    const i = toIso(d.x, d.y); if(cam && (i.x<cam.x-160 || i.x>cam.x+W+160 || i.y<cam.y-120 || i.y>cam.y+H+160)) continue;
+    drawables.push({depth:d.x+d.y, draw: d.k==='bonfire' ? ()=>drawCampFireIso(d, clk) : d.k==='bed' ? ()=>drawBedIso(d.bed) : (d.k==='bench' || d.k==='statue') ? ()=>drawFhtDecor(d) : ()=>drawRvDecor(d, clk)});
+  }
+  const c = t.lhCache;
+  if(c) drawables.push({depth:c.x+c.y, draw:()=>drawChestIso(c)});
+}
+function lhCacheTick(g, p){
+  const t = g.tower, c = t && t.lhCache; if(!c) return;
+  const k = 'cache'+t.floor, st = t.ft ? g.ftStore : t.fht ? g.fhtStore : g.lhStore;
+  if(st && st[k]) c.opened = true;
+  if(c.opened || dist(p, c) > c.r + p.r + 4) return;
+  c.opened = true; if(st) st[k] = true;
+  owLootChest(g, c, false); showMsg(t.ft ? 'A goblin stash' : t.fht ? 'A dwarven strongbox' : 'A bandit supply cache', 1.8);
 }
 // Floors 1-4: a handful of Bandits/Bandit Archers (reusing Withered Crossroads'
 // exact monster types), a modest count appropriate to the small floor size
@@ -253,17 +306,28 @@ function makeLighthouseMazeFloor(floor){
 function spawnLighthouseFloor(g, floor){
   const room = g.room;
   if(!room.rooftop && room.maze){
-    // v467: a bandit pack in every room except the one you arrive in; the stairs room is held by a brute
-    const spot = (r)=>{ for(let t=0;t<40;t++){ const x = rand(r.x0+80, r.x1-80), y = rand(r.y0+80, r.y1-80); if(!posBlockedByObstacles(x,y,22,room.obstacles) && dist({x,y},room.entrance)>260) return {x,y}; } return null; };
+    // v552: bandits in about nine rooms of ten -- round the bonfire where there is one -- bats in some, a brute near the stairs
+    const spot = (r, cx, cy, rad)=>{ for(let t=0;t<40;t++){ const x = cx!=null ? cx+rand(-rad,rad) : rand(r.x0+80, r.x1-80), y = cy!=null ? cy+rand(-rad,rad) : rand(r.y0+80, r.y1-80); if(x>r.x0+50 && x<r.x1-50 && y>r.y0+50 && y<r.y1-50 && !posBlockedByObstacles(x,y,22,room.obstacles) && dist({x,y},room.entrance)>260) return {x,y}; } return null; };
     for(const r of room.rooms){
       if(r.start) continue;
-      const nB = 1 + Math.floor(Math.random()*2) + (floor>=3 ? 1 : 0), nA = Math.random()<0.6 ? 1 : 0;
-      for(let k=0;k<nB;k++){ const q = spot(r); if(q) spawnEnemy(g, 'bandit', q); }
-      for(let k=0;k<nA;k++){ const q = spot(r); if(q) spawnEnemy(g, 'banditarcher', q); }
-      if(r.steps>0 && dist({x:r.cx,y:r.cy}, room.stairs) < 500){ const q = spot(r); if(q) spawnEnemy(g, 'banditbrute', q); }
+      if(r.fire){
+        const n = 3 + Math.floor(Math.random()*3) + (floor>=3 ? 1 : 0);
+        for(let k=0;k<n;k++){
+          const a = (k/n)*Math.PI*2 + rand(-0.3,0.3), rr = rand(72, 104), q = {x:r.fire.x + Math.cos(a)*rr, y:r.fire.y + Math.sin(a)*rr*0.9};
+          if(posBlockedByObstacles(q.x, q.y, 22, room.obstacles)) continue;
+          const e = spawnEnemy(g, k===0 && Math.random()<0.6 ? 'banditarcher' : 'bandit', q);
+          if(e){ e.homeX = q.x; e.homeY = q.y; e.wanderRadius = 14; e.facing = Math.atan2(r.fire.y-q.y, r.fire.x-q.x); }
+        }
+      } else if(Math.random() < 0.9){
+        const nB = 1 + Math.floor(Math.random()*2) + (floor>=3 ? 1 : 0), nA = Math.random()<0.5 ? 1 : 0;
+        for(let k=0;k<nB;k++){ const q = spot(r); if(q) spawnEnemy(g, 'bandit', q); }
+        for(let k=0;k<nA;k++){ const q = spot(r); if(q) spawnEnemy(g, 'banditarcher', q); }
+      }
+      if(Math.random() < 0.18 && typeof cryptBat==='function'){ const c = spot(r); if(c) for(let k=0, n=3+Math.floor(Math.random()*3); k<n; k++) cryptBat(g, c.x+rand(-50,50), c.y+rand(-50,50)); }
+      if(r.stairsRoom || (r.steps>0 && dist({x:r.cx,y:r.cy}, room.stairs) < 500)){ const q = spot(r); if(q) spawnEnemy(g, 'banditbrute', q); }
     }
-    // v505: every maze floor has a Map Bearer (ringed in gold) in the next room or so; slaying it charts the floor
-    { const ent = room.entrance, cand = g.enemies.filter(e=>e.hp>0 && e.type!=='banditbrute').map(e=>({e, d:dist(e,ent)})).filter(c=>c.d>=300).sort((x,y)=>Math.abs(x.d-650)-Math.abs(y.d-650));
+    // v552: ONE Map Bearer (ringed in gold), on the ground floor; its map charts every floor of this climb
+    if(floor===1){ const ent = room.entrance, cand = g.enemies.filter(e=>e.hp>0 && e.type==='bandit').map(e=>({e, d:dist(e,ent)})).filter(c=>c.d>=300).sort((x,y)=>Math.abs(x.d-800)-Math.abs(y.d-800));
       const b = cand.length ? cand[0].e : null;
       if(b){ b.mapCarrier = true; b.mapHolder = true; b.hp = Math.round(b.hp*2); b.maxHp = Math.round(b.maxHp*2); b.r = Math.round(b.r*1.12); b.xpMul = Math.max(b.xpMul||1, 2.5); } }
     g.enemies._dense = true;   // exactly these packs

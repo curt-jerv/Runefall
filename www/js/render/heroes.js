@@ -408,6 +408,10 @@ function drawWarrior(p){
   ctx.fillStyle='#c3cad8'; ctx.strokeStyle='#262c38'; ctx.lineWidth=0.9;
   ctx.beginPath(); ctx.moveTo(-1.6,hy-7.4); ctx.quadraticCurveTo(0,hy-11.2,1.6,hy-7.4); ctx.lineTo(1.6,hy-1.6); ctx.lineTo(-1.6,hy-1.6); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle=trimC; ctx.fillRect(-7.8,hy-2.4,15.6,1.1);
+  if(helmLook>=3 && !p.isSquire){   // v557: tier 5 helm -- gilded wings and a sapphire on the brow (matches its bag art)
+    ctx.fillStyle='rgba(216,176,74,0.55)'; for(const ws of [-1,1]){ ctx.beginPath(); ctx.moveTo(ws*7,hy-2.4); ctx.quadraticCurveTo(ws*12.4,hy-4,ws*15.2,hy-13.4); ctx.quadraticCurveTo(ws*10.6,hy-9,ws*7.4,hy-6.4); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle='#4a8ae0'; ctx.beginPath(); ctx.arc(0,hy-1.8,1.1,0,7); ctx.fill();
+  }
   ctx.fillStyle=crestC; ctx.beginPath(); ctx.moveTo(-1.4,hy-8.4); ctx.quadraticCurveTo(-3+flutter*0.15,hy-20,5+flutter*0.5,hy-17); ctx.quadraticCurveTo(10+flutter*0.7,hy-14,9+flutter*0.8,hy-6); ctx.quadraticCurveTo(5+flutter*0.3,hy-10.5,2.4,hy-8); ctx.closePath(); ctx.fill();   // tall crest
   ctx.strokeStyle='#4a1414'; ctx.lineWidth=0.7; ctx.stroke();
   }

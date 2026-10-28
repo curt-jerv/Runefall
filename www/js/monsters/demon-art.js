@@ -105,6 +105,7 @@ function wlBigDemon(g, e){
   g.particles.push({type:'ring', x:m.x, y:m.y, t:0.6, max:0.6, r:110, color:'#ff5a2a'}); shakeScreen(g, 4, 0.3);
 }
 function wlStartShadow(g, e, np){
+  if(!e.wlNeverSaid){ e.wlNeverSaid = true; voicePlay('wlord_never'); showMsg('\u201cI will never die!\u201d', 2.4, '#c8b8ff'); }   // v556
   e.wlNext = np; e.wlState = 'fadeOut'; e.wlT = 0.7; e.wlImmune = true; e.wlLockHp = e.hp; e.wlZones.length = 0;
   e.wlShield = false; e.armor = e.baseArmor; e.wlAlpha = 1; e.wlShadowA = 0;
   g.particles.push({type:'ring', x:e.x, y:e.y, t:0.6, max:0.6, r:170, color:'#6a4cff'});
@@ -269,7 +270,7 @@ function updateWraithLord(g, e, dt, target, d, isFT, chill, room){
 }
 function wraithLordSlain(g, e){
   const p = g.player;
-  p.wraithLordSlain = true; g.holdRupt = 1;
+  p.wraithLordSlain = true; g.holdRupt = 1; voicePlay('wlord_dies');   // v556
   if(!p.wlSkillReward){ p.wlSkillReward = true; p.skillPoints = (p.skillPoints||0) + 2; showMsg('The Wraith Lord is destroyed: +2 Skill Points', 4.0); }
   for(const o of g.enemies) if(o!==e && o.noReward) o.hp = 0;
   g.wlFlashT = 2.2; shakeScreen(g, 9, 1.2);

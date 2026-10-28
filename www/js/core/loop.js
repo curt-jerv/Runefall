@@ -129,10 +129,11 @@ function pcAimPick(g, from, maxD, onScreen, exclude){
   if(best) return best;
   return PC.lmb ? null : undefined;
 }
+const RANGED_TARGET_R = 720;
 function nearestEnemyOnScreen(g, from, maxD){
   if(PC.mouseOn && g.player===from){ const r = pcAimPick(g, from, maxD, true); if(r!==undefined) return r; }
   const cam = g.camera; if(!cam) return nearestEnemy(g, from, maxD);
-  const lim = maxD||99999; let best=null, bs=Infinity;   // v497: bs starts at Infinity (it used to start at maxD, which dropped every enemy that was not already fighting you beyond ~80 units)
+  const lim = from===g.player ? Math.max(maxD||0, RANGED_TARGET_R) : (maxD||99999); let best=null, bs=Infinity;   // v548: your ranged attacks and spells reach anything you can see on screen   // v497: bs starts at Infinity (it used to start at maxD, which dropped every enemy that was not already fighting you beyond ~80 units)
   for(const e of g.enemies){
     if(!enemyOnScreen(g,e)) continue;
     const d=dist(from,e) - Math.max(0, (e.r||0)-30) - bigBossReach(e);   // v452/v453: huge monsters are targeted from their edge; the great beasts from further out

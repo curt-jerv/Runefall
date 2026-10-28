@@ -197,7 +197,7 @@ for(const id in ACTIVE_SKILL_REGISTRY){
 // their own Assign buttons directly from elementalPolarity's own popup
 // (see openSkillNodePopup's elementalPolarity special-case) instead of the
 // normal single Assign button this exclusion list suppresses.
-const ASSIGN_EXCLUDE_IDS = ['elementalPolarity'];
+const ASSIGN_EXCLUDE_IDS = [];
 // Elementalist's Fireball/Ice Bolt (v76) are "virtual" active skills: they
 // have no skill-tree node of their own (see elementalPolarity's node
 // comment) so nodeDisplayName's normal tree lookup would just fall back to
@@ -264,11 +264,13 @@ const RESOURCE_SKILLS = {
   // (v146) Mystic basic spells now cost more per rank (step); the big Mystic skills cost mana too (no minCd: their own cooldowns stand).
   // (v152) Lightning Arc / Fireball / Ice Bolt / Soul Sap no longer cost mana -- they REWARD it on hit (MANA_ON_HIT_PCT).
   // Everything else costs a lot more, against a much smaller pool.
-  plague:{cost:75}, soulGate:{cost:40}, immolate:{cost:35}, flameVortex:{cost:45}, permafrost:{cost:21, step:-1.8},
-  nova:{cost:26}, tornado:{cost:35}, hurricane:{cost:70}, iceArmor:{cost:0}, pyroTorrent:{cost:20}, blizzard:{cost:80}, meteor:{cost:95}, stormcall:{cost:32}, raiseDead:{cost:12}, fear:{cost:25},  /* pyroTorrent cost is PER SECOND while channelling */
+  // v562: the four big spells (Hurricane, Meteor, Blizzard, Plague) cost 95 mana at rank 1 (v563: +8% a rank, like every Mana/Stamina skill)
+  plague:{cost:95}, soulGate:{cost:40}, immolate:{cost:35}, flameVortex:{cost:45}, permafrost:{cost:21, step:-1.8},
+  nova:{cost:26}, tornado:{cost:35}, hurricane:{cost:95}, iceArmor:{cost:0}, pyroTorrent:{cost:20}, blizzard:{cost:95}, meteor:{cost:95}, stormcall:{cost:32}, raiseDead:{cost:12}, fear:{cost:25},  /* pyroTorrent cost is PER SECOND while channelling */
   shieldThrow:{cost:25, minCd:1.0}, bulwark:{cost:30}, mirrorSteel:{cost:25, step:-10/9}, seismicSlam:{cost:25}, seismicAnchor:{cost:25, step:-10/9}, whirlwind:{cost:15, minCd:1.0}, unbreakable:{cost:0, minCd:8},
   // v489 Ranger: flat Stamina costs that grow with rank (basic shots -- Strike, Rapid Shot, Splinter Shot, Multi Shot -- are free and refill Stamina)
-  cripplingShot:{cost:20, step:1}, stunShot:{cost:26, step:1.2}, explosiveShot:{cost:30, step:1.5}, aimedShot:{cost:40, step:2}, rainOfArrows:{cost:50, step:2.5}, huntersMark:{cost:20, step:0.5}, explosiveTrap:{cost:35, step:1}, poisonTrap:{cost:20, step:0.8}, frostTrap:{cost:20, step:0.8},
+  cripplingShot:{cost:24, step:1.2}, stunShot:{cost:31.2, step:1.44}, explosiveShot:{cost:36, step:1.8}, aimedShot:{cost:40, step:2}, rainOfArrows:{cost:50, step:2.5}, huntersMark:{cost:20, step:0.5}, explosiveTrap:{cost:42, step:1.2}, poisonTrap:{cost:24, step:0.96}, frostTrap:{cost:24, step:0.96},   // v545: traps and the Hunter's special shots cost 20% more
+  fieldDress:{cost:30}, survivalFieldDress:{cost:30},   // v545: Field Dress costs 30 Stamina
   packTactics:{cost:20}, recall:{cost:20}, beastFury:{cost:20},   // v499: Ambush, Recall and Beast Fury cost 20 Stamina each
 };
 const ATKCD_SKILLS = {lightningArc:1, soulSap:1, fireball:1, iceBolt:1, deathBolt:1};   // these ride the basic-attack cooldown
@@ -285,12 +287,18 @@ const MANA_ON_HIT_PCT = {lightningArc:0.04, fireball:0.03, iceBolt:0.08, soulSap
 const WARRIOR_DMG_MULT = 1.25;
 function resourceName(p){ return RESOURCE_NAME[p.cls]||'Mana'; }
 // Cost of a skill for this player: base + per-rank step, and Mystic costs grow 2% per level past 20 so a bigger pool doesn't trivialise them.
+const COST_PER_RANK = 0.08;   // v563: x1.72 at rank 10 (about how much mana / Stamina grows from a skill's first rank to its tenth)
+let _rageSkillIds = null;
+function isRageSkill(id){ if(!_rageSkillIds){ _rageSkillIds = new Set(); for(const k in SKILL_TREES) for(const n of SKILL_TREES[k].nodes) _rageSkillIds.add(n.id); } return _rageSkillIds.has(id); }
 function resCost(p,id,rankOverride){
   const r = RESOURCE_SKILLS[id]; if(!r) return 0;
   let c = r.cost;
   if(id==='raiseDead' && p && p.skills) return RAISE_DEAD_MANA_PER_SKEL * Math.max(1, necroSkeletonLimit(p));   // v489: 12 mana per skeleton raised
-  if(r.step){ const rk = rankOverride!=null ? rankOverride : ((p&&p.skills&&effectiveRank(p,id))||0); c += r.step*Math.max(0,rk-1); }
-  if(p && p.cls==='mystic') c *= 1 + 0.02*Math.max(0,(p.level||1)-20);
+  const rk = rankOverride!=null ? rankOverride : ((p&&p.skills&&effectiveRank(p,id))||0);
+  // v563: Mana and Stamina costs grow with the skill's rank, as the pools grow with Intelligence / Dexterity (never with character level);
+  // Rage stays a fixed 100, so Rage skills keep their own small rank steps
+  if(isRageSkill(id)){ if(r.step) c += r.step*Math.max(0,rk-1); }
+  else c *= 1 + COST_PER_RANK*Math.max(0, rk-1);
   if(p && WR_SKILLS[id] && (p.windReady || p._wrCostWin>0)) c *= 0.5;   // v466 Windrunner
   if(p && p.cls==='ranger' && p.skills){ const ts=effectiveRank(p,'steadyBreathing')||0; if(ts>0) c *= 1 - 0.05*Math.min(10,ts); }   // v497: Steady Breathing is its own Marksman node
   return Math.round(c);
@@ -347,6 +355,8 @@ function gateResourceWants(p){
   if(wantExplosiveTrap && !resourceAffordable(p,'explosiveTrap')){ wantExplosiveTrap=false; noResourceMsg(p); }
   if(wantPoisonTrap && !resourceAffordable(p,'poisonTrap')){ wantPoisonTrap=false; noResourceMsg(p); }
   if(wantFrostTrap && !resourceAffordable(p,'frostTrap')){ wantFrostTrap=false; noResourceMsg(p); }
+  if(typeof wantFieldDress!=='undefined' && wantFieldDress && !resourceAffordable(p,'fieldDress')){ wantFieldDress=false; noResourceMsg(p); }   // v545
+  if(typeof wantSurvivalFieldDress!=='undefined' && wantSurvivalFieldDress && !resourceAffordable(p,'survivalFieldDress')){ wantSurvivalFieldDress=false; noResourceMsg(p); }
 }
 // After the cast blocks: a skill whose own cooldown just rose was cast -> spend its cost, and cap
 // its cooldown at the short rotation cooldown.
@@ -384,7 +394,7 @@ function tickResource(p, dt){
     }
   }
   else if(p.cls==='mystic') gainResource(p, p.maxMp*MANA_REGEN_PCT*dt*(p.tsRegenT>0 ? 1+(p.tsRegenBonus||0.3) : 1));
-  else if(p.cls==='ranger'){ if(p.deadeyeGainCd>0) p.deadeyeGainCd -= dt; gainResource(p, p.maxMp*STAMINA_REGEN_PCT*dt*(1+0.03*((p.skills&&effectiveRank(p,'steadyBreathing'))||0))); }
+  else if(p.cls==='ranger'){ if(p.deadeyeGainCd>0) p.deadeyeGainCd -= dt; gainResource(p, p.maxMp*STAMINA_REGEN_PCT*dt*(1+0.03*((p.skills&&effectiveRank(p,'steadyBreathing'))||0))*(p.coffeeT>0 ? 2 : 1)); /* v545: coffee doubles Stamina regen */ }
 }
 // (v244) Aimed Shot: press-and-hold its slot button to raise an aim pad under the thumb
 // (same pad as Pyro Torrent), drag to aim, release to fire. A quick tap still auto-targets.
@@ -400,7 +410,7 @@ function holdAimBegin(slotKey, el, id, x, y){
   holdAimT0 = (typeof performance!=='undefined' ? performance.now() : Date.now()); holdAimOn=true; holdAimId=id; holdAimSlot=slotKey; holdAimEl=el; holdAimStart={x,y}; holdAimCommit=false;
   aimActive=true; aimId=id; aimCenter={x:r.left+r.width/2, y:r.top+r.height/2}; aimVec={x:0,y:0};
   aimbase.style.display='none';   // v453: no pad -- the aim line on the ground shows where you're aiming
-  game.player.aimShotHold = true; game.player.aimDir = {x:game.player.facing.x, y:game.player.facing.y};
+  game.player.aimShotHold = true; game.player.aimLoadT0 = holdAimT0; game.player.aimDir = {x:game.player.facing.x, y:game.player.facing.y};
   holdAimMove(x,y);
   return true;
 }
@@ -419,7 +429,7 @@ function holdAimEnd(fire){
   if(!holdAimOn) return;
   const p = game && game.player, had = holdAimCommit && (aimVec.x||aimVec.y);
   holdAimOn=false; holdAimId=null; holdAimSlot=null; holdAimEl=null; aimEnd();
-  if(p){ p.aimShotHold=false; if(fire){ holdAimShotDir = had ? {x:p.aimDir.x, y:p.aimDir.y} : null; aimShotFull = !!had || ((typeof performance!=='undefined' ? performance.now() : Date.now()) - holdAimT0 >= AIMED_HOLD_MS); wantAimedShot=true; } }
+  if(p){ p.aimShotHold=false; if(fire){ holdAimShotDir = had ? {x:p.aimDir.x, y:p.aimDir.y} : null; aimShotFull = ((typeof performance!=='undefined' ? performance.now() : Date.now()) - holdAimT0 >= AIMED_HOLD_MS);   /* v545: full power only once the draw has loaded */ wantAimedShot=true; } }
 }
 function bindSlotBtn(el, slotKey){
   const isPyro = ()=>{ const p = game && game.player; return !!(p && p.skillSlots && p.skillSlots[slotKey]==='pyroTorrent'); };

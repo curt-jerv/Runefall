@@ -63,6 +63,8 @@ function affixUniqueKey(a){
   if(a.skillGroup) return a.key+':group:'+a.skillGroup.join(',');
   return a.key;
 }
+// v563: Strength rolls far more often on plate, Dexterity on leather, Intelligence on robes (jewelry, belts and shields: even odds)
+const ATTR_MAT_PREF = {strength:'plate', dexterity:'leather', intelligence:'robe'}, ATTR_MAT_MATCH_W = 2.5, ATTR_MAT_OTHER_W = 0.4;
 function rollExtraAffixes(category, itemTier, ilvl, material, innateKey, count, rarity){
   return rollExtraAffixesRaw(category, itemTier, ilvl, material, innateKey, count, rarity);
 }
@@ -96,7 +98,8 @@ function rollExtraAffixesRaw(category, itemTier, ilvl, material, innateKey, coun
     if(a.minIlvl && ilvl<a.minIlvl) return false;
     return true;
   });
-  const weightOf = a=> a.key==='lightRadiusPct' ? 0.5 : a.key==='skillDurPct' ? 0.5 : a.key==='statusDurPct' ? (category==='staff' ? 2.5 : 0.5) : a.key==='dmgVsElitePct' ? 0.25 : a.key==='critDmgPct' ? 0.7 : (a.key==='lifeOnKill'||a.key==='manaOnKill'||a.key==='potionStrengthPct') ? 0.6 : (a.skillTree||a.skillGroup||a.allSkills) ? AFFIX_WEIGHT.skill : (AFFIX_WEIGHT[a.key]!=null ? AFFIX_WEIGHT[a.key] : 1);
+  let weightOf = a=> a.key==='lightRadiusPct' ? 0.5 : a.key==='skillDurPct' ? 0.5 : a.key==='statusDurPct' ? (category==='staff' ? 2.5 : 0.5) : a.key==='dmgVsElitePct' ? 0.25 : a.key==='critDmgPct' ? 0.7 : (a.key==='lifeOnKill'||a.key==='manaOnKill'||a.key==='potionStrengthPct') ? 0.6 : (a.skillTree||a.skillGroup||a.allSkills) ? AFFIX_WEIGHT.skill : (AFFIX_WEIGHT[a.key]!=null ? AFFIX_WEIGHT[a.key] : 1);
+  { const w0 = weightOf; weightOf = a=> w0(a) * (ATTR_MAT_PREF[a.key] && material ? (ATTR_MAT_PREF[a.key]===material ? ATTR_MAT_MATCH_W : ATTR_MAT_OTHER_W) : 1); }   // v563
   while(chosen.length<count){
     const cands = pool.filter(a=>{
       if(usedKeys.has(affixUniqueKey(a))) return false;

@@ -94,7 +94,7 @@ function lakeSpline(P){
   return out;
 }
 // one winding road: the west gate -> round the lake if it has to -> the bridge's shore end
-function lakeBuildRoads(gW){
+function lakeBuildRoads(gW, via){
   const L = LAKE_RECT, S = lakeBridgeShore(), A = {x:S.x+S.dx*320, y:S.y+S.dy*320};
   const wet = (rd)=>rd.some(q=>q.x > L.x0-70 && q.x < L.x1+70 && q.y > L.y0-70 && q.y < L.y1+70 && !lakeOnBridge(q.x,q.y));
   let road = null;
@@ -103,7 +103,7 @@ function lakeBuildRoads(gW){
     const NW = {x:L.x0-m, y:L.y0-m}, NE = {x:L.x1+m, y:L.y0-m}, SW = {x:L.x0-m, y:L.y1+m}, SE = {x:L.x1+m, y:L.y1+m};
     const goNorth = gW.y < LAKE_CY ? Math.random()<0.75 : Math.random()<0.25;
     const corners = LAKE_DIR==='W' ? [] : LAKE_DIR==='N' ? [NW] : LAKE_DIR==='S' ? [SW] : (goNorth ? [NW, NE] : [SW, SE]);
-    const first = corners[0] || A, start = {x:200, y:gW.y}, keys = [{x:0, y:gW.y}, start];
+    const first = corners[0] || A, start0 = {x:200, y:gW.y}, keys = [{x:0, y:gW.y}, start0, ...(via||[])], start = keys[keys.length-1];   // v551: through the gaps in the tree walls
     const dx = first.x-start.x, dy = first.y-start.y, len = Math.hypot(dx,dy)||1, nx = -dy/len, ny = dx/len;
     const mids = len > 1600 ? 2 : len > 700 ? 1 : 0;
     for(let i=1;i<=mids;i++){ const t = i/(mids+1), o = rand(-1,1)*Math.min(380, len*0.25); const q = {x:start.x+dx*t+nx*o, y:clamp(start.y+dy*t+ny*o, 300, LAKE_H-300)}; if(q.x > L.x0-m && q.x < L.x1+m && q.y > L.y0-m && q.y < L.y1+m) continue; keys.push(q); }
@@ -117,9 +117,10 @@ const LAKE_PACK_ANCHOR_TARGET = 300;   // v530: twice the ground (was the Crossr
 // Fewer standing packs than Withered Crossroads' 70 -- the lake itself eats a
 // large, uninhabitable chunk of this same-sized footprint, so the walkable
 // shoreline area is smaller even though the zone's outer bounds match.
-const LAKE_PACK_COUNT = 110;   // v530: was 55 on half the area
+const LAKE_PACK_COUNT = 150;   // v550: denser (was 110 -- ~6 monsters per million square units vs the Forest's ~11)
 const LAKE_PACK_TEMPLATES = [
-  { type:'bandit', countMin:2, countMax:4 },
+  { type:'bandit', countMin:2, countMax:3, archer:0.5 },   // v550: small bands; the big groups sit in camps (makeBanditCamp)
+  { type:'thornback', countMin:2, countMax:3 },
   // Skeleton (first appearance, see spawnEnemy's 'skeleton' branch): two
   // templates so it shows up roughly as often as Bandit across the pool.
   { type:'skeleton', countMin:2, countMax:4 },
@@ -140,12 +141,20 @@ function makeLakesideRuins(){
 function lakeBuild(){
   const w=LAKE_W, h=LAKE_H;
   // v531: the island ruins sit anywhere, their one bridge facing any way (an east bridge keeps clear of the far edge)
-  const dir = ['W','E','N','S'][Math.floor(Math.random()*4)];
+  // v551: the ruins always sit in the eastern third; the bridge mostly faces west, north or south
+  const dr = Math.random(), dir = dr < 0.4 ? 'W' : dr < 0.65 ? 'N' : dr < 0.9 ? 'S' : 'E';
   const ex = LAKE_ISLAND_HX+LAKE_MARGIN, ey = LAKE_ISLAND_HY+LAKE_MARGIN, pad = 700;
-  lakeSetCenter(Math.round(rand(pad+ex+(dir==='W' ? 300 : 0), w-pad-ex-(dir==='E' ? 300 : 0))), Math.round(rand(pad+ey, h-pad-ey)), dir);
+  lakeSetCenter(Math.round(rand(w*0.7, w-pad-ex-(dir==='E' ? 300 : 0))), Math.round(rand(pad+ey, h-pad-ey)), dir);
   const sunlitGate = {x:16, y:Math.round(rand(h*0.2, h*0.8)), r:34};
   LAKESIDE_ENTRANCE_SPOT = {x:sunlitGate.x, y:sunlitGate.y};
-  lakeBuildRoads(sunlitGate);
+  // v551: two thick walls of old trees cross the west of the shore, each with one gap -- top, then bottom (or the other
+  // way round) -- so the road zig-zags toward the lake
+  const lowFirst = sunlitGate.y < h/2;
+  const walls = [ {x:Math.round(rand(w*0.24, w*0.30)), gap:Math.round(lowFirst ? rand(h*0.68, h*0.84) : rand(h*0.16, h*0.32)), ph:rand(0,6)},
+                  {x:Math.round(rand(w*0.46, w*0.53)), gap:0, ph:rand(0,6)} ];
+  walls[1].gap = Math.round(lowFirst ? rand(h*0.16, h*0.32) : rand(h*0.68, h*0.84));
+  const wallX = (wl, y)=> wl.x + Math.sin(y*0.0017 + wl.ph)*110;
+  lakeBuildRoads(sunlitGate, walls.flatMap(wl=>[{x:wallX(wl, wl.gap)-300, y:wl.gap}, {x:wallX(wl, wl.gap)+300, y:wl.gap}]));
   const obstacles = lakeWaterRects();
   function inWater(x,y){ return lakeWaterAt(x,y); }
   function offLimits(x,y){ return lakeOnRoad(x,y) || lakeOnIsland(x,y) || inWater(x,y); }
@@ -168,7 +177,13 @@ function lakeBuild(){
 
   // A dedicated permanent waypoint, same shared mechanism/art as every
   // other zone's -- nudged onto the near (west) shoreline, off the road.
-  const waypoint = {x:sunlitGate.x+300, y:clamp(sunlitGate.y-260, 300, h-300), r:22, off:true};   // v489: no waypoint here any more (spot kept as a landing point)
+  // v551: a waypoint again -- on the shore just beside the bridge's outer end
+  let waypoint = null;
+  { const S = lakeBridgeShore(), px = -S.dy, py = S.dx;
+    for(const [o,l] of [[240,230],[240,-230],[360,260],[360,-260],[200,320],[200,-320]]){
+      const q = {x:S.x+S.dx*o+px*l, y:S.y+S.dy*o+py*l};
+      if(q.x>200 && q.y>200 && q.x<w-200 && q.y<h-200 && !lakeNearWaterAt(q.x, q.y, 120) && lakeRoadDist(q.x, q.y) > 120){ waypoint = {x:Math.round(q.x), y:Math.round(q.y), r:22}; break; } }
+    if(!waypoint) waypoint = {x:sunlitGate.x+300, y:clamp(sunlitGate.y-260, 300, h-300), r:22, off:true}; }
 
   // The island's Stonehenge -- a fixed ring of 9 standing stones around
   // dead center, purely decorative/atmospheric (see drawLakesideStoneIso).
@@ -187,6 +202,7 @@ function lakeBuild(){
     if(offLimits(x,y)) continue;
     if(dist({x,y},sunlitGate) < 240) continue;
     if(dist({x,y},waypoint) < 220) continue;
+    if(walls.some(wl=>Math.abs(x-wallX(wl,y)) < 190 && Math.abs(y-wl.gap) >= 200)) continue;   // v551: not inside the tree walls
     if(packAnchors.some(a=>dist(a,{x,y}) < 280)) continue;
     packAnchors.push({x,y});
   }
@@ -207,11 +223,27 @@ function lakeBuild(){
     trees.push({x:bp.x, y:bp.y});
   }
 
+  // v551: a second and third ring of trees inside the border, so the shore is walled in by woods
+  for(const bp of zoneBorderPoints(w, h, 120, 160, [{x:sunlitGate.x, y:sunlitGate.y, r:240}])) if(!offLimits(bp.x, bp.y)) trees.push({x:bp.x, y:bp.y, s:rand(1.1,1.8), dark:Math.random()<0.5});
+  for(const bp of zoneBorderPoints(w, h, 200, 190, [{x:sunlitGate.x, y:sunlitGate.y, r:300}])) if(!offLimits(bp.x, bp.y) && Math.random()<0.7) trees.push({x:bp.x, y:bp.y, s:rand(1.1,1.9), dark:Math.random()<0.5});
   // v456: groves of old trees on the dry land around the lake (the Treants' home)
   const groves = [], groveObs = [];
+  // v551: the tree walls (four staggered rows of trunks; each trunk blocks, so only the gap lets you through)
+  for(const wl of walls){
+    for(let y=60; y<=h-60; y+=44){
+      if(Math.abs(y-wl.gap) < 230) continue;
+      for(let k=0;k<4;k++){
+        const x = wallX(wl, y) + (k-1.5)*46 + (k%2 ? 22 : 0) + rand(-8,8), yy = y + rand(-10,10);
+        if(lakeRoadDist(x, yy) < 130 || lakeNearWaterAt(x, yy, 80)) continue;
+        trees.push({x, y:yy, s:rand(1.3,2.2), dark:Math.random()<0.65, dead:Math.random()<0.06});
+        groveObs.push({x:x-17, y:yy-17, w:34, h:34, isProp:true, noDraw:true});
+      }
+    }
+  }
+  const inWall = (x,y,m)=> walls.some(wl=>Math.abs(x-wallX(wl,y)) < 120+m && Math.abs(y-wl.gap) >= 230-m);
   for(let i=0;i<3000 && groves.length<34;i++){   // v530: a forested shore (was 14 groves)
     const x = rand(320, w-320), y = rand(260, h-260);
-    if(offLimits(x,y) || lakeNearWaterAt(x,y,230) || lakeRoadDist(x,y) < 200) continue;
+    if(offLimits(x,y) || lakeNearWaterAt(x,y,230) || lakeRoadDist(x,y) < 200 || inWall(x,y,200)) continue;
     if(dist({x,y},sunlitGate)<520 || dist({x,y},waypoint)<360) continue;
     if(groves.some(gv=>dist(gv,{x,y})<560)) continue;
     groves.push({x,y});

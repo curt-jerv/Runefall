@@ -61,8 +61,10 @@ function drawShieldThrowIso(st){
 // tapered ribbon of light instead of a red laser line -- warm gold core, wide faint halo that fades with distance, little chevrons
 // and motes drifting toward the mark, and a flat isometric reticle on the ground where the arrow will land).
 function drawAimLineIso(p){
-  if(!p || !(p.aiming || (p.aimShotHold && holdAimCommit))) return;
-  const len = 240, T = (game && game.clock) || 0;
+  if(!p || !(p.aiming || p.aimShotHold)) return;
+  // v545: while Aimed Shot draws, the line grows out from the bow like a loading bar and reaches full length when the shot is ready
+  const load = p.aimShotHold ? clamp(((typeof performance!=='undefined' ? performance.now() : Date.now()) - (p.aimLoadT0||0))/AIMED_HOLD_MS, 0, 1) : 1;
+  const len = 240*Math.max(0.05, load), T = (game && game.clock) || 0;
   const iso1 = toIso(p.x, p.y), iso2 = toIso(p.x + p.aimDir.x*len, p.y + p.aimDir.y*len);
   const x1 = iso1.x, y1 = iso1.y-34, x2 = iso2.x, y2 = iso2.y-34;   // (v245) chest/shoulder height
   const dx = x2-x1, dy = y2-y1, L = Math.hypot(dx,dy) || 1, ux = dx/L, uy = dy/L, nx = -uy, ny = ux;
@@ -95,21 +97,8 @@ function drawAimLineIso(p){
     ctx.globalAlpha = Math.sin(u*Math.PI)*0.7; ctx.fillRect(cx-0.8, cy-0.8, 1.6, 1.6);
   }
   ctx.globalAlpha = 1;
-  // the mark: a flat isometric reticle on the ground with two slowly turning arcs and four ticks
-  ctx.save(); ctx.translate(iso2.x, iso2.y); ctx.scale(1, 0.5);
-  const R = 17+1.5*pulse;
-  ctx.fillStyle = 'rgba(255,200,110,0.09)'; ctx.beginPath(); ctx.arc(0,0,R,0,7); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,226,160,0.7)'; ctx.lineWidth = 1.4;
-  ctx.rotate(T*0.9);
-  ctx.beginPath(); ctx.arc(0,0,R,0.2,1.35); ctx.stroke(); ctx.beginPath(); ctx.arc(0,0,R,Math.PI+0.2,Math.PI+1.35); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,240,200,0.55)'; ctx.lineWidth = 1;
-  ctx.rotate(-T*1.8);
-  ctx.beginPath(); ctx.arc(0,0,R*0.62,1.9,3.0); ctx.stroke(); ctx.beginPath(); ctx.arc(0,0,R*0.62,-1.25,-0.15); ctx.stroke();
-  ctx.rotate(T*0.9);
-  ctx.strokeStyle = 'rgba(255,236,180,0.6)';
-  for(let k=0;k<4;k++){ const a = k*Math.PI/2; ctx.beginPath(); ctx.moveTo(Math.cos(a)*(R+3), Math.sin(a)*(R+3)); ctx.lineTo(Math.cos(a)*(R+9), Math.sin(a)*(R+9)); ctx.stroke(); }
-  ctx.fillStyle = 'rgba(255,248,224,0.85)'; ctx.beginPath(); ctx.arc(0,0,1.8,0,7); ctx.fill();
-  ctx.restore();
+  // v545: the ground reticle at the end of the line is gone; a bright tip shows when the draw is fully loaded
+  if(load>=1){ ctx.globalAlpha = 0.7+0.3*pulse; ctx.fillStyle = '#fff6d8'; ctx.beginPath(); ctx.arc(x2, y2, 3.2, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
   ctx.restore();
 }
 // v236: Guardian -- golden aegis dome with rotating globe lines, ground sigil and rising motes
@@ -946,6 +935,19 @@ function drawParticlesIso(list, pass){
         ctx.globalAlpha = a; ctx.fillRect(Math.cos(ang)*d, Math.sin(ang)*d*0.7+22*pp*pp, 2, 2);
       }
       ctx.globalAlpha = a*0.25*pp; ctx.fillStyle = '#2a1a14'; ctx.beginPath(); ctx.arc(0,-8*pp,10+16*pp,0,7); ctx.fill();
+      ctx.restore();
+    } else if(pt.type==='iceSpike'){   // v545: a cluster of ice spikes bursting up from the ground (Frosthold Commander's slam)
+      const pp = 1-a, up = Math.min(1, pp/0.18), sd = pt.seed||0.4, H = (pt.h||34)*up;
+      ctx.save(); ctx.translate(iso.x, iso.y); ctx.globalAlpha = Math.min(1, a*1.6);
+      ctx.fillStyle = 'rgba(150,210,255,0.25)'; ctx.beginPath(); ctx.ellipse(0, 0, 16, 7, 0, 0, 7); ctx.fill();
+      for(let i=0;i<3;i++){
+        const ox = (i-1)*9 + (sd*13%5) - 2, h = H*(i===1 ? 1 : 0.62 + ((sd*7+i)%1)*0.2), w = i===1 ? 6 : 4.5, lean = (i-1)*0.18;
+        ctx.save(); ctx.translate(ox, 2); ctx.rotate(lean);
+        const gr = ctx.createLinearGradient(0, 0, 0, -h); gr.addColorStop(0, '#5f9fd0'); gr.addColorStop(0.6, '#bfe8ff'); gr.addColorStop(1, '#f4fcff');
+        ctx.fillStyle = gr; ctx.strokeStyle = 'rgba(30,70,110,0.7)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-w, 0); ctx.lineTo(-w*0.3, -h*0.55); ctx.lineTo(0, -h); ctx.lineTo(w*0.35, -h*0.5); ctx.lineTo(w, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
       ctx.restore();
     } else if(pt.type==='iceImpact'){
       const pp = 1-a, sd = pt.seed||0.3;

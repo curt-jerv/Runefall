@@ -96,7 +96,7 @@ function owPoiRoll(g){
   for(let i=0;i<nCache;i++){ const s = owFindSpot(g, room, 40, taken, 700); if(s){ g.owPoi.push({kind:'cache', x:s.x, y:s.y, r:24, opened:false}); taken.push(s); } }
   if(Math.random() < cfg.shrine){
     const s = owFindSpot(g, room, 50, taken, 700), keys = Object.keys(OW_SHRINES);
-    if(s){ g.owPoi.push({kind:'shrine', x:s.x, y:s.y, r:30, sk:keys[Math.floor(Math.random()*keys.length)], used:false}); taken.push(s); }
+    if(s){ g.owPoi.push({kind:'shrine', x:s.x, y:s.y, r:45, sk:keys[Math.floor(Math.random()*keys.length)], used:false}); taken.push(s); }
   }
   if(Math.random() < cfg.hoard){
     const s = owFindSpot(g, room, 120, taken, 800);
@@ -165,9 +165,10 @@ function drawOwHoardGlow(c, t){
 // a weathered standing stone with a rune that glows in the shrine's colour (dims once used)
 function drawOwShrineIso(s, t){
   const iso = toIso(s.x, s.y), S = OW_SHRINES[s.sk], used = s.used, a = used ? 0.15 : 0.55+0.3*Math.sin(t*2.6);
-  drawShadow(iso.x, iso.y, 26, 10);
+  drawShadow(iso.x, iso.y, 39, 15);   // v548: 1.5x the stone, 2x the glow at its foot
   ctx.save(); ctx.translate(iso.x, iso.y);
-  if(!used){ ctx.save(); ctx.scale(1, 0.5); const gr = ctx.createRadialGradient(0,0,4,0,0,60); gr.addColorStop(0,'rgba('+S.col+','+(a*0.5)+')'); gr.addColorStop(1,'rgba('+S.col+',0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0,0,60,0,7); ctx.fill(); ctx.restore(); }
+  if(!used){ ctx.save(); ctx.scale(1, 0.5); const gr = ctx.createRadialGradient(0,0,6,0,0,120); gr.addColorStop(0,'rgba('+S.col+','+(a*0.5)+')'); gr.addColorStop(1,'rgba('+S.col+',0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0,0,120,0,7); ctx.fill(); ctx.restore(); }
+  ctx.scale(1.5, 1.5);
   ctx.fillStyle = '#6e6a60'; ctx.strokeStyle = '#26241f'; ctx.lineWidth = 1.4;
   ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-11, -46); ctx.lineTo(-4, -54); ctx.lineTo(9, -50); ctx.lineTo(14, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#8a857a'; ctx.beginPath(); ctx.moveTo(-11,-46); ctx.lineTo(-4,-54); ctx.lineTo(9,-50); ctx.lineTo(2,-44); ctx.closePath(); ctx.fill();

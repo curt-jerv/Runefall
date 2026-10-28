@@ -189,7 +189,7 @@ document.getElementById('witchBody').addEventListener('click', e=>{
 });
 function witchHeartstoneTalk(p){
   if(hasQItem(p,'minotaur_heartstone') && !p.heartstoneDone){
-      showNpcText('The Witch', '"A Minotaur Heartstone... it carries a blessing of life. Let me shape it into something you can socket."', 'Please do', ()=>{
+      voicePlay('witch_heartstone'); showNpcText('The Witch', '"A Minotaur Heartstone... it carries a blessing of life. Let me shape it into something you can socket."', 'Please do', ()=>{
         p.inventory = p.inventory.filter(it=>!(it && it.questId==='minotaur_heartstone'));
         p.heartstoneDone = true;
         addPart(p, 'minotaurheart', 2);
@@ -217,7 +217,7 @@ function witchCauldronInteract(){
   if(p.witchRescued && witchHeartstoneTalk(p)) return;   // v344: the Heartstone is dealt with before she teaches parts harvesting
   // v283: parts harvesting is taught the first time you talk to the freed witch beside her cauldron
   if(p.witchRescued && !p.partsHarvest){
-    showNpcText('The Witch', '"You freed me. Take this as thanks. Bring me the parts you cut from what you slay -- claw, pelt, tooth and horn -- and my cauldron will bind them into stones for your gear."', 'Teach me', ()=>{
+    voicePlay('witch_thanks'); showNpcText('The Witch', '"You freed me. Take this as thanks. Bring me the parts you cut from what you slay -- claw, pelt, tooth and horn -- and my cauldron will bind them into stones for your gear."', 'Teach me', ()=>{
       p.partsHarvest = true; witchGiveRecipes(p);   // v490: partsHarvest now means "the witch taught you" -- parts drop from the start; this opens her cauldron
       if(!p.witchRareGiven){ const wr = classRewardItem(p, Math.max(1, p.level||1), 'rare'); if(giveRewardIfRoom(p, [wr])){ p.witchRareGiven = true; bagPulse(); showMsg('The witch\u2019s cauldron is open to you. She also gives you: '+wr.name, 4.0); } }   // v493: no room -> she gives it next time
       else showMsg('The witch\u2019s cauldron is open to you \u2014 transmute your parts into stones', 3.2);
@@ -291,6 +291,7 @@ function witchTowerInteract(){
   const p = game.player;
   // v490: the cage opens whenever you reach it (a stray, unseen enemy used to keep it shut)
   const wPos = game.tower && game.tower.witch ? {x:game.tower.witch.x, y:game.tower.witch.y} : {x:game.tower.w/2, y:game.tower.h/2};
+  voicePlay('witch_rescued');   // v555
   showNpcText('The Witch', '"Thank you. Come see me by my camp."', 'Continue', ()=>{
     p.witchRescued = true;
     if(game.tower) game.tower.witch = null;

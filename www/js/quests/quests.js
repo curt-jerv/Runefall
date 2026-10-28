@@ -75,7 +75,7 @@ function claimShrineBlessing(){
   p.skillPoints = (p.skillPoints||0) + 2;
   forceAddToBag(p, makeAwakenedRuneItem());
   const q = getQuest(p, 'shrine_stone');
-  if(q){ q.progress=q.total; q.desc='The mountain judged you worthy and awakened the runestone. Show it to the scholar.'; }   // v456: completed by the scholar
+  if(q){ q.progress=q.total; q.desc='The mountain judged you worthy and awakened the runestone. Show it to Corwin.'; }   // v456: completed by the scholar
   p.snowWallOpen = true;
   npcMark(p, 'scholar', true);
   showBigMsg('The Mountain judges you worthy.', 'Received +2 skill points.', 3.6);
@@ -272,10 +272,11 @@ function talkToQuestGiver(){
   { const bq0 = getQuest(p, QUEST_BRIDGE.id); if(bq0 && bq0.status==='complete' && !bq0.rewarded){ grantBridgeReward(p, bq0); return; } }   // v486: turn in the bridge any time
   if(q && q.status==='complete'){
     if(!q.rewarded){
-      if(grantQuestRewardItem(p)) q.rewarded = true;
+      if(grantQuestRewardItem(p)){ q.rewarded = true; voicePlay('aldric_hunt_reward'); }   // v555: voiced
     } else if(!getQuest(p, QUEST_BRIDGE.id) && !p.bridgeCleared){
       pendingQuestGiver = 'oldmanBridge';
       questGiverNameEl.textContent = 'Aldric the Elder';
+      voicePlay('aldric_bridge_offer');
       questGiverTextEl.textContent = '"Bandits have seized the old bridge in the River Valley, south of the Dark Forest. It is the only road to the Withered Crossroads. Drive them out of their camp and the way will be safe again. Will you clear it?"';
       openQuestGiverDialogue();
     } else {
@@ -293,7 +294,7 @@ function talkToQuestGiver(){
       } else if(wq && wq.status==='active'){
         showMsg('"The runestone is held at the top of Frosthold Tower. Bring it down and we can face the Wraith Lord."', 3.4);
       } else {
-        { const bq = getQuest(p, QUEST_BRIDGE.id); showMsg(bq && bq.status==='active' ? '"The bandits still hold the old bridge ('+bq.progress+'/'+bq.total+')."' : '"Be careful out there."', 2.8); }   // v456: no more respec here (the well still offers it)
+        { const bq = getQuest(p, QUEST_BRIDGE.id); if(bq && bq.status==='active') showMsg('"The bandits still hold the old bridge ('+bq.progress+'/'+bq.total+')."', 2.8); else { talkTownTip({name:'Aldric the Elder'}); voicePlay('aldric_careful', {gap:20}); } }   /* v546: nothing to ask of you -- a piece of advice instead */   // v456: no more respec here (the well still offers it)
       }
     }
   } else if(q){
@@ -304,6 +305,7 @@ function talkToQuestGiver(){
     pendingQuestGiver = 'oldman';
     questGiverNameEl.textContent = 'Aldric the Elder';
     questGiverTextEl.textContent = '"' + QUEST_FIND_HUNTERS.desc + '"';
+    voicePlay('aldric_hunt_offer');
     openQuestGiverDialogue();
   }
 }
@@ -319,7 +321,7 @@ function talkToBarkeeper(){
   const q = getQuest(p, QUEST_LIGHT_THE_WAY.id);
   if(q && q.status==='active' && q.stage==='return'){
     // v536: Hobbs thanks you in a dialogue box first; the reward is handed over when you close it
-    showNpcText('Hobbs the Barkeeper', '"Thank you so much for relighting the lighthouse beacon! Now ships can safely dock, and since my supplies came, I can open the tavern again. Here, take this as thanks."', 'Accept', ()=>{
+    voicePlay('hobbs_ltw_done'); showNpcText('Hobbs the Barkeeper', '"Thank you so much for relighting the lighthouse beacon! Now ships can safely dock, and since my supplies came, I can open the tavern again. Here, take this as thanks."', 'Accept', ()=>{
       if(q.status!=='active') return;
       const rk = p.cls==='warrior' ? 'beer' : 'coffee';   // v490: no mana potions; the Mystic gets coffee
       const li = classRewardItem(p, Math.max(p.level||1, 15), 'reward');   // v483: class gear instead of a Health Potion
@@ -329,13 +331,14 @@ function talkToBarkeeper(){
       updateQuestBadge(); bagPulse(); saveGame();
     });
   } else if(q && q.status==='complete'){
-    showMsg('"Thank you, traveler -- the beacon\'s lit and the Tavern is finally open!"', 2.4);
+    voicePlay('hobbs_tavern_open', {gap:8}); showMsg('"Thank you, traveler -- the beacon\'s lit and the Tavern is finally open!"', 2.4);
   } else if(q){
-    showMsg('"Please -- climb to the top of the Lighthouse and light the beacon."', 2.4);
+    showMsg('"Please -- climb to the top of the Lighthouse and light the beacon."', 2.4); voicePlay('hobbs_ltw_ongoing', {gap:6});
   } else {
     pendingQuestGiver = 'barkeeper';
     questGiverNameEl.textContent = 'Hobbs the Barkeeper';
     questGiverTextEl.textContent = '"' + QUEST_LIGHT_THE_WAY.desc + '"';
+    voicePlay('hobbs_ltw_offer');
     openQuestGiverDialogue();
   }
 }

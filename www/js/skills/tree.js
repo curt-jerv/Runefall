@@ -122,17 +122,17 @@ const RANGER_SKILL_TREES = {
       desc:'Move like smoke, slipping past blows meant to end you.'},
     {id:'frostTrap',    name:'Frost Trap',   type:'active', reqLevel:7, row:1, col:0, prereq:['poisonTrap'],
       desc:'Set a trap of biting frost to root and chill your enemies.'},
-    {id:'survivalInstinct', name:"Predator's Instinct", type:'passive', reqLevel:21, row:3, col:1, prereq:['survivalFieldDress'],
-      desc:'Years in the wild have toughened your body, quickened your step and taught you where wounded prey is weakest.'},
+    {id:'survivalInstinct', name:"Predator's Instinct", type:'passive', reqLevel:14, row:2, col:1, prereq:['survivalFieldDress'],   // v545: Lv.14 row
+      desc:'Years in the wild have toughened your body and quickened your step.'},
     {id:'finesse',      name:'Finesse',      type:'passive', reqLevel:7, row:1, col:2, prereq:['evasion'],
       desc:'Refine your reflexes until dodging becomes second nature.'},
-    {id:'explosiveTrap', name:'Explosive Trap', type:'active', reqLevel:28, row:4, col:0, prereq:['frostTrap'],
+    {id:'explosiveTrap', name:'Explosive Trap', type:'active', reqLevel:28, row:4, col:0, prereq:['frostTrap'], capstone:true, capstoneShare:'survivalist',   // v545: a capstone too (shares the slot with Mirage)
       desc:'Bury a charge that detonates in a burst of fire when enemies step close.'},
     {id:'opportunist',  name:'Opportunist',  type:'passive', reqLevel:21, row:3, col:2, prereq:['finesse'],
       desc:'Every dodge opens a window to punish the enemy that missed you.'},
     {id:'trapMastery',  name:'Trap Mastery', type:'passive', reqLevel:28, row:4, col:1, prereq:['explosiveTrap'],
       desc:'Your traps hit harder, reach farther, and you throw them faster.'},
-    {id:'mirage',       name:'Mirage',       type:'passive', reqLevel:28, row:4, col:2, prereq:['opportunist'], capstone:true,
+    {id:'mirage',       name:'Mirage',       type:'passive', reqLevel:28, row:4, col:2, prereq:['opportunist'], capstone:true, capstoneShare:'survivalist',
       desc:'Every dodge leaves a mirage of you behind to draw the enemy away.'},
   ] },
   // Marksman tree (v58, v79 tweak): mostly unchanged this batch. Two
@@ -263,7 +263,7 @@ const RANGER_SKILL_TREES = {
 // (Mystic's 1st tree), Elementalist second (2nd tree).
 const MYSTIC_SKILL_TREES = {
   // v466: Djinn laid out as a lightning bolt -- it slants down to the left, juts right through the middle, then drops to the Hurricane tip
-  djinn: { name:'Djinn', layout:'sword', straight:true, links:[['lightningArc','staticBuildup'],['lightningChain','nova'],['windrunner','thunderstep'],['thunderstep','stormcall'],['tornado','storm']], nodes:[
+  djinn: { name:'Djinn', layout:'sword', straight:true, links:[['lightningArc','staticBuildup'],['lightningChain','nova'],['stormWard','thunderstep'],['thunderstep','stormcall'],['tornado','storm']], nodes:[
     // v475 layout: Lightning Arc + Static Buildup on top; Lightning Chain under Arc, Nova under Static; then Tornado | Thunderstep | Stormcall
     {id:'lightningArc', name:'Lightning Arc', type:'active', reqLevel:1, row:0, col:3, prereq:[],
       desc:'Loose a crackling arc of lightning at your foes.'},
@@ -273,16 +273,16 @@ const MYSTIC_SKILL_TREES = {
       desc:'Let your lightning leap from enemy to enemy.'},
     {id:'nova', name:'Nova', type:'active', reqLevel:7, row:1, col:3, prereq:['staticBuildup'],
       desc:'Unleash a ring of lightning that charges everything it touches.'},
-    {id:'tornado', name:'Tornado', type:'active', reqLevel:21, row:3, col:1, prereq:['windrunner'],
+    {id:'tornado', name:'Tornado', type:'active', reqLevel:21, row:3, col:1, prereq:['stormWard'],
       desc:'Hurl a howling tornado at your enemy.'},
-    {id:'thunderstep', name:'Thunderstep', type:'passive', reqLevel:14, row:2, col:2, prereq:['lightningChain'],
+    {id:'thunderstep', name:'Stormstrider', type:'passive', reqLevel:14, row:2, col:2, prereq:['lightningChain'],
       desc:'Your dodge becomes a blink of lightning, and your mana flows faster after it.'},
     {id:'stormcall', name:'Stormcall', type:'active', reqLevel:14, row:2, col:3, prereq:['nova'],
       desc:'Mark the ground, then call a bolt of lightning down onto it. Charged enemies conduct the strike to their neighbours.'},
     {id:'storm', name:'Storm', type:'passive', reqLevel:21, row:3, col:2, prereq:['thunderstep'],
       desc:'A small storm gathers above you, sharpening your strikes.'},
-    {id:'windrunner', name:'Windrunner', type:'passive', reqLevel:14, row:2, col:1, prereq:['thunderstep'],
-      desc:'Moving quickly gathers storm energy for your next lightning spell.'},
+    {id:'stormWard', name:'Storm Ward', type:'passive', reqLevel:14, row:2, col:1, prereq:['thunderstep'],   // v564: replaces Windrunner
+      desc:'Wrap yourself in a howling ward of wind that turns blows and missiles aside.'},
     {id:'hurricane', name:'Hurricane', type:'active', reqLevel:28, row:4, col:0, prereq:['tornado','storm'], prereqMode:'or', capstone:true,
       desc:'Conjure a raging hurricane that batters and slows everything nearby.'},
   ] },
@@ -304,14 +304,15 @@ const MYSTIC_SKILL_TREES = {
   // from 3/4 respectively, reading as two parallel columns side by side).
   // No new CSS class or connector-routing logic was needed -- 'shield' is
   // simply a more literal fit for THIS tree's shape than 'cascade' is.
-  elementalist: { name:'Elementalist', layout:'shield', nodes:[
+  // v567: Immolate (left) and Ice Armor (right) meet at a crossing in the empty Lv.14 spot (v568); Mana Shield (up) and Elemental Mastery (down) each branch from it
+  elementalist: { name:'Elementalist', layout:'shield', junction:{row:2, col:1, from:['immolate','iceArmor'], to:['manaShield','elementalMastery']}, nodes:[
     // v269 redo: fire is fast and dangerous (self-damage), cold is slow and heavy and freezes.
     {id:'fireball', name:'Fireball', type:'active', reqLevel:1, row:0, col:0, prereq:[],
       desc:'Hurl quick balls of fire. Each rank adds another ball, up to three.'},
     {id:'iceBolt', name:'Ice Bolt', type:'active', reqLevel:1, row:0, col:2, prereq:[],
       desc:'Hurl a big, slow, heavy bolt of ice that chills and freezes.'},
-    {id:'elementalPolarity', name:'Elemental Polarity', type:'passive', reqLevel:3, row:1, col:1, prereq:['fireball','iceBolt'],
-      desc:'Follow fire with ice, or ice with fire, for bonus damage.'},
+    {id:'manaShield', name:'Mana Shield', type:'passive', reqLevel:7, row:1, col:1, prereq:['immolate','iceArmor'],   // v564: replaces Elemental Polarity; v567: passive, the top arm of the Immolate / Ice Armor crossing; v568: Lv.7 row, between them
+      desc:'Let your mana take the blows meant for your flesh.'},
     {id:'immolate', name:'Immolate', type:'active', reqLevel:3, row:1, col:0, prereq:['fireball'],
       desc:'Set yourself ablaze: hit harder and make fireballs explode, at the cost of your own life.'},
     {id:'iceArmor', name:'Ice Armor', type:'active', reqLevel:3, row:1, col:2, prereq:['iceBolt'],
@@ -320,7 +321,7 @@ const MYSTIC_SKILL_TREES = {
       desc:'Freeze the ground: foes inside are slowed and frozen by the next hit, and you move faster.'},
     {id:'pyroTorrent', name:'Pyro Torrent', type:'active', reqLevel:14, row:2, col:0, prereq:['immolate'],
       desc:'Channel a searing torrent of fire through every enemy in its path.'},
-    {id:'elementalMastery', name:'Elemental Mastery', type:'passive', reqLevel:21, row:3, col:1, prereq:['elementalPolarity'],
+    {id:'elementalMastery', name:'Elemental Mastery', type:'passive', reqLevel:32, row:4, col:1, prereq:['immolate','iceArmor'],   // v566: bottom row beside Meteor and Blizzard; v567: the bottom arm of the crossing (Mana Shield not needed)
       desc:'Master fire and ice: your fire and cold spells hit harder and burn through enemy resistances. At rank 5, Fireball and Ice Bolt explode on hit.'},
     {id:'meteor', name:'Meteor', type:'active', reqLevel:28, row:4, col:0, prereq:['pyroTorrent'], capstone:true, capstoneShare:'elementalist',
       desc:'Call a burning meteor down from the sky. It crashes into your enemies after a moment and leaves the ground ablaze.'},
@@ -446,7 +447,7 @@ function effectiveRank(p, nodeId){
 }
 const MAX_SKILL_RANK = 10, BASE_MAX_RANK = 5, SKILL_RANK_STEP = 0.05;
 const MASTERY_LEVEL_REQ = {6:40, 7:40, 8:40, 9:60, 10:60};   // v306: two gates -- ranks 6-8 at Lv.40, ranks 9-10 at Lv.60
-const CAPSTONE_LEVEL_REQ = 28;
+const CAPSTONE_LEVEL_REQ = 32;   // v566: the bottom row (capstones) unlocks at Lv.32 (was 28)
 const MAX_EFF_RANK = 25;   // v420: gear +skills may push ranks well past 10; formulas keep scaling to here
 const SKILL_BONUS_GEAR_CAP = 5;   // v420: cap removed (display + scaling handle stacked +skills)   // v219: up to +3 from gear (mods roll from item level 30)
 function gearSkillBonus(p, nodeId){
@@ -505,7 +506,7 @@ function hasShieldEquipped(p){ return !!(p && p.equipment && p.equipment.offhand
 const BLOCK_CHANCE_BASE = 0.10, BLOCK_CHANCE_CAP = 0.50;
 // Riposte (Defender, requires Iron Skin): passive, adds extra Block Chance
 // per rank on top of the shield-equipped base, capped at BLOCK_CHANCE_CAP overall.
-const RIPOSTE_BLOCK_PER_RANK = 0.05, RIPOSTE_RAGE_BASE = 4, RIPOSTE_RAGE_MAX_BONUS = 14;
+const RIPOSTE_BLOCK_PER_RANK = 0.0425,   /* v560: was 0.05 */ RIPOSTE_RAGE_BASE = 4, RIPOSTE_RAGE_MAX_BONUS = 14;
 // Defensive Stance (Defender): +5% Block Chance per rank, only while a
 // shield is equipped -- folded into the same overall blockChance() total
 // (and its cap) as the base and Riposte, rather than being added on top
@@ -548,9 +549,9 @@ const SHIELD_DMG_BONUS_PCT = 0.10, SHIELD_ATKSPD_BONUS_PCT = 0.08;
 // Stance/Rally/Assault's ramp use (see takenMult in playerDamage). At Rank
 // 5 specifically, Iron Skin ALSO grants a flat +5% Damage Reduction -- a
 // separate stat in that other (takenMult) category, stacking with it.
-const IRON_SKIN_DEFENSE_PCT_BY_RANK = [0, 0.10, 0.16, 0.20, 0.23, 0.25];
+const IRON_SKIN_DEFENSE_PCT_BY_RANK = [0, 0.085, 0.136, 0.17, 0.195, 0.2125];   // v560: x0.85 (was 0.10/0.16/0.20/0.23/0.25)
 const IRON_SKIN_RANK5_DAMAGE_REDUCTION = 0; // v189: replaced by a life bonus
-const IRON_SKIN_DR_BY_RANK = [0, 0.02, 0.03, 0.04, 0.06, 0.08], IRON_SKIN_BLOCK_PER_RANK = 0.02, IRON_SKIN_RANK5_LIFE = 0.04, DMG_REDUCTION_CAP = 0.50;   // v438: total damage reduction cap 20% -> 50%, with much smaller gear rolls
+const IRON_SKIN_DR_BY_RANK = [0, 0.017, 0.0255, 0.034, 0.051, 0.068],   /* v560: x0.85 (was 0.02-0.08) */ IRON_SKIN_BLOCK_PER_RANK = 0.02, IRON_SKIN_RANK5_LIFE = 0.04, DMG_REDUCTION_CAP = 0.50;   // v438: total damage reduction cap 20% -> 50%, with much smaller gear rolls
 function ironSkinDrAt(r){ r = clamp(r||0, 0, MAX_EFF_RANK); return r<=BASE_MAX_RANK ? (IRON_SKIN_DR_BY_RANK[r] || 0) : IRON_SKIN_DR_BY_RANK[BASE_MAX_RANK] + 0.008*(r-BASE_MAX_RANK); }
 function ironSkinDefensePct(p){
   const rank = clamp((p.skills && effectiveRank(p,'ironSkin')) || 0, 0, MAX_EFF_RANK);
@@ -650,3 +651,18 @@ function mlHpMult(ml){ return 1 + 0.09*ml + 0.0016*ml*ml; }
 // v228: enemy life grows more gently at low monster level (75% at ML1, full by ML13); minions still use mlHpMult
 function mlEnemyHpMult(ml){ const base = mlHpMult(ml); return ml>=13 ? base : base*(0.75 + 0.25*Math.max(0,(ml-1)/12)); }
 function mlDmgMult(ml){ return 1 + 0.012*ml; }
+// v538: area-level scaling. One life curve and one damage curve by monster level, built from what a same-level character
+// is expected to have: PAR_LIFE = typical life (base + a few life rolls), PAR_HIT = a typical weapon hit. Each monster
+// type keeps its own size relative to the old standard formula (life 55+7*lvl, damage 13+2.2*lvl) -- so trolls, golems
+// and brutes still hit harder and soak more -- but the level growth comes only from these curves.
+// An average normal monster (about 0.8 of standard) hits for ~9% of PAR_LIFE and takes ~4-10 par hits to kill.
+function parLife(l){ return 120 + 15*l; }
+function parHit(l){ return 15 + 3.7*l; }
+const MON_DMG_PAR = 0.1125;                         // standard monster hit = 11.25% of par life (x0.8 for an average normal = 9%)
+function monStdDmg(ml){ return MON_DMG_PAR*parLife(Math.max(1, ml)); }
+const LATE_LIFE_LV = 40, LATE_LIFE_MULT = 1.25, FROSTHOLD_LIFE_MULT = 1.15;   // v559: from the Frosthold Tower and Dungeon on (monster level 40+), monsters have a quarter more life
+function monStdLife(ml){ const l = Math.max(1, ml); return parHit(l)*(4.5 + 0.1*l)/0.7 * (l >= LATE_LIFE_LV ? LATE_LIFE_MULT : 1); }
+function oldStdLife(d){ return 55 + 7*Math.max(1, d||1); }
+function oldStdDmg(d){ return 13 + 2.2*Math.max(1, d||1); }
+// traps and hazards written in the old numbers keep the same share of a standard monster's hit
+function hazardScale(d){ return monStdDmg(d)/(oldStdDmg(d)*ENEMY_DMG_MULT*mlDmgMult(d)); }
