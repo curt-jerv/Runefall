@@ -423,7 +423,8 @@ function itemCardHtml(item, other){
   if(rc) h += '<div class="icReq" style="color:#e8a24a">('+rc+' Only)</div>';
   if(item.levelReq && item.levelReq>1 && !item.unidentified) h += '<div class="icReq" style="color:#e8c44a">Requires Lv.'+item.levelReq+'</div>';
   { const rq = itemAttrReq(item), pl = (typeof game!=='undefined' && game && game.player) || null;   // v563: Strength / Dexterity / Intelligence needed
-    if(rq) h += '<div class="icReq" style="color:'+(pl && pl.attrs && !itemReqMet(pl, item) ? '#e05a4a' : '#e8c44a')+'">'+itemReqText(item)+(pl && pl.attrs && !itemReqMet(pl, item) ? ' &middot; its bonuses are off until you have it' : '')+'</div>'; }
+    const short = pl && pl.attrs && !itemReqMet(pl, item), worn = short && pl.equipment && Object.values(pl.equipment).includes(item);   // v570: the 'off' note only on gear you are wearing
+    if(rq) h += '<div class="icReq" style="color:'+(short ? '#e05a4a' : '#e8c44a')+'">'+itemReqText(item)+(worn ? ' &middot; its bonuses are off until you have it' : '')+'</div>'; }
   if(item.forgeDoubled) h += '<div class="icReq" style="color:#7fe07f">(doubled)</div>';
   if(item.crimson) h += '<div class="icReq" style="color:#d4344f">Obsidian-forged &middot; crimson</div>';
   if(item.unidentified) return h+'<div style="color:#b8a878;">Unidentified &mdash; its modifiers are revealed when you buy it.</div>';
