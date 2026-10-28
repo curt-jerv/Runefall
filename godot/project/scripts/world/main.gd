@@ -115,27 +115,33 @@ func _on_shot(from: Vector3, dir: Vector3) -> void:
 
 
 func _build_environment() -> void:
+	# ART_BIBLE section 4: overcast cool sky light, one low warm-neutral key, fog hiding the far edge,
+	# slight desaturation and a brown lift; fire and magic are the only warm, bright things.
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("#14161a")
+	env.background_color = Color("#101216")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("#5d6878")
-	env.ambient_light_energy = 0.55
+	env.ambient_light_color = Color("#4a5566")
+	env.ambient_light_energy = 0.7
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.05
 	env.fog_enabled = true
-	env.fog_light_color = Color("#2a2e34")
-	env.fog_density = 0.03
+	env.fog_light_color = Color("#1c1f24")
+	env.fog_density = 0.035
+	env.fog_sky_affect = 1.0
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 0.8
-	env.adjustment_contrast = 1.06
+	env.adjustment_brightness = 0.95
+	env.adjustment_saturation = 0.78
+	env.adjustment_contrast = 1.1
 	env.glow_enabled = true
-	env.glow_intensity = 0.6
+	env.glow_intensity = 0.7
+	env.glow_hdr_threshold = 0.9
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
 	var sun := DirectionalLight3D.new()
-	sun.light_color = Color("#d9c7a8")
-	sun.light_energy = 0.9
+	sun.light_color = Color("#b8b0a0")
+	sun.light_energy = 0.8
 	sun.shadow_enabled = true
 	sun.rotation_degrees = Vector3(-50, 150, 0)   # from behind the camera's left, so shadows fall away up-screen
 	add_child(sun)
@@ -153,7 +159,7 @@ func _build_ground() -> void:
 	var mi := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(400, 400)
-	plane.material = _mat("#4a3f2f")
+	plane.material = _mat("#3b3226")
 	mi.mesh = plane
 	ground.add_child(mi)
 	var col := CollisionShape3D.new()
@@ -190,11 +196,16 @@ func _build_ground() -> void:
 		s.position = p
 		s.rotation_degrees = Vector3(rng.randf_range(-20, 20), rng.randf_range(0, 360), 0)
 		add_child(s)
+	for i in 26:
+		var tp := Vector3(rng.randf_range(-45, 45), 0, rng.randf_range(-45, 45))
+		if tp.length() < 9 or (tp - Vector3(12, 0, -12)).length() < 7:
+			continue
+		_dead_tree(tp, rng)
 	# campfire: the warm light the bible asks for
 	var fire := OmniLight3D.new()
 	fire.light_color = Color("#ff8a3d")
-	fire.light_energy = 2.2
-	fire.omni_range = 6.5
+	fire.light_energy = 3.2
+	fire.omni_range = 8.0
 	fire.shadow_enabled = true
 	fire.position = Vector3(-4, 0.8, 3)
 	add_child(fire)
@@ -237,6 +248,37 @@ func _build_ground() -> void:
 	beacon.omni_range = 14.0
 	beacon.position = tower_top + Vector3.UP * 0.8
 	add_child(beacon)
+
+
+func _dead_tree(at: Vector3, rng: RandomNumberGenerator) -> void:
+	var bark := _mat("#3a3128")
+	var h := rng.randf_range(4.0, 7.5)
+	var trunk := MeshInstance3D.new()
+	var tm := CylinderMesh.new()
+	tm.top_radius = 0.08
+	tm.bottom_radius = rng.randf_range(0.22, 0.34)
+	tm.height = h
+	tm.radial_segments = 6
+	tm.material = bark
+	trunk.mesh = tm
+	trunk.position = at + Vector3(0, h / 2, 0)
+	trunk.rotation_degrees = Vector3(rng.randf_range(-6, 6), 0, rng.randf_range(-6, 6))
+	add_child(trunk)
+	for b in rng.randi_range(2, 4):
+		var br := MeshInstance3D.new()
+		var bm := CylinderMesh.new()
+		var bl := rng.randf_range(1.2, 2.4)
+		bm.top_radius = 0.03
+		bm.bottom_radius = 0.09
+		bm.height = bl
+		bm.radial_segments = 5
+		bm.material = bark
+		br.mesh = bm
+		var y := rng.randf_range(h * 0.45, h * 0.85)
+		var ang := rng.randf_range(0, TAU)
+		br.position = at + Vector3(cos(ang) * bl * 0.35, y, sin(ang) * bl * 0.35)
+		br.rotation = Vector3(0, -ang, deg_to_rad(rng.randf_range(40, 65)))
+		add_child(br)
 
 
 func _build_hud() -> void:
