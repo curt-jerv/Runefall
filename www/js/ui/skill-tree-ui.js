@@ -1537,8 +1537,19 @@ function drawShieldConnectors(tree){
     });
   }
   let linesHtml = '';
+  // v567: a crossing -- the 'from' nodes run into one point (an empty grid spot) and the 'to' nodes branch out of it
+  const J = tree.junction, jEl = J && wrap.querySelector('.treeJunction');
+  if(J && jEl){
+    const jr = jEl.getBoundingClientRect(), jx = jr.left+jr.width/2-wrapRect.left, jy = jr.top+jr.height/2-wrapRect.top;
+    const sk = game.player.skills||{}, allFrom = J.from.every(id=>(sk[id]||0)>0);
+    const cen = id=>{ const el = wrap.querySelector('.treeNode[data-nodeid="'+id+'"]'); if(!el) return null; const r = el.getBoundingClientRect(); return [r.left+r.width/2-wrapRect.left, r.top+r.height/2-wrapRect.top]; };
+    J.from.forEach(id=>{ const c = cen(id); if(c) linesHtml += '<line class="'+((sk[id]||0)>0?'lit':'')+'" x1="'+c[0]+'" y1="'+c[1]+'" x2="'+jx+'" y2="'+jy+'"></line>'; });
+    J.to.forEach(id=>{ const c = cen(id); if(c) linesHtml += '<line class="'+(allFrom?'lit':'')+'" x1="'+jx+'" y1="'+jy+'" x2="'+c[0]+'" y2="'+c[1]+'"></line>'; });
+    linesHtml += '<polygon class="'+(allFrom?'lit':'')+'" points="'+jx+','+(jy-7)+' '+(jx+7)+','+jy+' '+jx+','+(jy+7)+' '+(jx-7)+','+jy+'" style="fill:#1a140d"></polygon>';
+  }
   tree.nodes.forEach(node=>{
     (node.prereq||[]).forEach(reqId=>{
+      if(J && J.to.indexOf(node.id)>=0 && J.from.indexOf(reqId)>=0) return;   // drawn through the crossing above
       const fromEl = wrap.querySelector('.treeNode[data-nodeid="'+reqId+'"]');
       const toEl = wrap.querySelector('.treeNode[data-nodeid="'+node.id+'"]');
       if(!fromEl || !toEl) return;
@@ -1610,7 +1621,7 @@ function renderSkillTree(){
     const gridClass = (tree.layout==='sword' || tree.layout==='cascade') ? 'treeSwordGrid' : 'treeShieldGrid';
     treeColsEl.innerHTML = '<div class="treeShieldWrap" id="treeShieldWrap">'+
       '<svg class="treeShieldLines" id="treeShieldLines"></svg>'+
-      '<div class="'+gridClass+'">'+nodesHtml+'</div>'+
+      '<div class="'+gridClass+'">'+nodesHtml+(tree.junction ? '<div class="treeJunction" style="grid-column:'+(tree.junction.col+1)+';grid-row:'+(tree.junction.row+1)+';"></div>' : '')+'</div>'+
     '</div>';
     drawShieldConnectors(tree);
     treeColsEl.querySelectorAll('.treeNode.iconNode').forEach(el=>{

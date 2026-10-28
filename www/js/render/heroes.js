@@ -783,7 +783,6 @@ function drawMystic(p){
   drawShadow(iso.x, iso.y, 15*s, 7*s);
   if((p.staticStacks||0)>0 || p.windReady) drawDjinnFx(p, iso, s);
   if(p.iceArmorT>0) drawIceArmorAura(p, iso, s);
-  if(p.stormWardT>0) drawStormWardAura(p, iso, s); if(p.manaShieldOn) drawManaShieldAura(p, iso, s);   // v564
 
   if(p.guardianT>0) drawGuardianAura(p, iso, s);
 

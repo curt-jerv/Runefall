@@ -331,7 +331,10 @@ function newGame(saved, cls){
         if(rf>0){ player.skillPoints = (player.skillPoints||0) + rf; setTimeout(()=>{ try{ showMsg('Explosive Trap is now a capstone -- '+rf+' skill points refunded', 5, '#ffd27a'); }catch(e){} }, 3400); }
       }
     }
-    if(!saved.skillsV566){   // v566: bottom row needs Lv.32, Mana Shield moved and needs Immolate AND Ice Armor -- refund any rank that no longer fits (repeat so children of refunded nodes go too)
+    if(!saved.skillsV567){   // v567: Storm Ward and Mana Shield are passives -- take them off any skill button
+      for(const sk of Object.keys(player.skillSlots||{})) if(['stormWard','manaShield'].indexOf(player.skillSlots[sk])>=0) player.skillSlots[sk] = (sk==='main' ? 'strike' : null);
+    }
+    if(!saved.skillsV566 || !saved.skillsV567){   // v566: bottom row needs Lv.32, Mana Shield moved and needs Immolate AND Ice Armor -- refund any rank that no longer fits (repeat so children of refunded nodes go too)
       const TR = treesForClass(player.cls); let rf = 0, again = true;
       while(again){ again = false;
         for(const k of Object.keys(TR)) for(const n of TR[k].nodes){ const r = player.skills[n.id]||0;

@@ -1926,7 +1926,6 @@ function updateStep(dt){
       g.particles.push({type:'burst', x:p.x, y:p.y, t:0.4, max:0.4, color:'#ff5a1a'});
     }
   }
-  mysticDefenseTick(g, p, dt);   // v564 Storm Ward / Mana Shield
   if(p.immolateT>0){
     p.immolateT -= dt;
     if(p.hp <= p.maxHp*IMMOLATE_MIN_HP){ p.immolateT = 0; showMsg('The flames die down', 0.8); }

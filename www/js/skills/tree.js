@@ -281,7 +281,7 @@ const MYSTIC_SKILL_TREES = {
       desc:'Mark the ground, then call a bolt of lightning down onto it. Charged enemies conduct the strike to their neighbours.'},
     {id:'storm', name:'Storm', type:'passive', reqLevel:21, row:3, col:2, prereq:['thunderstep'],
       desc:'A small storm gathers above you, sharpening your strikes.'},
-    {id:'stormWard', name:'Storm Ward', type:'active', reqLevel:14, row:2, col:1, prereq:['thunderstep'],   // v564: replaces Windrunner
+    {id:'stormWard', name:'Storm Ward', type:'passive', reqLevel:14, row:2, col:1, prereq:['thunderstep'],   // v564: replaces Windrunner
       desc:'Wrap yourself in a howling ward of wind that turns blows and missiles aside.'},
     {id:'hurricane', name:'Hurricane', type:'active', reqLevel:28, row:4, col:0, prereq:['tornado','storm'], prereqMode:'or', capstone:true,
       desc:'Conjure a raging hurricane that batters and slows everything nearby.'},
@@ -304,13 +304,14 @@ const MYSTIC_SKILL_TREES = {
   // from 3/4 respectively, reading as two parallel columns side by side).
   // No new CSS class or connector-routing logic was needed -- 'shield' is
   // simply a more literal fit for THIS tree's shape than 'cascade' is.
-  elementalist: { name:'Elementalist', layout:'shield', nodes:[
+  // v567: Immolate (left) and Ice Armor (right) meet at a crossing in the empty Lv.21 spot; Mana Shield (up) and Elemental Mastery (down) each branch from it
+  elementalist: { name:'Elementalist', layout:'shield', junction:{row:3, col:1, from:['immolate','iceArmor'], to:['manaShield','elementalMastery']}, nodes:[
     // v269 redo: fire is fast and dangerous (self-damage), cold is slow and heavy and freezes.
     {id:'fireball', name:'Fireball', type:'active', reqLevel:1, row:0, col:0, prereq:[],
       desc:'Hurl quick balls of fire. Each rank adds another ball, up to three.'},
     {id:'iceBolt', name:'Ice Bolt', type:'active', reqLevel:1, row:0, col:2, prereq:[],
       desc:'Hurl a big, slow, heavy bolt of ice that chills and freezes.'},
-    {id:'manaShield', name:'Mana Shield', type:'active', reqLevel:21, row:3, col:1, prereq:['immolate','iceArmor'],   // v564: replaces Elemental Polarity; v566: Lv.21 spot, needs Immolate AND Ice Armor, leads to Elemental Mastery
+    {id:'manaShield', name:'Mana Shield', type:'passive', reqLevel:14, row:2, col:1, prereq:['immolate','iceArmor'],   // v564: replaces Elemental Polarity; v567: passive, Lv.14 row, the top arm of the Immolate / Ice Armor crossing
       desc:'Let your mana take the blows meant for your flesh.'},
     {id:'immolate', name:'Immolate', type:'active', reqLevel:3, row:1, col:0, prereq:['fireball'],
       desc:'Set yourself ablaze: hit harder and make fireballs explode, at the cost of your own life.'},
@@ -320,7 +321,7 @@ const MYSTIC_SKILL_TREES = {
       desc:'Freeze the ground: foes inside are slowed and frozen by the next hit, and you move faster.'},
     {id:'pyroTorrent', name:'Pyro Torrent', type:'active', reqLevel:14, row:2, col:0, prereq:['immolate'],
       desc:'Channel a searing torrent of fire through every enemy in its path.'},
-    {id:'elementalMastery', name:'Elemental Mastery', type:'passive', reqLevel:32, row:4, col:1, prereq:['manaShield'],   // v566: bottom row beside Meteor and Blizzard
+    {id:'elementalMastery', name:'Elemental Mastery', type:'passive', reqLevel:32, row:4, col:1, prereq:['immolate','iceArmor'],   // v566: bottom row beside Meteor and Blizzard; v567: the bottom arm of the crossing (Mana Shield not needed)
       desc:'Master fire and ice: your fire and cold spells hit harder and burn through enemy resistances. At rank 5, Fireball and Ice Bolt explode on hit.'},
     {id:'meteor', name:'Meteor', type:'active', reqLevel:28, row:4, col:0, prereq:['pyroTorrent'], capstone:true, capstoneShare:'elementalist',
       desc:'Call a burning meteor down from the sky. It crashes into your enemies after a moment and leaves the ground ablaze.'},
