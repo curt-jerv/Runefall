@@ -304,14 +304,14 @@ const MYSTIC_SKILL_TREES = {
   // from 3/4 respectively, reading as two parallel columns side by side).
   // No new CSS class or connector-routing logic was needed -- 'shield' is
   // simply a more literal fit for THIS tree's shape than 'cascade' is.
-  // v567: Immolate (left) and Ice Armor (right) meet at a crossing in the empty Lv.21 spot; Mana Shield (up) and Elemental Mastery (down) each branch from it
-  elementalist: { name:'Elementalist', layout:'shield', junction:{row:3, col:1, from:['immolate','iceArmor'], to:['manaShield','elementalMastery']}, nodes:[
+  // v567: Immolate (left) and Ice Armor (right) meet at a crossing in the empty Lv.14 spot (v568); Mana Shield (up) and Elemental Mastery (down) each branch from it
+  elementalist: { name:'Elementalist', layout:'shield', junction:{row:2, col:1, from:['immolate','iceArmor'], to:['manaShield','elementalMastery']}, nodes:[
     // v269 redo: fire is fast and dangerous (self-damage), cold is slow and heavy and freezes.
     {id:'fireball', name:'Fireball', type:'active', reqLevel:1, row:0, col:0, prereq:[],
       desc:'Hurl quick balls of fire. Each rank adds another ball, up to three.'},
     {id:'iceBolt', name:'Ice Bolt', type:'active', reqLevel:1, row:0, col:2, prereq:[],
       desc:'Hurl a big, slow, heavy bolt of ice that chills and freezes.'},
-    {id:'manaShield', name:'Mana Shield', type:'passive', reqLevel:14, row:2, col:1, prereq:['immolate','iceArmor'],   // v564: replaces Elemental Polarity; v567: passive, Lv.14 row, the top arm of the Immolate / Ice Armor crossing
+    {id:'manaShield', name:'Mana Shield', type:'passive', reqLevel:7, row:1, col:1, prereq:['immolate','iceArmor'],   // v564: replaces Elemental Polarity; v567: passive, the top arm of the Immolate / Ice Armor crossing; v568: Lv.7 row, between them
       desc:'Let your mana take the blows meant for your flesh.'},
     {id:'immolate', name:'Immolate', type:'active', reqLevel:3, row:1, col:0, prereq:['fireball'],
       desc:'Set yourself ablaze: hit harder and make fireballs explode, at the cost of your own life.'},

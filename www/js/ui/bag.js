@@ -632,7 +632,7 @@ function recalcStats(p){
   // the hit" roll gear-based Evasion already grants, per spec ("+dodge%").
   // (v105) gear Evasion % is gone -- gear rolls Dexterity, and every 10
   // Dexterity on gear = +1% Evasion (dodge).
-  p.dexDodge = Math.min(DEX_DODGE_CAP, dexEvasionPct(p.dexterity, p.level||1));   // measured against your own level so it doesn't jump in town   // v563: Dexterity gives a small dodge chance again
+  p.dexDodge = dexEvasionTapered(p.dexterity, p.level||1);   // measured against your own level so it doesn't jump in town   // v563: Dexterity gives a small dodge chance again
   p.evasion = Math.min(60, p.dexDodge + pb.eva); p.evaPb = pb.eva||0;
   if(p.coffeeT>0) atkSpeedMod *= COFFEE_ATKSPD_MULT;
   p.atkCdMax = BASE_ATK_CD * atkSpeedMod;
@@ -661,6 +661,9 @@ function projectileSpeedMult(p){ return 1 + clamp((p&&p.projectileSpeedPct)||0, 
 const EVASION_CAP = 0.6;
 // (v250) Evasion from Dex is a diminishing ratio against the area's monster level (like D2 defence vs attack rating).
 function dexEvasionPct(dex, ml){ const d = Math.max(0, dex||0); return Math.min(45, Math.round(1000*d/(d + 25*Math.max(1,ml||1) + 100))/10); }
+// v568: Dexterity's evasion chance has diminishing returns -- full value up to DEX_EVA_SOFT %, then only DEX_EVA_TAPER of the rest, capped at DEX_DODGE_CAP
+function dexEvasionTapered(dex, lvl){ const raw = dexEvasionPct(dex, lvl); return Math.round(10*Math.min(DEX_DODGE_CAP, raw <= DEX_EVA_SOFT ? raw : DEX_EVA_SOFT + (raw-DEX_EVA_SOFT)*DEX_EVA_TAPER))/10; }
 function gearEvasionNow(p){ return Math.min(60, (p.evaPb||0) + (p.dexDodge||0)); }   // v563: Dexterity feeds Defense and a little dodge
-function evasionChance(p){ const base = clamp(gearEvasionNow(p)/100 + evasionSkillChance(p), 0, EVASION_CAP); return (p.vanishEvaT>0 && typeof VANISH_EVA!=='undefined') ? Math.max(base, VANISH_EVA) : base; }
+function evasionChance(p){ const sw = (p && p.cls==='mystic' && p.skills && typeof stormWardChance==='function' && (effectiveRank(p,'stormWard')||0)>0) ? stormWardChance(effectiveRank(p,'stormWard')) : 0;   // v568: Storm Ward adds to evasion chance (same 60% cap)
+  const base = clamp(gearEvasionNow(p)/100 + evasionSkillChance(p) + sw, 0, EVASION_CAP); return (p.vanishEvaT>0 && typeof VANISH_EVA!=='undefined') ? Math.max(base, VANISH_EVA) : base; }
 

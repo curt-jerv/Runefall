@@ -43,7 +43,7 @@ const DEF_AR_BASE = 40, DEF_AR_PER_ML = 25;   // enemy Attack Rating by monster 
 const DEF_HIT_MIN = 0.25, DEF_HIT_MAX = 0.90;
 const DEF_PER_DEX = 1.0;   // v563: was 1.5 when only gear gave Dexterity
 // v563 what the attributes do (balance pass still to come)
-const LIFE_PER_LEVEL = 8, LIFE_PER_STR = 2, STR_PER_DMG_PCT = 5, INT_PER_DMG_PCT = 5, DEX_PER_BOW_PCT = 5, MANA_BASE = 20, MANA_PER_INT = 1.3, STAMINA_PER_DEX = 2/3, DEX_DODGE_CAP = 20;               // each Dexterity point adds Defense
+const LIFE_PER_LEVEL = 8, LIFE_PER_STR = 2, STR_PER_DMG_PCT = 5, INT_PER_DMG_PCT = 5, DEX_PER_BOW_PCT = 5, MANA_BASE = 20, MANA_PER_INT = 1.3, STAMINA_PER_DEX = 2/3, DEX_DODGE_CAP = 15, DEX_EVA_SOFT = 8, DEX_EVA_TAPER = 0.4;   // v568: Dexterity's evasion tapers off past 8% (only 40% of the rest counts), max 15%               // each Dexterity point adds Defense
 function enemyAttackRating(ml){ return DEF_AR_BASE + DEF_AR_PER_ML*Math.max(1, ml||1); }
 const IRON_STILL_PER_S = 0.10, IRON_STILL_MAX = 5;
 function ironStillMult(p){ return (p && p.cls==='warrior' && p.skills && (p.skills.ironSkin||0)>0 && p.stillT>0) ? 1 + IRON_STILL_PER_S*Math.floor(Math.min(IRON_STILL_MAX, p.stillT)) : 1; }

@@ -180,9 +180,8 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
         } }
       return;
     } }
-  if(stormWardEvade(g, p, srcEnemy)) return;   // v564 Storm Ward: melee, arrows and spells from monsters may be turned aside
   if(Math.random()<evasionChance(p)){
-    showMsg('Dodged!', 0.5);
+    showMsg('Evaded!', 0.5);
     g.particles.push({type:'burst', x:p.x, y:p.y, t:0.25, max:0.25, color:'#9ae6b4'});
     return;
   }
