@@ -1,0 +1,6430 @@
+{
+ "trees": {
+  "defender": {
+   "name": "Defender",
+   "layout": "sword",
+   "straight": true,
+   "links": [
+    [
+     "ironSkin",
+     "unbreakable"
+    ],
+    [
+     "unbreakable",
+     "shieldBash"
+    ]
+   ],
+   "nodes": [
+    {
+     "id": "ironSkin",
+     "name": "Iron Skin",
+     "type": "passive",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 0,
+     "prereq": [],
+     "desc": "Your skin hardens like stone, turning aside blows that would fell lesser warriors."
+    },
+    {
+     "id": "unbreakable",
+     "name": "Unbreakable",
+     "type": "passive",
+     "reqLevel": 4,
+     "row": 0,
+     "col": 2,
+     "prereq": [],
+     "desc": "Pain feeds you, and when you are nearly dead you simply refuse to fall."
+    },
+    {
+     "id": "shieldBash",
+     "name": "Shield Slam",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 4,
+     "prereq": [],
+     "desc": "Slam your shield into the foes in front of you."
+    },
+    {
+     "id": "riposte",
+     "name": "Riposte",
+     "type": "passive",
+     "reqLevel": 3,
+     "row": 1,
+     "col": 0,
+     "prereq": [
+      "ironSkin"
+     ],
+     "desc": "Turn near-misses into solid blocks and answer every one with steel."
+    },
+    {
+     "id": "shieldThrow",
+     "name": "Shield Throw",
+     "type": "active",
+     "reqLevel": 5,
+     "row": 1,
+     "col": 4,
+     "prereq": [
+      "shieldBash"
+     ],
+     "desc": "Hurl your shield through the enemy ranks and let it fly back to your hand."
+    },
+    {
+     "id": "seismicSlam",
+     "name": "Seismic Slam",
+     "type": "active",
+     "reqLevel": 7,
+     "row": 2,
+     "col": 4,
+     "prereq": [
+      "shieldThrow"
+     ],
+     "desc": "Slam the earth with your shield and stagger everything around you."
+    },
+    {
+     "id": "mirrorSteel",
+     "name": "Mirror of Steel",
+     "type": "active",
+     "reqLevel": 7,
+     "row": 2,
+     "col": 0,
+     "prereq": [
+      "riposte"
+     ],
+     "desc": "Raise your shield and turn every blow back on its source."
+    },
+    {
+     "id": "bulwark",
+     "name": "Bulwark",
+     "type": "active",
+     "reqLevel": 9,
+     "row": 3,
+     "col": 1,
+     "prereq": [
+      "mirrorSteel"
+     ],
+     "desc": "Plant your feet, soak up the blows, then release them in one thundering shockwave."
+    },
+    {
+     "id": "seismicAnchor",
+     "name": "Seismic Anchor",
+     "type": "active",
+     "reqLevel": 9,
+     "row": 3,
+     "col": 3,
+     "prereq": [
+      "seismicSlam"
+     ],
+     "desc": "Tear the ground open and drag your foes into the rift."
+    },
+    {
+     "id": "guardian",
+     "name": "Juggernaut",
+     "type": "active",
+     "reqLevel": 12,
+     "row": 4,
+     "col": 2,
+     "prereq": [
+      "bulwark",
+      "seismicAnchor"
+     ],
+     "prereqMode": "or",
+     "capstone": true,
+     "desc": "Roar, fill your Rage and charge unstoppable until the Rage runs dry."
+    }
+   ]
+  },
+  "berserker": {
+   "name": "Berserker",
+   "layout": "sword",
+   "straight": true,
+   "nodes": [
+    {
+     "id": "leap",
+     "name": "Charge",
+     "type": "active",
+     "reqLevel": 2,
+     "row": 1,
+     "col": 1,
+     "prereq": [
+      "reave"
+     ],
+     "desc": "Charge across the battlefield and crash into your foes."
+    },
+    {
+     "id": "rampage",
+     "name": "Rampage",
+     "type": "passive",
+     "reqLevel": 4,
+     "row": 1,
+     "col": 3,
+     "prereq": [
+      "reave"
+     ],
+     "desc": "Every kill feeds the slaughter."
+    },
+    {
+     "id": "reave",
+     "name": "Reave",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 2,
+     "prereq": [],
+     "desc": "A vicious, tearing blow that leaves the wound bleeding."
+    },
+    {
+     "id": "weaponsSpecialist",
+     "name": "Weapon Specialization",
+     "type": "passive",
+     "reqLevel": 2,
+     "row": 1,
+     "col": 2,
+     "prereq": [
+      "reave"
+     ],
+     "desc": "Master heavier blades, learning to wield greatswords and twin swords alike."
+    },
+    {
+     "id": "bloodlust",
+     "name": "Bloodlust",
+     "type": "passive",
+     "reqLevel": 3,
+     "row": 2,
+     "col": 2,
+     "prereq": [
+      "weaponsSpecialist"
+     ],
+     "desc": "Drink deep of every wound you deal."
+    },
+    {
+     "id": "cleave",
+     "name": "Cleave",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 3,
+     "col": 0,
+     "prereq": [
+      "whirlwind"
+     ],
+     "desc": "Sweep a heavy blade through the enemy ranks in one wide arc."
+    },
+    {
+     "id": "whirlwind",
+     "name": "Whirlwind",
+     "type": "active",
+     "reqLevel": 5,
+     "row": 3,
+     "col": 2,
+     "prereq": [
+      "bloodlust"
+     ],
+     "desc": "Become a whirling storm of steel."
+    },
+    {
+     "id": "fury",
+     "name": "Fury",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 3,
+     "col": 4,
+     "prereq": [
+      "whirlwind"
+     ],
+     "desc": "Dance between twin blades in a relentless flurry of strikes."
+    },
+    {
+     "id": "assault",
+     "name": "Assault",
+     "type": "active",
+     "reqLevel": 10,
+     "row": 4,
+     "col": 2,
+     "prereq": [
+      "whirlwind"
+     ],
+     "capstone": true,
+     "desc": "Fly into a berserker rage and end it in a burst of spent fury."
+    }
+   ]
+  },
+  "templar": {
+   "name": "Templar",
+   "layout": "sword",
+   "straight": true,
+   "links": [
+    [
+     "sacredWeapon",
+     "auraOfRetribution"
+    ]
+   ],
+   "nodes": [
+    {
+     "id": "vengeance",
+     "name": "Vengeance",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 2,
+     "prereq": [],
+     "desc": "Strike with holy fire and drive your followers into a righteous frenzy."
+    },
+    {
+     "id": "sacredWeapon",
+     "name": "Sacred Weapon",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 1,
+     "prereq": [
+      "vengeance"
+     ],
+     "desc": "Your blade is consecrated: every fourth Vengeance erupts in holy flame."
+    },
+    {
+     "id": "auraOfRetribution",
+     "name": "Aura of Retribution",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 3,
+     "prereq": [
+      "vengeance"
+     ],
+     "desc": "Those who strike you are struck in turn by your faith."
+    },
+    {
+     "id": "smite",
+     "name": "Smite",
+     "type": "active",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 0,
+     "prereq": [
+      "sacredWeapon"
+     ],
+     "desc": "Hurl a bolt of holy light that strikes the first foe and mends your allies."
+    },
+    {
+     "id": "banner",
+     "name": "Battle Standard",
+     "type": "active",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 2,
+     "prereq": [
+      "squire"
+     ],
+     "desc": "Plant a battle standard that rallies you and your followers."
+    },
+    {
+     "id": "squire",
+     "name": "Commander",
+     "type": "passive",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 2,
+     "prereq": [
+      "smite",
+      "consecrate",
+      "sacredWeapon",
+      "auraOfRetribution"
+     ],
+     "prereqMode": "or",
+     "desc": "Call squires to fight at your side. Most of your damage comes from them."
+    },
+    {
+     "id": "bannerWar",
+     "name": "Standard of War",
+     "type": "passive",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 0,
+     "prereq": [
+      "banner"
+     ],
+     "desc": "War standards rouse you and your followers to greater damage."
+    },
+    {
+     "id": "consecrate",
+     "name": "Consecrate",
+     "type": "active",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 4,
+     "prereq": [
+      "auraOfRetribution"
+     ],
+     "desc": "Sanctify the ground beneath you, burning foes and empowering your followers."
+    },
+    {
+     "id": "bannerAegis",
+     "name": "Standard of Aegis",
+     "type": "passive",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 4,
+     "prereq": [
+      "banner"
+     ],
+     "desc": "Aegis standards shield and mend you and your followers."
+    },
+    {
+     "id": "judgment",
+     "name": "Judgment",
+     "type": "active",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 2,
+     "prereq": [
+      "banner"
+     ],
+     "capstone": true,
+     "desc": "Call down pillars of holy fire upon your foes."
+    }
+   ]
+  },
+  "survivalist": {
+   "name": "Survivalist",
+   "layout": "shield",
+   "nodes": [
+    {
+     "id": "poisonTrap",
+     "name": "Poison Trap",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 0,
+     "prereq": [],
+     "desc": "Lay a venomous trap that blankets the area in toxic fumes."
+    },
+    {
+     "id": "survivalFieldDress",
+     "name": "Field Dress",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 1,
+     "prereq": [],
+     "desc": "Bind your wounds on the move, and patch up your companions too."
+    },
+    {
+     "id": "evasion",
+     "name": "Evasion",
+     "type": "passive",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 2,
+     "prereq": [],
+     "desc": "Move like smoke, slipping past blows meant to end you."
+    },
+    {
+     "id": "frostTrap",
+     "name": "Frost Trap",
+     "type": "active",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 0,
+     "prereq": [
+      "poisonTrap"
+     ],
+     "desc": "Set a trap of biting frost to lock your enemies in place."
+    },
+    {
+     "id": "survivalInstinct",
+     "name": "Predator's Instinct",
+     "type": "passive",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 1,
+     "prereq": [
+      "survivalFieldDress"
+     ],
+     "desc": "Years in the wild have toughened your body and sharpened your killing instinct."
+    },
+    {
+     "id": "finesse",
+     "name": "Finesse",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 2,
+     "prereq": [
+      "evasion"
+     ],
+     "desc": "Refine your reflexes until dodging becomes second nature."
+    },
+    {
+     "id": "explosiveTrap",
+     "name": "Explosive Trap",
+     "type": "active",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 0,
+     "prereq": [
+      "frostTrap"
+     ],
+     "capstone": true,
+     "capstoneShare": "survivalist",
+     "desc": "Bury a charge that bursts into flame when enemies step close."
+    },
+    {
+     "id": "opportunist",
+     "name": "Opportunist",
+     "type": "passive",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 2,
+     "prereq": [
+      "finesse"
+     ],
+     "desc": "Every dodge opens a window to punish the enemy that missed you."
+    },
+    {
+     "id": "trapMastery",
+     "name": "Trap Mastery",
+     "type": "passive",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 1,
+     "prereq": [
+      "explosiveTrap"
+     ],
+     "desc": "Your traps hit harder, reach farther, and you throw them faster."
+    },
+    {
+     "id": "mirage",
+     "name": "Mirage",
+     "type": "passive",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 2,
+     "prereq": [
+      "opportunist"
+     ],
+     "capstone": true,
+     "capstoneShare": "survivalist",
+     "desc": "Every dodge leaves a mirage behind to draw the enemy away."
+    }
+   ]
+  },
+  "marksman": {
+   "name": "Marksman",
+   "layout": "shield",
+   "nodes": [
+    {
+     "id": "bowExpert",
+     "name": "Bow Expert",
+     "type": "passive",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 1,
+     "prereq": [],
+     "desc": "Master the bow until every arrow flies true."
+    },
+    {
+     "id": "rapidShot",
+     "name": "Rapid Shot",
+     "type": "active",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 0,
+     "prereq": [
+      "bowExpert"
+     ],
+     "desc": "Loose a rapid volley before the enemy can react."
+    },
+    {
+     "id": "multiShot",
+     "name": "Multi Shot",
+     "type": "active",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 1,
+     "prereq": [
+      "bowExpert"
+     ],
+     "desc": "Split your aim and loose a fan of arrows in a single motion."
+    },
+    {
+     "id": "splinterShot",
+     "name": "Splinter Shot",
+     "type": "active",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 2,
+     "prereq": [
+      "bowExpert"
+     ],
+     "desc": "An arrow that bursts on impact, its splinters seeking out the foes nearby."
+    },
+    {
+     "id": "favouredFoe",
+     "name": "Favoured Foe",
+     "type": "passive",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 0,
+     "prereq": [
+      "rapidShot"
+     ],
+     "desc": "Your eye finds the weak spot."
+    },
+    {
+     "id": "steadyBreathing",
+     "name": "Steady Breathing",
+     "type": "passive",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 1,
+     "prereq": [
+      "multiShot"
+     ],
+     "desc": "Steady breathing keeps your strength up for the chase."
+    },
+    {
+     "id": "splinteredWounds",
+     "name": "Splintered Wounds",
+     "type": "passive",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 2,
+     "prereq": [
+      "splinterShot"
+     ],
+     "desc": "Barbed splinters tear deeper and bleed the wounded."
+    },
+    {
+     "id": "deadeye",
+     "name": "Deadeye",
+     "type": "passive",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 1,
+     "prereq": [
+      "steadyBreathing"
+     ],
+     "desc": "Your criticals strike deeper, and distance is no shelter."
+    },
+    {
+     "id": "rainOfArrows",
+     "name": "Rain of Arrows",
+     "type": "active",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 0,
+     "prereq": [
+      "deadeye"
+     ],
+     "capstone": true,
+     "capstoneShare": "marksman",
+     "desc": "Call down a rain of arrows on the battlefield."
+    },
+    {
+     "id": "aimedShot",
+     "name": "Aimed Shot",
+     "type": "active",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 2,
+     "prereq": [
+      "deadeye"
+     ],
+     "capstone": true,
+     "capstoneShare": "marksman",
+     "desc": "Draw fully and loose a shot that punches through a line of enemies."
+    }
+   ]
+  },
+  "hunter": {
+   "name": "Hunter",
+   "layout": "shield",
+   "nodes": [
+    {
+     "id": "cripplingShot",
+     "name": "Crippling Shot",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 0,
+     "prereq": [],
+     "desc": "Loose a barbed arrow that leaves a festering wound."
+    },
+    {
+     "id": "companionWolf",
+     "name": "Summon Wolf",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 1,
+     "prereq": [],
+     "desc": "A loyal wolf hunts at your side."
+    },
+    {
+     "id": "huntersBond",
+     "name": "Hunter's Bond",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 2,
+     "prereq": [
+      "companionWolf"
+     ],
+     "desc": "The bond with your companions makes them fiercer and sturdier."
+    },
+    {
+     "id": "stunShot",
+     "name": "Stun Shot",
+     "type": "active",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 0,
+     "prereq": [
+      "cripplingShot"
+     ],
+     "desc": "Fire a heavy arrow that rattles a foe senseless."
+    },
+    {
+     "id": "packTactics",
+     "name": "Ambush",
+     "type": "active",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 1,
+     "prereq": [
+      "companionWolf"
+     ],
+     "desc": "Send your companions leaping onto your target for a savage ambush."
+    },
+    {
+     "id": "beastFury",
+     "name": "Beast Fury",
+     "type": "active",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 2,
+     "prereq": [
+      "huntersBond"
+     ],
+     "desc": "Drive your companions into a frenzy."
+    },
+    {
+     "id": "explosiveShot",
+     "name": "Explosive Shot",
+     "type": "active",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 0,
+     "prereq": [
+      "stunShot"
+     ],
+     "desc": "A fire-tipped arrow that bursts into flame on impact."
+    },
+    {
+     "id": "huntersMark",
+     "name": "Hunter's Mark",
+     "type": "active",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 2,
+     "prereq": [
+      "beastFury"
+     ],
+     "desc": "Mark your prey for the pack."
+    },
+    {
+     "id": "recall",
+     "name": "Recall",
+     "type": "active",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 1,
+     "prereq": [
+      "packTactics"
+     ],
+     "desc": "Call your companions back to your side, emboldened for the fight ahead."
+    },
+    {
+     "id": "companionBear",
+     "name": "Summon Bear",
+     "type": "passive",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 1,
+     "prereq": [
+      "recall"
+     ],
+     "capstone": true,
+     "desc": "A great bear joins you, the hardest-hitting companion in the wild."
+    }
+   ]
+  },
+  "djinn": {
+   "name": "Djinn",
+   "layout": "sword",
+   "straight": true,
+   "links": [
+    [
+     "lightningArc",
+     "staticBuildup"
+    ],
+    [
+     "lightningChain",
+     "nova"
+    ],
+    [
+     "stormWard",
+     "thunderstep"
+    ],
+    [
+     "thunderstep",
+     "stormcall"
+    ],
+    [
+     "tornado",
+     "storm"
+    ]
+   ],
+   "nodes": [
+    {
+     "id": "lightningArc",
+     "name": "Lightning Arc",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 3,
+     "prereq": [],
+     "desc": "Loose a crackling arc of lightning at your foes."
+    },
+    {
+     "id": "staticBuildup",
+     "name": "Static Buildup",
+     "type": "passive",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 4,
+     "prereq": [
+      "lightningArc"
+     ],
+     "desc": "Every lightning hit builds static, waiting to be unleashed."
+    },
+    {
+     "id": "lightningChain",
+     "name": "Lightning Chain",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 2,
+     "prereq": [
+      "lightningArc"
+     ],
+     "desc": "Let your lightning leap from foe to foe."
+    },
+    {
+     "id": "nova",
+     "name": "Nova",
+     "type": "active",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 3,
+     "prereq": [
+      "staticBuildup"
+     ],
+     "desc": "Unleash a ring of lightning that charges everything it touches."
+    },
+    {
+     "id": "tornado",
+     "name": "Tornado",
+     "type": "active",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 1,
+     "prereq": [
+      "stormWard"
+     ],
+     "desc": "Hurl a huge, howling tornado that tears through every enemy in its path."
+    },
+    {
+     "id": "thunderstep",
+     "name": "Stormstrider",
+     "type": "passive",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 2,
+     "prereq": [
+      "lightningChain"
+     ],
+     "desc": "Dance through the storm, lightning trailing in your wake."
+    },
+    {
+     "id": "stormcall",
+     "name": "Stormcall",
+     "type": "active",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 3,
+     "prereq": [
+      "nova"
+     ],
+     "desc": "Call a bolt of lightning down from the heavens."
+    },
+    {
+     "id": "storm",
+     "name": "Storm",
+     "type": "passive",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 2,
+     "prereq": [
+      "thunderstep"
+     ],
+     "desc": "A small storm gathers above you, sharpening your strikes."
+    },
+    {
+     "id": "stormWard",
+     "name": "Storm Ward",
+     "type": "passive",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 1,
+     "prereq": [
+      "thunderstep"
+     ],
+     "desc": "A howling ward of wind always swirls around you, turning blows and missiles aside."
+    },
+    {
+     "id": "hurricane",
+     "name": "Hurricane",
+     "type": "active",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 0,
+     "prereq": [
+      "tornado",
+      "storm"
+     ],
+     "prereqMode": "or",
+     "capstone": true,
+     "desc": "Conjure a raging hurricane that batters and slows everything nearby."
+    }
+   ]
+  },
+  "elementalist": {
+   "name": "Elementalist",
+   "layout": "shield",
+   "junction": {
+    "row": 2,
+    "col": 1,
+    "from": [
+     "immolate",
+     "iceArmor"
+    ],
+    "to": [
+     "manaShield",
+     "elementalMastery"
+    ]
+   },
+   "nodes": [
+    {
+     "id": "fireball",
+     "name": "Fireball",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 0,
+     "prereq": [],
+     "desc": "Hurl quick balls of fire."
+    },
+    {
+     "id": "iceBolt",
+     "name": "Ice Bolt",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 2,
+     "prereq": [],
+     "desc": "Hurl a heavy bolt of ice that chills and freezes."
+    },
+    {
+     "id": "manaShield",
+     "name": "Mana Shield",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 1,
+     "prereq": [
+      "immolate",
+      "iceArmor"
+     ],
+     "desc": "Let your mana take the blows meant for your flesh."
+    },
+    {
+     "id": "immolate",
+     "name": "Immolate",
+     "type": "active",
+     "reqLevel": 3,
+     "row": 1,
+     "col": 0,
+     "prereq": [
+      "fireball"
+     ],
+     "desc": "Set yourself ablaze, trading your own life for raw power."
+    },
+    {
+     "id": "iceArmor",
+     "name": "Ice Armor",
+     "type": "active",
+     "reqLevel": 3,
+     "row": 1,
+     "col": 2,
+     "prereq": [
+      "iceBolt"
+     ],
+     "desc": "Encase yourself in a shell of protective ice."
+    },
+    {
+     "id": "permafrost",
+     "name": "Permafrost",
+     "type": "active",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 2,
+     "prereq": [
+      "iceArmor"
+     ],
+     "desc": "Freeze the ground beneath your foes."
+    },
+    {
+     "id": "pyroTorrent",
+     "name": "Pyro Torrent",
+     "type": "active",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 0,
+     "prereq": [
+      "immolate"
+     ],
+     "desc": "Channel a searing torrent of fire through every enemy in its path."
+    },
+    {
+     "id": "elementalMastery",
+     "name": "Elemental Mastery",
+     "type": "passive",
+     "reqLevel": 32,
+     "row": 4,
+     "col": 1,
+     "prereq": [
+      "immolate",
+      "iceArmor"
+     ],
+     "desc": "Master fire and ice, and the dance between them."
+    },
+    {
+     "id": "meteor",
+     "name": "Meteor",
+     "type": "active",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 0,
+     "prereq": [
+      "pyroTorrent"
+     ],
+     "capstone": true,
+     "capstoneShare": "elementalist",
+     "desc": "Call a burning meteor down from the sky."
+    },
+    {
+     "id": "blizzard",
+     "name": "Blizzard",
+     "type": "active",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 2,
+     "prereq": [
+      "permafrost"
+     ],
+     "capstone": true,
+     "capstoneShare": "elementalist",
+     "desc": "Call down a freezing blizzard of ice shards."
+    }
+   ]
+  },
+  "necromancer": {
+   "name": "Necromancer",
+   "layout": "shield",
+   "nodes": [
+    {
+     "id": "soulSap",
+     "name": "Soul Sap",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 0,
+     "prereq": [],
+     "desc": "Drain the life and soul from your enemies with a venomous touch."
+    },
+    {
+     "id": "soulShield",
+     "name": "Soul Shield",
+     "type": "passive",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 1,
+     "prereq": [],
+     "desc": "The souls you hold circle you and turn aside blows."
+    },
+    {
+     "id": "raiseDead",
+     "name": "Raise Skeletons",
+     "type": "active",
+     "reqLevel": 1,
+     "row": 0,
+     "col": 2,
+     "prereq": [],
+     "desc": "Raise the dead to fight for you."
+    },
+    {
+     "id": "fear",
+     "name": "Fear",
+     "type": "active",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 0,
+     "prereq": [
+      "soulSap"
+     ],
+     "desc": "Curse your foes with dread."
+    },
+    {
+     "id": "soulHunger",
+     "name": "Soul Hunger",
+     "type": "passive",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 1,
+     "prereq": [
+      "soulShield"
+     ],
+     "desc": "Bleed your own life into a growing store of souls."
+    },
+    {
+     "id": "sacrifice",
+     "name": "Sacrifice",
+     "type": "passive",
+     "reqLevel": 7,
+     "row": 1,
+     "col": 2,
+     "prereq": [
+      "raiseDead"
+     ],
+     "desc": "Your fallen skeletons burst in poison."
+    },
+    {
+     "id": "soulFire",
+     "name": "Soul Fire",
+     "type": "active",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 0,
+     "prereq": [
+      "fear"
+     ],
+     "desc": "Hurl a great rolling ball of green soul-flame."
+    },
+    {
+     "id": "demonBind",
+     "name": "Demon Bind",
+     "type": "passive",
+     "reqLevel": 21,
+     "row": 3,
+     "col": 1,
+     "prereq": [
+      "soulFire",
+      "soulGate"
+     ],
+     "prereqMode": "or",
+     "desc": "Bind a hulking demon to your service."
+    },
+    {
+     "id": "soulGate",
+     "name": "Soul Gate",
+     "type": "active",
+     "reqLevel": 14,
+     "row": 2,
+     "col": 2,
+     "prereq": [
+      "sacrifice"
+     ],
+     "desc": "Tear open a gate that spits out skeletal archers."
+    },
+    {
+     "id": "plague",
+     "name": "Plague",
+     "type": "active",
+     "reqLevel": 28,
+     "row": 4,
+     "col": 1,
+     "prereq": [
+      "demonBind"
+     ],
+     "capstone": true,
+     "desc": "Corrupt the earth itself with a spreading plague."
+    }
+   ]
+  }
+ },
+ "tips": {
+  "ironSkin": {
+   "desc": "Your skin hardens like stone, turning aside blows that would fell lesser warriors.",
+   "fx": "Standing still also hardens you: +10% Defence for every second you stand your ground, up to +50%. Rank 5 also gives +4% max life and +1% max resistance.",
+   "stats": [
+    {
+     "label": "Defence",
+     "by_rank": [
+      "+8.5%",
+      "+13.6%",
+      "+17%",
+      "+19.5%",
+      "+21.3%",
+      "+21.3%",
+      "+21.3%",
+      "+21.3%",
+      "+21.3%",
+      "+21.3%"
+     ]
+    },
+    {
+     "label": "Damage reduction",
+     "by_rank": [
+      "1.7%",
+      "2.6%",
+      "3.4%",
+      "5.1%",
+      "6.8%",
+      "6.8%",
+      "6.8%",
+      "6.8%",
+      "6.8%",
+      "6.8%"
+     ]
+    },
+    {
+     "label": "Block chance (shield)",
+     "by_rank": [
+      "+2%",
+      "+4%",
+      "+6%",
+      "+8%",
+      "+10%",
+      "+12%",
+      "+14%",
+      "+16%",
+      "+18%",
+      "+20%"
+     ]
+    },
+    {
+     "label": "All resistances",
+     "by_rank": [
+      "+5%",
+      "+8.75%",
+      "+12.5%",
+      "+16.25%",
+      "+20%",
+      "+21.5%",
+      "+23%",
+      "+24.5%",
+      "+26%",
+      "+27.5%"
+     ]
+    }
+   ]
+  },
+  "unbreakable": {
+   "desc": "Pain feeds you, and when you are nearly dead you simply refuse to fall.",
+   "fx": "Taking hits builds extra Rage. Below 35% life you take less damage, and a killing blow leaves you at 20% life instead.",
+   "stats": [
+    {
+     "label": "Rage from hits taken",
+     "by_rank": [
+      "+20%",
+      "+40%",
+      "+60%",
+      "+80%",
+      "+100%",
+      "+120%",
+      "+140%",
+      "+160%",
+      "+180%",
+      "+200%"
+     ]
+    },
+    {
+     "label": "Damage taken below 35% life",
+     "by_rank": [
+      "-10%",
+      "-12.5%",
+      "-15%",
+      "-17.5%",
+      "-20%",
+      "-22.5%",
+      "-25%",
+      "-27.5%",
+      "-30%",
+      "-32.5%"
+     ]
+    },
+    {
+     "label": "Survive a killing blow",
+     "by_rank": [
+      "once every 65s",
+      "once every 59s",
+      "once every 53s",
+      "once every 47s",
+      "once every 41s",
+      "once every 35s",
+      "once every 29s",
+      "once every 23s",
+      "once every 17s",
+      "once every 11s"
+     ]
+    }
+   ]
+  },
+  "shieldBash": {
+   "desc": "Slam your shield into the foes in front of you.",
+   "fx": "A shield blow in a cone in front of you that may stun. It costs nothing and builds Rage for every foe it hits (up to 3).",
+   "per": "per enemy hit",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Rage per foe hit",
+     "by_rank": [
+      "+3",
+      "+3.5",
+      "+4",
+      "+4.5",
+      "+5",
+      "+5.5",
+      "+6",
+      "+6.5",
+      "+7",
+      "+7.5"
+     ]
+    },
+    {
+     "label": "Stun",
+     "by_rank": [
+      "2% chance, 0.4s",
+      "5% chance, 0.55s",
+      "7% chance, 0.7s",
+      "10% chance, 0.85s",
+      "12% chance, 1.5s",
+      "15% chance, 1.5s",
+      "17% chance, 1.5s",
+      "20% chance, 1.5s",
+      "22% chance, 1.5s",
+      "25% chance, 1.5s"
+     ]
+    }
+   ]
+  },
+  "riposte": {
+   "desc": "Turn near-misses into solid blocks and answer every one with steel.",
+   "fx": "Raises your Block Chance (cap 50%). Every block (or parry, with a two-hander or twin swords) gives Rage and strikes back at the attacker.",
+   "per": "per counter-strike",
+   "stats": [
+    {
+     "label": "Block chance",
+     "by_rank": [
+      "14%",
+      "19%",
+      "23%",
+      "27%",
+      "31%",
+      "36%",
+      "40%",
+      "44%",
+      "48%",
+      "50%"
+     ]
+    },
+    {
+     "label": "Rage per block",
+     "by_rank": [
+      "4 to 18 (bigger hits give more)",
+      "4 to 18 (bigger hits give more)",
+      "4 to 18 (bigger hits give more)",
+      "4 to 18 (bigger hits give more)",
+      "4 to 18 (bigger hits give more)",
+      "4 to 18 (bigger hits give more)",
+      "4 to 18 (bigger hits give more)",
+      "4 to 18 (bigger hits give more)",
+      "4 to 18 (bigger hits give more)",
+      "4 to 18 (bigger hits give more)"
+     ]
+    }
+   ]
+  },
+  "shieldThrow": {
+   "desc": "Hurl your shield through the enemy ranks and let it fly back to your hand.",
+   "fx": "Your shield flies out, bounces between enemies and returns to you. Each hit may stun.",
+   "per": "per hit",
+   "cooldown_by_rank": [
+    0.95,
+    0.9055555555555556,
+    0.861111111111111,
+    0.8426812585499316,
+    0.8426812585499316,
+    0.8426812585499316,
+    0.8426812585499316,
+    0.8426812585499316,
+    0.8426812585499316,
+    0.8426812585499316
+   ],
+   "stats": [
+    {
+     "label": "Bounces",
+     "by_rank": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "4",
+      "5",
+      "5",
+      "6",
+      "7"
+     ]
+    },
+    {
+     "label": "Stun",
+     "by_rank": [
+      "2% chance, 1s",
+      "3% chance, 1.25s",
+      "4% chance, 1.5s",
+      "5% chance, 1.75s",
+      "6% chance, 2s",
+      "6% chance, 2.25s",
+      "7% chance, 2.5s",
+      "8% chance, 2.75s",
+      "9% chance, 3s",
+      "10% chance, 3.25s"
+     ]
+    }
+   ]
+  },
+  "seismicSlam": {
+   "desc": "Slam the earth with your shield and stagger everything around you.",
+   "fx": "Needs a shield. Hits every enemy around you and stuns them; elites and bosses are slowed instead.",
+   "per": "per enemy",
+   "cooldown_by_rank": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "stats": [
+    {
+     "label": "Stun",
+     "by_rank": [
+      "1s",
+      "1.06s",
+      "1.12s",
+      "1.18s",
+      "1.24s",
+      "1.3s",
+      "1.36s",
+      "1.42s",
+      "1.48s",
+      "1.54s"
+     ]
+    },
+    {
+     "label": "Radius",
+     "by_rank": [
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150"
+     ]
+    }
+   ]
+  },
+  "mirrorSteel": {
+   "desc": "Raise your shield and turn every blow back on its source.",
+   "fx": "Needs a shield. Every hit you take, melee or ranged, is reflected back for its full damage, and you heal for 50% of what you reflect.",
+   "cooldown_by_rank": [
+    12,
+    11.555555555555555,
+    11.11111111111111,
+    10.666666666666666,
+    10.222222222222221,
+    9.777777777777779,
+    9.333333333333334,
+    8.88888888888889,
+    8.444444444444445,
+    8
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "2.5s",
+      "2.67s",
+      "2.83s",
+      "3s",
+      "3.17s",
+      "3.33s",
+      "3.5s",
+      "3.67s",
+      "3.83s",
+      "4s"
+     ]
+    }
+   ]
+  },
+  "bulwark": {
+   "desc": "Plant your feet, soak up the blows, then release them in one thundering shockwave.",
+   "fx": "Your armor rises and you slow down. Damage you take is stored and released as a knockback shockwave when it ends (tap again to release early).",
+   "cooldown_by_rank": [
+    18,
+    18,
+    18,
+    18,
+    18,
+    18,
+    18,
+    18,
+    18,
+    18
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "6s",
+      "6.5s",
+      "7s",
+      "7.5s",
+      "8s",
+      "8.5s",
+      "9s",
+      "9.5s",
+      "10s",
+      "10.5s"
+     ]
+    },
+    {
+     "label": "Armor",
+     "by_rank": [
+      "+50%",
+      "+50%",
+      "+50%",
+      "+50%",
+      "+50%",
+      "+50%",
+      "+50%",
+      "+50%",
+      "+50%",
+      "+50%"
+     ]
+    },
+    {
+     "label": "Speed",
+     "by_rank": [
+      "-50%",
+      "-50%",
+      "-50%",
+      "-50%",
+      "-50%",
+      "-50%",
+      "-50%",
+      "-50%",
+      "-50%",
+      "-50%"
+     ]
+    },
+    {
+     "label": "Shockwave",
+     "by_rank": [
+      "80% of the damage stored",
+      "80% of the damage stored",
+      "80% of the damage stored",
+      "80% of the damage stored",
+      "80% of the damage stored",
+      "80% of the damage stored",
+      "80% of the damage stored",
+      "80% of the damage stored",
+      "80% of the damage stored",
+      "80% of the damage stored"
+     ]
+    }
+   ]
+  },
+  "seismicAnchor": {
+   "desc": "Tear the ground open and drag your foes into the rift.",
+   "fx": "Needs a shield. After 1s, enemies within 6 metres are pulled to you, their casting is broken and they are slowed (fading over 3s).",
+   "cooldown_by_rank": [
+    10,
+    9.555555555555555,
+    9.11111111111111,
+    8.666666666666666,
+    8.222222222222221,
+    7.777777777777778,
+    7.333333333333334,
+    6.888888888888889,
+    6.444444444444445,
+    6
+   ],
+   "stats": [
+    {
+     "label": "Slow",
+     "by_rank": [
+      "70%",
+      "70%",
+      "70%",
+      "70%",
+      "70%",
+      "70%",
+      "70%",
+      "70%",
+      "70%",
+      "70%"
+     ]
+    }
+   ]
+  },
+  "guardian": {
+   "desc": "Roar, fill your Rage and charge unstoppable until the Rage runs dry.",
+   "fx": "Fills your Rage, then you charge nonstop (you steer, but cannot attack or use skills) until it runs out, trampling and knocking back everything in your way. When the Rage is gone you erupt in a final burst.",
+   "per": "per trample hit",
+   "x": "final burst",
+   "cost": "(computed)",
+   "cooldown_by_rank": [
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30
+   ],
+   "stats": [
+    {
+     "label": "Rage lost per second",
+     "by_rank": [
+      "15",
+      "14.44",
+      "13.89",
+      "13.33",
+      "12.78",
+      "12.22",
+      "11.67",
+      "11.11",
+      "10.56",
+      "10"
+     ]
+    },
+    {
+     "label": "Defence while charging",
+     "by_rank": [
+      "+50%",
+      "+55%",
+      "+60%",
+      "+65%",
+      "+70%",
+      "+75%",
+      "+80%",
+      "+85%",
+      "+90%",
+      "+95%"
+     ]
+    }
+   ]
+  },
+  "reave": {
+   "desc": "A vicious, tearing blow that leaves the wound bleeding.",
+   "fx": "A single blow that makes the target bleed for 4s. No cooldown; builds Rage.",
+   "per": "per hit",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Bleed (of the hit)",
+     "by_rank": [
+      "60%",
+      "70%",
+      "80%",
+      "90%",
+      "100%",
+      "110%",
+      "120%",
+      "130%",
+      "140%",
+      "150%"
+     ]
+    }
+   ]
+  },
+  "leap": {
+   "desc": "Charge across the battlefield and crash into your foes.",
+   "fx": "Charge up to 460 at the nearest enemy, untouchable on the way, then crush the ground and stun everything around you. Gives 20% of your max Rage.",
+   "per": "on landing",
+   "cost": "(computed)",
+   "cooldown_by_rank": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "stats": [
+    {
+     "label": "Stun",
+     "by_rank": [
+      "0.8s",
+      "0.9s",
+      "1s",
+      "1.1s",
+      "1.2s",
+      "1.3s",
+      "1.4s",
+      "1.5s",
+      "1.6s",
+      "1.7s"
+     ]
+    }
+   ]
+  },
+  "rampage": {
+   "desc": "Every kill feeds the slaughter.",
+   "fx": "Each kill adds a stack of attack speed (up to 10, lost after 5s without a kill). You also hit harder the more Rage you carry.",
+   "stats": [
+    {
+     "label": "Attack speed per stack",
+     "by_rank": [
+      "+2.5%",
+      "+3%",
+      "+3.5%",
+      "+4%",
+      "+4.5%",
+      "+4.8%",
+      "+5.1%",
+      "+5.4%",
+      "+5.7%",
+      "+6%"
+     ]
+    },
+    {
+     "label": "Damage at full Rage",
+     "by_rank": [
+      "+10%",
+      "+12%",
+      "+14%",
+      "+16%",
+      "+18%",
+      "+19%",
+      "+20%",
+      "+22%",
+      "+23%",
+      "+24%"
+     ]
+    }
+   ]
+  },
+  "weaponsSpecialist": {
+   "desc": "Master heavier blades, learning to wield greatswords and twin swords alike.",
+   "fx": "Lets you wield the Longsword line (Longsword, Greatsword, Demonblade; two-handers already hit +15% harder) and two swords at once. With either, half your Block Chance becomes a chance to parry.",
+   "stats": [
+    {
+     "label": "Two-hander damage",
+     "by_rank": [
+      "+8%",
+      "+16%",
+      "+24%",
+      "+32%",
+      "+40%",
+      "+48%",
+      "+56%",
+      "+64%",
+      "+72%",
+      "+80%"
+     ]
+    },
+    {
+     "label": "Two-hander armor pierce",
+     "by_rank": [
+      "15%",
+      "30%",
+      "45%",
+      "60%",
+      "75%",
+      "90%",
+      "100%",
+      "100%",
+      "100%",
+      "100%"
+     ]
+    },
+    {
+     "label": "Dual-wield attack speed",
+     "by_rank": [
+      "+3%",
+      "+6%",
+      "+9%",
+      "+12%",
+      "+15%",
+      "+18%",
+      "+21%",
+      "+24%",
+      "+27%",
+      "+30%"
+     ]
+    },
+    {
+     "label": "Rage gained",
+     "by_rank": [
+      "+5%",
+      "+5.6%",
+      "+6.1%",
+      "+6.7%",
+      "+7.2%",
+      "+7.8%",
+      "+8.3%",
+      "+8.9%",
+      "+9.4%",
+      "+10%"
+     ]
+    }
+   ]
+  },
+  "bloodlust": {
+   "desc": "Drink deep of every wound you deal.",
+   "fx": "You heal for part of the damage you deal. Below 50% life you are Bloodied: x1.75 leech and faster attacks. Out of combat, fading Rage turns into life, and enemies drop more health potions.",
+   "stats": [
+    {
+     "label": "Life leech",
+     "by_rank": [
+      "4%",
+      "6%",
+      "8%",
+      "10%",
+      "12%",
+      "14%",
+      "16%",
+      "18%",
+      "20%",
+      "22%"
+     ]
+    },
+    {
+     "label": "Bloodied attack speed",
+     "by_rank": [
+      "+10%",
+      "+12.5%",
+      "+15%",
+      "+17.5%",
+      "+20%",
+      "+22.5%",
+      "+25%",
+      "+27.5%",
+      "+30%",
+      "+32.5%"
+     ]
+    },
+    {
+     "label": "Health potion drops",
+     "by_rank": [
+      "+4%",
+      "+8%",
+      "+12%",
+      "+16%",
+      "+20%",
+      "+24%",
+      "+28%",
+      "+32%",
+      "+36%",
+      "+40%"
+     ]
+    },
+    {
+     "label": "Fading Rage returned as life",
+     "by_rank": [
+      "10%",
+      "11%",
+      "12%",
+      "13%",
+      "14%",
+      "16%",
+      "17%",
+      "18%",
+      "19%",
+      "20%"
+     ]
+    }
+   ]
+  },
+  "cleave": {
+   "desc": "Sweep a heavy blade through the enemy ranks in one wide arc.",
+   "fx": "Needs a two-handed sword. Your Strike becomes Cleave, a slow, heavy sweep in front of you. With less than 5 Rage you swing a plain Strike.",
+   "per": "per swing",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Armor pierce",
+     "by_rank": [
+      "+5%",
+      "+10%",
+      "+15%",
+      "+20%",
+      "+25%",
+      "+30%",
+      "+35%",
+      "+40%",
+      "+45%",
+      "+50%"
+     ]
+    }
+   ]
+  },
+  "fury": {
+   "desc": "Dance between twin blades in a relentless flurry of strikes.",
+   "fx": "Needs two one-handed swords. Your Strike becomes a 3-hit combo. With less than 5 Rage you swing a plain Strike.",
+   "per": "per strike (3 strikes)",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Attack speed",
+     "by_rank": [
+      "+2%",
+      "+4%",
+      "+6%",
+      "+8%",
+      "+10%",
+      "+12%",
+      "+14%",
+      "+16%",
+      "+18%",
+      "+20%"
+     ]
+    }
+   ]
+  },
+  "whirlwind": {
+   "desc": "Become a whirling storm of steel.",
+   "fx": "Spin and hit every enemy around you every 0.25s until your Rage runs out or you tap again. The Rage drain grows by 5/s every second. Attack Speed spins you faster. You cannot attack, use skills or gain Rage while spinning; Dodge stops it.",
+   "per": "per hit",
+   "cost": "(computed)",
+   "cooldown_by_rank": [
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7
+   ],
+   "stats": [
+    {
+     "label": "Starting Rage drain",
+     "by_rank": [
+      "15/s",
+      "13.9/s",
+      "12.8/s",
+      "11.7/s",
+      "10.6/s",
+      "9.4/s",
+      "8.3/s",
+      "7.2/s",
+      "6.1/s",
+      "5/s"
+     ]
+    },
+    {
+     "label": "Movement while spinning",
+     "by_rank": [
+      "-10%",
+      "-10%",
+      "-10%",
+      "-10%",
+      "-10%",
+      "-10%",
+      "-10%",
+      "-10%",
+      "-10%",
+      "-5%"
+     ]
+    }
+   ]
+  },
+  "assault": {
+   "desc": "Fly into a berserker rage and end it in a burst of spent fury.",
+   "fx": "Fills your Rage, then for a while your damage ramps up to +35% (and the damage you take up to +50%), with life leech. Each kill extends it and takes 0.7s off its cooldown. When it ends, your remaining Rage explodes.",
+   "per": "per 20 Rage spent in the final burst",
+   "cost": "(computed)",
+   "cooldown_by_rank": [
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "6s",
+      "7s",
+      "8s",
+      "9s",
+      "10s",
+      "11s",
+      "12s",
+      "13s",
+      "14s",
+      "15s"
+     ]
+    },
+    {
+     "label": "Extra time per kill",
+     "by_rank": [
+      "0.2s",
+      "0.25s",
+      "0.3s",
+      "0.35s",
+      "0.4s",
+      "0.43s",
+      "0.46s",
+      "0.49s",
+      "0.52s",
+      "0.55s"
+     ]
+    }
+   ]
+  },
+  "vengeance": {
+   "desc": "Strike with holy fire and drive your followers into a righteous frenzy.",
+   "fx": "A cone of holy fire in front of you that also makes your followers hit harder for 3s. No cooldown; builds 9 Conviction per foe. Over 80% Conviction it spends 5 for +5% damage.",
+   "per": "per hit",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Followers",
+     "by_rank": [
+      "+20% damage, +15% crit",
+      "+24% damage, +17% crit",
+      "+28% damage, +19% crit",
+      "+32% damage, +21% crit",
+      "+36% damage, +23% crit",
+      "+40% damage, +25% crit",
+      "+44% damage, +27% crit",
+      "+48% damage, +29% crit",
+      "+52% damage, +31% crit",
+      "+56% damage, +33% crit"
+     ]
+    }
+   ]
+  },
+  "sacredWeapon": {
+   "desc": "Your blade is consecrated: every fourth Vengeance erupts in holy flame.",
+   "fx": "After 3 Vengeance attacks, the next one spends 10 Conviction to hit harder and set everything it hits burning (120% of the hit over 3s).",
+   "stats": [
+    {
+     "label": "Empowered damage",
+     "by_rank": [
+      "+50%",
+      "+60%",
+      "+70%",
+      "+80%",
+      "+90%",
+      "+100%",
+      "+110%",
+      "+120%",
+      "+130%",
+      "+140%"
+     ]
+    }
+   ]
+  },
+  "auraOfRetribution": {
+   "desc": "Those who strike you are struck in turn by your faith.",
+   "fx": "Enemies that hit you take back part of the damage they dealt.",
+   "stats": [
+    {
+     "label": "Damage returned",
+     "by_rank": [
+      "10%",
+      "14%",
+      "19%",
+      "23%",
+      "28%",
+      "32%",
+      "37%",
+      "41%",
+      "46%",
+      "50%"
+     ]
+    }
+   ]
+  },
+  "smite": {
+   "desc": "Hurl a bolt of holy light that strikes the first foe and mends your allies.",
+   "fx": "The bolt flies up to 360, hits the first foe and heals followers it passes. Every 3rd cast is Wrath: a wider bolt for x1.9 damage that bursts on impact. Builds 5 Conviction (14 for Wrath).",
+   "per": "per bolt",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Follower heal",
+     "by_rank": [
+      "8% (Wrath 16%)",
+      "9% (Wrath 18%)",
+      "10% (Wrath 19%)",
+      "10% (Wrath 21%)",
+      "11% (Wrath 22%)",
+      "12% (Wrath 24%)",
+      "13% (Wrath 26%)",
+      "14% (Wrath 27%)",
+      "14% (Wrath 29%)",
+      "15% (Wrath 30%)"
+     ]
+    }
+   ]
+  },
+  "squire": {
+   "desc": "Call squires to fight at your side. Most of your damage comes from them.",
+   "fx": "Squires fight beside you (a 2nd from Rank 3, a 3rd from Rank 5) and come back after falling. Your followers hit x1.7 harder than other classes' followers.",
+   "stats": [
+    {
+     "label": "Squires",
+     "by_rank": [
+      "1",
+      "1",
+      "2",
+      "2",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3"
+     ]
+    },
+    {
+     "label": "Squire damage",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "label": "Squire life",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "label": "Back after falling",
+     "by_rank": [
+      "5s",
+      "4.5s",
+      "4s",
+      "3.5s",
+      "3s",
+      "3s",
+      "3s",
+      "3s",
+      "3s",
+      "3s"
+     ]
+    }
+   ]
+  },
+  "consecrate": {
+   "desc": "Sanctify the ground beneath you, burning foes and empowering your followers.",
+   "fx": "Holy ground burns enemies in it. While you stand in it you regenerate and gain Conviction, and followers in it hit harder.",
+   "per": "per tick",
+   "cost": "(computed)",
+   "cooldown_by_rank": [
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "8s",
+      "8.5s",
+      "9s",
+      "9.5s",
+      "10s",
+      "10.5s",
+      "11s",
+      "11.5s",
+      "12s",
+      "12.5s"
+     ]
+    },
+    {
+     "label": "Follower damage",
+     "by_rank": [
+      "+20%",
+      "+24%",
+      "+28%",
+      "+32%",
+      "+36%",
+      "+40%",
+      "+44%",
+      "+48%",
+      "+52%",
+      "+56%"
+     ]
+    }
+   ]
+  },
+  "banner": {
+   "desc": "Plant a battle standard that rallies you and your followers.",
+   "fx": "Plant a standard; you and your followers inside it get its bonus. Casts alternate between War (red: damage, crit) and Aegis (blue: Defence, less damage taken, life regeneration). Gives 15 Conviction.",
+   "cost": "(computed)",
+   "cooldown_by_rank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "30s",
+      "32s",
+      "34s",
+      "36s",
+      "38s",
+      "40s",
+      "42s",
+      "44s",
+      "46s",
+      "48s"
+     ]
+    },
+    {
+     "label": "War",
+     "by_rank": [
+      "+10% damage, +5% crit",
+      "+12% damage, +6% crit",
+      "+14% damage, +7% crit",
+      "+16% damage, +8% crit",
+      "+18% damage, +9% crit",
+      "+20% damage, +10% crit",
+      "+22% damage, +11% crit",
+      "+24% damage, +12% crit",
+      "+26% damage, +13% crit",
+      "+28% damage, +14% crit"
+     ]
+    },
+    {
+     "label": "Aegis",
+     "by_rank": [
+      "+5% Defence, -5% damage taken, +1.0% life/s",
+      "+10% Defence, -5% damage taken, +1.2% life/s",
+      "+15% Defence, -5% damage taken, +1.4% life/s",
+      "+20% Defence, -5% damage taken, +1.6% life/s",
+      "+25% Defence, -5% damage taken, +1.8% life/s",
+      "+30% Defence, -5% damage taken, +2.0% life/s",
+      "+35% Defence, -5% damage taken, +2.2% life/s",
+      "+40% Defence, -5% damage taken, +2.4% life/s",
+      "+45% Defence, -5% damage taken, +2.6% life/s",
+      "+50% Defence, -5% damage taken, +2.8% life/s"
+     ]
+    }
+   ]
+  },
+  "bannerWar": {
+   "desc": "War standards rouse you and your followers to greater damage.",
+   "fx": "Strengthens the War half of your Battle Standard.",
+   "stats": [
+    {
+     "label": "War standard",
+     "by_rank": [
+      "+13% damage, +7% crit, +6% Conviction gained",
+      "+16% damage, +9% crit, +7% Conviction gained",
+      "+19% damage, +11% crit, +8% Conviction gained",
+      "+22% damage, +13% crit, +9% Conviction gained",
+      "+25% damage, +15% crit, +10% Conviction gained",
+      "+28% damage, +17% crit, +11% Conviction gained",
+      "+31% damage, +19% crit, +12% Conviction gained",
+      "+34% damage, +21% crit, +13% Conviction gained",
+      "+37% damage, +23% crit, +14% Conviction gained",
+      "+40% damage, +25% crit, +15% Conviction gained"
+     ]
+    }
+   ]
+  },
+  "bannerAegis": {
+   "desc": "Aegis standards shield and mend you and your followers.",
+   "fx": "Strengthens the Aegis half of your Battle Standard.",
+   "stats": [
+    {
+     "label": "Aegis standard",
+     "by_rank": [
+      "-6% damage taken, +1.3% life/s",
+      "-7% damage taken, +1.6% life/s",
+      "-8% damage taken, +1.9% life/s",
+      "-9% damage taken, +2.2% life/s",
+      "-10% damage taken, +2.5% life/s",
+      "-11% damage taken, +2.8% life/s",
+      "-12% damage taken, +3.1% life/s",
+      "-13% damage taken, +3.4% life/s",
+      "-14% damage taken, +3.7% life/s",
+      "-15% damage taken, +4.0% life/s"
+     ]
+    }
+   ]
+  },
+  "judgment": {
+   "desc": "Call down pillars of holy fire upon your foes.",
+   "fx": "Marks enemies; after a short warning, a pillar of holy fire crashes down on each, stunning them and blinding survivors for 3s (half their attacks miss).",
+   "per": "per pillar",
+   "cost": "(computed)",
+   "cooldown_by_rank": [
+    15,
+    15,
+    15,
+    15,
+    15,
+    15,
+    15,
+    15,
+    15,
+    15
+   ],
+   "stats": [
+    {
+     "label": "Pillars",
+     "by_rank": [
+      "4",
+      "4",
+      "5",
+      "5",
+      "6",
+      "6",
+      "7",
+      "7",
+      "8",
+      "8"
+     ]
+    }
+   ]
+  },
+  "poisonTrap": {
+   "desc": "Lay a venomous trap that blankets the area in toxic fumes.",
+   "fx": "Throw a trap that bursts into a poison cloud after 0.5s. The poison grows up to +150% stronger the longer a foe stays inside.",
+   "per": "per second in the cloud",
+   "cooldown_by_rank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+   ],
+   "stats": [
+    {
+     "label": "Radius",
+     "by_rank": [
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110"
+     ]
+    }
+   ]
+  },
+  "survivalFieldDress": {
+   "desc": "Bind your wounds on the move, and patch up your companions too.",
+   "fx": "Bandage yourself over 4s while you keep moving and fighting, cleansing slows and ailments; companions heal half as much. Every dodge also heals you a little over 3s.",
+   "cooldown_by_rank": [
+    30,
+    27,
+    24,
+    21,
+    18,
+    18,
+    18,
+    18,
+    18,
+    18
+   ],
+   "stats": [
+    {
+     "label": "Bandage heals (of max life)",
+     "by_rank": [
+      "32%",
+      "40%",
+      "48%",
+      "56%",
+      "64%",
+      "69%",
+      "74%",
+      "78%",
+      "83%",
+      "88%"
+     ]
+    },
+    {
+     "label": "Each dodge heals (of max life)",
+     "by_rank": [
+      "2%",
+      "2.5%",
+      "3%",
+      "3.5%",
+      "4%",
+      "4.3%",
+      "4.6%",
+      "4.9%",
+      "5.2%",
+      "5.5%"
+     ]
+    }
+   ]
+  },
+  "evasion": {
+   "desc": "Move like smoke, slipping past blows meant to end you.",
+   "fx": "Raises your evasion chance: a chance to avoid a hit completely (adds to the evasion chance from Dexterity, cap 60%). Every dodge also restores Stamina.",
+   "stats": [
+    {
+     "label": "Evasion chance",
+     "by_rank": [
+      "+5%",
+      "+10%",
+      "+15%",
+      "+20%",
+      "+22%",
+      "+24%",
+      "+26%",
+      "+28%",
+      "+30%",
+      "+32%"
+     ]
+    },
+    {
+     "label": "Stamina per dodge",
+     "by_rank": [
+      "15",
+      "18",
+      "21",
+      "24",
+      "27",
+      "30",
+      "33",
+      "36",
+      "39",
+      "42"
+     ]
+    }
+   ]
+  },
+  "frostTrap": {
+   "desc": "Set a trap of biting frost to lock your enemies in place.",
+   "fx": "Lay up to 3 traps. When an enemy steps near one it freezes everything around it, then chills them. Elites and brutes freeze for less; bosses are only chilled.",
+   "per": "burst",
+   "cooldown_by_rank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+   ],
+   "stats": [
+    {
+     "label": "Freeze",
+     "by_rank": [
+      "1s",
+      "1.2s",
+      "1.4s",
+      "1.6s",
+      "1.8s",
+      "1.92s",
+      "2.04s",
+      "2.16s",
+      "2.28s",
+      "2.4s"
+     ]
+    },
+    {
+     "label": "Chill after",
+     "by_rank": [
+      "3s",
+      "3.5s",
+      "4s",
+      "4.5s",
+      "5s",
+      "5.3s",
+      "5.6s",
+      "5.9s",
+      "6.2s",
+      "6.5s"
+     ]
+    },
+    {
+     "label": "Radius",
+     "by_rank": [
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110"
+     ]
+    }
+   ]
+  },
+  "survivalInstinct": {
+   "desc": "Years in the wild have toughened your body and sharpened your killing instinct.",
+   "fx": "More life and speed, and more damage against enemies suffering an ailment (bleeding, poisoned, burning, chilled, frozen, charged or stunned).",
+   "stats": [
+    {
+     "label": "Max life",
+     "by_rank": [
+      "+5%",
+      "+10%",
+      "+15%",
+      "+20%",
+      "+25%",
+      "+30%",
+      "+35%",
+      "+40%",
+      "+45%",
+      "+50%"
+     ]
+    },
+    {
+     "label": "Movement speed",
+     "by_rank": [
+      "+2%",
+      "+4%",
+      "+6%",
+      "+8%",
+      "+10%",
+      "+12%",
+      "+14%",
+      "+16%",
+      "+18%",
+      "+20%"
+     ]
+    },
+    {
+     "label": "Damage vs ailing enemies",
+     "by_rank": [
+      "+15%",
+      "+19%",
+      "+23%",
+      "+27%",
+      "+31%",
+      "+34%",
+      "+38%",
+      "+42%",
+      "+46%",
+      "+50%"
+     ]
+    }
+   ]
+  },
+  "finesse": {
+   "desc": "Refine your reflexes until dodging becomes second nature.",
+   "fx": "You get a second Dodge charge, and Dodge recharges faster (normally 1.55s).",
+   "stats": [
+    {
+     "label": "Dodge cooldown",
+     "by_rank": [
+      "1.45s",
+      "1.35s",
+      "1.25s",
+      "1.15s",
+      "1.05s",
+      "1.02s",
+      "0.99s",
+      "0.96s",
+      "0.93s",
+      "0.9s"
+     ]
+    }
+   ]
+  },
+  "opportunist": {
+   "desc": "Every dodge opens a window to punish the enemy that missed you.",
+   "fx": "After you dodge, you deal more damage for 3s.",
+   "stats": [
+    {
+     "label": "Damage after a dodge",
+     "by_rank": [
+      "+5%",
+      "+10%",
+      "+15%",
+      "+20%",
+      "+25%",
+      "+30%",
+      "+35%",
+      "+40%",
+      "+45%",
+      "+50%"
+     ]
+    }
+   ]
+  },
+  "trapMastery": {
+   "desc": "Your traps hit harder, reach farther, and you throw them faster.",
+   "fx": "Poison and Explosive Traps hit harder, every trap covers more ground, and you throw traps faster.",
+   "stats": [
+    {
+     "label": "Trap damage",
+     "by_rank": [
+      "+8%",
+      "+16%",
+      "+24%",
+      "+32%",
+      "+40%",
+      "+48%",
+      "+56%",
+      "+64%",
+      "+72%",
+      "+80%"
+     ]
+    },
+    {
+     "label": "Trap radius",
+     "by_rank": [
+      "+6%",
+      "+12%",
+      "+18%",
+      "+24%",
+      "+30%",
+      "+36%",
+      "+42%",
+      "+48%",
+      "+54%",
+      "+60%"
+     ]
+    },
+    {
+     "label": "Time between throws",
+     "by_rank": [
+      "0.58s",
+      "0.55s",
+      "0.53s",
+      "0.5s",
+      "0.48s",
+      "0.46s",
+      "0.43s",
+      "0.41s",
+      "0.38s",
+      "0.36s"
+     ]
+    }
+   ]
+  },
+  "explosiveTrap": {
+   "desc": "Bury a charge that bursts into flame when enemies step close.",
+   "fx": "Throw a trap that arms after a moment and explodes when enemies come near, setting them burning.",
+   "per": "explosion",
+   "cooldown_by_rank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+   ]
+  },
+  "mirage": {
+   "desc": "Every dodge leaves a mirage behind to draw the enemy away.",
+   "fx": "When you dodge, a mirage of you stays where you started. Nearby enemies (not bosses) attack it instead of you until it fades.",
+   "stats": [
+    {
+     "label": "Mirage lasts",
+     "by_rank": [
+      "3s",
+      "3.3s",
+      "3.7s",
+      "4s",
+      "4.3s",
+      "4.7s",
+      "5s",
+      "5.3s",
+      "5.7s",
+      "6s"
+     ]
+    },
+    {
+     "label": "Once every",
+     "by_rank": [
+      "15s",
+      "14.4s",
+      "13.9s",
+      "13.3s",
+      "12.8s",
+      "12.2s",
+      "11.7s",
+      "11.1s",
+      "10.6s",
+      "10s"
+     ]
+    }
+   ]
+  },
+  "bowExpert": {
+   "desc": "Master the bow until every arrow flies true.",
+   "fx": "Your bow hits harder.",
+   "stats": [
+    {
+     "label": "Bow damage",
+     "by_rank": [
+      "+5%",
+      "+7%",
+      "+9%",
+      "+10%",
+      "+12%",
+      "+14%",
+      "+15%",
+      "+16%",
+      "+18%",
+      "+20%"
+     ]
+    }
+   ]
+  },
+  "rapidShot": {
+   "desc": "Loose a rapid volley before the enemy can react.",
+   "fx": "Fire 3 arrows in quick succession. If all 3 hit the same enemy, the last one pierces armor.",
+   "per": "per arrow",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Last-arrow armor pierce",
+     "by_rank": [
+      "5%",
+      "10%",
+      "15%",
+      "20%",
+      "25%",
+      "30%",
+      "35%",
+      "40%",
+      "45%",
+      "50%"
+     ]
+    }
+   ]
+  },
+  "multiShot": {
+   "desc": "Split your aim and loose a fan of arrows in a single motion.",
+   "fx": "Loose a fan of 3 arrows at once (5 from Rank 5).",
+   "per": "per arrow",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Arrows",
+     "by_rank": [
+      "3",
+      "3",
+      "3",
+      "3",
+      "5",
+      "5",
+      "5",
+      "5",
+      "5",
+      "5"
+     ]
+    }
+   ]
+  },
+  "splinterShot": {
+   "desc": "An arrow that bursts on impact, its splinters seeking out the foes nearby.",
+   "fx": "An arrow that splits on impact into 3 splinters, flying at other enemies nearby. May cause Bleed.",
+   "per": "per arrow",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Splinters",
+     "by_rank": [
+      "70% of the hit each",
+      "70% of the hit each",
+      "70% of the hit each",
+      "70% of the hit each",
+      "70% of the hit each",
+      "70% of the hit each",
+      "70% of the hit each",
+      "70% of the hit each",
+      "70% of the hit each",
+      "70% of the hit each"
+     ]
+    },
+    {
+     "label": "Bleed chance",
+     "by_rank": [
+      "10%",
+      "10%",
+      "10%",
+      "10%",
+      "10%",
+      "10%",
+      "10%",
+      "10%",
+      "10%",
+      "10%"
+     ]
+    }
+   ]
+  },
+  "favouredFoe": {
+   "desc": "Your eye finds the weak spot.",
+   "fx": "The last arrow of Rapid Shot may pierce through every enemy in its path, and you crit more often with a bow.",
+   "stats": [
+    {
+     "label": "Last Rapid Shot arrow pierces",
+     "by_rank": [
+      "25% chance",
+      "31% chance",
+      "36% chance",
+      "42% chance",
+      "47% chance",
+      "53% chance",
+      "58% chance",
+      "64% chance",
+      "69% chance",
+      "75% chance"
+     ]
+    },
+    {
+     "label": "Crit chance (bow)",
+     "by_rank": [
+      "+5%",
+      "+7%",
+      "+9%",
+      "+12%",
+      "+14%",
+      "+16%",
+      "+18%",
+      "+21%",
+      "+23%",
+      "+25%"
+     ]
+    }
+   ]
+  },
+  "steadyBreathing": {
+   "desc": "Steady breathing keeps your strength up for the chase.",
+   "fx": "Your skills cost less Stamina and it comes back faster.",
+   "stats": [
+    {
+     "label": "Stamina costs",
+     "by_rank": [
+      "-5%",
+      "-10%",
+      "-15%",
+      "-20%",
+      "-25%",
+      "-30%",
+      "-35%",
+      "-40%",
+      "-45%",
+      "-50%"
+     ]
+    },
+    {
+     "label": "Stamina regeneration",
+     "by_rank": [
+      "+3%",
+      "+6%",
+      "+9%",
+      "+12%",
+      "+15%",
+      "+18%",
+      "+21%",
+      "+24%",
+      "+27%",
+      "+30%"
+     ]
+    }
+   ]
+  },
+  "splinteredWounds": {
+   "desc": "Barbed splinters tear deeper and bleed the wounded.",
+   "fx": "Splinter Shot bleeds more often and its splinters hit harder.",
+   "stats": [
+    {
+     "label": "Splinter Shot bleed chance",
+     "by_rank": [
+      "14%",
+      "18%",
+      "22%",
+      "26%",
+      "30%",
+      "34%",
+      "38%",
+      "42%",
+      "46%",
+      "50%"
+     ]
+    },
+    {
+     "label": "Splinters",
+     "by_rank": [
+      "73% of the hit",
+      "76% of the hit",
+      "79% of the hit",
+      "82% of the hit",
+      "85% of the hit",
+      "88% of the hit",
+      "91% of the hit",
+      "94% of the hit",
+      "97% of the hit",
+      "100% of the hit"
+     ]
+    }
+   ]
+  },
+  "deadeye": {
+   "desc": "Your criticals strike deeper, and distance is no shelter.",
+   "fx": "Critical hits hit harder and restore Stamina, and your arrows hit harder against targets more than 220 away.",
+   "stats": [
+    {
+     "label": "Crit damage",
+     "by_rank": [
+      "+8%",
+      "+16%",
+      "+24%",
+      "+32%",
+      "+40%",
+      "+48%",
+      "+56%",
+      "+64%",
+      "+72%",
+      "+80%"
+     ]
+    },
+    {
+     "label": "Stamina per crit",
+     "by_rank": [
+      "1% of max",
+      "2% of max",
+      "3% of max",
+      "4% of max",
+      "5% of max",
+      "6% of max",
+      "7% of max",
+      "8% of max",
+      "9% of max",
+      "10% of max"
+     ]
+    },
+    {
+     "label": "Damage vs distant targets",
+     "by_rank": [
+      "+5%",
+      "+10%",
+      "+15%",
+      "+20%",
+      "+25%",
+      "+30%",
+      "+35%",
+      "+40%",
+      "+45%",
+      "+50%"
+     ]
+    }
+   ]
+  },
+  "rainOfArrows": {
+   "desc": "Call down a rain of arrows on the battlefield.",
+   "fx": "Loose an arrow into the sky; half a second later it shatters into 3 volleys of arrows over an area.",
+   "per": "per volley",
+   "cooldown_by_rank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+   ],
+   "stats": [
+    {
+     "label": "Radius",
+     "by_rank": [
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130"
+     ]
+    }
+   ]
+  },
+  "aimedShot": {
+   "desc": "Draw fully and loose a shot that punches through a line of enemies.",
+   "fx": "Hold to draw for 0.5s, then release a full-power shot with +15% crit chance that pierces enemies (each one weaker by 20%). A quick tap fires a weaker snap shot (145% weapon damage).",
+   "per": "full draw",
+   "cooldown_by_rank": [
+    2.5,
+    2.388888888888889,
+    2.2777777777777777,
+    2.1666666666666665,
+    2.0555555555555554,
+    1.9444444444444444,
+    1.8333333333333335,
+    1.7222222222222223,
+    1.6111111111111112,
+    1.5
+   ],
+   "stats": [
+    {
+     "label": "Pierces",
+     "by_rank": [
+      "3 enemies",
+      "3 enemies",
+      "4 enemies",
+      "4 enemies",
+      "5 enemies",
+      "5 enemies",
+      "5 enemies",
+      "5 enemies",
+      "6 enemies",
+      "6 enemies"
+     ]
+    }
+   ]
+  },
+  "cripplingShot": {
+   "desc": "Loose a barbed arrow that leaves a festering wound.",
+   "fx": "A heavy barbed arrow that leaves the target bleeding for 4s.",
+   "per": "per arrow",
+   "cooldown_by_rank": [
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+   ],
+   "stats": [
+    {
+     "label": "Bleed per second (of the hit)",
+     "by_rank": [
+      "30%",
+      "38%",
+      "45%",
+      "52%",
+      "60%",
+      "65%",
+      "69%",
+      "74%",
+      "78%",
+      "83%"
+     ]
+    }
+   ]
+  },
+  "companionWolf": {
+   "desc": "A loyal wolf hunts at your side.",
+   "fx": "A wolf fights beside you (a second one joins at Rank 5); its slashes cut up to 3 enemies and cause Bleed, and it heals itself as it bites. It comes back after falling.",
+   "stats": [
+    {
+     "label": "Wolves",
+     "by_rank": [
+      "1",
+      "1",
+      "1",
+      "1",
+      "2",
+      "2",
+      "2",
+      "2",
+      "2",
+      "2"
+     ]
+    },
+    {
+     "label": "Wolf damage",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "label": "Wolf life",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "label": "Life leech",
+     "by_rank": [
+      "5%",
+      "7%",
+      "8%",
+      "10%",
+      "12%",
+      "13%",
+      "15%",
+      "17%",
+      "18%",
+      "20%"
+     ]
+    },
+    {
+     "label": "Back after falling",
+     "by_rank": [
+      "5s",
+      "4.5s",
+      "4s",
+      "3.5s",
+      "3s",
+      "3s",
+      "3s",
+      "3s",
+      "3s",
+      "3s"
+     ]
+    }
+   ]
+  },
+  "huntersBond": {
+   "desc": "The bond with your companions makes them fiercer and sturdier.",
+   "fx": "Your wolves and bear hit harder and have more life.",
+   "stats": [
+    {
+     "label": "Companion damage",
+     "by_rank": [
+      "+6%",
+      "+12%",
+      "+18%",
+      "+24%",
+      "+30%",
+      "+36%",
+      "+42%",
+      "+48%",
+      "+54%",
+      "+60%"
+     ]
+    },
+    {
+     "label": "Companion life",
+     "by_rank": [
+      "+8%",
+      "+16%",
+      "+24%",
+      "+32%",
+      "+40%",
+      "+48%",
+      "+56%",
+      "+64%",
+      "+72%",
+      "+80%"
+     ]
+    }
+   ]
+  },
+  "stunShot": {
+   "desc": "Fire a heavy arrow that rattles a foe senseless.",
+   "fx": "A heavy arrow that may stun.",
+   "per": "per arrow",
+   "cooldown_by_rank": [
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   "stats": [
+    {
+     "label": "Stun",
+     "by_rank": [
+      "8% chance, 0.4s",
+      "11% chance, 0.5s",
+      "14% chance, 0.6s",
+      "17% chance, 0.7s",
+      "20% chance, 0.8s",
+      "22% chance, 0.86s",
+      "24% chance, 0.92s",
+      "25% chance, 0.98s",
+      "27% chance, 1.04s",
+      "29% chance, 1.1s"
+     ]
+    }
+   ]
+  },
+  "packTactics": {
+   "desc": "Send your companions leaping onto your target for a savage ambush.",
+   "fx": "Your wolves and bear leap onto your target and land a bonus attack that also slashes the enemies around it.",
+   "cooldown_by_rank": [
+    4,
+    3.7777777777777777,
+    3.5555555555555554,
+    3.3333333333333335,
+    3.111111111111111,
+    2.888888888888889,
+    2.666666666666667,
+    2.4444444444444446,
+    2.2222222222222223,
+    2
+   ],
+   "stats": [
+    {
+     "label": "Landing hit",
+     "by_rank": [
+      "+50% damage",
+      "+65% damage",
+      "+80% damage",
+      "+95% damage",
+      "+110% damage",
+      "+119% damage",
+      "+128% damage",
+      "+137% damage",
+      "+146% damage",
+      "+155% damage"
+     ]
+    }
+   ]
+  },
+  "beastFury": {
+   "desc": "Drive your companions into a frenzy.",
+   "fx": "Your companions deal +50% damage and attack 25% faster, and you deal +15% damage. Your bear roars, forcing nearby enemies to attack it, and your wolves' bleeds hit harder.",
+   "cooldown_by_rank": [
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "8s",
+      "9s",
+      "10s",
+      "11s",
+      "12s",
+      "13s",
+      "14s",
+      "15s",
+      "16s",
+      "17s"
+     ]
+    },
+    {
+     "label": "Bear taunt",
+     "by_rank": [
+      "3s",
+      "3.25s",
+      "3.5s",
+      "3.75s",
+      "4s",
+      "4.25s",
+      "4.5s",
+      "4.75s",
+      "5s",
+      "5.25s"
+     ]
+    },
+    {
+     "label": "Wolf bleed",
+     "by_rank": [
+      "+50%",
+      "+55%",
+      "+60%",
+      "+65%",
+      "+70%",
+      "+75%",
+      "+80%",
+      "+85%",
+      "+90%",
+      "+95%"
+     ]
+    }
+   ]
+  },
+  "explosiveShot": {
+   "desc": "A fire-tipped arrow that bursts into flame on impact.",
+   "fx": "An arrow that explodes on impact, burning everything in a small area.",
+   "per": "arrow hit",
+   "x": "fire blast",
+   "cooldown_by_rank": [
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+   ],
+   "stats": [
+    {
+     "label": "Burn",
+     "by_rank": [
+      "2s",
+      "2.3s",
+      "2.6s",
+      "2.9s",
+      "3.2s",
+      "3.5s",
+      "3.8s",
+      "4.1s",
+      "4.4s",
+      "4.7s"
+     ]
+    },
+    {
+     "label": "Blast radius",
+     "by_rank": [
+      "62",
+      "62",
+      "62",
+      "62",
+      "62",
+      "62",
+      "62",
+      "62",
+      "62",
+      "62"
+     ]
+    }
+   ]
+  },
+  "huntersMark": {
+   "desc": "Mark your prey for the pack.",
+   "fx": "Mark the nearest enemy. You and your companions deal more damage to it. One mark at a time.",
+   "cooldown_by_rank": [
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "8s",
+      "9s",
+      "10s",
+      "11s",
+      "12s",
+      "13s",
+      "14s",
+      "15s",
+      "16s",
+      "17s"
+     ]
+    },
+    {
+     "label": "Damage the target takes",
+     "by_rank": [
+      "+15%",
+      "+18%",
+      "+21%",
+      "+24%",
+      "+27%",
+      "+30%",
+      "+33%",
+      "+36%",
+      "+39%",
+      "+42%"
+     ]
+    }
+   ]
+  },
+  "recall": {
+   "desc": "Call your companions back to your side, emboldened for the fight ahead.",
+   "fx": "Your companions dash back to you behind a shield, and for 6s you gain damage, life regeneration and a small shield.",
+   "cooldown_by_rank": [
+    25,
+    25,
+    25,
+    25,
+    25,
+    25,
+    25,
+    25,
+    25,
+    25
+   ],
+   "stats": [
+    {
+     "label": "Companion shield (of their life)",
+     "by_rank": [
+      "30%",
+      "35%",
+      "40%",
+      "45%",
+      "50%",
+      "53%",
+      "56%",
+      "59%",
+      "62%",
+      "65%"
+     ]
+    },
+    {
+     "label": "Your damage",
+     "by_rank": [
+      "+10%",
+      "+15%",
+      "+20%",
+      "+25%",
+      "+30%",
+      "+33%",
+      "+36%",
+      "+39%",
+      "+42%",
+      "+45%"
+     ]
+    },
+    {
+     "label": "Your life regeneration",
+     "by_rank": [
+      "2%/s",
+      "3%/s",
+      "4%/s",
+      "5%/s",
+      "6%/s",
+      "7%/s",
+      "7%/s",
+      "8%/s",
+      "8%/s",
+      "9%/s"
+     ]
+    },
+    {
+     "label": "Your shield (of your life)",
+     "by_rank": [
+      "10%",
+      "13%",
+      "16%",
+      "19%",
+      "22%",
+      "24%",
+      "26%",
+      "27%",
+      "29%",
+      "31%"
+     ]
+    }
+   ]
+  },
+  "companionBear": {
+   "desc": "A great bear joins you, the hardest-hitting companion in the wild.",
+   "fx": "A bear fights beside you; its swipes cut up to 4 enemies at once.",
+   "stats": [
+    {
+     "label": "Bear damage",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "label": "Bear life",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   ]
+  },
+  "lightningArc": {
+   "desc": "Loose a crackling arc of lightning at your foes.",
+   "fx": "An instant bolt of lightning at your target.",
+   "per": "per hit"
+  },
+  "staticBuildup": {
+   "desc": "Every lightning hit builds static, waiting to be unleashed.",
+   "fx": "Lightning hits build Static (up to 8 stacks); each stack makes Lightning Arc hit harder. A full bar empowers your next Lightning Arc, Nova, Tornado or Stormcall: it Charges and briefly stuns (0.8s, not bosses) what it hits, an Arc chains further and the others grow 30% bigger.",
+   "stats": [
+    {
+     "label": "Lightning Arc per stack",
+     "by_rank": [
+      "+3%",
+      "+3.5%",
+      "+4%",
+      "+4.5%",
+      "+5%",
+      "+5.5%",
+      "+6%",
+      "+6.5%",
+      "+7%",
+      "+7.5%"
+     ]
+    },
+    {
+     "label": "Empowered damage",
+     "by_rank": [
+      "x1.40",
+      "x1.45",
+      "x1.50",
+      "x1.55",
+      "x1.60",
+      "x1.65",
+      "x1.70",
+      "x1.75",
+      "x1.80",
+      "x1.85"
+     ]
+    },
+    {
+     "label": "Empowered Arc chains",
+     "by_rank": [
+      "+1",
+      "+1",
+      "+1",
+      "+1",
+      "+2",
+      "+2",
+      "+2",
+      "+2",
+      "+2",
+      "+2"
+     ]
+    }
+   ]
+  },
+  "lightningChain": {
+   "desc": "Let your lightning leap from foe to foe.",
+   "fx": "Lightning Arc jumps to nearby enemies; each jump deals 75% of the previous hit.",
+   "stats": [
+    {
+     "label": "Jumps",
+     "by_rank": [
+      "1",
+      "1",
+      "2",
+      "2",
+      "3",
+      "3",
+      "4",
+      "4",
+      "5",
+      "5"
+     ]
+    }
+   ]
+  },
+  "nova": {
+   "desc": "Unleash a ring of lightning that charges everything it touches.",
+   "fx": "A ring of lightning bursts from you, Charging every enemy it touches and pushing ordinary enemies back.",
+   "per": "per enemy",
+   "cooldown_by_rank": [
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9
+   ],
+   "stats": [
+    {
+     "label": "Radius",
+     "by_rank": [
+      "98",
+      "98",
+      "98",
+      "98",
+      "98",
+      "98",
+      "98",
+      "98",
+      "98",
+      "98"
+     ]
+    }
+   ]
+  },
+  "thunderstep": {
+   "desc": "Dance through the storm, lightning trailing in your wake.",
+   "fx": "Little bursts of lightning go off where your dodge starts and where it ends, and your mana flows faster for 4s after it.",
+   "per": "per burst",
+   "stats": [
+    {
+     "label": "Mana regeneration after a dodge",
+     "by_rank": [
+      "+50%",
+      "+56%",
+      "+61%",
+      "+67%",
+      "+72%",
+      "+76%",
+      "+79%",
+      "+82%",
+      "+86%",
+      "+89%"
+     ]
+    }
+   ]
+  },
+  "stormWard": {
+   "desc": "A howling ward of wind always swirls around you, turning blows and missiles aside.",
+   "fx": "Raises your evasion chance: every attack (melee, arrows and spells) may miss you completely. Adds to the evasion chance from Dexterity (cap 60%).",
+   "stats": [
+    {
+     "label": "Evasion chance",
+     "by_rank": [
+      "8%",
+      "9%",
+      "10%",
+      "11%",
+      "12%",
+      "14%",
+      "15%",
+      "16%",
+      "17%",
+      "18%"
+     ]
+    }
+   ]
+  },
+  "tornado": {
+   "desc": "Hurl a huge, howling tornado that tears through every enemy in its path.",
+   "fx": "A big, slow tornado that passes through enemies, hitting each one inside it 3 times a second.",
+   "per": "per hit",
+   "cooldown_by_rank": [
+    3,
+    2.7777777777777777,
+    2.5555555555555554,
+    2.3333333333333335,
+    2.111111111111111,
+    1.8888888888888888,
+    1.6666666666666667,
+    1.4444444444444446,
+    1.2222222222222223,
+    1
+   ]
+  },
+  "stormcall": {
+   "desc": "Call a bolt of lightning down from the heavens.",
+   "fx": "Marks the thickest group of enemies; 0.7s later lightning strikes the circle, Charging everything inside. A strike on an already Charged enemy leaps to more enemies nearby at half damage.",
+   "per": "per strike",
+   "cooldown_by_rank": [
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   "stats": [
+    {
+     "label": "Leaps from Charged enemies",
+     "by_rank": [
+      "2",
+      "2",
+      "2",
+      "2",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "4"
+     ]
+    },
+    {
+     "label": "Radius",
+     "by_rank": [
+      "95",
+      "95",
+      "95",
+      "95",
+      "95",
+      "95",
+      "95",
+      "95",
+      "95",
+      "95"
+     ]
+    }
+   ]
+  },
+  "storm": {
+   "desc": "A small storm gathers above you, sharpening your strikes.",
+   "fx": "A storm cloud hangs over you. Your critical hits lower the target's lightning resistance for 4s.",
+   "stats": [
+    {
+     "label": "Crit chance",
+     "by_rank": [
+      "+3%",
+      "+6%",
+      "+9%",
+      "+12%",
+      "+15%",
+      "+18%",
+      "+21%",
+      "+24%",
+      "+27%",
+      "+30%"
+     ]
+    },
+    {
+     "label": "Lightning resistance lowered",
+     "by_rank": [
+      "10%",
+      "12%",
+      "13%",
+      "15%",
+      "17%",
+      "18%",
+      "20%",
+      "22%",
+      "23%",
+      "25%"
+     ]
+    }
+   ]
+  },
+  "hurricane": {
+   "desc": "Conjure a raging hurricane that batters and slows everything nearby.",
+   "fx": "A hurricane rages around you, hitting and slowing every enemy inside. While it rages you gain Defence. Casting again restarts it.",
+   "per": "per hit",
+   "cooldown_by_rank": [
+    8,
+    7.777777777777778,
+    7.555555555555555,
+    7.333333333333333,
+    7.111111111111111,
+    6.888888888888889,
+    6.666666666666667,
+    6.444444444444445,
+    6.222222222222222,
+    6
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "4s",
+      "5s",
+      "6s",
+      "7s",
+      "8s",
+      "8.6s",
+      "9.2s",
+      "9.8s",
+      "10.4s",
+      "11s"
+     ]
+    },
+    {
+     "label": "Defence",
+     "by_rank": [
+      "+10%",
+      "+12%",
+      "+14%",
+      "+17%",
+      "+19%",
+      "+21%",
+      "+23%",
+      "+26%",
+      "+28%",
+      "+30%"
+     ]
+    },
+    {
+     "label": "Radius",
+     "by_rank": [
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110",
+      "110"
+     ]
+    }
+   ]
+  },
+  "fireball": {
+   "desc": "Hurl quick balls of fire.",
+   "fx": "Fast balls of fire that may set the target burning (less often elites and bosses; a 2nd ball from Rank 3, a 3rd from Rank 5). Casts quickly and never roots you.",
+   "per": "per ball",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Balls per cast",
+     "by_rank": [
+      "1",
+      "1",
+      "2",
+      "2",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3"
+     ]
+    },
+    {
+     "label": "Burn chance",
+     "by_rank": [
+      "33%",
+      "40%",
+      "48%",
+      "55%",
+      "63%",
+      "70%",
+      "78%",
+      "85%",
+      "93%",
+      "100%"
+     ]
+    }
+   ]
+  },
+  "iceBolt": {
+   "desc": "Hurl a heavy bolt of ice that chills and freezes.",
+   "fx": "A big, slow bolt of ice that chills. 3 cold hits in a row freeze an ordinary enemy (6 for brutes and elites; bosses are only chilled).",
+   "per": "per bolt",
+   "cost": "(computed)"
+  },
+  "manaShield": {
+   "desc": "Let your mana take the blows meant for your flesh.",
+   "fx": "Part of every hit you take is paid from your mana instead of your life, as long as you have mana (Ice Armor soaks first).",
+   "stats": [
+    {
+     "label": "Damage taken from mana",
+     "by_rank": [
+      "30%",
+      "33%",
+      "37%",
+      "40%",
+      "43%",
+      "47%",
+      "50%",
+      "53%",
+      "57%",
+      "60%"
+     ]
+    },
+    {
+     "label": "Mana per point of damage",
+     "by_rank": [
+      "1.5",
+      "1.44",
+      "1.39",
+      "1.33",
+      "1.28",
+      "1.22",
+      "1.17",
+      "1.11",
+      "1.06",
+      "1"
+     ]
+    }
+   ]
+  },
+  "immolate": {
+   "desc": "Set yourself ablaze, trading your own life for raw power.",
+   "fx": "You burn for 5% of your max life per second (less with fire resistance, never fatal) but hit far harder, and your Fireballs explode for 60% damage around the target. Burns until you press it again or fall to 25% life.",
+   "cooldown_by_rank": [
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20
+   ],
+   "stats": [
+    {
+     "label": "Damage dealt",
+     "by_rank": [
+      "+38%",
+      "+47%",
+      "+56%",
+      "+66%",
+      "+75%",
+      "+90%",
+      "+105%",
+      "+120%",
+      "+135%",
+      "+150%"
+     ]
+    }
+   ]
+  },
+  "iceArmor": {
+   "desc": "Encase yourself in a shell of protective ice.",
+   "fx": "While on a skill button it keeps 25% of your mana to hold a barrier of ice that soaks damage and refills when you are not hit. Press it to shatter the barrier: cold damage equal to what it holds, freezing nearby enemies (bosses are only chilled).",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Barrier",
+     "by_rank": [
+      "25% of max life",
+      "28% of max life",
+      "31% of max life",
+      "33% of max life",
+      "36% of max life",
+      "39% of max life",
+      "42% of max life",
+      "44% of max life",
+      "47% of max life",
+      "50% of max life"
+     ]
+    },
+    {
+     "label": "Refills after you go unhit for",
+     "by_rank": [
+      "5s",
+      "4.78s",
+      "4.56s",
+      "4.33s",
+      "4.11s",
+      "3.89s",
+      "3.67s",
+      "3.44s",
+      "3.22s",
+      "3s"
+     ]
+    }
+   ]
+  },
+  "permafrost": {
+   "desc": "Freeze the ground beneath your foes.",
+   "fx": "Enemies on the frozen ground are slowed and take more cold damage; chilled or frozen ones that die there shatter, hurting those nearby. Standing on it you move 10% faster and cast Ice Bolt 25% faster.",
+   "cooldown_by_rank": [
+    12,
+    11.555555555555555,
+    11.11111111111111,
+    10.666666666666666,
+    10.222222222222221,
+    9.777777777777779,
+    9.333333333333334,
+    8.88888888888889,
+    8.444444444444445,
+    8
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "6s",
+      "7s",
+      "8s",
+      "9s",
+      "10s",
+      "10.6s",
+      "11.2s",
+      "11.8s",
+      "12.4s",
+      "13s"
+     ]
+    },
+    {
+     "label": "Enemy slow",
+     "by_rank": [
+      "25%",
+      "28%",
+      "31%",
+      "33%",
+      "36%",
+      "39%",
+      "42%",
+      "44%",
+      "47%",
+      "50%"
+     ]
+    },
+    {
+     "label": "Cold damage taken",
+     "by_rank": [
+      "+20%",
+      "+23%",
+      "+27%",
+      "+30%",
+      "+33%",
+      "+37%",
+      "+40%",
+      "+43%",
+      "+47%",
+      "+50%"
+     ]
+    },
+    {
+     "label": "Radius",
+     "by_rank": [
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150",
+      "150"
+     ]
+    }
+   ]
+  },
+  "pyroTorrent": {
+   "desc": "Channel a searing torrent of fire through every enemy in its path.",
+   "fx": "A beam of fire that burns every enemy along it and doubles in strength over 5s. It lasts until you press it again, run out of mana or dodge. You can walk while channelling, slower.",
+   "per": "per tick",
+   "cost": "(computed)"
+  },
+  "elementalMastery": {
+   "desc": "Master fire and ice, and the dance between them.",
+   "fx": "Your fire and cold damage hits harder and pierces enemy resistance, and a spell of the opposite element to your last one (fire after ice, ice after fire) hits harder still. From Rank 5, Fireball and Ice Bolt explode on hit (fire burns, ice chills).",
+   "stats": [
+    {
+     "label": "Fire and cold damage",
+     "by_rank": [
+      "+10%",
+      "+13%",
+      "+16%",
+      "+19%",
+      "+22%",
+      "+25%",
+      "+28%",
+      "+31%",
+      "+34%",
+      "+37%"
+     ]
+    },
+    {
+     "label": "Opposite-element bonus",
+     "by_rank": [
+      "+25%",
+      "+29%",
+      "+33%",
+      "+37%",
+      "+41%",
+      "+44%",
+      "+48%",
+      "+52%",
+      "+56%",
+      "+60%"
+     ]
+    },
+    {
+     "label": "Resistance pierced",
+     "by_rank": [
+      "5%",
+      "6%",
+      "7%",
+      "8%",
+      "9%",
+      "10%",
+      "11%",
+      "12%",
+      "13%",
+      "14%"
+     ]
+    },
+    {
+     "label": "Explosion (of the hit)",
+     "by_rank": [
+      "none",
+      "none",
+      "none",
+      "none",
+      "40%",
+      "43%",
+      "46%",
+      "49%",
+      "52%",
+      "55%"
+     ]
+    }
+   ]
+  },
+  "meteor": {
+   "desc": "Call a burning meteor down from the sky.",
+   "fx": "A meteor falls on the thickest group of enemies 0.9s later, crushing everything in a wide circle (less at the edge) and leaving the ground burning for 4s.",
+   "per": "impact",
+   "x": "burning ground, per second",
+   "cooldown_by_rank": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "stats": [
+    {
+     "label": "Radius",
+     "by_rank": [
+      "125",
+      "125",
+      "125",
+      "125",
+      "125",
+      "125",
+      "125",
+      "125",
+      "125",
+      "125"
+     ]
+    }
+   ]
+  },
+  "blizzard": {
+   "desc": "Call down a freezing blizzard of ice shards.",
+   "fx": "Ice shards rain on the thickest group of enemies, chilling them; repeated hits freeze.",
+   "per": "per tick",
+   "cooldown_by_rank": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "4s",
+      "4s",
+      "4s",
+      "4s",
+      "4s",
+      "4s",
+      "4s",
+      "4s",
+      "4s",
+      "4s"
+     ]
+    },
+    {
+     "label": "Radius",
+     "by_rank": [
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130",
+      "130"
+     ]
+    }
+   ]
+  },
+  "soulSap": {
+   "desc": "Drain the life and soul from your enemies with a venomous touch.",
+   "fx": "Drains the nearest enemy. Every hit gives you 1 soul and a drained enemy gives 3 more when it dies (up to 50).",
+   "per": "per hit (extra targets half)",
+   "cost": "(computed)",
+   "stats": [
+    {
+     "label": "Targets",
+     "by_rank": [
+      "1",
+      "1",
+      "2",
+      "2",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3"
+     ]
+    }
+   ]
+  },
+  "soulShield": {
+   "desc": "The souls you hold circle you and turn aside blows.",
+   "fx": "Each soul you hold gives a chance to block hits (up to 50%). No souls are spent.",
+   "stats": [
+    {
+     "label": "Block per soul",
+     "by_rank": [
+      "0.46%",
+      "0.50%",
+      "0.54%",
+      "0.57%",
+      "0.61%",
+      "0.65%",
+      "0.69%",
+      "0.73%",
+      "0.77%",
+      "0.80%"
+     ]
+    },
+    {
+     "label": "Block at 50 souls",
+     "by_rank": [
+      "23%",
+      "25%",
+      "27%",
+      "29%",
+      "31%",
+      "33%",
+      "35%",
+      "36%",
+      "38%",
+      "40%"
+     ]
+    }
+   ]
+  },
+  "raiseDead": {
+   "desc": "Raise the dead to fight for you.",
+   "fx": "Raise skeletons: one per rank, up to 5. A fallen skeleton rises again 3s later for 1 soul; with no souls it stays down until you cast again. Casting again blows up the ones standing and raises a fresh set.",
+   "cost": "(computed)",
+   "cooldown_by_rank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+   ],
+   "stats": [
+    {
+     "label": "Skeletons",
+     "by_rank": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "5",
+      "5",
+      "5",
+      "5",
+      "5"
+     ]
+    },
+    {
+     "label": "Skeleton damage",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "label": "Skeleton life",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   ]
+  },
+  "fear": {
+   "desc": "Curse your foes with dread.",
+   "fx": "Curse the biggest group of enemies in range: they flee in terror (bosses stand their ground) and take more damage while cursed.",
+   "cooldown_by_rank": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "stats": [
+    {
+     "label": "Flee",
+     "by_rank": [
+      "1.5s",
+      "2s",
+      "2.5s",
+      "3s",
+      "3.5s",
+      "3.8s",
+      "4.1s",
+      "4.4s",
+      "4.7s",
+      "5s"
+     ]
+    },
+    {
+     "label": "Damage taken",
+     "by_rank": [
+      "+15%",
+      "+19%",
+      "+23%",
+      "+27%",
+      "+31%",
+      "+34%",
+      "+38%",
+      "+42%",
+      "+46%",
+      "+50%"
+     ]
+    },
+    {
+     "label": "Curse lasts",
+     "by_rank": [
+      "4.5s",
+      "5s",
+      "5.5s",
+      "6s",
+      "6.5s",
+      "6.8s",
+      "7.1s",
+      "7.4s",
+      "7.7s",
+      "8s"
+     ]
+    },
+    {
+     "label": "Radius",
+     "by_rank": [
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105"
+     ]
+    }
+   ]
+  },
+  "sacrifice": {
+   "desc": "Your fallen skeletons burst in poison.",
+   "fx": "When a skeleton dies (or you recast Raise Skeletons) it bursts, poisoning everything around it. No souls are spent.",
+   "stats": [
+    {
+     "label": "Blast (of the skeleton's life)",
+     "by_rank": [
+      "25%",
+      "27%",
+      "29%",
+      "32%",
+      "34%",
+      "36%",
+      "38%",
+      "41%",
+      "43%",
+      "45%"
+     ]
+    },
+    {
+     "label": "Radius",
+     "by_rank": [
+      "90",
+      "90",
+      "90",
+      "90",
+      "90",
+      "90",
+      "90",
+      "90",
+      "90",
+      "90"
+     ]
+    }
+   ]
+  },
+  "soulHunger": {
+   "desc": "Bleed your own life into a growing store of souls.",
+   "fx": "Above 50% life you burn 1.5% of your max life to make each soul, and cannot regenerate above 50%. Every 2 souls you hold give +1% damage (+25% at 50).",
+   "stats": [
+    {
+     "label": "A soul every",
+     "by_rank": [
+      "0.32s",
+      "0.28s",
+      "0.24s",
+      "0.2s",
+      "0.16s",
+      "0.14s",
+      "0.11s",
+      "0.09s",
+      "0.06s",
+      "0.04s"
+     ]
+    }
+   ]
+  },
+  "soulFire": {
+   "desc": "Hurl a great rolling ball of green soul-flame.",
+   "fx": "A big, slow ball of soul-flame that bursts on the first enemy it reaches, hitting everything around for half physical, half poison damage. Spending 20 souls adds +20% damage.",
+   "per": "per burst",
+   "cost": "(computed)",
+   "cooldown_by_rank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+   ],
+   "stats": [
+    {
+     "label": "Radius",
+     "by_rank": [
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105",
+      "105"
+     ]
+    }
+   ]
+  },
+  "demonBind": {
+   "desc": "Bind a hulking demon to your service.",
+   "fx": "Holding 5 souls binds a demon that fights for you. It hits 10% harder and grows for every 10 souls you hold, and its hits heal you and itself.",
+   "stats": [
+    {
+     "label": "Demon damage",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "label": "Demon life",
+     "by_rank": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "label": "Life leech",
+     "by_rank": [
+      "10%",
+      "13%",
+      "15%",
+      "18%",
+      "20%",
+      "22%",
+      "23%",
+      "25%",
+      "26%",
+      "28%"
+     ]
+    }
+   ]
+  },
+  "soulGate": {
+   "desc": "Tear open a gate that spits out skeletal archers.",
+   "fx": "A gate opens and sends out skeletal archers, each costing 4 souls as it comes out and lasting 6s. The cooldown starts when it closes.",
+   "cooldown_by_rank": [
+    20,
+    18,
+    16,
+    14,
+    12,
+    10,
+    10,
+    10,
+    10,
+    10
+   ],
+   "stats": [
+    {
+     "label": "Open for",
+     "by_rank": [
+      "8s",
+      "9s",
+      "10s",
+      "11s",
+      "12s",
+      "13s",
+      "14s",
+      "15s",
+      "15s",
+      "15s"
+     ]
+    },
+    {
+     "label": "An archer every",
+     "by_rank": [
+      "1s",
+      "0.9s",
+      "0.8s",
+      "0.7s",
+      "0.6s",
+      "0.54s",
+      "0.48s",
+      "0.42s",
+      "0.36s",
+      "0.3s"
+     ]
+    },
+    {
+     "label": "Archer damage",
+     "by_rank": [
+      "x1",
+      "x1.05",
+      "x1.1",
+      "x1.15",
+      "x1.2",
+      "x1.25",
+      "x1.3",
+      "x1.35",
+      "x1.4",
+      "x1.45"
+     ]
+    }
+   ]
+  },
+  "plague": {
+   "desc": "Corrupt the earth itself with a spreading plague.",
+   "fx": "A large poison zone that grows up to +150% stronger the longer a foe stays in it. The cooldown starts when it ends.",
+   "per": "per second",
+   "cooldown_by_rank": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "stats": [
+    {
+     "label": "Duration",
+     "by_rank": [
+      "8s",
+      "8s",
+      "8s",
+      "8s",
+      "8s",
+      "8s",
+      "8s",
+      "8s",
+      "8s",
+      "8s"
+     ]
+    },
+    {
+     "label": "Radius",
+     "by_rank": [
+      "260",
+      "260",
+      "260",
+      "260",
+      "260",
+      "260",
+      "260",
+      "260",
+      "260",
+      "260"
+     ]
+    }
+   ]
+  }
+ },
+ "resource_cost_by_rank": {
+  "plague": [
+   95,
+   103,
+   110,
+   118,
+   125,
+   133,
+   141,
+   148,
+   156,
+   163
+  ],
+  "soulGate": [
+   40,
+   43,
+   46,
+   50,
+   53,
+   56,
+   59,
+   62,
+   66,
+   69
+  ],
+  "immolate": [
+   35,
+   38,
+   41,
+   43,
+   46,
+   49,
+   52,
+   55,
+   57,
+   60
+  ],
+  "flameVortex": [
+   45,
+   49,
+   52,
+   56,
+   59,
+   63,
+   67,
+   70,
+   74,
+   77
+  ],
+  "permafrost": [
+   21,
+   23,
+   24,
+   26,
+   28,
+   29,
+   31,
+   33,
+   34,
+   36
+  ],
+  "nova": [
+   26,
+   28,
+   30,
+   32,
+   34,
+   36,
+   38,
+   41,
+   43,
+   45
+  ],
+  "tornado": [
+   35,
+   38,
+   41,
+   43,
+   46,
+   49,
+   52,
+   55,
+   57,
+   60
+  ],
+  "hurricane": [
+   95,
+   103,
+   110,
+   118,
+   125,
+   133,
+   141,
+   148,
+   156,
+   163
+  ],
+  "iceArmor": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "pyroTorrent": [
+   20,
+   22,
+   23,
+   25,
+   26,
+   28,
+   30,
+   31,
+   33,
+   34
+  ],
+  "blizzard": [
+   95,
+   103,
+   110,
+   118,
+   125,
+   133,
+   141,
+   148,
+   156,
+   163
+  ],
+  "meteor": [
+   95,
+   103,
+   110,
+   118,
+   125,
+   133,
+   141,
+   148,
+   156,
+   163
+  ],
+  "stormcall": [
+   32,
+   35,
+   37,
+   40,
+   42,
+   45,
+   47,
+   50,
+   52,
+   55
+  ],
+  "raiseDead": [
+   12,
+   24,
+   36,
+   48,
+   60,
+   60,
+   60,
+   60,
+   60,
+   60
+  ],
+  "fear": [
+   25,
+   27,
+   29,
+   31,
+   33,
+   35,
+   37,
+   39,
+   41,
+   43
+  ],
+  "shieldThrow": [
+   25,
+   25,
+   25,
+   25,
+   25,
+   25,
+   25,
+   25,
+   25,
+   25
+  ],
+  "bulwark": [
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30
+  ],
+  "mirrorSteel": [
+   25,
+   24,
+   23,
+   22,
+   21,
+   19,
+   18,
+   17,
+   16,
+   15
+  ],
+  "seismicSlam": [
+   25,
+   25,
+   25,
+   25,
+   25,
+   25,
+   25,
+   25,
+   25,
+   25
+  ],
+  "seismicAnchor": [
+   25,
+   24,
+   23,
+   22,
+   21,
+   19,
+   18,
+   17,
+   16,
+   15
+  ],
+  "whirlwind": [
+   15,
+   15,
+   15,
+   15,
+   15,
+   15,
+   15,
+   15,
+   15,
+   15
+  ],
+  "unbreakable": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "cripplingShot": [
+   24,
+   26,
+   28,
+   30,
+   32,
+   34,
+   36,
+   37,
+   39,
+   41
+  ],
+  "stunShot": [
+   31,
+   34,
+   36,
+   39,
+   41,
+   44,
+   46,
+   49,
+   51,
+   54
+  ],
+  "explosiveShot": [
+   36,
+   39,
+   42,
+   45,
+   48,
+   50,
+   53,
+   56,
+   59,
+   62
+  ],
+  "aimedShot": [
+   40,
+   43,
+   46,
+   50,
+   53,
+   56,
+   59,
+   62,
+   66,
+   69
+  ],
+  "rainOfArrows": [
+   50,
+   54,
+   58,
+   62,
+   66,
+   70,
+   74,
+   78,
+   82,
+   86
+  ],
+  "huntersMark": [
+   20,
+   22,
+   23,
+   25,
+   26,
+   28,
+   30,
+   31,
+   33,
+   34
+  ],
+  "explosiveTrap": [
+   42,
+   45,
+   49,
+   52,
+   55,
+   59,
+   62,
+   66,
+   69,
+   72
+  ],
+  "poisonTrap": [
+   24,
+   26,
+   28,
+   30,
+   32,
+   34,
+   36,
+   37,
+   39,
+   41
+  ],
+  "frostTrap": [
+   24,
+   26,
+   28,
+   30,
+   32,
+   34,
+   36,
+   37,
+   39,
+   41
+  ],
+  "fieldDress": [
+   30,
+   32,
+   35,
+   37,
+   40,
+   42,
+   44,
+   47,
+   49,
+   52
+  ],
+  "survivalFieldDress": [
+   30,
+   32,
+   35,
+   37,
+   40,
+   42,
+   44,
+   47,
+   49,
+   52
+  ],
+  "packTactics": [
+   20,
+   22,
+   23,
+   25,
+   26,
+   28,
+   30,
+   31,
+   33,
+   34
+  ],
+  "recall": [
+   20,
+   22,
+   23,
+   25,
+   26,
+   28,
+   30,
+   31,
+   33,
+   34
+  ],
+  "beastFury": [
+   20,
+   22,
+   23,
+   25,
+   26,
+   28,
+   30,
+   31,
+   33,
+   34
+  ]
+ },
+ "weapon_damage_pct_by_rank": {
+  "fury": [
+   0.88,
+   0.9233333333333333,
+   0.9666666666666667,
+   1.01,
+   1.0533333333333332,
+   1.0966666666666667,
+   1.14,
+   1.1833333333333333,
+   1.2266666666666666,
+   1.27
+  ],
+  "assault": [
+   1.01,
+   1.06,
+   1.11,
+   1.16,
+   1.21,
+   1.26,
+   1.31,
+   1.36,
+   1.41,
+   1.46
+  ],
+  "shieldBash": [
+   0.84,
+   0.8777777777777778,
+   0.9155555555555556,
+   0.9533333333333333,
+   0.9911111111111112,
+   1.028888888888889,
+   1.0666666666666667,
+   1.1044444444444443,
+   1.1422222222222222,
+   1.18
+  ],
+  "seismicSlam": [
+   1.12,
+   1.1911111111111112,
+   1.2622222222222224,
+   1.3333333333333335,
+   1.4044444444444446,
+   1.4755555555555555,
+   1.5466666666666666,
+   1.6177777777777778,
+   1.6888888888888889,
+   1.76
+  ],
+  "guardian": [
+   1.84,
+   2.0266666666666664,
+   2.2133333333333334,
+   2.4,
+   2.586666666666667,
+   2.773333333333334,
+   2.96,
+   3.146666666666667,
+   3.333333333333334,
+   3.52
+  ],
+  "cleave": [
+   4.03,
+   4.362222222222222,
+   4.694444444444445,
+   5.026666666666666,
+   5.358888888888889,
+   5.691111111111111,
+   6.0233333333333325,
+   6.355555555555555,
+   6.687777777777779,
+   7.02
+  ],
+  "shieldThrow": [
+   1.44,
+   1.5155555555555553,
+   1.5911111111111111,
+   1.6666666666666665,
+   1.7422222222222223,
+   1.8177777777777777,
+   1.893333333333333,
+   1.968888888888889,
+   2.0444444444444447,
+   2.12
+  ],
+  "leap": [
+   1.2,
+   1.261111111111111,
+   1.3222222222222222,
+   1.3833333333333335,
+   1.4444444444444446,
+   1.5055555555555555,
+   1.5666666666666667,
+   1.6277777777777778,
+   1.6888888888888889,
+   1.75
+  ],
+  "whirlwind": [
+   1.61,
+   1.7422222222222223,
+   1.8744444444444446,
+   2.0066666666666664,
+   2.138888888888889,
+   2.2711111111111113,
+   2.4033333333333333,
+   2.5355555555555553,
+   2.667777777777778,
+   2.8
+  ],
+  "riposte": [
+   0.5,
+   0.5277777777777778,
+   0.5555555555555556,
+   0.5833333333333333,
+   0.6111111111111112,
+   0.6388888888888888,
+   0.6666666666666665,
+   0.6944444444444444,
+   0.7222222222222223,
+   0.75
+  ],
+  "reave": [
+   1.06,
+   1.0844444444444443,
+   1.1088888888888888,
+   1.1333333333333333,
+   1.1577777777777778,
+   1.1822222222222223,
+   1.2066666666666668,
+   1.231111111111111,
+   1.2555555555555555,
+   1.28
+  ],
+  "vengeance": [
+   1.06,
+   1.1111111111111112,
+   1.1622222222222223,
+   1.2133333333333334,
+   1.2644444444444445,
+   1.3155555555555554,
+   1.3666666666666665,
+   1.4177777777777778,
+   1.468888888888889,
+   1.52
+  ],
+  "smite": [
+   1.05,
+   1.1,
+   1.15,
+   1.2,
+   1.25,
+   1.3,
+   1.35,
+   1.4,
+   1.45,
+   1.5
+  ],
+  "judgment": [
+   2.4,
+   2.5277777777777777,
+   2.6555555555555554,
+   2.783333333333333,
+   2.911111111111111,
+   3.038888888888889,
+   3.166666666666667,
+   3.2944444444444447,
+   3.4222222222222225,
+   3.55
+  ],
+  "consecrate": [
+   0.46,
+   0.48333333333333334,
+   0.5066666666666666,
+   0.53,
+   0.5533333333333333,
+   0.5766666666666667,
+   0.6,
+   0.6233333333333334,
+   0.6466666666666667,
+   0.67
+  ],
+  "trap": [
+   0.56,
+   0.5877777777777777,
+   0.6155555555555555,
+   0.6433333333333333,
+   0.6711111111111111,
+   0.6988888888888889,
+   0.7266666666666666,
+   0.7544444444444445,
+   0.7822222222222223,
+   0.81
+  ],
+  "rapidShot": [
+   0.69,
+   0.7222222222222223,
+   0.7544444444444445,
+   0.7866666666666667,
+   0.8188888888888889,
+   0.8511111111111112,
+   0.8833333333333334,
+   0.9155555555555556,
+   0.9477777777777777,
+   0.98
+  ],
+  "multiShot": [
+   0.6,
+   0.6277777777777778,
+   0.6555555555555556,
+   0.6833333333333332,
+   0.7111111111111111,
+   0.7388888888888888,
+   0.7666666666666666,
+   0.7944444444444444,
+   0.8222222222222223,
+   0.85
+  ],
+  "splinterShot": [
+   1.09,
+   1.1433333333333333,
+   1.1966666666666668,
+   1.25,
+   1.3033333333333335,
+   1.3566666666666665,
+   1.41,
+   1.4633333333333332,
+   1.5166666666666666,
+   1.57
+  ],
+  "cripplingShot": [
+   2.43,
+   2.55,
+   2.67,
+   2.79,
+   2.91,
+   3.03,
+   3.15,
+   3.27,
+   3.39,
+   3.51
+  ],
+  "explosiveShot": [
+   2.03,
+   2.1266666666666665,
+   2.2233333333333336,
+   2.32,
+   2.4166666666666665,
+   2.513333333333333,
+   2.61,
+   2.706666666666666,
+   2.8033333333333332,
+   2.9
+  ],
+  "stunShot": [
+   2.7,
+   2.8355555555555556,
+   2.971111111111111,
+   3.106666666666667,
+   3.2422222222222223,
+   3.3777777777777778,
+   3.513333333333333,
+   3.648888888888889,
+   3.7844444444444445,
+   3.92
+  ],
+  "aimedShot": [
+   3.91,
+   4.242222222222222,
+   4.5744444444444445,
+   4.906666666666666,
+   5.238888888888889,
+   5.571111111111111,
+   5.903333333333332,
+   6.235555555555555,
+   6.567777777777779,
+   6.9
+  ],
+  "rainOfArrows": [
+   2.99,
+   3.143333333333333,
+   3.296666666666667,
+   3.45,
+   3.603333333333333,
+   3.756666666666667,
+   3.91,
+   4.0633333333333335,
+   4.216666666666667,
+   4.37
+  ],
+  "poisonTrap": [
+   0.53,
+   0.5566666666666666,
+   0.5833333333333334,
+   0.61,
+   0.6366666666666666,
+   0.6633333333333333,
+   0.69,
+   0.7166666666666666,
+   0.7433333333333333,
+   0.77
+  ],
+  "frostTrap": [
+   0.53,
+   0.5566666666666666,
+   0.5833333333333334,
+   0.61,
+   0.6366666666666666,
+   0.6633333333333333,
+   0.69,
+   0.7166666666666666,
+   0.7433333333333333,
+   0.77
+  ],
+  "explosiveTrap": [
+   6.37,
+   6.687777777777779,
+   7.0055555555555555,
+   7.323333333333334,
+   7.641111111111111,
+   7.95888888888889,
+   8.276666666666667,
+   8.594444444444445,
+   8.912222222222221,
+   9.23
+  ],
+  "lightningArc": [
+   1.05,
+   1.1022222222222222,
+   1.1544444444444444,
+   1.2066666666666668,
+   1.258888888888889,
+   1.3111111111111111,
+   1.3633333333333335,
+   1.4155555555555555,
+   1.4677777777777776,
+   1.52
+  ],
+  "fireball": [
+   0.72,
+   0.7555555555555555,
+   0.7911111111111111,
+   0.8266666666666667,
+   0.8622222222222223,
+   0.8977777777777777,
+   0.9333333333333332,
+   0.9688888888888889,
+   1.0044444444444445,
+   1.04
+  ],
+  "iceBolt": [
+   3.7,
+   3.8833333333333333,
+   4.066666666666666,
+   4.25,
+   4.433333333333334,
+   4.616666666666666,
+   4.8,
+   4.983333333333333,
+   5.166666666666666,
+   5.35
+  ],
+  "nova": [
+   1.45,
+   1.5222222222222224,
+   1.5944444444444446,
+   1.6666666666666665,
+   1.738888888888889,
+   1.8111111111111111,
+   1.8833333333333335,
+   1.9555555555555555,
+   2.0277777777777777,
+   2.1
+  ],
+  "thunderstep": [
+   0.5,
+   0.5244444444444444,
+   0.5488888888888889,
+   0.5733333333333334,
+   0.5977777777777777,
+   0.6222222222222222,
+   0.6466666666666667,
+   0.6711111111111111,
+   0.6955555555555556,
+   0.72
+  ],
+  "tornado": [
+   0.97,
+   1.0177777777777777,
+   1.0655555555555556,
+   1.1133333333333333,
+   1.1611111111111112,
+   1.208888888888889,
+   1.2566666666666666,
+   1.3044444444444445,
+   1.3522222222222222,
+   1.4
+  ],
+  "hurricane": [
+   0.93,
+   0.9766666666666667,
+   1.0233333333333332,
+   1.07,
+   1.1166666666666667,
+   1.1633333333333333,
+   1.21,
+   1.2566666666666668,
+   1.3033333333333335,
+   1.35
+  ],
+  "pyroTorrent": [
+   0.28,
+   0.29555555555555557,
+   0.3111111111111111,
+   0.32666666666666666,
+   0.3422222222222222,
+   0.3577777777777778,
+   0.37333333333333335,
+   0.38888888888888884,
+   0.40444444444444444,
+   0.42
+  ],
+  "blizzard": [
+   0.54,
+   0.5677777777777778,
+   0.5955555555555556,
+   0.6233333333333333,
+   0.6511111111111112,
+   0.6788888888888889,
+   0.7066666666666666,
+   0.7344444444444445,
+   0.7622222222222222,
+   0.79
+  ],
+  "stormcall": [
+   2.7,
+   2.8444444444444446,
+   2.988888888888889,
+   3.1333333333333333,
+   3.2777777777777777,
+   3.4222222222222225,
+   3.566666666666667,
+   3.711111111111111,
+   3.8555555555555556,
+   4
+  ],
+  "meteor": [
+   6.2,
+   6.511111111111111,
+   6.822222222222222,
+   7.133333333333334,
+   7.444444444444445,
+   7.7555555555555555,
+   8.066666666666666,
+   8.377777777777778,
+   8.68888888888889,
+   9
+  ],
+  "flameVortex": [
+   0.31,
+   0.32666666666666666,
+   0.3433333333333334,
+   0.36,
+   0.37666666666666665,
+   0.39333333333333337,
+   0.41,
+   0.4266666666666667,
+   0.44333333333333336,
+   0.46
+  ],
+  "plague": [
+   0.47,
+   0.49333333333333335,
+   0.5166666666666666,
+   0.54,
+   0.5633333333333334,
+   0.5866666666666667,
+   0.61,
+   0.6333333333333333,
+   0.6566666666666667,
+   0.68
+  ],
+  "soulSap": [
+   1.05,
+   1.1033333333333333,
+   1.1566666666666667,
+   1.21,
+   1.2633333333333332,
+   1.3166666666666667,
+   1.37,
+   1.4233333333333331,
+   1.4766666666666666,
+   1.53
+  ],
+  "deathBolt": [
+   0.92,
+   0.9666666666666667,
+   1.0133333333333332,
+   1.06,
+   1.1066666666666667,
+   1.1533333333333333,
+   1.2,
+   1.2466666666666668,
+   1.2933333333333334,
+   1.34
+  ],
+  "soulFire": [
+   2.3,
+   2.411111111111111,
+   2.522222222222222,
+   2.6333333333333333,
+   2.7444444444444445,
+   2.8555555555555556,
+   2.9666666666666663,
+   3.0777777777777775,
+   3.188888888888889,
+   3.3
+  ]
+ },
+ "SKILL_WD": {
+  "fury": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    88,
+    127
+   ],
+   "per": "per strike (3 strikes)"
+  },
+  "assault": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    101,
+    146
+   ],
+   "per": "per 20 Rage spent (Rage Burst)"
+  },
+  "shieldBash": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    84,
+    118
+   ],
+   "per": "per hit"
+  },
+  "seismicSlam": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    112,
+    176
+   ],
+   "per": "per enemy around you"
+  },
+  "guardian": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    184,
+    352
+   ],
+   "per": "per trample hit",
+   "x": {
+    "n": "final burst",
+    "t": "physical",
+    "r": [
+     145,
+     145
+    ]
+   }
+  },
+  "cleave": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    403,
+    702
+   ],
+   "per": "per swing"
+  },
+  "shieldThrow": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    144,
+    212
+   ],
+   "per": "per hit"
+  },
+  "leap": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    120,
+    175
+   ],
+   "per": "on landing"
+  },
+  "whirlwind": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    161,
+    280
+   ],
+   "per": "per spin tick"
+  },
+  "riposte": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    50,
+    75
+   ],
+   "per": "per counter-strike"
+  },
+  "reave": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    106,
+    128
+   ],
+   "per": "per hit (plus Bleed)"
+  },
+  "vengeance": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    106,
+    152
+   ],
+   "per": "per hit",
+   "split": {
+    "t": "fire",
+    "f": 0.5
+   }
+  },
+  "smite": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    105,
+    150
+   ],
+   "per": "per bolt (Wrath x1.9)",
+   "split": {
+    "t": "fire",
+    "f": 0.5
+   }
+  },
+  "judgment": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    240,
+    355
+   ],
+   "per": "per pillar",
+   "split": {
+    "t": "fire",
+    "f": 0.5
+   }
+  },
+  "consecrate": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    46,
+    67
+   ],
+   "per": "per tick",
+   "split": {
+    "t": "fire",
+    "f": 0.5
+   }
+  },
+  "trap": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    56,
+    81
+   ],
+   "per": "when sprung"
+  },
+  "rapidShot": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    69,
+    98
+   ],
+   "per": "per arrow (3 arrows)"
+  },
+  "multiShot": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    60,
+    85
+   ],
+   "per": "per arrow"
+  },
+  "splinterShot": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    109,
+    157
+   ],
+   "per": "per arrow (splinters 70%)"
+  },
+  "cripplingShot": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    243,
+    351
+   ],
+   "per": "per arrow (plus Bleed)"
+  },
+  "explosiveShot": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    203,
+    290
+   ],
+   "per": "arrow hit",
+   "x": {
+    "n": "blast",
+    "t": "fire",
+    "r": [
+     95,
+     140
+    ]
+   }
+  },
+  "stunShot": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    270,
+    392
+   ],
+   "per": "per arrow"
+  },
+  "aimedShot": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    391,
+    690
+   ],
+   "per": "held shot (a quick tap: 145%)",
+   "tap": 145
+  },
+  "rainOfArrows": {
+   "t": "physical",
+   "c": "weapon",
+   "r": [
+    299,
+    437
+   ],
+   "per": "per volley (3 volleys)"
+  },
+  "poisonTrap": {
+   "t": "poison",
+   "c": "weapon",
+   "r": [
+    53,
+    77
+   ],
+   "per": "per second in the cloud, rising up to +150% the longer a foe stays in it"
+  },
+  "frostTrap": {
+   "t": "cold",
+   "c": "weapon",
+   "r": [
+    53,
+    77
+   ],
+   "per": "burst"
+  },
+  "explosiveTrap": {
+   "t": "fire",
+   "c": "weapon",
+   "r": [
+    637,
+    923
+   ],
+   "per": "explosion (plus Burn)"
+  },
+  "lightningArc": {
+   "t": "lightning",
+   "c": "spell",
+   "r": [
+    105,
+    152
+   ],
+   "per": "per hit"
+  },
+  "fireball": {
+   "t": "fire",
+   "c": "spell",
+   "r": [
+    72,
+    104
+   ],
+   "per": "per ball"
+  },
+  "iceBolt": {
+   "t": "cold",
+   "c": "spell",
+   "r": [
+    370,
+    535
+   ],
+   "per": "per bolt"
+  },
+  "nova": {
+   "t": "lightning",
+   "c": "spell",
+   "r": [
+    145,
+    210
+   ],
+   "per": "per enemy"
+  },
+  "thunderstep": {
+   "t": "lightning",
+   "c": "spell",
+   "r": [
+    50,
+    72
+   ],
+   "per": "per charge"
+  },
+  "tornado": {
+   "t": "physical",
+   "c": "spell",
+   "r": [
+    97,
+    140
+   ],
+   "per": "per hit"
+  },
+  "hurricane": {
+   "t": "physical",
+   "c": "spell",
+   "r": [
+    93,
+    135
+   ],
+   "per": "per tick"
+  },
+  "pyroTorrent": {
+   "t": "fire",
+   "c": "spell",
+   "r": [
+    28,
+    42
+   ],
+   "per": "per tick (ramps to x2)"
+  },
+  "blizzard": {
+   "t": "cold",
+   "c": "spell",
+   "r": [
+    54,
+    79
+   ],
+   "per": "per tick"
+  },
+  "stormcall": {
+   "t": "lightning",
+   "c": "spell",
+   "r": [
+    270,
+    400
+   ],
+   "per": "strike (Charged targets chain it on at 50%)"
+  },
+  "meteor": {
+   "t": "fire",
+   "c": "spell",
+   "r": [
+    620,
+    900
+   ],
+   "per": "impact (less at the edge)",
+   "x": {
+    "n": "burning ground, per second",
+    "t": "fire",
+    "r": [
+     60,
+     88
+    ]
+   }
+  },
+  "flameVortex": {
+   "t": "fire",
+   "c": "spell",
+   "r": [
+    31,
+    46
+   ],
+   "per": "per tick",
+   "x": {
+    "n": "final blast",
+    "t": "fire",
+    "r": [
+     250,
+     365
+    ]
+   }
+  },
+  "plague": {
+   "t": "poison",
+   "c": "spell",
+   "r": [
+    47,
+    68
+   ],
+   "per": "per second, rising up to +150% the longer a foe stays in it"
+  },
+  "soulSap": {
+   "t": "poison",
+   "c": "spell",
+   "r": [
+    105,
+    153
+   ],
+   "per": "per hit (extra targets 50%)"
+  },
+  "deathBolt": {
+   "t": "physical",
+   "c": "spell",
+   "r": [
+    92,
+    134
+   ],
+   "per": "per bolt (x1.5 below half life)"
+  },
+  "soulFire": {
+   "t": "physical",
+   "c": "spell",
+   "r": [
+    230,
+    330
+   ],
+   "per": "explosion, half physical / half poison",
+   "split": {
+    "t": "poison",
+    "f": 0.5
+   }
+  }
+ },
+ "SKILL_WD_TUNE": {
+  "shieldBash": 0.8,
+  "shieldThrow": 0.8,
+  "seismicSlam": 0.8,
+  "guardian": 0.8,
+  "fury": 1.3,
+  "assault": 1.3,
+  "cleave": 1.3,
+  "whirlwind": 1.3,
+  "trap": 1.3,
+  "poisonTrap": 1.3,
+  "frostTrap": 1.3,
+  "explosiveTrap": 1.3,
+  "rapidShot": 1.15,
+  "splinterShot": 1.15,
+  "rainOfArrows": 1.15,
+  "aimedShot": 1.15,
+  "cripplingShot": 1.35,
+  "explosiveShot": 1.35,
+  "stunShot": 1.35
+ },
+ "RESOURCE_SKILLS": {
+  "plague": {
+   "cost": 95
+  },
+  "soulGate": {
+   "cost": 40
+  },
+  "immolate": {
+   "cost": 35
+  },
+  "flameVortex": {
+   "cost": 45
+  },
+  "permafrost": {
+   "cost": 21,
+   "step": -1.8
+  },
+  "nova": {
+   "cost": 26
+  },
+  "tornado": {
+   "cost": 35
+  },
+  "hurricane": {
+   "cost": 95
+  },
+  "iceArmor": {
+   "cost": 0
+  },
+  "pyroTorrent": {
+   "cost": 20
+  },
+  "blizzard": {
+   "cost": 95
+  },
+  "meteor": {
+   "cost": 95
+  },
+  "stormcall": {
+   "cost": 32
+  },
+  "raiseDead": {
+   "cost": 12
+  },
+  "fear": {
+   "cost": 25
+  },
+  "shieldThrow": {
+   "cost": 25,
+   "minCd": 1
+  },
+  "bulwark": {
+   "cost": 30
+  },
+  "mirrorSteel": {
+   "cost": 25,
+   "step": -1.1111111111111112
+  },
+  "seismicSlam": {
+   "cost": 25
+  },
+  "seismicAnchor": {
+   "cost": 25,
+   "step": -1.1111111111111112
+  },
+  "whirlwind": {
+   "cost": 15,
+   "minCd": 1
+  },
+  "unbreakable": {
+   "cost": 0,
+   "minCd": 8
+  },
+  "cripplingShot": {
+   "cost": 24,
+   "step": 1.2
+  },
+  "stunShot": {
+   "cost": 31.2,
+   "step": 1.44
+  },
+  "explosiveShot": {
+   "cost": 36,
+   "step": 1.8
+  },
+  "aimedShot": {
+   "cost": 40,
+   "step": 2
+  },
+  "rainOfArrows": {
+   "cost": 50,
+   "step": 2.5
+  },
+  "huntersMark": {
+   "cost": 20,
+   "step": 0.5
+  },
+  "explosiveTrap": {
+   "cost": 42,
+   "step": 1.2
+  },
+  "poisonTrap": {
+   "cost": 24,
+   "step": 0.96
+  },
+  "frostTrap": {
+   "cost": 24,
+   "step": 0.96
+  },
+  "fieldDress": {
+   "cost": 30
+  },
+  "survivalFieldDress": {
+   "cost": 30
+  },
+  "packTactics": {
+   "cost": 20
+  },
+  "recall": {
+   "cost": 20
+  },
+  "beastFury": {
+   "cost": 20
+  }
+ },
+ "SKILL_ROW_LEVEL_REQ": [
+  1,
+  7,
+  14,
+  21,
+  32,
+  35
+ ],
+ "CAST_FX_SKILLS": {
+  "fear": "#c89bff",
+  "raiseDead": "#8fe6c8",
+  "soulGate": "#8fe6c8",
+  "plague": "#8dff6a",
+  "soulFire": "#ff9a4a",
+  "nova": "#9adfff",
+  "tornado": "#cfd8e8",
+  "hurricane": "#cfd8e8",
+  "iceArmor": "#9adfff",
+  "pyroTorrent": "#ff9a4a",
+  "blizzard": "#9adfff",
+  "immolate": "#ff9a4a",
+  "flameVortex": "#ff9a4a",
+  "permafrost": "#9adfff",
+  "stormcall": "#9adfff",
+  "meteor": "#ff9a4a",
+  "battlecry": "#ffd070",
+  "banner": "#ffd070",
+  "commander": "#ffd070",
+  "rally": "#ffd070",
+  "guardian": "#cfe0ff",
+  "bulwark": "#cfe0ff",
+  "mirrorSteel": "#cfe0ff",
+  "consecrate": "#ffe9a0",
+  "judgment": "#ffe9a0",
+  "bloodrage": "#ff6a5a",
+  "seismicAnchor": "#cfe0ff",
+  "packTactics": "#9ad88a",
+  "fieldDress": "#9ad88a",
+  "survivalFieldDress": "#9ad88a",
+  "huntersMark": "#e8c25a",
+  "beastFury": "#ffb05a",
+  "recall": "#9ad88a",
+  "vanish": "#bfc8d8",
+  "shadowStep": "#bfc8d8"
+ },
+ "STAFF_SPELL_INFO": {
+  "fire": {
+   "label": "Fireball",
+   "color": "#ff7a3d",
+   "desc": "Fire projectile that burns for extra damage over time."
+  },
+  "ice": {
+   "label": "Ice Bolt",
+   "color": "#7ad0ff",
+   "desc": "Cold projectile that chills, slowing the enemy."
+  },
+  "lightning": {
+   "label": "Lightning Arc",
+   "color": "#e6e35a",
+   "desc": "Bolt of lightning that briefly stuns an enemy."
+  },
+  "soul": {
+   "label": "Soul Sap",
+   "color": "#a06ad0",
+   "desc": "Drains the souls of your enemies."
+  }
+ },
+ "SKILL_TREE_CLASS_GROUP": {
+  "warrior": [
+   "defender",
+   "berserker",
+   "templar"
+  ],
+  "ranger": [
+   "survivalist",
+   "marksman",
+   "hunter"
+  ],
+  "mystic": [
+   "djinn",
+   "elementalist",
+   "necromancer"
+  ]
+ },
+ "RESOURCE_NAME": {
+  "mystic": "Mana",
+  "warrior": "Rage",
+  "ranger": "Stamina"
+ },
+ "EVASION_SKILL_PCT": [
+  0.05,
+  0.1,
+  0.15,
+  0.2,
+  0.22,
+  0.24,
+  0.26,
+  0.28,
+  0.3,
+  0.32
+ ],
+ "IRON_SKIN_DEFENSE_PCT_BY_RANK": [
+  0,
+  0.085,
+  0.136,
+  0.17,
+  0.195,
+  0.2125
+ ],
+ "IRON_SKIN_DR_BY_RANK": [
+  0,
+  0.017,
+  0.0255,
+  0.034,
+  0.051,
+  0.068
+ ],
+ "IRON_SKIN_RESIST_BY_RANK": [
+  0,
+  5,
+  8.75,
+  12.5,
+  16.25,
+  20
+ ],
+ "MASTERY_LEVEL_REQ": {
+  "6": 40,
+  "7": 40,
+  "8": 40,
+  "9": 60,
+  "10": 60
+ },
+ "FOLLOWER_FORMATION_ANGLES": {
+  "1": [
+   0
+  ],
+  "2": [
+   -0.9,
+   0.9
+  ],
+  "3": [
+   -1.15,
+   0,
+   1.15
+  ]
+ }
+}

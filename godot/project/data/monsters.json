@@ -1,0 +1,5141 @@
+{
+ "types": {
+  "boss": {
+   "type": "boss",
+   "by_level": {
+    "10": {
+     "life": 1830,
+     "damage": 21.9,
+     "speed": 74,
+     "radius": 24,
+     "attack_cd": 1,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 5909,
+     "damage": 45.3,
+     "speed": 70,
+     "radius": 24,
+     "attack_cd": 1,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 19272,
+     "damage": 80.5,
+     "speed": 72,
+     "radius": 24,
+     "attack_cd": 1,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "grunt": {
+   "type": "grunt",
+   "by_level": {
+    "10": {
+     "life": 203,
+     "damage": 18,
+     "speed": 104,
+     "radius": 15,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 723,
+     "damage": 40.2,
+     "speed": 88,
+     "radius": 15,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2451,
+     "damage": 73.4,
+     "speed": 94,
+     "radius": 15,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "archer": {
+   "type": "archer",
+   "by_level": {
+    "10": {
+     "life": 144,
+     "damage": 14.1,
+     "speed": 71,
+     "radius": 13,
+     "attack_cd": 1.6,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 530,
+     "damage": 32.1,
+     "speed": 73,
+     "radius": 13,
+     "attack_cd": 1.6,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1815,
+     "damage": 59.1,
+     "speed": 71,
+     "radius": 13,
+     "attack_cd": 1.6,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "brute": {
+   "type": "brute",
+   "by_level": {
+    "10": {
+     "life": 409,
+     "damage": 27.3,
+     "speed": 56,
+     "radius": 21,
+     "attack_cd": 0.8250000000000001,
+     "armor": 10,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1350,
+     "damage": 57.7,
+     "speed": 52,
+     "radius": 21,
+     "attack_cd": 0.8250000000000001,
+     "armor": 10,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 4444,
+     "damage": 103.3,
+     "speed": 56,
+     "radius": 21,
+     "attack_cd": 0.8250000000000001,
+     "armor": 10,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "wolf": {
+   "type": "wolf",
+   "by_level": {
+    "10": {
+     "life": 173,
+     "damage": 19.5,
+     "speed": 131,
+     "radius": 14,
+     "attack_cd": 0.8,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 627,
+     "damage": 43.1,
+     "speed": 152,
+     "radius": 14,
+     "attack_cd": 0.8,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2133,
+     "damage": 78.3,
+     "speed": 137,
+     "radius": 14,
+     "attack_cd": 0.8,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "spider": {
+   "type": "spider",
+   "by_level": {
+    "10": {
+     "life": 147,
+     "damage": 15.6,
+     "speed": 26,
+     "radius": 13,
+     "attack_cd": 3,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 535,
+     "damage": 35.1,
+     "speed": 31,
+     "radius": 13,
+     "attack_cd": 3,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1824,
+     "damage": 64.1,
+     "speed": 26,
+     "radius": 13,
+     "attack_cd": 3,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "bear": {
+   "type": "bear",
+   "by_level": {
+    "10": {
+     "life": 266,
+     "damage": 21.6,
+     "speed": 69,
+     "radius": 22,
+     "attack_cd": 1.1,
+     "armor": 5,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 878,
+     "damage": 45.6,
+     "speed": 68,
+     "radius": 22,
+     "attack_cd": 1.1,
+     "armor": 5,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2889,
+     "damage": 81.6,
+     "speed": 76,
+     "radius": 22,
+     "attack_cd": 1.1,
+     "armor": 5,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "treant": {
+   "type": "treant",
+   "by_level": {
+    "10": {
+     "life": 719,
+     "damage": 29.5,
+     "speed": 43,
+     "radius": 24,
+     "attack_cd": 1.6,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 2343,
+     "damage": 60.3,
+     "speed": 49,
+     "radius": 24,
+     "attack_cd": 1.6,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 7671,
+     "damage": 106.7,
+     "speed": 52,
+     "radius": 24,
+     "attack_cd": 1.6,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "frozenzombie": {
+   "type": "frozenzombie",
+   "by_level": {
+    "10": {
+     "life": 360,
+     "damage": 21.9,
+     "speed": 40,
+     "radius": 16,
+     "attack_cd": 1.1,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1172,
+     "damage": 46.8,
+     "speed": 43,
+     "radius": 16,
+     "attack_cd": 1.1,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 3836,
+     "damage": 84,
+     "speed": 44,
+     "radius": 16,
+     "attack_cd": 1.1,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "bandit": {
+   "type": "bandit",
+   "by_level": {
+    "10": {
+     "life": 242,
+     "damage": 21.1,
+     "speed": 120,
+     "radius": 15,
+     "attack_cd": 0.9,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 825,
+     "damage": 46,
+     "speed": 126,
+     "radius": 15,
+     "attack_cd": 0.9,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2750,
+     "damage": 83.3,
+     "speed": 136,
+     "radius": 15,
+     "attack_cd": 0.9,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "banditarcher": {
+   "type": "banditarcher",
+   "by_level": {
+    "10": {
+     "life": 163,
+     "damage": 18,
+     "speed": 96,
+     "radius": 13,
+     "attack_cd": 1.6,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 581,
+     "damage": 40.2,
+     "speed": 101,
+     "radius": 13,
+     "attack_cd": 1.6,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1965,
+     "damage": 73.4,
+     "speed": 101,
+     "radius": 13,
+     "attack_cd": 1.6,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "banditbrute": {
+   "type": "banditbrute",
+   "by_level": {
+    "10": {
+     "life": 441,
+     "damage": 29.7,
+     "speed": 61,
+     "radius": 17,
+     "attack_cd": 0.8624999999999999,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1401,
+     "damage": 61.4,
+     "speed": 59,
+     "radius": 17,
+     "attack_cd": 0.8624999999999999,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 4537,
+     "damage": 109,
+     "speed": 62,
+     "radius": 17,
+     "attack_cd": 0.8624999999999999,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "skeleton": {
+   "type": "skeleton",
+   "by_level": {
+    "10": {
+     "life": 255,
+     "damage": 21.1,
+     "speed": 70,
+     "radius": 15,
+     "attack_cd": 0.95,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 866,
+     "damage": 46,
+     "speed": 80,
+     "radius": 15,
+     "attack_cd": 0.95,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2881,
+     "damage": 83.3,
+     "speed": 69,
+     "radius": 15,
+     "attack_cd": 0.95,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "skeletonarcher": {
+   "type": "skeletonarcher",
+   "by_level": {
+    "10": {
+     "life": 173,
+     "damage": 18,
+     "speed": 96,
+     "radius": 13,
+     "attack_cd": 1.6,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 606,
+     "damage": 40.2,
+     "speed": 90,
+     "radius": 13,
+     "attack_cd": 1.6,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2039,
+     "damage": 73.4,
+     "speed": 95,
+     "radius": 13,
+     "attack_cd": 1.6,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "wraith": {
+   "type": "wraith",
+   "by_level": {
+    "10": {
+     "life": 7191,
+     "damage": 21.9,
+     "speed": 118,
+     "radius": 26,
+     "attack_cd": 1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 23434,
+     "damage": 45.3,
+     "speed": 118,
+     "radius": 26,
+     "attack_cd": 1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 76713,
+     "damage": 80.5,
+     "speed": 118,
+     "radius": 26,
+     "attack_cd": 1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "imp": {
+   "type": "imp",
+   "by_level": {
+    "10": {
+     "life": 150,
+     "damage": 20.3,
+     "speed": 152,
+     "radius": 11,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 499,
+     "damage": 43.8,
+     "speed": 143,
+     "radius": 11,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1647,
+     "damage": 79.1,
+     "speed": 140,
+     "radius": 11,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "hellhound": {
+   "type": "hellhound",
+   "by_level": {
+    "10": {
+     "life": 203,
+     "damage": 24.2,
+     "speed": 152,
+     "radius": 19,
+     "attack_cd": 0.85,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 662,
+     "damage": 51.9,
+     "speed": 162,
+     "radius": 19,
+     "attack_cd": 0.85,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2170,
+     "damage": 93.3,
+     "speed": 151,
+     "radius": 19,
+     "attack_cd": 0.85,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "cinderfiend": {
+   "type": "cinderfiend",
+   "by_level": {
+    "10": {
+     "life": 216,
+     "damage": 23.4,
+     "speed": 79,
+     "radius": 14,
+     "attack_cd": 1.4,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 703,
+     "damage": 51.1,
+     "speed": 80,
+     "radius": 14,
+     "attack_cd": 1.4,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2301,
+     "damage": 92.6,
+     "speed": 85,
+     "radius": 14,
+     "attack_cd": 1.4,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "brimstonebrute": {
+   "type": "brimstonebrute",
+   "by_level": {
+    "10": {
+     "life": 1144,
+     "damage": 33,
+     "speed": 52,
+     "radius": 28,
+     "attack_cd": 1.125,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 3719,
+     "damage": 67.7,
+     "speed": 53,
+     "radius": 28,
+     "attack_cd": 1.125,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 12162,
+     "damage": 119.9,
+     "speed": 52,
+     "radius": 28,
+     "attack_cd": 1.125,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "demonboss": {
+   "type": "demonboss",
+   "by_level": {
+    "10": {
+     "life": 16539,
+     "damage": 20.3,
+     "speed": 130,
+     "radius": 40,
+     "attack_cd": 1.3,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 52675,
+     "damage": 42.6,
+     "speed": 130,
+     "radius": 40,
+     "attack_cd": 1.3,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 170827,
+     "damage": 76,
+     "speed": 130,
+     "radius": 40,
+     "attack_cd": 1.3,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "wraithlord": {
+   "type": "wraithlord",
+   "by_level": {
+    "10": {
+     "life": 18043,
+     "damage": 20.3,
+     "speed": 112,
+     "radius": 34,
+     "attack_cd": 1.3,
+     "armor": 16,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 57464,
+     "damage": 42.6,
+     "speed": 112,
+     "radius": 34,
+     "attack_cd": 1.3,
+     "armor": 16,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 186357,
+     "damage": 76,
+     "speed": 112,
+     "radius": 34,
+     "attack_cd": 1.3,
+     "armor": 16,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "skeletonbrute": {
+   "type": "skeletonbrute",
+   "by_level": {
+    "10": {
+     "life": 458,
+     "damage": 30.5,
+     "speed": 63,
+     "radius": 14,
+     "attack_cd": 0.8999999999999999,
+     "armor": 9,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1447,
+     "damage": 63.6,
+     "speed": 61,
+     "radius": 14,
+     "attack_cd": 0.8999999999999999,
+     "armor": 9,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 4678,
+     "damage": 113.2,
+     "speed": 54,
+     "radius": 14,
+     "attack_cd": 0.8999999999999999,
+     "armor": 9,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "zombie": {
+   "type": "zombie",
+   "by_level": {
+    "10": {
+     "life": 281,
+     "damage": 22.7,
+     "speed": 47,
+     "radius": 16,
+     "attack_cd": 1.15,
+     "armor": 3,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 948,
+     "damage": 48.9,
+     "speed": 48,
+     "radius": 16,
+     "attack_cd": 1.15,
+     "armor": 3,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 3143,
+     "damage": 88.3,
+     "speed": 43,
+     "radius": 16,
+     "attack_cd": 1.15,
+     "armor": 3,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "vampire": {
+   "type": "vampire",
+   "by_level": {
+    "10": {
+     "life": 425,
+     "damage": 25.8,
+     "speed": 166,
+     "radius": 15,
+     "attack_cd": 0.85,
+     "armor": 5,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1375,
+     "damage": 54.8,
+     "speed": 192,
+     "radius": 15,
+     "attack_cd": 0.85,
+     "armor": 5,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 4491,
+     "damage": 98.3,
+     "speed": 180,
+     "radius": 15,
+     "attack_cd": 0.85,
+     "armor": 5,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "leviathan": {
+   "type": "leviathan",
+   "by_level": {
+    "10": {
+     "life": 1471,
+     "damage": 21.1,
+     "speed": 0,
+     "radius": 100,
+     "attack_cd": 2,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 4738,
+     "damage": 44.6,
+     "speed": 0,
+     "radius": 100,
+     "attack_cd": 2,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 15436,
+     "damage": 79.8,
+     "speed": 0,
+     "radius": 100,
+     "attack_cd": 2,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "fhdwarf": {
+   "type": "fhdwarf",
+   "by_level": {
+    "10": {
+     "life": 255,
+     "damage": 21.9,
+     "speed": 77,
+     "radius": 14,
+     "attack_cd": 1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 907,
+     "damage": 48.2,
+     "speed": 79,
+     "radius": 14,
+     "attack_cd": 1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 3069,
+     "damage": 87.6,
+     "speed": 87,
+     "radius": 14,
+     "attack_cd": 1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "fhcleric": {
+   "type": "fhcleric",
+   "by_level": {
+    "10": {
+     "life": 222,
+     "damage": 18.7,
+     "speed": 36,
+     "radius": 14,
+     "attack_cd": 2,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 774,
+     "damage": 40.9,
+     "speed": 37,
+     "radius": 14,
+     "attack_cd": 2,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2601,
+     "damage": 74.1,
+     "speed": 41,
+     "radius": 14,
+     "attack_cd": 2,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "fhaxe": {
+   "type": "fhaxe",
+   "by_level": {
+    "10": {
+     "life": 209,
+     "damage": 23.4,
+     "speed": 84,
+     "radius": 13,
+     "attack_cd": 2,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 754,
+     "damage": 51.1,
+     "speed": 75,
+     "radius": 13,
+     "attack_cd": 2,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2563,
+     "damage": 92.6,
+     "speed": 82,
+     "radius": 13,
+     "attack_cd": 2,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "fhbrute": {
+   "type": "fhbrute",
+   "by_level": {
+    "10": {
+     "life": 523,
+     "damage": 32,
+     "speed": 54,
+     "radius": 22,
+     "attack_cd": 0.9750000000000001,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1732,
+     "damage": 67.9,
+     "speed": 56,
+     "radius": 22,
+     "attack_cd": 0.9750000000000001,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 5707,
+     "damage": 121.8,
+     "speed": 53,
+     "radius": 22,
+     "attack_cd": 0.9750000000000001,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "alligator": {
+   "type": "alligator",
+   "by_level": {
+    "10": {
+     "life": 448,
+     "damage": 27.3,
+     "speed": 80,
+     "radius": 20,
+     "attack_cd": 1.3,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1462,
+     "damage": 57.7,
+     "speed": 81,
+     "radius": 20,
+     "attack_cd": 1.3,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 4790,
+     "damage": 103.3,
+     "speed": 74,
+     "radius": 20,
+     "attack_cd": 1.3,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "tortuga": {
+   "type": "tortuga",
+   "by_level": {
+    "10": {
+     "life": 490,
+     "damage": 22.7,
+     "speed": 58,
+     "radius": 17,
+     "attack_cd": 1.4,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1579,
+     "damage": 48.9,
+     "speed": 59,
+     "radius": 17,
+     "attack_cd": 1.4,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 5145,
+     "damage": 88.3,
+     "speed": 56,
+     "radius": 17,
+     "attack_cd": 1.4,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "anaconda": {
+   "type": "anaconda",
+   "by_level": {
+    "10": {
+     "life": 255,
+     "damage": 19.5,
+     "speed": 129,
+     "radius": 16,
+     "attack_cd": 1,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 825,
+     "damage": 43.1,
+     "speed": 127,
+     "radius": 16,
+     "attack_cd": 1,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2694,
+     "damage": 78.3,
+     "speed": 131,
+     "radius": 16,
+     "attack_cd": 1,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "giantoad": {
+   "type": "giantoad",
+   "by_level": {
+    "10": {
+     "life": 366,
+     "damage": 24.2,
+     "speed": 59,
+     "radius": 20,
+     "attack_cd": 1.2,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1182,
+     "damage": 51.9,
+     "speed": 60,
+     "radius": 20,
+     "attack_cd": 1.2,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 3854,
+     "damage": 93.3,
+     "speed": 59,
+     "radius": 20,
+     "attack_cd": 1.2,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "poisonplant": {
+   "type": "poisonplant",
+   "by_level": {
+    "10": {
+     "life": 229,
+     "damage": 19.5,
+     "speed": 0,
+     "radius": 14,
+     "attack_cd": 2.4,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 764,
+     "damage": 41.6,
+     "speed": 0,
+     "radius": 14,
+     "attack_cd": 2.4,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2526,
+     "damage": 74.8,
+     "speed": 0,
+     "radius": 14,
+     "attack_cd": 2.4,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "armordon": {
+   "type": "armordon",
+   "by_level": {
+    "10": {
+     "life": 621,
+     "damage": 23.7,
+     "speed": 46,
+     "radius": 36,
+     "attack_cd": 1.4,
+     "armor": 16,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1987,
+     "damage": 50.3,
+     "speed": 46,
+     "radius": 36,
+     "attack_cd": 1.4,
+     "armor": 16,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 6455,
+     "damage": 90,
+     "speed": 52,
+     "radius": 36,
+     "attack_cd": 1.4,
+     "armor": 16,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "crawler": {
+   "type": "crawler",
+   "by_level": {
+    "10": {
+     "life": 418,
+     "damage": 23,
+     "speed": 66,
+     "radius": 21,
+     "attack_cd": 1.3,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1365,
+     "damage": 49.3,
+     "speed": 69,
+     "radius": 21,
+     "attack_cd": 1.3,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 4472,
+     "damage": 88.6,
+     "speed": 63,
+     "radius": 21,
+     "attack_cd": 1.3,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "buffalo": {
+   "type": "buffalo",
+   "by_level": {
+    "10": {
+     "life": 497,
+     "damage": 23.2,
+     "speed": 67,
+     "radius": 29,
+     "attack_cd": 1.5,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1589,
+     "damage": 49.3,
+     "speed": 64,
+     "radius": 29,
+     "attack_cd": 1.5,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 5164,
+     "damage": 88.5,
+     "speed": 67,
+     "radius": 29,
+     "attack_cd": 1.5,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "raptor": {
+   "type": "raptor",
+   "by_level": {
+    "10": {
+     "life": 242,
+     "damage": 21.1,
+     "speed": 140,
+     "radius": 22,
+     "attack_cd": 0.9,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "fire",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 785,
+     "damage": 46,
+     "speed": 133,
+     "radius": 22,
+     "attack_cd": 0.9,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "fire",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2563,
+     "damage": 83.3,
+     "speed": 140,
+     "radius": 22,
+     "attack_cd": 0.9,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "fire",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "sandsnake": {
+   "type": "sandsnake",
+   "by_level": {
+    "10": {
+     "life": 190,
+     "damage": 17.2,
+     "speed": 146,
+     "radius": 13,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 622,
+     "damage": 38,
+     "speed": 152,
+     "radius": 13,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2039,
+     "damage": 69.1,
+     "speed": 149,
+     "radius": 13,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "poison",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "stormsnake": {
+   "type": "stormsnake",
+   "by_level": {
+    "10": {
+     "life": 216,
+     "damage": 19.5,
+     "speed": 139,
+     "radius": 13,
+     "attack_cd": 1,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "lightning",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 703,
+     "damage": 43.1,
+     "speed": 137,
+     "radius": 13,
+     "attack_cd": 1,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "lightning",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2301,
+     "damage": 78.3,
+     "speed": 125,
+     "radius": 13,
+     "attack_cd": 1,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "lightning",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "goblin": {
+   "type": "goblin",
+   "by_level": {
+    "10": {
+     "life": 190,
+     "damage": 18.7,
+     "speed": 109,
+     "radius": 12,
+     "attack_cd": 0.8,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 642,
+     "damage": 40.9,
+     "speed": 103,
+     "radius": 12,
+     "attack_cd": 0.8,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2133,
+     "damage": 74.1,
+     "speed": 107,
+     "radius": 12,
+     "attack_cd": 0.8,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "goblinarcher": {
+   "type": "goblinarcher",
+   "by_level": {
+    "10": {
+     "life": 137,
+     "damage": 17.2,
+     "speed": 79,
+     "radius": 11,
+     "attack_cd": 1.5,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 479,
+     "damage": 38,
+     "speed": 78,
+     "radius": 11,
+     "attack_cd": 1.5,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1609,
+     "damage": 69.1,
+     "speed": 70,
+     "radius": 11,
+     "attack_cd": 1.5,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "fhtemplar": {
+   "type": "fhtemplar",
+   "by_level": {
+    "10": {
+     "life": 1824,
+     "damage": 32.3,
+     "speed": 53,
+     "radius": 25,
+     "attack_cd": 1.35,
+     "armor": 34,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 5777,
+     "damage": 64.4,
+     "speed": 51,
+     "radius": 25,
+     "attack_cd": 1.35,
+     "armor": 34,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 18692,
+     "damage": 112.8,
+     "speed": 50,
+     "radius": 25,
+     "attack_cd": 1.35,
+     "armor": 34,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "hwsentinel": {
+   "type": "hwsentinel",
+   "by_level": {
+    "10": {
+     "life": 752,
+     "damage": 29.7,
+     "speed": 69,
+     "radius": 20,
+     "attack_cd": 1.25,
+     "armor": 20,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 2394,
+     "damage": 61.4,
+     "speed": 66,
+     "radius": 20,
+     "attack_cd": 1.25,
+     "armor": 20,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 7765,
+     "damage": 109,
+     "speed": 67,
+     "radius": 20,
+     "attack_cd": 1.25,
+     "armor": 20,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "hwwarden": {
+   "type": "hwwarden",
+   "by_level": {
+    "10": {
+     "life": 1340,
+     "damage": 37.5,
+     "speed": 47,
+     "radius": 23,
+     "attack_cd": 1.6,
+     "armor": 32,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 4126,
+     "damage": 76,
+     "speed": 50,
+     "radius": 23,
+     "attack_cd": 1.6,
+     "armor": 32,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 13191,
+     "damage": 133.9,
+     "speed": 46,
+     "radius": 23,
+     "attack_cd": 1.6,
+     "armor": 32,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "hwvanguard": {
+   "type": "hwvanguard",
+   "by_level": {
+    "10": {
+     "life": 621,
+     "damage": 26.6,
+     "speed": 98,
+     "radius": 20,
+     "attack_cd": 0.95,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1987,
+     "damage": 55.5,
+     "speed": 107,
+     "radius": 20,
+     "attack_cd": 0.95,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 6455,
+     "damage": 99,
+     "speed": 108,
+     "radius": 20,
+     "attack_cd": 0.95,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "hwmendicant": {
+   "type": "hwmendicant",
+   "by_level": {
+    "10": {
+     "life": 431,
+     "damage": 18.7,
+     "speed": 93,
+     "radius": 15,
+     "attack_cd": 1.9,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1386,
+     "damage": 39.4,
+     "speed": 93,
+     "radius": 15,
+     "attack_cd": 1.9,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 4509,
+     "damage": 70.5,
+     "speed": 94,
+     "radius": 15,
+     "attack_cd": 1.9,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "hwbulwark": {
+   "type": "hwbulwark",
+   "by_level": {
+    "10": {
+     "life": 1128,
+     "damage": 31.2,
+     "speed": 51,
+     "radius": 21,
+     "attack_cd": 1.5,
+     "armor": 30,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 3490,
+     "damage": 64.3,
+     "speed": 53,
+     "radius": 21,
+     "attack_cd": 1.5,
+     "armor": 30,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 11180,
+     "damage": 114,
+     "speed": 53,
+     "radius": 21,
+     "attack_cd": 1.5,
+     "armor": 30,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "hwduelist": {
+   "type": "hwduelist",
+   "by_level": {
+    "10": {
+     "life": 350,
+     "damage": 16,
+     "speed": 147,
+     "radius": 15,
+     "attack_cd": 0.42,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1105,
+     "damage": 33.2,
+     "speed": 137,
+     "radius": 15,
+     "attack_cd": 0.42,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 3574,
+     "damage": 59.1,
+     "speed": 146,
+     "radius": 15,
+     "attack_cd": 0.42,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "banditking": {
+   "type": "banditking",
+   "by_level": {
+    "10": {
+     "life": 3971,
+     "damage": 32.6,
+     "speed": 86,
+     "radius": 27,
+     "attack_cd": 1,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 12608,
+     "damage": 67.5,
+     "speed": 84,
+     "radius": 27,
+     "attack_cd": 1,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 40836,
+     "damage": 119.9,
+     "speed": 90,
+     "radius": 27,
+     "attack_cd": 1,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "hwguardian": {
+   "type": "hwguardian",
+   "by_level": {
+    "10": {
+     "life": 5857,
+     "damage": 45.3,
+     "speed": 62,
+     "radius": 46,
+     "attack_cd": 1.5,
+     "armor": 36,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 18910,
+     "damage": 89.1,
+     "speed": 60,
+     "radius": 46,
+     "attack_cd": 1.5,
+     "armor": 36,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 61670,
+     "damage": 155.3,
+     "speed": 60,
+     "radius": 46,
+     "attack_cd": 1.5,
+     "armor": 36,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "cultist": {
+   "type": "cultist",
+   "by_level": {
+    "10": {
+     "life": 490,
+     "damage": 22.7,
+     "speed": 88,
+     "radius": 15,
+     "attack_cd": 1.5,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1579,
+     "damage": 48.9,
+     "speed": 81,
+     "radius": 15,
+     "attack_cd": 1.5,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 5145,
+     "damage": 88.3,
+     "speed": 89,
+     "radius": 15,
+     "attack_cd": 1.5,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "cogcrawler": {
+   "type": "cogcrawler",
+   "by_level": {
+    "10": {
+     "life": 307,
+     "damage": 20.3,
+     "speed": 144,
+     "radius": 13,
+     "attack_cd": 0.8,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1009,
+     "damage": 43.8,
+     "speed": 134,
+     "radius": 13,
+     "attack_cd": 0.8,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 3312,
+     "damage": 79.1,
+     "speed": 136,
+     "radius": 13,
+     "attack_cd": 0.8,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "gearguard": {
+   "type": "gearguard",
+   "by_level": {
+    "10": {
+     "life": 1007,
+     "damage": 34.4,
+     "speed": 54,
+     "radius": 27,
+     "attack_cd": 1.5,
+     "armor": 26,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 3250,
+     "damage": 69,
+     "speed": 49,
+     "radius": 27,
+     "attack_cd": 1.5,
+     "armor": 26,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 10600,
+     "damage": 121.2,
+     "speed": 55,
+     "radius": 27,
+     "attack_cd": 1.5,
+     "armor": 26,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "coilsentry": {
+   "type": "coilsentry",
+   "by_level": {
+    "10": {
+     "life": 216,
+     "damage": 19.5,
+     "speed": 83,
+     "radius": 14,
+     "attack_cd": 1.7,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 703,
+     "damage": 43.1,
+     "speed": 70,
+     "radius": 14,
+     "attack_cd": 1.7,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2301,
+     "damage": 78.3,
+     "speed": 74,
+     "radius": 14,
+     "attack_cd": 1.7,
+     "armor": 6,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "dwconstruct": {
+   "type": "dwconstruct",
+   "by_level": {
+    "10": {
+     "life": 10031,
+     "damage": 35,
+     "speed": 62,
+     "radius": 86,
+     "attack_cd": 1.4,
+     "armor": 30,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 31773,
+     "damage": 67.8,
+     "speed": 62,
+     "radius": 86,
+     "attack_cd": 1.4,
+     "armor": 30,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 102805,
+     "damage": 117.4,
+     "speed": 62,
+     "radius": 86,
+     "attack_cd": 1.4,
+     "armor": 30,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "fhturret": {
+   "type": "fhturret",
+   "by_level": {
+    "10": {
+     "life": 490,
+     "damage": 23.9,
+     "speed": 0,
+     "radius": 19,
+     "attack_cd": 2,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1579,
+     "damage": 48.7,
+     "speed": 0,
+     "radius": 19,
+     "attack_cd": 2,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 5145,
+     "damage": 85.9,
+     "speed": 0,
+     "radius": 19,
+     "attack_cd": 2,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "cavetroll": {
+   "type": "cavetroll",
+   "by_level": {
+    "10": {
+     "life": 850,
+     "damage": 31.2,
+     "speed": 96,
+     "radius": 24,
+     "attack_cd": 1.5,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 2751,
+     "damage": 64,
+     "speed": 109,
+     "radius": 24,
+     "attack_cd": 1.5,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 8981,
+     "damage": 113.2,
+     "speed": 112,
+     "radius": 24,
+     "attack_cd": 1.5,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "lavabeetle": {
+   "type": "lavabeetle",
+   "by_level": {
+    "10": {
+     "life": 261,
+     "damage": 22.7,
+     "speed": 112,
+     "radius": 15,
+     "attack_cd": 1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 856,
+     "damage": 48.9,
+     "speed": 105,
+     "radius": 15,
+     "attack_cd": 1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2807,
+     "damage": 88.3,
+     "speed": 112,
+     "radius": 15,
+     "attack_cd": 1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "windigo": {
+   "type": "windigo",
+   "by_level": {
+    "10": {
+     "life": 523,
+     "damage": 26.6,
+     "speed": 102,
+     "radius": 25,
+     "attack_cd": 1.1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1732,
+     "damage": 57,
+     "speed": 109,
+     "radius": 25,
+     "attack_cd": 1.1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 5707,
+     "damage": 102.6,
+     "speed": 98,
+     "radius": 25,
+     "attack_cd": 1.1,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "cold",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "wraithling": {
+   "type": "wraithling",
+   "by_level": {
+    "10": {
+     "life": 177,
+     "damage": 20.3,
+     "speed": 143,
+     "radius": 14,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 581,
+     "damage": 43.8,
+     "speed": 131,
+     "radius": 14,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1908,
+     "damage": 79.1,
+     "speed": 144,
+     "radius": 14,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "poisonwalker": {
+   "type": "poisonwalker",
+   "by_level": {
+    "10": {
+     "life": 1046,
+     "damage": 33,
+     "speed": 55,
+     "radius": 32,
+     "attack_cd": 1.5,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 3362,
+     "damage": 67.7,
+     "speed": 55,
+     "radius": 32,
+     "attack_cd": 1.5,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 10946,
+     "damage": 119.9,
+     "speed": 58,
+     "radius": 32,
+     "attack_cd": 1.5,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "poisonsnake": {
+   "type": "poisonsnake",
+   "by_level": {
+    "10": {
+     "life": 105,
+     "damage": 14.8,
+     "speed": 174,
+     "radius": 9,
+     "attack_cd": 0.8,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 346,
+     "damage": 32.9,
+     "speed": 160,
+     "radius": 9,
+     "attack_cd": 0.8,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1141,
+     "damage": 59.8,
+     "speed": 171,
+     "radius": 9,
+     "attack_cd": 0.8,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "shadowcultist": {
+   "type": "shadowcultist",
+   "by_level": {
+    "10": {
+     "life": 229,
+     "damage": 21.1,
+     "speed": 89,
+     "radius": 17.5,
+     "attack_cd": 1.2,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 764,
+     "damage": 46,
+     "speed": 76,
+     "radius": 17.5,
+     "attack_cd": 1.2,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2526,
+     "damage": 83.3,
+     "speed": 85,
+     "radius": 17.5,
+     "attack_cd": 1.2,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "shadowghoul": {
+   "type": "shadowghoul",
+   "by_level": {
+    "10": {
+     "life": 229,
+     "damage": 21.1,
+     "speed": 129,
+     "radius": 15.4,
+     "attack_cd": 0.85,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "lightning",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 785,
+     "damage": 46,
+     "speed": 130,
+     "radius": 15.4,
+     "attack_cd": 0.85,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "lightning",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2619,
+     "damage": 83.3,
+     "speed": 126,
+     "radius": 15.4,
+     "attack_cd": 0.85,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "lightning",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "risendead": {
+   "type": "risendead",
+   "by_level": {
+    "10": {
+     "life": 311,
+     "damage": 24.2,
+     "speed": 65,
+     "radius": 17.6,
+     "attack_cd": 1.15,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1044,
+     "damage": 51.9,
+     "speed": 64,
+     "radius": 17.6,
+     "attack_cd": 1.15,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 3461,
+     "damage": 93.3,
+     "speed": 71,
+     "radius": 17.6,
+     "attack_cd": 1.15,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "fallengolem": {
+   "type": "fallengolem",
+   "by_level": {
+    "10": {
+     "life": 915,
+     "damage": 31.2,
+     "speed": 51,
+     "radius": 27,
+     "attack_cd": 1.5,
+     "armor": 20,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 2955,
+     "damage": 64,
+     "speed": 48,
+     "radius": 27,
+     "attack_cd": 1.5,
+     "armor": 20,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 9636,
+     "damage": 113.2,
+     "speed": 50,
+     "radius": 27,
+     "attack_cd": 1.5,
+     "armor": 20,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "vulture": {
+   "type": "vulture",
+   "by_level": {
+    "10": {
+     "life": 150,
+     "damage": 18.7,
+     "speed": 158,
+     "radius": 13.2,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 499,
+     "damage": 40.9,
+     "speed": 158,
+     "radius": 13.2,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1647,
+     "damage": 74.1,
+     "speed": 161,
+     "radius": 13.2,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "harpy": {
+   "type": "harpy",
+   "by_level": {
+    "10": {
+     "life": 209,
+     "damage": 22.7,
+     "speed": 140,
+     "radius": 13,
+     "attack_cd": 1,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 672,
+     "damage": 48.9,
+     "speed": 150,
+     "radius": 13,
+     "attack_cd": 1,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2189,
+     "damage": 88.3,
+     "speed": 143,
+     "radius": 13,
+     "attack_cd": 1,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "harpyqueen": {
+   "type": "harpyqueen",
+   "by_level": {
+    "10": {
+     "life": 10525,
+     "damage": 19.7,
+     "speed": 125,
+     "radius": 50,
+     "attack_cd": 1.2,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 33521,
+     "damage": 41.2,
+     "speed": 125,
+     "radius": 50,
+     "attack_cd": 1.2,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 108708,
+     "damage": 73.5,
+     "speed": 125,
+     "radius": 50,
+     "attack_cd": 1.2,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "giant": {
+   "type": "giant",
+   "by_level": {
+    "10": {
+     "life": 1830,
+     "damage": 43.8,
+     "speed": 34,
+     "radius": 40,
+     "attack_cd": 2.2,
+     "armor": 20,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 5909,
+     "damage": 88.2,
+     "speed": 33,
+     "radius": 40,
+     "attack_cd": 2.2,
+     "armor": 20,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 19272,
+     "damage": 155,
+     "speed": 33,
+     "radius": 40,
+     "attack_cd": 2.2,
+     "armor": 20,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "warg": {
+   "type": "warg",
+   "by_level": {
+    "10": {
+     "life": 261,
+     "damage": 25,
+     "speed": 169,
+     "radius": 18,
+     "attack_cd": 0.75,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 876,
+     "damage": 54.1,
+     "speed": 165,
+     "radius": 18,
+     "attack_cd": 0.75,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2900,
+     "damage": 97.6,
+     "speed": 167,
+     "radius": 18,
+     "attack_cd": 0.75,
+     "armor": 4,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "roc": {
+   "type": "roc",
+   "by_level": {
+    "10": {
+     "life": 314,
+     "damage": 26.6,
+     "speed": 178,
+     "radius": 22,
+     "attack_cd": 1.2,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 998,
+     "damage": 57,
+     "speed": 171,
+     "radius": 22,
+     "attack_cd": 1.2,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 3237,
+     "damage": 102.6,
+     "speed": 175,
+     "radius": 22,
+     "attack_cd": 1.2,
+     "armor": 2,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "ram": {
+   "type": "ram",
+   "by_level": {
+    "10": {
+     "life": 490,
+     "damage": 29.7,
+     "speed": 76,
+     "radius": 21,
+     "attack_cd": 1.2,
+     "armor": 10,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 1579,
+     "damage": 62.8,
+     "speed": 78,
+     "radius": 21,
+     "attack_cd": 1.2,
+     "armor": 10,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 5145,
+     "damage": 112.5,
+     "speed": 73,
+     "radius": 21,
+     "attack_cd": 1.2,
+     "armor": 10,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "mtroll": {
+   "type": "mtroll",
+   "by_level": {
+    "10": {
+     "life": 850,
+     "damage": 31.2,
+     "speed": 83,
+     "radius": 23,
+     "attack_cd": 1.5,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 2751,
+     "damage": 64,
+     "speed": 89,
+     "radius": 23,
+     "attack_cd": 1.5,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 8981,
+     "damage": 113.2,
+     "speed": 81,
+     "radius": 23,
+     "attack_cd": 1.5,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "trollelder": {
+   "type": "trollelder",
+   "by_level": {
+    "10": {
+     "life": 752,
+     "damage": 20,
+     "speed": 59,
+     "radius": 22,
+     "attack_cd": 1.6,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 2394,
+     "damage": 42.1,
+     "speed": 59,
+     "radius": 22,
+     "attack_cd": 1.6,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 7765,
+     "damage": 75.2,
+     "speed": 57,
+     "radius": 22,
+     "attack_cd": 1.6,
+     "armor": 8,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "firebat": {
+   "type": "firebat",
+   "by_level": {
+    "10": {
+     "life": 137,
+     "damage": 17.2,
+     "speed": 172,
+     "radius": 11,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "fire",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 458,
+     "damage": 38,
+     "speed": 166,
+     "radius": 11,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "fire",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1516,
+     "damage": 69.1,
+     "speed": 157,
+     "radius": 11,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": "fire",
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "magmagolem": {
+   "type": "magmagolem",
+   "by_level": {
+    "10": {
+     "life": 915,
+     "damage": 33,
+     "speed": 45,
+     "radius": 26,
+     "attack_cd": 1.5,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 2955,
+     "damage": 67.7,
+     "speed": 45,
+     "radius": 26,
+     "attack_cd": 1.5,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 9636,
+     "damage": 119.9,
+     "speed": 47,
+     "radius": 26,
+     "attack_cd": 1.5,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "magmacrawler": {
+   "type": "magmacrawler",
+   "by_level": {
+    "10": {
+     "life": 105,
+     "damage": 14.1,
+     "speed": 138,
+     "radius": 10,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 346,
+     "damage": 30.7,
+     "speed": 128,
+     "radius": 10,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 1141,
+     "damage": 55.6,
+     "speed": 134,
+     "radius": 10,
+     "attack_cd": 0.9,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "colossus": {
+   "type": "colossus",
+   "by_level": {
+    "10": {
+     "life": 19546,
+     "damage": 13.4,
+     "speed": 78,
+     "radius": 118,
+     "attack_cd": 1.6,
+     "armor": 26,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 62253,
+     "damage": 28,
+     "speed": 78,
+     "radius": 118,
+     "attack_cd": 1.6,
+     "armor": 26,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 201887,
+     "damage": 50,
+     "speed": 78,
+     "radius": 118,
+     "attack_cd": 1.6,
+     "armor": 26,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "balrog": {
+   "type": "balrog",
+   "by_level": {
+    "10": {
+     "life": 7943,
+     "damage": 21.6,
+     "speed": 88,
+     "radius": 40,
+     "attack_cd": 1.3,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 25217,
+     "damage": 44.7,
+     "speed": 88,
+     "radius": 40,
+     "attack_cd": 1.3,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 81671,
+     "damage": 79.5,
+     "speed": 88,
+     "radius": 40,
+     "attack_cd": 1.3,
+     "armor": 12,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "trex": {
+   "type": "trex",
+   "by_level": {
+    "10": {
+     "life": 7518,
+     "damage": 19.7,
+     "speed": 125,
+     "radius": 78,
+     "attack_cd": 1.3,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 23943,
+     "damage": 41.2,
+     "speed": 125,
+     "radius": 78,
+     "attack_cd": 1.3,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 77649,
+     "damage": 73.5,
+     "speed": 125,
+     "radius": 78,
+     "attack_cd": 1.3,
+     "armor": 14,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "gojira": {
+   "type": "gojira",
+   "by_level": {
+    "10": {
+     "life": 18043,
+     "damage": 20.3,
+     "speed": 118,
+     "radius": 105,
+     "attack_cd": 1.5,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 57464,
+     "damage": 42.6,
+     "speed": 118,
+     "radius": 105,
+     "attack_cd": 1.5,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 186357,
+     "damage": 76,
+     "speed": 118,
+     "radius": 105,
+     "attack_cd": 1.5,
+     "armor": 18,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "lightningraptor": {
+   "type": "lightningraptor",
+   "by_level": {
+    "10": {
+     "life": 6014,
+     "damage": 22.6,
+     "speed": 112,
+     "radius": 60,
+     "attack_cd": 1.1,
+     "armor": 10,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 19155,
+     "damage": 47.2,
+     "speed": 112,
+     "radius": 60,
+     "attack_cd": 1.1,
+     "armor": 10,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 62119,
+     "damage": 84.2,
+     "speed": 112,
+     "radius": 60,
+     "attack_cd": 1.1,
+     "armor": 10,
+     "ranged": false,
+     "dmg_type": "fire",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  },
+  "boar": {
+   "type": "boar",
+   "by_level": {
+    "10": {
+     "life": 183,
+     "damage": 17.2,
+     "speed": 115,
+     "radius": 16,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "30": {
+     "life": 611,
+     "damage": 38,
+     "speed": 120,
+     "radius": 16,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    },
+    "60": {
+     "life": 2021,
+     "damage": 69.1,
+     "speed": 110,
+     "radius": 16,
+     "attack_cd": 1,
+     "armor": 0,
+     "ranged": false,
+     "dmg_type": "normal",
+     "dmg_split": null,
+     "boss": false,
+     "elite": false,
+     "xp": null,
+     "name": null
+    }
+   }
+  }
+ },
+ "ENEMY_DMG_TYPE": {
+  "shadowghoul": "lightning",
+  "zombie": "poison",
+  "leviathan": "poison",
+  "anaconda": "poison",
+  "stormsnake": "lightning",
+  "giantoad": "poison",
+  "poisonplant": "poison",
+  "sandsnake": "poison",
+  "lightningraptor": "fire",
+  "balrog": "fire",
+  "gojira": "fire",
+  "lavabeetle": "fire",
+  "firebat": "fire",
+  "magmacrawler": "fire",
+  "colossus": "fire"
+ },
+ "ENEMY_DMG_SPLIT": {
+  "fhdwarf": "cold",
+  "fhbrute": "cold",
+  "fhaxe": "cold",
+  "fhcleric": "cold",
+  "fhtemplar": "cold",
+  "raptor": "fire",
+  "firebat": "fire",
+  "windigo": "cold"
+ },
+ "ENEMY_RESIST_TYPES": {
+  "fhtemplar": {
+   "cold": 25
+  },
+  "fhdwarf": {
+   "cold": 25
+  },
+  "fhcleric": {
+   "cold": 25
+  },
+  "fhbrute": {
+   "cold": 25
+  },
+  "fhaxe": {
+   "cold": 25
+  },
+  "frozenzombie": {
+   "cold": 25
+  },
+  "windigo": {
+   "cold": 40
+  },
+  "raptor": {
+   "fire": 25
+  },
+  "lightningraptor": {
+   "fire": 25
+  },
+  "balrog": {
+   "fire": 25
+  },
+  "gojira": {
+   "fire": 40
+  }
+ },
+ "ELITE_PRE": [
+  "Gor",
+  "Vrek",
+  "Mal",
+  "Skar",
+  "Thra",
+  "Uzg",
+  "Kor",
+  "Bel",
+  "Drak",
+  "Zul",
+  "Nar",
+  "Hesh",
+  "Ghar",
+  "Ysk"
+ ],
+ "ELITE_MID": [
+  "ak",
+  "oth",
+  "ug",
+  "ith",
+  "ar",
+  "un",
+  "esh",
+  "or"
+ ],
+ "ELITE_TITLE": [
+  "the Sundering",
+  "Bonegrinder",
+  "the Relentless",
+  "Skullsplitter",
+  "the Cruel",
+  "Ashbringer",
+  "Gloomfang",
+  "the Unyielding",
+  "Stormcaller",
+  "Doomhide",
+  "the Ravenous",
+  "Ironjaw"
+ ],
+ "DENSIFY_TUNE": {
+  "bearcave": {
+   "density": 9,
+   "spread": 70,
+   "gap": 400,
+   "packMin": 2,
+   "packMax": 3
+  },
+  "spiderlair": {
+   "density": 20,
+   "spread": 60,
+   "gap": 300,
+   "pack": 3
+  },
+  "darkcrypt": {
+   "density": 27,
+   "spread": 75,
+   "gap": 330,
+   "pack": 4
+  }
+ },
+ "FOREST_ENEMY_TYPES": [
+  "wolf",
+  "wolf",
+  "spider"
+ ],
+ "FOREST_PACK_TEMPLATES": [
+  {
+   "type": "wolf",
+   "countMin": 1,
+   "countMax": 5
+  },
+  {
+   "type": "wolf",
+   "countMin": 1,
+   "countMax": 5
+  },
+  {
+   "type": "wolf",
+   "countMin": 2,
+   "countMax": 6
+  },
+  {
+   "type": "wolf",
+   "countMin": 2,
+   "countMax": 6
+  },
+  {
+   "type": "spider",
+   "countMin": 1,
+   "countMax": 5
+  },
+  {
+   "type": "spider",
+   "countMin": 1,
+   "countMax": 5
+  },
+  {
+   "type": "bear",
+   "countMin": 1,
+   "countMax": 2
+  }
+ ],
+ "LAKE_PACK_TEMPLATES": [
+  {
+   "type": "bandit",
+   "countMin": 2,
+   "countMax": 3,
+   "archer": 0.5
+  },
+  {
+   "type": "thornback",
+   "countMin": 2,
+   "countMax": 3
+  },
+  {
+   "type": "skeleton",
+   "countMin": 2,
+   "countMax": 4
+  },
+  {
+   "type": "skeleton",
+   "countMin": 1,
+   "countMax": 3
+  },
+  {
+   "type": "spider",
+   "countMin": 1,
+   "countMax": 3
+  },
+  {
+   "type": "tortuga",
+   "countMin": 2,
+   "countMax": 3
+  }
+ ],
+ "CEM_PACK_TEMPLATES": [
+  {
+   "type": "skeleton",
+   "countMin": 2,
+   "countMax": 4
+  },
+  {
+   "type": "skeleton",
+   "countMin": 1,
+   "countMax": 3
+  },
+  {
+   "type": "skeletonarcher",
+   "countMin": 1,
+   "countMax": 2
+  },
+  {
+   "type": "spider",
+   "countMin": 1,
+   "countMax": 2
+  },
+  {
+   "type": "skeletonbrute",
+   "countMin": 1,
+   "countMax": 1
+  }
+ ],
+ "MOUNTAIN_PASS_PACK_TEMPLATES": [
+  {
+   "type": "frozenzombie",
+   "count": 5
+  },
+  {
+   "type": "bear",
+   "countMin": 2,
+   "countMax": 3,
+   "variant": "polar"
+  }
+ ],
+ "RV_NORTH_PACKS": [
+  {
+   "type": "wolf",
+   "countMin": 2,
+   "countMax": 4
+  },
+  {
+   "type": "wolf",
+   "countMin": 1,
+   "countMax": 3
+  },
+  {
+   "type": "spider",
+   "countMin": 1,
+   "countMax": 3
+  },
+  {
+   "type": "boar",
+   "countMin": 1,
+   "countMax": 2
+  },
+  {
+   "type": "thornback",
+   "countMin": 2,
+   "countMax": 3
+  }
+ ],
+ "RV_SOUTH_PACKS": [
+  {
+   "type": "bandit",
+   "countMin": 2,
+   "countMax": 3
+  },
+  {
+   "type": "banditarcher",
+   "countMin": 1,
+   "countMax": 2
+  },
+  {
+   "type": "boar",
+   "countMin": 1,
+   "countMax": 3
+  },
+  {
+   "type": "wolf",
+   "countMin": 1,
+   "countMax": 3
+  },
+  {
+   "type": "thornback",
+   "countMin": 2,
+   "countMax": 3
+  }
+ ],
+ "ICY_PACKS": {
+  "summit": [
+   {
+    "type": "frozenzombie",
+    "count": 5
+   },
+   {
+    "type": "bear",
+    "countMin": 2,
+    "countMax": 3,
+    "variant": "polar"
+   },
+   {
+    "type": "warg",
+    "countMin": 4,
+    "countMax": 5,
+    "variant": "white"
+   },
+   {
+    "type": "windigo",
+    "countMin": 1,
+    "countMax": 2
+   }
+  ],
+  "shrine": [
+   {
+    "type": "frozenzombie",
+    "count": 5
+   },
+   {
+    "type": "bear",
+    "countMin": 2,
+    "countMax": 3,
+    "variant": "polar"
+   },
+   {
+    "type": "warg",
+    "countMin": 4,
+    "countMax": 5,
+    "variant": "white"
+   }
+  ],
+  "cellar": [
+   {
+    "type": "frozenzombie",
+    "count": 6
+   },
+   {
+    "type": "warg",
+    "countMin": 4,
+    "countMax": 5,
+    "variant": "white"
+   },
+   {
+    "type": "bear",
+    "countMin": 2,
+    "countMax": 3,
+    "variant": "polar"
+   },
+   {
+    "type": "windigo",
+    "countMin": 1,
+    "countMax": 2
+   }
+  ]
+ },
+ "FH_PACKS": [
+  {
+   "mix": [
+    [
+     "fhdwarf",
+     4
+    ],
+    [
+     "fhbrute",
+     1
+    ],
+    [
+     "fhcleric",
+     1
+    ]
+   ]
+  },
+  {
+   "mix": [
+    [
+     "fhdwarf",
+     5
+    ]
+   ]
+  },
+  {
+   "mix": [
+    [
+     "fhdwarf",
+     3
+    ],
+    [
+     "fhbrute",
+     2
+    ],
+    [
+     "fhcleric",
+     1
+    ]
+   ]
+  },
+  {
+   "mix": [
+    [
+     "fhbrute",
+     3
+    ],
+    [
+     "fhcleric",
+     1
+    ]
+   ]
+  },
+  {
+   "mix": [
+    [
+     "fhdwarf",
+     4
+    ],
+    [
+     "fhbrute",
+     1
+    ]
+   ]
+  },
+  {
+   "mix": [
+    [
+     "fhdwarf",
+     5
+    ],
+    [
+     "fhcleric",
+     1
+    ]
+   ]
+  },
+  {
+   "mix": [
+    [
+     "fhdwarf",
+     3
+    ],
+    [
+     "fhaxe",
+     3
+    ]
+   ]
+  },
+  {
+   "mix": [
+    [
+     "fhbrute",
+     1
+    ],
+    [
+     "fhdwarf",
+     2
+    ],
+    [
+     "fhaxe",
+     3
+    ],
+    [
+     "fhcleric",
+     1
+    ]
+   ]
+  },
+  {
+   "mix": [
+    [
+     "fhaxe",
+     4
+    ],
+    [
+     "fhdwarf",
+     2
+    ]
+   ]
+  }
+ ],
+ "RR_PACKS": [
+  "armordon",
+  "raptor",
+  "sandsnake",
+  "crawler",
+  "raptor",
+  "sandsnake",
+  "crawler",
+  "armordon"
+ ],
+ "BR_PACKS": [
+  [
+   "imp",
+   "imp",
+   "imp"
+  ],
+  [
+   "hellhound",
+   "hellhound",
+   "hellhound"
+  ],
+  [
+   "imp",
+   "imp",
+   "hellhound",
+   "hellhound"
+  ],
+  [
+   "cinderfiend",
+   "imp",
+   "imp"
+  ],
+  [
+   "cinderfiend",
+   "cinderfiend",
+   "hellhound"
+  ],
+  [
+   "brimstonebrute",
+   "imp",
+   "imp"
+  ],
+  [
+   "brimstonebrute",
+   "cinderfiend"
+  ],
+  [
+   "hellhound",
+   "hellhound",
+   "hellhound",
+   "hellhound",
+   "imp"
+  ],
+  [
+   "brimstonebrute",
+   "brimstonebrute"
+  ]
+ ],
+ "BR_THEME_PACKS": {
+  "minotaur": [
+   [
+    "skeleton",
+    "skeleton",
+    "skeletonarcher"
+   ],
+   [
+    "skeletonbrute",
+    "skeleton",
+    "skeleton"
+   ],
+   [
+    "skeletonbrute",
+    "skeletonbrute"
+   ],
+   [
+    "skeleton",
+    "skeleton",
+    "skeleton",
+    "skeletonarcher"
+   ]
+  ],
+  "revenant": [
+   [
+    "skeleton",
+    "skeletonarcher",
+    "skeleton",
+    "skeletonbrute"
+   ],
+   [
+    "spider",
+    "spider",
+    "spider"
+   ],
+   [
+    "skeletonbrute",
+    "skeletonarcher",
+    "skeleton"
+   ],
+   [
+    "skeleton",
+    "skeleton",
+    "spider"
+   ]
+  ],
+  "mastodon": [
+   [
+    "frozenzombie",
+    "frozenzombie",
+    "frozenzombie"
+   ],
+   [
+    "bear:polar",
+    "bear:polar"
+   ],
+   [
+    "warg:white",
+    "warg:white",
+    "warg:white"
+   ],
+   [
+    "frozenzombie",
+    "frozenzombie",
+    "warg:white"
+   ]
+  ],
+  "leviathan": [
+   [
+    "giantoad",
+    "giantoad"
+   ],
+   [
+    "zombie",
+    "zombie",
+    "zombie"
+   ],
+   [
+    "poisonplant",
+    "poisonplant",
+    "zombie"
+   ],
+   [
+    "giantoad",
+    "zombie",
+    "zombie"
+   ]
+  ],
+  "colossus": [
+   [
+    "lavabeetle",
+    "lavabeetle",
+    "lavabeetle"
+   ],
+   [
+    "firebat",
+    "firebat",
+    "firebat"
+   ],
+   [
+    "magmagolem",
+    "lavabeetle"
+   ],
+   [
+    "magmacrawler",
+    "magmacrawler",
+    "magmacrawler"
+   ]
+  ],
+  "kraken": [
+   [
+    "stormsnake",
+    "stormsnake",
+    "stormsnake"
+   ],
+   [
+    "stormsnake",
+    "stormsnake"
+   ],
+   [
+    "squid",
+    "squid",
+    "squid"
+   ],
+   [
+    "stormsnake",
+    "squid",
+    "squid"
+   ]
+  ]
+ },
+ "BR_TIER_PACKS": [
+  [
+   0,
+   1,
+   2
+  ],
+  [
+   1,
+   2,
+   3,
+   4
+  ],
+  [
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  [
+   4,
+   5,
+   6,
+   7,
+   8
+  ]
+ ],
+ "BR_BOSS": {
+  "5": "houndlord",
+  "10": "cinderqueen",
+  "15": "warden",
+  "20": "tyrant"
+ },
+ "BR_BOSS_NAME": {
+  "houndlord": "Gorefang, Hound-Lord of the Breach",
+  "cinderqueen": "Vexara, the Cinder Matriarch",
+  "warden": "The Brimstone Warden",
+  "tyrant": "The Ember Tyrant",
+  "fhcmd": "The Frosthold Commander, Returned",
+  "wraithlord": "The Wraith Lord, Bound to the Breach",
+  "trex": "Rex, the Crater King",
+  "gojira": "Gojira, Wrath of the Crater",
+  "minotaur": "The Minotaur, Returned",
+  "revenant": "The Templar Revenant, Returned",
+  "mastodon": "The Woolly Mastodon, Returned",
+  "leviathan": "The Marsh Leviathan, Returned",
+  "colossus": "The Molten Colossus, Returned",
+  "kraken": "The Kraken, Returned"
+ },
+ "BR_BOSS_POOL": [
+  "houndlord",
+  "cinderqueen",
+  "warden",
+  "tyrant",
+  "fhcmd",
+  "wraithlord",
+  "trex",
+  "gojira"
+ ],
+ "KP_TYPES": {
+  "wraithling": 1,
+  "poisonwalker": 1,
+  "poisonsnake": 1,
+  "shadowcultist": 1,
+  "imp": 1,
+  "wraithlord": 1,
+  "hellhound": 1,
+  "cinderfiend": 1,
+  "brimstonebrute": 1,
+  "demonboss": 1
+ },
+ "CLF_TYPES": {
+  "shadowghoul": 1,
+  "risendead": 1,
+  "fallengolem": 1,
+  "vulture": 1,
+  "harpy": 1,
+  "harpyqueen": 1
+ },
+ "CLF_PACK": {
+  "ghoul": {
+   "type": "shadowghoul",
+   "countMin": 4,
+   "countMax": 6
+  },
+  "risen": {
+   "type": "risendead",
+   "countMin": 5,
+   "countMax": 7
+  },
+  "golem": {
+   "type": "fallengolem",
+   "countMin": 1,
+   "countMax": 2
+  },
+  "vult": {
+   "type": "vulture",
+   "countMin": 3,
+   "countMax": 4
+  },
+  "harpy": {
+   "type": "harpy",
+   "countMin": 3,
+   "countMax": 4
+  },
+  "wraith": {
+   "type": "wraithling",
+   "countMin": 3,
+   "countMax": 4
+  }
+ },
+ "RUINS_MONSTERS_BY_FLOOR": {
+  "1": [
+   "skeleton",
+   "skeleton",
+   "skeletonarcher",
+   "spider"
+  ],
+  "2": [
+   "skeleton",
+   "skeleton",
+   "skeletonarcher",
+   "spider",
+   "skeletonbrute"
+  ],
+  "3": [
+   "skeleton",
+   "skeletonarcher",
+   "spider",
+   "skeletonbrute"
+  ],
+  "4": [
+   "skeleton",
+   "skeletonarcher",
+   "spider",
+   "skeletonbrute",
+   "skeletonbrute"
+  ],
+  "5": [
+   "skeleton",
+   "skeletonarcher",
+   "spider",
+   "skeletonbrute",
+   "skeletonbrute"
+  ]
+ },
+ "MORALE_TYPES": {
+  "bandit": 1,
+  "banditarcher": 1,
+  "goblin": 1,
+  "goblinarcher": 1
+ },
+ "PROT_NAME": {
+  "defender": "Defender of the Summit",
+  "berserker": "Berserker of the Summit",
+  "templar": "Templar of the Summit"
+ },
+ "PROT_HP_MULT": {
+  "defender": 4.6,
+  "berserker": 3.6,
+  "templar": 3.4
+ },
+ "HEART_DEF": {
+  "AX0": 1886,
+  "AX1": 3836,
+  "AY0": 148,
+  "AY1": 1252,
+  "CX": 2861,
+  "CY": 700,
+  "RX": 975,
+  "RY": 552
+ },
+ "MST_AVA_PHASES": [
+  0.75,
+  0.5,
+  0.25
+ ],
+ "FHT_CHAMP_MODS": [
+  "fast",
+  "strong",
+  "fireEnch",
+  "coldEnch",
+  "lightEnch",
+  "stoneSkin",
+  "regen",
+  "vampiric",
+  "shielded"
+ ],
+ "HUNTER_NAMES": {
+  "foundForest": "Dark Forest hunter",
+  "foundSpider": "Spider Lair hunter",
+  "foundBear": "Bear Cave hunter"
+ },
+ "HUNT_TROPHY": {
+  "hunt_leviathan": [
+   "leviathan_scale",
+   {
+    "__fn": "function makeLeviathanScaleItem(){\n  return { id:'it'+Math.random().toString(36).slice(2,9), slotType:'questitem', rarity:'rare',\n    name:\"Leviathan's Scale\", affixes:[], color:'#3fd6b0', questId:'leviathan_scale', unsellable:true,\n    questDesc:'A dinner-plate-sized scale that still glistens with lake water. Quest item -- cannot be sold.' };\n}"
+   }
+  ],
+  "hunt_mastodon": [
+   "mastodon_hoof",
+   {
+    "__fn": "function makeMastodonHoofItem(){\n  return { id:'it'+Math.random().toString(36).slice(2,9), slotType:'questitem', rarity:'rare',\n    name:\"Mastodon's Hoof\", affixes:[], color:'#cfe6ff', questId:'mastodon_hoof', unsellable:true,\n    questDesc:'A massive, frost-rimed hoof torn from the Woolly Mastodon. Quest item -- cannot be sold.' };\n}"
+   }
+  ],
+  "hunt_kraken": [
+   "electric_tentacle",
+   {
+    "__fn": "function makeElectricTentacleItem(){\n  return { id:'it'+Math.random().toString(36).slice(2,9), slotType:'questitem', rarity:'rare',\n    name:'Electric Tentacle', affixes:[], color:'#7fb8ff', questId:'electric_tentacle', unsellable:true,\n    questDesc:'A severed tentacle that still crackles with blue sparks. Quest item -- cannot be sold.' };\n}"
+   }
+  ],
+  "hunt_colossus": [
+   "molten_shell",
+   {
+    "__fn": "function makeMoltenShellItem(){\n  return { id:'it'+Math.random().toString(36).slice(2,9), slotType:'questitem', rarity:'rare',\n    name:'Molten Shell Fragment', affixes:[], color:'#ff7a2a', questId:'molten_shell', unsellable:true,\n    questDesc:'A jagged shard of the Molten Colossus\\' shell, still glowing with ember-red cracks. Quest item -- cannot be sold.' };\n}"
+   }
+  ]
+ }
+}

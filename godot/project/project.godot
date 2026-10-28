@@ -1,0 +1,34 @@
+; Engine configuration file.
+; Runefall — Godot rebuild. See ../docs/GODOT_REFERENCE.md.
+
+config_version=5
+
+[application]
+
+config/name="Runefall"
+config/description="Isometric action RPG. Rebuild of the HTML game in Godot 4."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "Mobile")
+config/icon="res://icon.svg"
+
+[autoload]
+
+GameData="*res://scripts/autoload/game_data.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=6
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=1
