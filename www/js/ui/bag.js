@@ -205,7 +205,7 @@ function equipItemRaw(p, item){
   // generated before this update have no .material and are grandfathered
   // in (no check applied to them).
   // v563: any class can wear any armor; it needs Strength / Dexterity / Intelligence instead (worn without it, it does nothing)
-  if(itemAttrReq(item) && !itemReqMet(p, item)) showMsg(itemReqText(item)+': its bonuses are off until you have it', 1.8);
+  if(p.attrs && itemAttrReq(item) && !itemReqMet(p, item)){ showMsg(itemReqText(item), 1.6, '#e05a4a'); return false; }   // v569: not enough Strength / Dexterity / Intelligence = can't equip it
   // Tiered gear (Field Plate/Full Plate, Scalehide/Demonhide, Adept/Arcanist robes,
   // Hunter/Recurve Bow, etc) requires a matching character level -- items
   // generated before this update have no .levelReq (undefined) and are

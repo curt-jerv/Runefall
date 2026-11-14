@@ -126,12 +126,14 @@ function renderRuneforgePanel(){
   document.getElementById('socketInfo').innerHTML = h;
   const armed = it && game.forgeArm && game.forgeArm.item===it && performance.now()-game.forgeArm.t<5000;
   const btn = document.getElementById('socketDoBtn');
-  btn.textContent = armed ? 'Tap again — 25% to destroy!' : 'Obsidian Forge — Free';
+  btn.textContent = armed ? 'Tap again — 25% to destroy!' : 'Obsidian Forge — '+RUNEFORGE_COST+' gold';
   btn.style.opacity = it ? '1' : '0.45';
 }
+const RUNEFORGE_COST = 10000;   // v569: every forge costs gold
 function runeforgeDo(){
   const g = game, p = g.player, it = g.socketItem;
   if(!it){ showMsg('Place an item on the anvil first', 1.6, '#ffd93a'); return; }
+  if((p.gold||0) < RUNEFORGE_COST){ g.forgeArm = null; showMsg('Not enough gold (need '+RUNEFORGE_COST+')', 1.8, '#e05a4a'); return; }
   if(!g.forgeArm || g.forgeArm.item!==it || performance.now()-g.forgeArm.t>5000){
     g.forgeArm = {item:it, t:performance.now()}; renderRuneforgePanel();
     setTimeout(()=>{ if(g.openVendor==='runeforge' && shopOverlay.style.display==='flex') renderRuneforgePanel(); }, 5100);
@@ -139,6 +141,7 @@ function runeforgeDo(){
   }
   g.forgeArm = null;
   if((it.runeforged||0)>=2){ showMsg('This item has already been through the forge twice', 1.8, '#ffd93a'); return; }
+  p.gold -= RUNEFORGE_COST;
   const outs = runeforgeOutcomes(it);
   const pick = Math.random()<0.25 ? 'destroy' : outs[Math.floor(Math.random()*outs.length)];
   let msg = '', col = '#ffe2a0', floatTxt = '';

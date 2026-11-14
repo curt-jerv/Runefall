@@ -1,7 +1,13 @@
 // ---------- Skill Respec ----------
 const respecOverlay = document.getElementById('respecOverlay');
+const RESPEC_GOLD_PER_POINT = 100;   // v569: a reset costs 100 gold per skill point it gives back
+function respecPointsSpent(p){ let n = 0; for(const id in (p.skills||{})) n += p.skills[id]||0; return n; }
 function openRespecDialog(){
   game.modalOpen = true;
+  const n = respecPointsSpent(game.player), cost = n*RESPEC_GOLD_PER_POINT;
+  document.getElementById('respecText').textContent = n>0
+    ? 'Reset all skills and return '+n+' skill point'+(n===1?'':'s')+' for '+cost+' gold? This action cannot be undone.'
+    : 'You have no skill points to reset.';
   respecOverlay.style.display = 'flex';
 }
 function closeRespecDialog(){
@@ -12,10 +18,11 @@ function respecSkills(){
   const p = game.player;
   if(!p.skills) p.skills = {};
   // Calculate total skill points spent before resetting
-  let totalPointsSpent = 0;
-  for(const skillId in p.skills){
-    totalPointsSpent += p.skills[skillId];
-  }
+  const totalPointsSpent = respecPointsSpent(p);
+  const cost = totalPointsSpent*RESPEC_GOLD_PER_POINT;
+  if(totalPointsSpent<=0){ showMsg('No skill points to reset', 1.6); closeRespecDialog(); return; }
+  if((p.gold||0) < cost){ showMsg('Not enough gold (need '+cost+')', 1.8, '#e05a4a'); return; }
+  p.gold -= cost;
   // Reset all skill ranks to 0
   for(const skillId in p.skills){
     p.skills[skillId] = 0;
@@ -31,7 +38,7 @@ function respecSkills(){
   p.activeSlot3 = null;
   // Refund all spent points
   p.skillPoints = (p.skillPoints || 0) + totalPointsSpent;
-  showMsg('Skills reset! All skill points refunded.', 2.0);
+  showMsg('Skills reset for '+cost+' gold! All skill points refunded.', 2.0);
   recalcStats(p);
   updateSkillButtonsVisibility();
   updateSkillSlotButtonsUI();
