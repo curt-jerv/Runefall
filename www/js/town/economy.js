@@ -366,7 +366,7 @@ function updateBuffBar(p){
   if(ironStillMult(p)>1) items.push({k:'ironstill', icon:'\u{1F6E1}\uFE0F', label:'+'+Math.round((ironStillMult(p)-1)*100)+'%', t:0, tip:'Iron Skin: standing your ground, +'+Math.round((ironStillMult(p)-1)*100)+'% Defence (up to +50%)'});
   if(p.bhPool>1) items.push({k:'bharvest', icon:'\u{1FA78}', label:'regen', t:0, tip:'Blood Harvest: faded Rage returning as life'});
   { const dm = (typeof divineEqMode==='function') ? divineEqMode(p) : null;   // v570 Divine Equilibrium: which aura is up
-    if(dm==='retribution') items.push({k:'deRetrib', icon:'\u2694\uFE0F', label:'aura', t:0, tip:'Aura of Retribution (Divine Equilibrium): your life regeneration fills Conviction instead of life. Tap the skill button to switch to Salvation.'});
+    if(dm==='retribution') items.push({k:'deRetrib', icon:'\u2694\uFE0F', label:'aura', t:0, tip:'Aura of Retribution (Divine Equilibrium): your life regeneration fills Conviction instead of life (+'+Math.round(retributionRagePerSec(p))+' a second). Tap the skill button to switch to Salvation.'});
     else if(dm==='salvation') items.push({k:'deSalv', icon:'\u271A', label:'aura', t:0, tip:'Aura of Salvation (Divine Equilibrium): +'+Math.round(salvationRegenPct(divineEqRank(p))*100)+'% life regeneration. Tap the skill button to switch to Retribution.'}); }
   if(p.cls==='warrior' && p.vengStage>0) items.push({k:'vengCombo', icon:'\u{1F525}', label:(p.vengStage+1)+'/3', t:0, tip:'Vengeance combo: swing '+(p.vengStage+1)+' of 3 is ready -- tap again before it fades'});
   if(p.cls==='warrior' && (p.sacredReady || p.sacredCombo)) items.push({k:'sacredEmp', icon:'\u2728', label:p.sacredCombo ? 'on' : 'ready', t:0, tip:p.sacredCombo ? 'Empowered: this Vengeance combo hits harder and burns' : 'Empowered ready: your next Vengeance combo spends '+SACRED_COST+' Conviction to be Empowered'});
@@ -568,7 +568,8 @@ function makeTown(charLevel){
   t.obstacles.push({x:-100,y:TOWN_PIER.y+TOWN_PIER.h,w:TOWN_SHORE_X+100,h:600, isProp:true, isWater:true});
   t.obstacles.push({x:-100,y:TOWN_PIER.y,w:TOWN_PIER.x+100,h:TOWN_PIER.h, isProp:true, isWater:true});
   { const P = (k,x,y,o)=>t.props.push(Object.assign({k,x,y},o||{}));
-    [300,520,760,1000,1240,1480,1720].forEach(x=>P('lantern',x,378)); [420,640,980,1180,1420,1660].forEach(x=>P('lantern',x,524));
+    // v570: no lamp posts in front of the tavern door (x 520 and 760 removed)
+    [300,1000,1240,1480,1720].forEach(x=>P('lantern',x,378)); [420,640,980,1180,1420,1660].forEach(x=>P('lantern',x,524));
     // dock: bigger posts, lamps, cargo and nets
     for(let x=TOWN_PIER.x+30; x<TOWN_PIER.x+TOWN_PIER.w; x+=92){ P('pierpost',x,TOWN_PIER.y+4,{s:2}); P('pierpost',x,TOWN_PIER.y+TOWN_PIER.h-4,{s:2}); }
     P('lantern',TOWN_SHORE_X-12,TOWN_PIER.y+6,{s:1.8}); P('lantern',TOWN_SHORE_X-12,TOWN_PIER.y+TOWN_PIER.h-6,{s:1.8}); P('lantern',TOWN_PIER.x+16,TOWN_PIER.y+TOWN_PIER.h/2,{s:1.8});
@@ -649,9 +650,8 @@ const FOREST_PACK_TEMPLATES = [
   { type:'wolf',   countMin:1, countMax:5 },
   { type:'wolf',   countMin:2, countMax:6 },
   { type:'wolf',   countMin:2, countMax:6 },
-  { type:'spider', countMin:1, countMax:5 },
-  { type:'spider', countMin:1, countMax:5 },
-  { type:'bear',   countMin:1, countMax:2 },   // v228: replaces the treant
+  { type:'thornback', countMin:2, countMax:3 },   // v570: Thornbacks in the Dark Forest; spiders keep to the Spider Lair's woods
+  { type:'thornback', countMin:2, countMax:3 },   //       and bears to the Bear Cave (see enterForest in zones/frosthold-tower.js)
 ];
 // The Forest's one and only bear: fixed near the Bear Cave gate rather than
 // roaming in a pack (see item 1 of the v62 batch) -- a small random offset

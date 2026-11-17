@@ -230,6 +230,8 @@ const VENG_COMBO_WINDOW = 1.6, VENG_STAGES = 3;
 function divineEqRank(p){ return (p && p.cls==='warrior' && p.skills && effectiveRank(p,'auraOfRetribution'))||0; }
 function divineEqSlotted(p){ const s = p && p.skillSlots; return !!(s && (s.main==='auraOfRetribution' || s.slot1==='auraOfRetribution' || s.slot2==='auraOfRetribution' || s.slot3==='auraOfRetribution')); }
 function divineEqMode(p){ return (divineEqRank(p)>0 && divineEqSlotted(p)) ? (p.deMode==='salvation' ? 'salvation' : 'retribution') : null; }
+const RETRIB_RAGE_PER_REGEN = 6;   // each 1% of life regeneration becomes 6 Conviction (Rage) a second (Rage is a small pool that fades)
+function retributionRagePerSec(p){ return (p.lifeRegenPct||0)*100*RETRIB_RAGE_PER_REGEN; }
 function salvationRegenPct(r){ r = clamp(r||1, 1, 20); return 0.20 + 0.30*(Math.min(10,r)-1)/9 + 0.02*Math.max(0, r-10); }
 function divineEqToggle(p){
   if(!p || divineEqRank(p)<=0) return;

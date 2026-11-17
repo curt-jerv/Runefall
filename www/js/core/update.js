@@ -27,7 +27,7 @@ function updateStep(dt){
   // v83 Holy/Regeneration (+Life Regen %, of max HP per second): a plain
   // per-frame heal-over-time tick, only while alive and below max HP.
   const _deM = divineEqMode(p);   // v570 Divine Equilibrium: Retribution turns life regeneration into Conviction (Rage); Salvation adds to it
-  if(_deM==='retribution'){ if(p.lifeRegenPct>0 && p.hp>0 && p.maxMp>0) gainResource(p, p.maxMp*p.lifeRegenPct*dt); }
+  if(_deM==='retribution'){ if(p.lifeRegenPct>0 && p.hp>0 && p.maxMp>0) gainResource(p, retributionRagePerSec(p)*dt); }
   else if(p.lifeRegenPct>0 && p.hp>0 && p.hp<p.maxHp){
     p.hp = Math.min(p.maxHp, p.hp + p.maxHp*p.lifeRegenPct*(_deM==='salvation' ? 1+salvationRegenPct(divineEqRank(p)) : 1)*dt);
   }
@@ -2310,6 +2310,7 @@ function updateStep(dt){
       e.fearT = 3.0; e.engaged = false;
       g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#ff6a3a'});
     }
+    if(e.orbit && crowOrbitTick(g, e, dt)) continue;   // v570: Crossroads crows wheel over a dead ranger
     if(e.fearT>0){
       e.fearT -= dt; if(e.fearT<0) e.fearT = 0;
       const awayAng = Math.atan2(e.y-p.y, e.x-p.x);
@@ -3807,8 +3808,7 @@ function updateStep(dt){
       if(sc.opened || dist(p, sc) > sc.r + p.r) continue;
       sc.opened = true;
       const lvl = Math.max(1, monsterLevel(g)), n0 = g.loot.length;
-      for(let k=0;k<2;k++) g.loot.push({type:'item', x:sc.x+rand(-26,26), y:sc.y+rand(26,46), r:8, item:generateItem(lvl, packRarity(lvl), null, null, p)});
-      if(Math.random()<0.5) g.loot.push({type:'item', x:sc.x+rand(-26,26), y:sc.y+rand(26,46), r:8, item:generateItem(lvl, packRarity(lvl), null, null, p)});
+      g.loot.push({type:'item', x:sc.x+rand(-26,26), y:sc.y+rand(26,46), r:8, item:generateItem(lvl, Math.random()<0.5 ? 'rare' : 'magic', null, null, p)});   // v570: a rare or a magic item, 50/50
       g.loot.push({type:'gold', x:sc.x+rand(-20,20), y:sc.y+rand(26,46), r:9, amt:Math.ceil((rand(30,60)+g.depth*3)*(1+clamp((p.goldFindPct||0),0,200)/100))});
       for(let i=n0;i<g.loot.length;i++) fixLootSpot(g, g.loot[i]);
       g.particles.push({type:'burst', x:sc.x, y:sc.y, t:0.4, max:0.4, color:'#e8c44a'});

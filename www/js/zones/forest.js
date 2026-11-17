@@ -105,6 +105,11 @@ function makeForest(){
   for(let i=0;i<170;i++){ const x=rand(80,w-80), y=rand(80,h-80); if(dOk(x,y)) decor.push({k:'mushroom', x, y, s:rand(0.8,1.4), glow:Math.random()<0.5, c:['#8a5aa8','#5a8aa8','#a85a5a'][i%3]}); }
   for(let i=0;i<50;i++){ const x=rand(80,w-80), y=rand(80,h-80); if(dOk(x,y)) decor.push({k:'stump', x, y, s:rand(0.9,1.5)}); }
   for(let i=0;i<24;i++){ const x=rand(80,w-80), y=rand(80,h-80); if(dOk(x,y)) decor.push({k:'bones', x, y, r:rand(0,3)}); }
+  // v570: the spiders' woods -- a wide ring of webs (and more inside) marks the land round the Spider Lair as theirs
+  for(let i=0;i<70;i++){ const a = i/70*6.283 + rand(-0.04,0.04), rr = FOREST_SPIDER_R*rand(0.88,1.04), x = spiderLairGate.x+Math.cos(a)*rr, y = spiderLairGate.y+Math.sin(a)*rr;
+    if(x>60 && y>60 && x<w-60 && y<h-60 && dOk(x,y)) decor.push({k:'web', x, y, s:rand(0.9,1.5), rot:rand(-0.5,0.5)}); }
+  for(let i=0;i<60;i++){ const a = Math.random()*6.283, rr = FOREST_SPIDER_R*Math.sqrt(Math.random())*0.85, x = spiderLairGate.x+Math.cos(a)*rr, y = spiderLairGate.y+Math.sin(a)*rr;
+    if(x>60 && y>60 && x<w-60 && y<h-60 && dist({x,y}, spiderLairGate) > 160 && dOk(x,y)) decor.push({k:'web', x, y, s:rand(0.7,1.3), rot:rand(-0.5,0.5)}); }
 
   // pack anchors: clusters spread across the map, off roads, props and gates
   const packAnchors = [];
@@ -145,6 +150,7 @@ function breatheAnchors(anchors, o){
 // Defaults to a random template (wolf/spider) when none is given; enterForest()
 // now spawns several packs (see FOREST_PACK_COUNT) at entry, each randomly
 // wolf or spider, rather than one fixed pack per template.
+const FOREST_SPIDER_R = 900, FOREST_BEAR_KEEP = 650;   // v570: the spiders' woods round the Spider Lair; no wandering packs this close to the Bear Cave
 function spawnForestPack(g, anchor, template){
   const t = template || FOREST_PACK_TEMPLATES[Math.floor(Math.random()*FOREST_PACK_TEMPLATES.length)];
   const n = forestPackSize(t);

@@ -85,7 +85,7 @@ function makeDarkCrypt(){
   // v503: a much larger, freshly rolled crypt every visit. Chambers sit on a jittered 4 x 5 grid (a few cells stay empty), are
   // joined by a random minimum spanning tree of tunnels plus a few loops, so the dead ends and side vaults are real. The way in
   // is at the bottom, the way on is always the same: the hall of wardens, its north door, the Defiler's Tomb.
-  const w = DARKCRYPT_W, h = DARKCRYPT_H, CORR_W = 150;
+  const w = DARKCRYPT_W, h = DARKCRYPT_H, CORR_W = 190;   // v570: wider tunnels (was 150)
   const ri = (a,b)=>Math.round(rand(a,b));
   const exitRoom     = {x:ri(300, w-1250), y:700, w:900, h:560};   // the hall before the tomb, guarded by crypt wardens
   let tombRoom = null;
@@ -95,9 +95,9 @@ function makeDarkCrypt(){
   const COLS = 5, ROWS = 7, gx0 = 220, gx1 = w-220, gy0 = 1550, gy1 = h-1050, cw = (gx1-gx0)/COLS, chh = (gy1-gy0)/ROWS;
   const forceTop = ri(0,COLS-1), forceBot = ri(0,COLS-1), rooms = [];
   for(let cy=0; cy<ROWS; cy++) for(let cx=0; cx<COLS; cx++){
-    if(!((cy===0 && cx===forceTop) || (cy===ROWS-1 && cx===forceBot)) && Math.random()<0.18) continue;
-    const rw = ri(520,880), rh = ri(420,640);
-    rooms.push({x:Math.round(gx0+cx*cw+rand(40, cw-rw-40)), y:Math.round(gy0+cy*chh+rand(30, chh-rh-30)), w:rw, h:rh, cx, cy});
+    if(!((cy===0 && cx===forceTop) || (cy===ROWS-1 && cx===forceBot)) && Math.random()<0.2) continue;
+    const big = Math.random()<0.3, rw = big ? ri(900,1180) : ri(620,940), rh = big ? ri(640,760) : ri(480,700);   // v570: roomier chambers, some great halls
+    rooms.push({x:Math.round(gx0+cx*cw+rand(30, Math.max(31, cw-rw-30))), y:Math.round(gy0+cy*chh+rand(20, Math.max(21, chh-rh-20))), w:rw, h:rh, cx, cy});
   }
   const cen = rooms.map(rectCenter);
   const edges = [], key = (a,b)=> a<b ? a+','+b : b+','+a, have = new Set();
@@ -120,7 +120,8 @@ function makeDarkCrypt(){
     } }
   for(const pr of pairs){ const ra = find(pr.a), rb = find(pr.b); if(ra!==rb){ par[ra] = rb; link(pr.a, pr.b); } }
   for(let a=1;a<rooms.length;a++) if(find(a)!==find(0)){ let bd = 1e9, bb = 0; for(let b=0;b<rooms.length;b++) if(find(b)===find(0)){ const d = dist(cen[a],cen[b]); if(d<bd){ bd = d; bb = b; } } par[find(a)] = find(0); link(a, bb); }
-  for(const pr of pairs){ if(edges.length >= rooms.length-1 + 2) break; if(pr.d<2100 && Math.random()<0.05) link(pr.a, pr.b); }   // v514: at most one or two loops (shortcuts) now
+  { const nLoop = 3 + Math.floor(Math.random()*3);   // v570: three to five loops between neighbouring chambers -- the crypt is a web of tunnels, not one corridor
+    for(const pr of pairs){ if(edges.length >= rooms.length-1 + nLoop) break; if(pr.d<1900 && Math.random()<0.18) link(pr.a, pr.b); } }
   const nearestIn = (pt, list)=>{ let bi = list[0], bd = 1e9; for(const i of list){ const d = dist(pt, cen[i]); if(d<bd){ bd = d; bi = i; } } return bi; };
   const botRooms = rooms.map((r,i)=>r.cy===ROWS-1 ? i : -1).filter(i=>i>=0), topRooms = rooms.map((r,i)=>r.cy===0 ? i : -1).filter(i=>i>=0);
   const inRoom = nearestIn(rectCenter(entranceRoom), botRooms), outRoom = nearestIn(rectCenter(exitRoom), topRooms);
@@ -132,9 +133,33 @@ function makeDarkCrypt(){
   const mainRooms = pathIdx.map(i=>rooms[i]), sideRooms = rooms.filter((r,i)=>pathIdx.indexOf(i)<0);
   const floorRects = [entranceRoom, ...rooms, exitRoom], tunnels = [];
   const addTunnel = (a,b,wd)=>{ const sw = Math.random()<0.5, r = sw ? tunnelRects(b.x,b.y,a.x,a.y,wd) : tunnelRects(a.x,a.y,b.x,b.y,wd); floorRects.push(...r); tunnels.push({a,b,rects:r}); };
+  // v570: most chambers grow a wing or an alcove, so no two look alike (L, T and cross shapes)
+  for(const r of rooms){ const nW = Math.random()<0.65 ? 1 + (Math.random()<0.35 ? 1 : 0) : 0;
+    for(let k=0;k<nW;k++){ const side = Math.floor(Math.random()*4), ww = ri(260, 420), hh = ri(220, 360);
+      const wr = side===0 ? {x:r.x-ww+60, y:r.y+ri(0, Math.max(0, r.h-hh)), w:ww, h:hh} : side===1 ? {x:r.x+r.w-60, y:r.y+ri(0, Math.max(0, r.h-hh)), w:ww, h:hh}
+               : side===2 ? {x:r.x+ri(0, Math.max(0, r.w-ww)), y:r.y-hh+60, w:ww, h:hh} : {x:r.x+ri(0, Math.max(0, r.w-ww)), y:r.y+r.h-60, w:ww, h:hh};
+      if(wr.x<120 || wr.y<1350 || wr.x+wr.w>w-120 || wr.y+wr.h>h-500) continue;
+      if(rooms.some(o=>o!==r && rectsOverlap(wr, o, 90)) || rectsOverlap(wr, entranceRoom, 120) || rectsOverlap(wr, exitRoom, 120)) continue;
+      floorRects.push(wr); } }
   for(const [a,b] of edges) addTunnel(cen[a], cen[b], CORR_W);
   addTunnel(rectCenter(entranceRoom), cen[inRoom], CORR_W);
   addTunnel(cen[outRoom], rectCenter(exitRoom), CORR_W);
+  // v570: four to six treasure vaults in dead ends. Dead-end chambers count first; if there are too few, small vaults are dug
+  // off random chambers on a tunnel of their own (each is a dead end by construction).
+  const vaultRooms = [];
+  { const target = 4 + Math.floor(Math.random()*3), dead = rooms.map((r,i)=>i).filter(i=>adj[i].length===1 && pathIdx.indexOf(i)<0);
+    shuffle(dead); for(const i of dead){ if(vaultRooms.length>=target) break; vaultRooms.push(rooms[i]); }
+    const hosts = shuffle(rooms.slice());
+    for(let t=0; t<200 && vaultRooms.length<target; t++){
+      const hr = hosts[t % hosts.length], side = Math.floor(Math.random()*4), vw = ri(420,520), vh = ri(360,440), gap = ri(260, 420);
+      const hc = rectCenter(hr);
+      const v = side===0 ? {x:hr.x-gap-vw, y:hc.y-vh/2} : side===1 ? {x:hr.x+hr.w+gap, y:hc.y-vh/2} : side===2 ? {x:hc.x-vw/2, y:hr.y-gap-vh} : {x:hc.x-vw/2, y:hr.y+hr.h+gap};
+      v.x = Math.round(v.x); v.y = Math.round(v.y); v.w = vw; v.h = vh;
+      if(v.x<140 || v.y<1350 || v.x+v.w>w-140 || v.y+v.h>h-520) continue;
+      if(floorRects.some(o=>rectsOverlap(v, o, 110)) || tunnels.some(tn=>tn.rects.some(o=>rectsOverlap(v, o, 80)))) continue;
+      v.vault = true; floorRects.push(v); vaultRooms.push(v);
+      addTunnel(hc, rectCenter(v), Math.round(CORR_W*0.85));
+    } }
   floorRects.push(tombRoom);
   const obstacles = darkCryptCarveObstacles(floorRects, w, h);
   // Entry/exit gate back to Cursed Cemetery -- same "the entry point IS the
@@ -158,8 +183,8 @@ function makeDarkCrypt(){
   const hallDoor = {x:exitRoom.x+exitRoom.w/2, y:exitRoom.y+24, r:34};
   const tombDoor = {x:tombRoom.x+tombRoom.w/2, y:tombRoom.y+tombRoom.h-24, r:34};
   // v516: a chest in every dead-end side room (a chamber with a single tunnel that is not on the way to the hall); marked on the map
-  const sideChests = [];
-  rooms.forEach((r,i)=>{ if(adj[i].length===1 && pathIdx.indexOf(i)<0){ const c = rectCenter(r); sideChests.push({x:Math.round(c.x), y:Math.round(c.y), r:22, opened:false}); } });
+  const sideChests = [];   // v570: one chest in each treasure vault (4-6), guarded by skeleton brutes (spawnDarkCryptPopulation)
+  for(const r of vaultRooms){ const c = rectCenter(r); sideChests.push({x:Math.round(c.x), y:Math.round(c.y), r:22, opened:false, room:r}); }
   // v519: The Silver Locket -- while that quest is open, ONE random dead-end chest holds the locket (a different chest each visit until it is found)
   { const lq = (typeof game!=='undefined' && game && game.player) ? getQuest(game.player, 'silver_locket') : null;
     if(lq && lq.status==='active' && lq.progress<lq.total){
@@ -216,6 +241,13 @@ function spawnDarkCryptPopulation(g){
         if(okSpot(x, y, 330)) pack(x, y, Math.random()<0.25 ? 'spider' : 'skeleton', 2, 40);
       }
     }
+  }
+  // v570: skeleton brutes guard every treasure vault
+  for(const sc of (C.sideChests||[])){
+    const n = 2 + (Math.random()<0.5 ? 1 : 0);
+    for(let k=0;k<n;k++){ const a = k/n*Math.PI*2 + rand(-0.3,0.3), x = sc.x+Math.cos(a)*rand(90,140), y = sc.y+Math.sin(a)*rand(70,110);
+      if(posBlockedByObstacles(x, y, 20, C.obstacles)) continue; const b = spawnEnemy(g, 'skeletonbrute', {x, y}); if(b){ b.vaultGuard = true; b.wanderRadius = 40; } }
+    centers.push({x:sc.x, y:sc.y});
   }
   // v536: the first pack on the way in is led by the Map Bearer -- a big skeleton brute ringed in gold with three skeletons
   { const a1 = rectCenter(C.mainPath[0]), er = C.entranceRoom;

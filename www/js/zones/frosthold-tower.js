@@ -1102,10 +1102,13 @@ function enterForest(from){
   // per-area density and the same spread-out, not-clumped feel -- see
   // README "Version 68" for the full reasoning.
   const anchors = shuffle(breatheAnchors(g.forest.packAnchors, {gap:380}));
-  const FOREST_PACK_COUNT = Math.min(70, anchors.length);
-  for(let i=0;i<FOREST_PACK_COUNT;i++){
-    spawnForestPack(g, anchors[i]);
-  }
+  // v570: spiders only in the woods round the Spider Lair (FOREST_SPIDER_R, ringed with webs), bears only at the Bear Cave
+  const sg = g.forest.spiderLairGate, bg = g.forest.bearCaveGate;
+  const inSpider = a=>dist(a, sg) < FOREST_SPIDER_R, nearBear = a=>dist(a, bg) < FOREST_BEAR_KEEP;
+  const open = anchors.filter(a=>!inSpider(a) && !nearBear(a)), webs = anchors.filter(a=>inSpider(a) && dist(a, sg) > 200);
+  const FOREST_PACK_COUNT = Math.min(58, open.length);
+  for(let i=0;i<FOREST_PACK_COUNT;i++) spawnForestPack(g, open[i]);
+  for(let i=0;i<Math.min(12, webs.length);i++) spawnForestPack(g, webs[i], {type:'spider', countMin:3, countMax:5});
   // The Forest's one bear (item 1, v62): a single fixed spawn near the Bear
   // Cave entrance rather than a roaming pack -- a small random offset off
   // the gate so it isn't standing directly on the entrance trigger.
@@ -1121,6 +1124,10 @@ function enterForest(from){
     const bx = clamp(gate.x + Math.cos(bang)*FOREST_BEAR_OFFSET, 60, g.forest.w-60);
     const by = clamp(gate.y + Math.sin(bang)*FOREST_BEAR_OFFSET, 60, g.forest.h-60);
     spawnEnemy(g, 'bear', {x:bx, y:by});
+    for(let k=1;k<3;k++){   // v570: three bears loiter outside the Bear Cave entrance
+      const a2 = bang + k*2.1;
+      spawnEnemy(g, 'bear', {x:clamp(gate.x + Math.cos(a2)*FOREST_BEAR_OFFSET*1.3, 60, g.forest.w-60), y:clamp(gate.y + Math.sin(a2)*FOREST_BEAR_OFFSET*1.3, 60, g.forest.h-60)});
+    }
   }
   g.followers = [];
   ensureFollowers(g);
