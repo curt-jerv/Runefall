@@ -108,7 +108,7 @@ let wantStormcall=false, wantRaiseDead=false, wantMeteor=false, wantAttack=false
 // physically held down. Read by the aiming state machine in updatePlaying();
 // see onAttackDown/onAttackUp below for how this gets set.
 let attackHeld = false;
-const HOLD_REPEAT_MAIN = { explosiveShot:1, splinterShot:1, multiShot:1, reave:1, shieldBash:1, smite:1, vengeance:1, cripplingShot:1, stunShot:1, rapidShot:0, fireball:1, iceBolt:1, lightningArc:1, soulSap:1, deathBolt:1 };   // v452: main attacks that repeat while STRIKE is held
+const HOLD_REPEAT_MAIN = { explosiveShot:1, splinterShot:1, multiShot:1, reave:1, shieldBash:1, smite:1, vengeance:0, cripplingShot:1, stunShot:1, rapidShot:0, fireball:1, iceBolt:1, lightningArc:1, soulSap:1, deathBolt:1 };   // v452: main attacks that repeat while STRIKE is held
 function bindBtn(el, fn){
   el.addEventListener('touchstart', e=>{ e.preventDefault(); fn(); }, {passive:false});
   el.addEventListener('mousedown', e=>{ e.preventDefault(); fn(); });

@@ -345,8 +345,11 @@ function spawnLighthouseFloor(g, floor){
     // v461: the Bandit King holds the rooftop with his guard
     // v480: he waits behind the beacon, untouchable, and sends six brutes and six archers first
     const bc = room.beacon || {x:room.w/2, y:room.h/2};
-    const king = spawnEnemy(g, 'banditking', {x:bc.x + (room.entranceSide==='right' ? -95 : 95), y:bc.y - 30});
-    if(king){ king.bkHold = true; }
+    // v570: he waits in FRONT of the beacon (towards the camera, a little to one side) so the beacon never hides him
+    const king = spawnEnemy(g, 'banditking', {x:bc.x + 150, y:bc.y + 40});
+    if(king){ king.bkHold = true;
+      for(let tr=0; tr<16 && posBlockedByObstacles(king.x, king.y, king.r, room.obstacles); tr++){ king.x += 14; king.y += 10; }
+      king.homeX = king.x; king.homeY = king.y; }
     for(let i=0;i<12;i++){
       const e = spawnEnemy(g, i<6 ? 'banditbrute' : 'banditarcher'); if(!e) continue;
       e.bkCrew = true; e.bkWait = true; e._aggro0 = e.aggroRange; e.aggroRange = 0;   // v486: they hold their posts around the beacon

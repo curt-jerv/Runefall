@@ -914,7 +914,8 @@ function render(){
     drawables.push({depth:playerDepth-90, draw:()=>drawHurricaneIso(p, g.clock||0, false)});
     drawables.push({depth:playerDepth+90, draw:()=>drawHurricaneIso(p, g.clock||0, true)});
   }
-  drawables.push({depth:playerDepth, draw:()=>drawWithStatus(p, ()=>(p.cls==='ranger' ? drawRanger(p) : p.cls==='mystic' ? drawMystic(p) : drawWarrior(p)), true)});
+  drawables.push({depth:playerDepth, draw:()=>{ const lz = playerLaunchZ(p); if(lz>0){ ctx.save(); ctx.translate(0, -lz); }   // v570: thrown into the air
+    try{ drawWithStatus(p, ()=>(p.cls==='ranger' ? drawRanger(p) : p.cls==='mystic' ? drawMystic(p) : drawWarrior(p)), true); } finally { if(lz>0) ctx.restore(); } }});
   if(g.mirage && p.cls==='ranger'){ const m = g.mirage; drawables.push({depth:m.x+m.y, draw:()=>{
     const k = Math.min(1, m.t/0.4, ((g.clock||0)-m.born)/0.15+0.2);
     const ghost = Object.assign(Object.create(p), {x:m.x, y:m.y, facing:m.facing, faceSign:m.faceSign, dodging:false, moving:false, atkAnimT:0, castAnimT:0, hitFlash:0, vanishT:0, chillT:0, poisonT:0, burnT:0, charges:0, mirageAlpha:0.42*k});

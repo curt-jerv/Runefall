@@ -144,7 +144,7 @@ function saveGame(){
       shrineBlessed:p.shrineBlessed||false, forestHunterPos:p.forestHunterPos||null, leviathanSlain:p.leviathanSlain||false, krakenSlain:p.krakenSlain||false, wmSeen:p.wmSeen||{},
       frostholdUnlocked:p.frostholdUnlocked||false, snowWallOpen:p.snowWallOpen||false, heartstoneTaken:p.heartstoneTaken||false, defilerSlain:p.defilerSlain||false, inscriptionTaken:p.inscriptionTaken||false, scholarMet:p.scholarMet||false, scholarMeet:p.scholarMeet||false, scholarLeft:p.scholarLeft||false, ruinsEvent:p.ruinsEvent||0, scholarRead:p.scholarRead||false, fhDungeonKey:p.fhDungeonKey||false, fhDungeonOpen:p.fhDungeonOpen||false, fhDungeonDone:p.fhDungeonDone||false, redridgeWallOpen:p.redridgeWallOpen||false, shrineStage:p.shrineStage||0, scholarEast:p.scholarEast||false, fhCmdSlain:p.fhCmdSlain||false, fhCmdLooted:p.fhCmdLooted||false, constructSlain:p.constructSlain||false, heartstoneDone:p.heartstoneDone||false, witchPotionStarted:p.witchPotionStarted||false, npcMarks:p.npcMarks||{},
       reachedSunlitPlains:p.reachedSunlitPlains||false,
-      reachedRiverValley:p.reachedRiverValley||false, bridgeCleared:p.bridgeCleared||false, bridgeChiefDead:p.bridgeChiefDead||false,
+      reachedRiverValley:p.reachedRiverValley||false, bridgeCleared:p.bridgeCleared||false, bridgeChiefDead:p.bridgeChiefDead||false, deMode:p.deMode||'retribution',
       reachedLighthouseTower:p.reachedLighthouseTower||false,
       reachedLighthouseTowerTop:p.reachedLighthouseTowerTop||false,
       reachedLakesideRuins:p.reachedLakesideRuins||false,

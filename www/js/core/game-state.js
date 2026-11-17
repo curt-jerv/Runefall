@@ -373,7 +373,7 @@ function newGame(saved, cls){
     player.shrineStage = saved.shrineStage||0; player.scholarEast = !!saved.scholarEast; player.fhCmdSlain = !!saved.fhCmdSlain; player.fhCmdLooted = !!saved.fhCmdLooted; player.constructSlain = !!saved.constructSlain; player.heartstoneDone = !!saved.heartstoneDone; player.witchPotionStarted = !!saved.witchPotionStarted;
     player.frostholdUnlocked = !!saved.frostholdUnlocked; player.snowWallOpen = !!saved.snowWallOpen; player.heartstoneTaken = !!saved.heartstoneTaken; player.defilerSlain = !!saved.defilerSlain; player.inscriptionTaken = !!saved.inscriptionTaken; player.scholarMet = !!saved.scholarMet; player.scholarMeet = !!saved.scholarMeet; player.scholarLeft = !!saved.scholarLeft; player.ruinsEvent = saved.ruinsEvent||0; player.scholarRead = !!saved.scholarRead; player.fhDungeonKey = !!saved.fhDungeonKey; player.fhDungeonOpen = !!saved.fhDungeonOpen; player.fhDungeonDone = !!saved.fhDungeonDone; player.redridgeWallOpen = !!saved.redridgeWallOpen; player.npcMarks = saved.npcMarks||{};
     player.reachedSunlitPlains = !!saved.reachedSunlitPlains;
-    player.reachedRiverValley = !!saved.reachedRiverValley; player.bridgeCleared = !!saved.bridgeCleared; player.bridgeChiefDead = !!saved.bridgeChiefDead;
+    player.reachedRiverValley = !!saved.reachedRiverValley; player.bridgeCleared = !!saved.bridgeCleared; player.bridgeChiefDead = !!saved.bridgeChiefDead; player.deMode = saved.deMode==='salvation' ? 'salvation' : 'retribution';
     player.reachedLighthouseTower = !!saved.reachedLighthouseTower;
     player.reachedLighthouseTowerTop = !!saved.reachedLighthouseTowerTop;
     player.reachedLakesideRuins = !!saved.reachedLakesideRuins;
@@ -786,7 +786,7 @@ function spawnEnemy(g, type, pos){
     // damage, moving noticeably slower in exchange, tuned in the same
     // "tough mid-tier heavy" band as Bandit Brute rather than a full boss.
     e = {type,x,y,r:14,hp:68+depth*7.2,maxHp:68+depth*7.2,speed:rand(52,64),dmg:15+depth*2.4,
-         atkCd:0,atkCdMax:1.2,color:'#8a8078',state:'chase',hitT:0,armor:9};
+         atkCd:0,atkCdMax:0.85,color:'#8a8078',state:'chase',hitT:0,armor:9};   // v570: swings faster (1.2 -> 0.85, x0.75 for brutes)
   } else if(type==='zombie'){
     // Dark Crypt (v73) -- general-population melee type: adapted from
     // Frozen Zombie's shape (same slow shambling base speed, well under
@@ -934,7 +934,7 @@ function spawnEnemy(g, type, pos){
          atkCd:rand(0,0.5),atkCdMax:0.42,color:'#c4783a',state:'chase',hitT:0,armor:6,hw:'duelist'};
   } else if(type==='banditking'){
     // v461 The Bandit King: Lighthouse Tower rooftop boss
-    e = {type,x,y,r:27,hp:(65+depth*7)*9,   /* v545: a little smaller (was 30) */ maxHp:(65+depth*7)*9,speed:rand(84,90),dmg:(15+depth*2.3)*1.1,
+    e = {type,x,y,r:21.6,hp:(65+depth*7)*9,   /* v570: 20% smaller again (27 -> 21.6) */ maxHp:(65+depth*7)*9,speed:rand(84,90),dmg:(15+depth*2.3)*1.1,
          atkCd:0,atkCdMax:1.0,color:'#a8282a',state:'chase',hitT:0,armor:14,bkBoss:true,heavy:true,bossName:'The Bandit King',eliteName:'The Bandit King',xpMul:8};
   } else if(type==='hwguardian'){
     // The Highward Ancient Warden: towering gold-rust champion. Slams, raises a shield wall, rains hammers, calls its garrison.

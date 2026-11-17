@@ -258,7 +258,7 @@ function drawHwStatusFx(e){
   }
 }
 // ---- v461 The Bandit King: Lighthouse Tower rooftop boss ----
-const BK_LEAP_R = 115, BK_LEAP_WIND = 0.55, BK_LEAP_AIR = 0.6, BK_FAN_WIND = 0.6;
+const BK_LEAP_R = 115, BK_LEAP_WIND = 0.55, BK_LEAP_AIR = 0.38, BK_FAN_WIND = 0.6;   // v570: the leap flies faster (air 0.6 -> 0.38s)
 function updateBanditKing(g, e, dt, target, d, isFT, chill, room){
   if(!e._greeted){ bossGreet(g, e, '\u201cThis lighthouse is mine, and so is everything you carry!\u201d'); if(e._greeted) voicePlay('bk_greet'); }   // v490 (v556: voiced, with his 'Kill him, boys!')
   const p = g.player, reach = e.r+target.r+6;
@@ -316,7 +316,7 @@ function updateBanditKing(g, e, dt, target, d, isFT, chill, room){
     e.bkFan -= dt; e.moving = false; e.castAnimT = 0.2;
     if(e.bkFan<=0){
       const n = enr ? 7 : 5, base = e.bkFanAng, spread = 0.95;
-      for(let i=0;i<n;i++){ const a = base + (i/(n-1)-0.5)*spread; g.projectiles.push({x:e.x, y:e.y-20, vx:Math.cos(a)*360, vy:Math.sin(a)*360, r:7, dmg:e.dmg*0.5, from:'enemy', life:1.6, color:'#d8dce4', isKnife:true, srcEnemy:e, targetRef:target}); }
+      for(let i=0;i<n;i++){ const a = base + (i/(n-1)-0.5)*spread; g.projectiles.push({x:e.x, y:e.y-20, vx:Math.cos(a)*360, vy:Math.sin(a)*360, r:9, dmg:e.dmg*0.5, from:'enemy', life:1.6, color:'#d8dce4', isKnife:true, srcEnemy:e, targetRef:target}); }
       e.atkAnimT = 0.2;
     }
     return;

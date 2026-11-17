@@ -119,12 +119,13 @@ function updateProtector(g, e, dt, target, d, isFollowerTarget, chillMult, room)
       return;
     }
     if(e.prot==='defender' && e.prCd2<=0 && d < 150){ e.prState='seisTele'; e.prT=PROT_SEIS_TELE; e.windT=0; e.prCd2 = rand(7,9); return; }
-    if(e.prot==='berserker' && e.prCd2<=0 && d > 150 && d < 460){ e.prState='leapTele'; e.prT=PROT_LEAP_TELE; e.leapTo = {x:target.x, y:target.y}; e.leapFrom = {x:e.x, y:e.y}; e.prCd2 = rand(6,8); face(Math.atan2(target.y-e.y, target.x-e.x)); return; }
+    // v570: the Berserker's leap is gone (it fights with plain Warrior sword swings)
+    if(false && e.prot==='berserker' && e.prCd2<=0 && d > 150 && d < 460){ e.prState='leapTele'; e.prT=PROT_LEAP_TELE; e.leapTo = {x:target.x, y:target.y}; e.leapFrom = {x:e.x, y:e.y}; e.prCd2 = rand(6,8); face(Math.atan2(target.y-e.y, target.x-e.x)); return; }
     if(e.prCd<=0){
       if(e.prot==='defender'){
         if(d < 115){ e.prState='bashTele'; e.prT=PROT_BASH_TELE; e.windT=0; }
         else if(d > 190 && d < 520){ e.prState='throwTele'; e.prT=PROT_THROW_TELE; e.windT=0; face(Math.atan2(target.y-e.y, target.x-e.x)); }
-      } else if(d < 380){ e.prState='wwTele'; e.prT=PROT_WW_TELE; e.windT=0; }
+      }   // v570: no more Whirlwind spin for the Berserker -- only the standard Warrior swing (beginEnemyMelee below)
       if(e.prState!=='chase') return;
     }
     if(d > e.r+target.r+2) approach(target.x, target.y, 1);

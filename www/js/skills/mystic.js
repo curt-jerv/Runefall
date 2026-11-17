@@ -27,7 +27,7 @@ function lightningArcChains(rank){ return rank>0 ? Math.max(1,Math.round(rkSprea
 // duration scales with rank -- Nova's own direct hit damage is flat,
 // called out explicitly in its effect text (same "fixed, doesn't scale"
 // convention Field Dress's cooldown text already established).
-const NOVA_CD = 9, NOVA_RADIUS = 98;   // v311: 30% smaller
+const NOVA_CD = 5, NOVA_RADIUS = 98;   // v570: cooldown 5s (was 9)   // v311: 30% smaller
 const NOVA_SHOCK_DUR_BASE = 1.5, NOVA_SHOCK_DUR_STEP = 0.5; // 1.5s at Rank1 -> 3.5s at Rank5
 const NOVA_SHOCK_DPS_PCT = 0.12; // Shock ticks for 12% of Nova's own direct hit damage, per second
 function novaShockDuration(rank){ return rank>0 ? NOVA_SHOCK_DUR_BASE + NOVA_SHOCK_DUR_STEP*(rank-1) : NOVA_SHOCK_DUR_BASE; }

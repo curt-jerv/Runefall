@@ -66,9 +66,9 @@ const SKILL_TREES = {
     {id:'vengeance',    name:'Vengeance',    type:'active', reqLevel:1,  row:0, col:2, prereq:[],
       desc:'Strike with holy fire, driving your followers into a righteous frenzy.'},
     {id:'sacredWeapon', name:'Sacred Weapon', type:'passive', reqLevel:7, row:1, col:1, prereq:['vengeance'],
-      desc:'Your blade is consecrated: every fourth Vengeance erupts in holy flame.'},
-    {id:'auraOfRetribution', name:'Aura of Retribution', type:'passive', reqLevel:7, row:1, col:3, prereq:['vengeance'],
-      desc:'Those who strike you are struck in turn by your faith.'},
+      desc:'Your blade is consecrated: a finished Vengeance combo empowers the next one.'},
+    {id:'auraOfRetribution', name:'Divine Equilibrium', type:'active', reqLevel:7, row:1, col:3, prereq:['vengeance'],   // v570: was the passive Aura of Retribution (id kept for saves)
+      desc:'Hold faith and flesh in balance: an aura of Retribution or of Salvation.'},
     {id:'smite',        name:'Smite',        type:'active', reqLevel:14, row:2, col:0, prereq:['sacredWeapon'],
       desc:'Hurl a bolt of holy light that strikes the first foe and mends allies. Every third cast is a mighty Wrath.'},
     {id:'banner',       name:'Battle Standard', type:'active', reqLevel:21, row:3, col:2, prereq:['squire'],
@@ -370,8 +370,8 @@ function treesForClass(cls){ return cls==='ranger' ? RANGER_SKILL_TREES : cls===
 const SKILL_DESC_OVERRIDES = {"ironSkin": "Your skin hardens like stone, turning aside blows that would fell lesser warriors.", "shieldBash": "Slam your shield into a foe hard enough to rattle their skull.", "shieldThrow": "Hurl your shield through the enemy ranks and let it fly back to your hand.", "guardian": "Roar, fill your Rage and charge unstoppable, flattening everything in your path until the Rage runs dry.", "whirlwind": "Become a whirling storm of steel, cutting down everything that stands too close.", "assault": "Fly into a berserker rage, growing deadlier and more reckless as the fight goes on.", "squire": "Call loyal squires to stand and fight at your side.", "offensiveStance": "Drive your followers into a frenzy so they strike harder with every blow.", "commander": "Command your followers to charge into the fray or hold the line beside you, and toughen them for the fight.", "templarDefensiveStance": "Train your followers to stand firm, drawing enemy eyes away from you.", "battlecry": "Let loose a thunderous war cry that stuns the foes around you and sends you and your followers into a fury.", "rally": "Raise your shield and call your followers back to your side, healing and steeling them.", "companionBear": "A great bear joins you -- the hardest-hitting companion in the wild.", "companionWolf": "A loyal wolf hunts at your side. Respawns after 5 seconds if fallen.", "stunShot": "Fire a heavy arrow that rattles a foe senseless.", "tornado": "Hurl a huge, howling tornado that tears through every enemy in its path."};
 const V454_RANGER_REMOVED = ['arrowEye','trueShot','longshot','vanish'];
 const SKILL_DESC_V454 = {
-  sacredWeapon:'Your blade is consecrated: every fourth Vengeance erupts in holy flame.',
-  auraOfRetribution:'Those who strike you are struck in turn by your faith.',
+  sacredWeapon:'Your blade is consecrated: a finished Vengeance combo empowers the next one.',
+  auraOfRetribution:'Hold faith and flesh in balance: an aura of Retribution or of Salvation.',
   explosiveShot:'A fire-tipped arrow that bursts into flame on impact.',
   beastFury:'Drive your companions into a frenzy: your bear roars a challenge and your wolves tear deeper.',
   trapMastery:'Your traps hit harder, reach farther, and you throw them faster.',

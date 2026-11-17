@@ -127,7 +127,7 @@ const PART_DEFS = {
   brimstoneash:{name:'Brimstone Ash', icon:'\u{1F311}', color:'#b0603a', stat:'thorns', label:'of enemy hit damage reflected (Thorns)', scale:2, from:'Pit demons (grunts, brutes, archers and their lords)'},
   rextooth:{name:"Crater King's Tooth", icon:'\u{1F9B7}', color:'#e8d8c0', stat:'physpct', label:'Physical Damage', from:'Rex, the Crater King \u2014 5% drop', sig:true, scale:2},
   flameclaw:{name:'Flame Raptor Claw', icon:'\u{1F525}', color:'#ff6a2a', stat:'firepct', label:'Fire Damage', from:'The Flame Raptor \u2014 15% drop', sig:true, scale:2},
-  minotaurheart:{name:'Minotaur Heartstone', icon:'\u{1FAC0}', color:'#e0504a', stat:'hp', label:'Max HP', from:'The Minotaur (witch-cut)', quest:true},
+  minotaurheart:{name:'Minotaur Heartstone', icon:'\u{1FAC0}', color:'#e0504a', stat:'hp', label:'Max HP', from:'The Minotaur', quest:true},   // v570: no '(witch-cut)' in the label
   // ---- Signature parts (v383): the rare ingredients of the nine unique amber stones ----
   golemcore:{name:'Golem Core', icon:'⚙', color:'#9aa0a8', stat:'maxres', label:'Max Resistances', scale:0.2, from:'Golems and Constructs', sig:true},
   hellhoundfang:{name:'Hellhound Fang', icon:'\u{1F9B7}', color:'#ff5a3a', stat:'elempct', label:'Elemental Damage', from:'Hellhounds and Brimstone Brutes', sig:true, scale:1.5},
@@ -365,6 +365,11 @@ function updateBuffBar(p){
   if(p.wellRestedT>0 && game && game.started && !game.over) items.push({k:'rested', icon:'\u{1F319}', t:p.wellRestedT, tip:'Well Rested: +5% Magic Find, +'+WELL_RESTED_REGEN+'% life regeneration per second'});   // v452: Well Rested lives in the buff row too
   if(ironStillMult(p)>1) items.push({k:'ironstill', icon:'\u{1F6E1}\uFE0F', label:'+'+Math.round((ironStillMult(p)-1)*100)+'%', t:0, tip:'Iron Skin: standing your ground, +'+Math.round((ironStillMult(p)-1)*100)+'% Defence (up to +50%)'});
   if(p.bhPool>1) items.push({k:'bharvest', icon:'\u{1FA78}', label:'regen', t:0, tip:'Blood Harvest: faded Rage returning as life'});
+  { const dm = (typeof divineEqMode==='function') ? divineEqMode(p) : null;   // v570 Divine Equilibrium: which aura is up
+    if(dm==='retribution') items.push({k:'deRetrib', icon:'\u2694\uFE0F', label:'aura', t:0, tip:'Aura of Retribution (Divine Equilibrium): your life regeneration fills Conviction instead of life. Tap the skill button to switch to Salvation.'});
+    else if(dm==='salvation') items.push({k:'deSalv', icon:'\u271A', label:'aura', t:0, tip:'Aura of Salvation (Divine Equilibrium): +'+Math.round(salvationRegenPct(divineEqRank(p))*100)+'% life regeneration. Tap the skill button to switch to Retribution.'}); }
+  if(p.cls==='warrior' && p.vengStage>0) items.push({k:'vengCombo', icon:'\u{1F525}', label:(p.vengStage+1)+'/3', t:0, tip:'Vengeance combo: swing '+(p.vengStage+1)+' of 3 is ready -- tap again before it fades'});
+  if(p.cls==='warrior' && (p.sacredReady || p.sacredCombo)) items.push({k:'sacredEmp', icon:'\u2728', label:p.sacredCombo ? 'on' : 'ready', t:0, tip:p.sacredCombo ? 'Empowered: this Vengeance combo hits harder and burns' : 'Empowered ready: your next Vengeance combo spends '+SACRED_COST+' Conviction to be Empowered'});
   if(p.assaultT>0) items.push({k:'assault', icon:'\u{1F525}', t:p.assaultT, tip:'Assault: bonus damage and life leech, but you take more damage as it ramps'});
   if(p.owShrine && p.owShrine.t>0){ const S = OW_SHRINES[p.owShrine.kind]; items.push({k:'owshrine', icon:S.icon, t:p.owShrine.t, tip:S.name+': '+S.desc}); }   // v525
   // v491: the beast lairs' zone hazards show in the buff row too

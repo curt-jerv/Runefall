@@ -49,7 +49,7 @@ function applyCastMovementStop(p, snap){
 const ENEMY_WINDUP_MIN = 0.22, ENEMY_WINDUP_MAX = 0.4, ENEMY_WINDUP_FRAC = 0.35; // windup = atkCdMax*frac, clamped
 const ENEMY_WINDUP_REACH_SLACK = 10;   // extra px of reach at resolve time (so a 1-px step doesn't fully whiff)
 const STAGGER_WIND_CUTOFF = 0.5; const STAGGER_CHANCE = 0.6;
-const STAGGER_DUR = 0.18, STAGGER_IMMUNE = 1.5;
+const STAGGER_DUR = 0.32, STAGGER_IMMUNE = 1.5;   // v570: 0.18 -> 0.32 (crits only now, so the recoil can be seen)
 const RIPOSTE_DUR = 1.5, RIPOSTE_DMG_MULT = 1.3; // perfect-dodge damage bonus
 let lastHitCrit = false; // set around crit-capable hits so damage numbers can style crits
 function spawnDmgNumber(g, e, amt, crit, opt){
@@ -74,16 +74,18 @@ function shakeScreen(g, mag, dur){
 }
 function hitStop(g, dur){ if(g) g.hitStopT = Math.max(g.hitStopT||0, dur); }
 // Normal enemies flinch; bosses, lair bosses and stationary Leviathans don't.
+// v570: only a CRITICAL hit staggers (and plays the recoil, see drawEnemyIso in monsters/elites.js); bosses never stagger
+function enemyIsBossy(e){ return !!(e.isBoss || e.isLairBoss || e.gj || e.trex || e.rev || e.lr || e.colossus || e.balrog || e.mastodon || e.kraken || e.lvBoss || e.prot || e.bossBar || e.miniBoss); }
 function staggerEnemy(e, dur){
-  if(!e || e.isBoss || e.isLairBoss || e.speed===0) return;
+  if(!e || enemyIsBossy(e) || e.speed===0) return;
+  if(!lastHitCrit) return;
   if(e.staggerImmuneT>0 || e.staggerT>0) return;
   // v334: a hit only interrupts the FIRST half of a wind-up; once the swing/charge is past halfway it lands anyway
   if(e.windT>0 && e.windMax>0 && e.windT < e.windMax*STAGGER_WIND_CUTOFF) return;
   if(e.chargeState==='wind' && e.chargeWindT < BEAR_CHARGE_WIND*STAGGER_WIND_CUTOFF) return;
   if(e.boarChargeState==='wind' && e.boarWindT < BOAR_CHARGE_WIND*STAGGER_WIND_CUTOFF) return;
   if(e.zChargeState==='wind' && e.zChargeWindT < ZOMBIE_CHARGE_WIND*STAGGER_WIND_CUTOFF) return;
-  if(Math.random() >= STAGGER_CHANCE) return;   // v335: 60% chance to interrupt
-  e.staggerT = dur;
+  e.staggerT = dur; e.staggerMax = dur;
 }
 function beginEnemyMelee(e){
   e.atkCd = e.atkCdMax;
@@ -280,7 +282,7 @@ function playerDamage(g, amt, srcEnemy, knockback, canMiss){
   // Black Marsh Anaconda: its coiling bite slows movement briefly (same slow as spider webs).
   if(srcEnemy && (srcEnemy.type==='anaconda' || srcEnemy.type==='sandsnake') && !p.slowImmune) p.webSlowT = Math.max(p.webSlowT||0, 1.3);
   // v455 Aura of Retribution: an attacker takes a share of the damage it just dealt
-  if(srcEnemy && srcEnemy.hp>0 && p.cls==='warrior'){
+  if(false && srcEnemy && srcEnemy.hp>0 && p.cls==='warrior'){   // v570: retired -- the node is now Divine Equilibrium (skills/warrior.js)
     const arR = (p.skills && effectiveRank(p,'auraOfRetribution'))||0;
     if(arR>0){
       const back = Math.max(1, Math.round(amt*retributionPct(arR)));

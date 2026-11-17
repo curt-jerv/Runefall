@@ -150,6 +150,7 @@ function pickNamingAffixes(affixes){
 function generateItem(...args){ const it = generateItemRaw(...args); migrateItemAffixes(it);
   // v362: a rare chance for gear to drop with sockets (max 2), from level 30 up
   if(it && (args[0]||0)>=20 && SOCKETABLE[it.slotType] && !(it.sockets>0) && Math.random()<socketChance(args[0]||0)){ it.sockets = Math.random()<0.2 ? 2 : 1; it.socketed = []; }
+  if(it && it.rarity==='common' && SOCKETABLE[it.slotType] && !(it.sockets>0)){ it.sockets = 1; it.socketed = []; }   // v570: every common (white) piece of gear has one socket
   return it; }
 function generateItemRaw(charLevel, forcedRarity, forcedCategory, forcedMaterial, dropPlayer){
   const category = forcedCategory || pickItemCategory();

@@ -1,3 +1,22 @@
+// v570: one subtle lightning stroke for Lightning Arc, Lightning Chain and Nova (thin, soft glow, steady jitter)
+function drawSubtleBolt(x0, y0, x1, y1, seed, alpha, w){
+  const len = Math.hypot(x1-x0, y1-y0) || 1, nx = -(y1-y0)/len, ny = (x1-x0)/len;
+  const segs = Math.max(3, Math.round(len/26)), tick = Math.floor(((game&&game.clock)||0)*14);
+  const pts = [[x0,y0]];
+  for(let i=1;i<segs;i++){
+    const f = i/segs, h = Math.sin(seed*12.9898 + i*78.233 + tick*3.17)*43758.5453, off = ((h%1)+1)%1*2-1;
+    pts.push([x0+(x1-x0)*f+nx*off*6, y0+(y1-y0)*f+ny*off*6]);
+  }
+  pts.push([x1,y1]);
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha = alpha;
+  ctx.shadowColor = '#e8e48a'; ctx.shadowBlur = 4;
+  for(let pass=0; pass<2; pass++){
+    ctx.strokeStyle = pass===0 ? 'rgba(232,228,138,0.7)' : 'rgba(255,255,240,0.95)';
+    ctx.lineWidth = (pass===0 ? 2.6 : 1.1)*(w||1);
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke();
+  }
+  ctx.restore();
+}
 // v342: Juggernaut wind -- speed lines + fading ghost trail behind the charging player, and a shout flare during the war cry
 function drawJuggFx(p){
   if(!p) return;
@@ -27,15 +46,29 @@ function drawJuggFx(p){
 }
 // v337: gray ring on the floor showing how far the Bulwark release will reach
 // v480: Aura of Retribution -- a slow ring of holy embers at the Templar's feet
+// v570 Divine Equilibrium: two quiet ground auras at the Templar's feet (Path of Exile style) -- Retribution: a warm ember-orange
+// double ring with slow outward-pointing runes and drifting embers; Salvation: a cool mint-white disc with a turning cross of light
 function drawRetribAura(p){
-  if(!p || p.cls!=='warrior' || !p.skills || !((p.skills.auraOfRetribution||0)>0)) return;
-  const iso = toIso(p.x,p.y), t = (game && game.clock) || 0, R = 34 + 2*Math.sin(t*2);
-  ctx.save(); ctx.translate(iso.x, iso.y+2); ctx.scale(1, 0.45);
-  const gr = ctx.createRadialGradient(0,0,R*0.3,0,0,R*1.15); gr.addColorStop(0,'rgba(255,170,60,0)'); gr.addColorStop(0.75,'rgba(255,150,50,0.16)'); gr.addColorStop(1,'rgba(255,120,40,0)');
-  ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0,0,R*1.15,0,7); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,190,90,0.55)'; ctx.lineWidth = 1.6; ctx.setLineDash([7,6]); ctx.lineDashOffset = -t*14;
-  ctx.beginPath(); ctx.arc(0,0,R,0,7); ctx.stroke(); ctx.setLineDash([]);
-  for(let i=0;i<6;i++){ const a = t*0.9 + i*1.047; ctx.fillStyle = 'rgba(255,214,140,'+(0.5+0.4*Math.sin(t*4+i))+')'; ctx.beginPath(); ctx.arc(Math.cos(a)*R, Math.sin(a)*R, 2.2, 0, 7); ctx.fill(); }
+  const mode = (typeof divineEqMode==='function') ? divineEqMode(p) : null; if(!mode) return;
+  const iso = toIso(p.x,p.y), t = (game && game.clock) || 0, R = 46 + 1.5*Math.sin(t*1.6);
+  ctx.save(); ctx.translate(iso.x, iso.y+2); ctx.scale(1, ISO_KY/ISO_KX);
+  if(mode==='retribution'){
+    const gr = ctx.createRadialGradient(0,0,R*0.2,0,0,R*1.1); gr.addColorStop(0,'rgba(255,140,40,0)'); gr.addColorStop(0.8,'rgba(255,120,30,0.13)'); gr.addColorStop(1,'rgba(255,90,20,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0,0,R*1.1,0,7); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,170,80,0.45)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(0,0,R,0,7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,120,40,0.32)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0,0,R*0.82,0,7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,200,120,0.5)'; ctx.lineWidth = 1.3;
+    for(let i=0;i<8;i++){ const a = t*0.35 + i*0.785; const cx = Math.cos(a)*R*0.91, cy = Math.sin(a)*R*0.91;   // little arrowhead runes pointing out
+      ctx.beginPath(); ctx.moveTo(cx-Math.cos(a)*3-Math.sin(a)*3, cy-Math.sin(a)*3+Math.cos(a)*3); ctx.lineTo(cx+Math.cos(a)*3, cy+Math.sin(a)*3); ctx.lineTo(cx-Math.cos(a)*3+Math.sin(a)*3, cy-Math.sin(a)*3-Math.cos(a)*3); ctx.stroke(); }
+    for(let i=0;i<5;i++){ const u = (t*0.4 + i*0.2)%1, a = i*1.3 + t*0.2; ctx.fillStyle = 'rgba(255,190,100,'+(0.55*(1-u))+')'; ctx.beginPath(); ctx.arc(Math.cos(a)*R*(0.4+0.6*u), Math.sin(a)*R*(0.4+0.6*u), 1.6, 0, 7); ctx.fill(); }
+  } else {
+    const gr = ctx.createRadialGradient(0,0,0,0,0,R*1.05); gr.addColorStop(0,'rgba(170,255,210,0.10)'); gr.addColorStop(0.7,'rgba(140,240,200,0.08)'); gr.addColorStop(1,'rgba(120,230,190,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0,0,R*1.05,0,7); ctx.fill();
+    ctx.strokeStyle = 'rgba(200,255,225,0.42)'; ctx.lineWidth = 1.2; ctx.setLineDash([3,7]); ctx.lineDashOffset = t*6; ctx.beginPath(); ctx.arc(0,0,R,0,7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.save(); ctx.rotate(-t*0.25); ctx.strokeStyle = 'rgba(220,255,235,0.30)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-R*0.62,0); ctx.lineTo(R*0.62,0); ctx.moveTo(0,-R*0.62); ctx.lineTo(0,R*0.62); ctx.stroke(); ctx.restore();
+    for(let i=0;i<6;i++){ const u = (t*0.35 + i/6)%1, a = i*1.047; ctx.fillStyle = 'rgba(220,255,235,'+(0.6*(1-u))+')'; ctx.beginPath(); ctx.arc(Math.cos(a)*R*0.7, Math.sin(a)*R*0.7 - u*14, 1.5, 0, 7); ctx.fill(); }
+  }
   ctx.restore();
 }
 function drawBulwarkRing(p){
@@ -400,7 +433,7 @@ function drawProjectilesIso(list){
     } else if(pr.isKnife){
       // v476: the Bandit King's thrown knives -- a steel blade and a wrapped grip, flying point-first
       const isoV = toIso(pr.x+pr.vx, pr.y+pr.vy), ang = Math.atan2(isoV.y-iso.y, isoV.x-iso.x);
-      ctx.save(); ctx.translate(iso.x, iso.y-18); ctx.rotate(ang);
+      ctx.save(); ctx.translate(iso.x, iso.y-18); ctx.rotate(ang); ctx.scale(2.1, 2.1);   // v570: proper knife size (was a sliver)
       ctx.fillStyle = '#e6e9ee'; ctx.strokeStyle = '#2a2c30'; ctx.lineWidth = 0.8;
       ctx.beginPath(); ctx.moveTo(11,0); ctx.lineTo(1,-2.6); ctx.lineTo(-2,-2.2); ctx.lineTo(-2,2.2); ctx.lineTo(1,2.6); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.moveTo(9,0); ctx.lineTo(0,0); ctx.stroke();
@@ -493,31 +526,11 @@ function drawParticlesIso(list, pass){
       }
       ctx.restore();
     } else if(pt.type==='bolt'){
-      // Lightning Arc (v106): a jagged lightning bolt from the caster's chest
-      // to the target's, re-jittered every frame so it crackles, fading out.
+      // v570: Lightning Arc and every Lightning Chain hop share one subtle style (drawSubtleBolt): a thin pale-yellow
+      // stroke with a white core and a soft glow, re-jittered a few times a second instead of every frame
       const isoB = toIso(pt.x2, pt.y2);
-      const x0 = iso.x, y0 = iso.y-30, x1 = isoB.x, y1 = isoB.y-22;
-      const len = Math.hypot(x1-x0, y1-y0) || 1;
-      const nx = -(y1-y0)/len, ny = (x1-x0)/len;
-      const segs = Math.max(4, Math.round(len/22));
-      ctx.save();
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      ctx.globalAlpha = Math.min(1, a*1.4);
-      ctx.shadowColor = '#e6e35a'; ctx.shadowBlur = 12;
-      const pts = [[x0,y0]];
-      for(let i=1;i<segs;i++){
-        const f = i/segs, off = (Math.random()*2-1)*9;
-        pts.push([x0+(x1-x0)*f+nx*off, y0+(y1-y0)*f+ny*off]);
-      }
-      pts.push([x1,y1]);
-      for(let pass=0; pass<2; pass++){ // wide yellow glow, then a thin white core on the same path
-        ctx.strokeStyle = pass===0 ? '#e6e35a' : '#ffffff';
-        ctx.lineWidth = pass===0 ? 4 : 1.8;
-        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
-        for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
-        ctx.stroke();
-      }
-      ctx.restore();
+      if(pt.seed==null) pt.seed = Math.random()*100;
+      drawSubtleBolt(iso.x, iso.y-30, isoB.x, isoB.y-22, pt.seed, Math.min(1, a*1.4), 1);
       continue;
     }
     if(pt.type==='beam'){
@@ -693,21 +706,16 @@ function drawParticlesIso(list, pass){
       continue;
     }
     if(pt.type==='novaRing'){
-      // v454 Nova: one clean expanding lightning ring with a few fixed sparks on its edge (no per-frame random flicker)
+      // v570 Nova: the Lightning Arc look -- a faint expanding ring and short subtle bolts running out to it
       const u = 1-a, k = Math.min(1, 0.2+u*1.15), rx = pt.r*ISO_KX*ISO_SQ2*k, ry = pt.r*ISO_KY*ISO_SQ2*k, cy = iso.y-6;
       ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.fillStyle = 'rgba(150,220,255,'+(0.10*a)+')'; ctx.beginPath(); ctx.ellipse(iso.x, cy, rx, ry, 0, 0, 7); ctx.fill();
-      ctx.strokeStyle = 'rgba(200,240,255,'+(0.9*a)+')'; ctx.lineWidth = 1.5+3*a;
+      ctx.strokeStyle = 'rgba(240,236,170,'+(0.35*a)+')'; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.ellipse(iso.x, cy, rx, ry, 0, 0, 7); ctx.stroke();
-      ctx.strokeStyle = 'rgba(120,200,255,'+(0.5*a)+')'; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.ellipse(iso.x, cy, rx*0.86, ry*0.86, 0, 0, 7); ctx.stroke();
-      ctx.strokeStyle = 'rgba(235,250,255,'+(0.85*a)+')'; ctx.lineWidth = 1.4;
-      for(let i=0;i<10;i++){
-        const an = i/10*6.283 + pt.seed, cx = iso.x+Math.cos(an)*rx, cyy = cy+Math.sin(an)*ry, o = (i%2?1:-1)*3;
-        ctx.beginPath(); ctx.moveTo(cx, cyy); ctx.lineTo(cx+o, cyy-5); ctx.lineTo(cx-o*0.5, cyy-9); ctx.stroke();
-      }
       ctx.restore();
+      for(let i=0;i<8;i++){
+        const an = i/8*6.283 + pt.seed, r0 = 0.35*k;
+        drawSubtleBolt(iso.x+Math.cos(an)*rx*r0, cy+Math.sin(an)*ry*r0, iso.x+Math.cos(an)*rx, cy+Math.sin(an)*ry, pt.seed+i*3.1, Math.min(1, a*1.3), 0.8);
+      }
       continue;
     }
     if(pt.type==='novaBolt'){

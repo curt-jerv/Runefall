@@ -97,6 +97,21 @@ function drawWarriorShield(w, h, glow, face){
   ctx.strokeStyle = '#7a5a1a'; ctx.lineWidth = 0.9; ctx.stroke();
   ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(-ww/2+1.6,-h/2+3); ctx.lineTo(-ww/2+1.6,h*0.1); ctx.stroke();
 }
+// v570: one run cycle for every speed -- the same steps as the normal run, just played faster when the hero moves faster
+// (the upper body keeps the normal-run bob; only the playback rate changes). Rate from the hero's real ground speed.
+function heroWalkPhase(p){
+  const t = p.animT||0;
+  if(!game || p!==game.player) return t*10;
+  const clk = t, dtc = clk - (p._wClk==null ? clk : p._wClk);   // animT runs in town too (game.clock does not)
+  if(dtc>0 && dtc<0.25){
+    const dd = Math.hypot(p.x-(p._wX==null?p.x:p._wX), p.y-(p._wY==null?p.y:p._wY));
+    const rate = clamp((dd/dtc)/Math.max(60, BASE_SPEED), 1, 1.8);
+    p._wRate = (p._wRate||1) + (rate-(p._wRate||1))*Math.min(1, dtc*8);
+    p._wPh = (p._wPh||0) + dtc*10*p._wRate;
+  } else if(p._wPh==null) p._wPh = t*10;
+  p._wClk = clk; p._wX = p.x; p._wY = p.y;
+  return p._wPh;
+}
 function drawWarrior(p){
   const iso = toIso(p.x,p.y); _wsTint = p.shieldT || null;
   const s = p.r/16*((p.juggT>0||p.juggWindT>0) ? JUGG_SCALE : 1), face = p.faceSign||1, t = p.animT||0;   // v342: +5% size from the war cry
@@ -136,8 +151,8 @@ function drawWarrior(p){
   ctx.translate(iso.x, iso.y);
   ctx.scale(face*s*1.05, s*1.05*1.07);   // v352: +5% overall, and the warrior stands ~7% taller
 
-  const walk = moving ? Math.sin(t*10) : 0;
-  const bob = moving ? Math.abs(Math.sin(t*10))*2 : Math.sin(t*2)*1.2;
+  const wph = heroWalkPhase(p), walk = moving ? Math.sin(wph) : 0;
+  const bob = moving ? Math.abs(Math.sin(wph))*2 : Math.sin(t*2)*1.2;
   const legSwing = walk*7;
   const flutter = Math.sin(t*6)*3 + walk*2;
   // body lunge for the committed attacks
@@ -317,7 +332,8 @@ function drawWarrior(p){
   } else if(vengT>=0 && !isBow && !isStaff){
     // Vengeance: draw back, then drive the blade forward in a straight, lunging cut
     const ve = vengT<0.28 ? -0.5*(vengT/0.28) : -0.5 + 2.15*(1-Math.pow(1-clamp((vengT-0.28)/0.4,0,1),3));
-    ctx.translate(9+clamp((vengT-0.28)/0.4,0,1)*7, -36+bob); ctx.rotate(ve); vengGlow = vengT>0.2;
+    const vst = p.vengAnimStage||0;   // v570: the three swings of the combo -- lunging cut, backhand return, big overhead finisher
+    ctx.translate(9+clamp((vengT-0.28)/0.4,0,1)*7, -36+bob - (vst===2 ? 4 : 0)); ctx.rotate(vst===1 ? 1.65-ve : vst===2 ? ve*1.35-0.55 : ve); vengGlow = vengT>0.2;
   } else if(throwT>=0 || bashT>=0){
     ctx.translate(9,-35+bob); ctx.rotate(-0.25);   // sword stays low while the shield does the work
   } else {
@@ -489,8 +505,8 @@ function drawRanger(p){
   ctx.translate(iso.x, iso.y);
   ctx.scale(face*s*1.05, s*1.05);
 
-  const walk = moving ? Math.sin(t*10) : 0;
-  const bob = moving ? Math.abs(Math.sin(t*10))*2 : Math.sin(t*2)*1.2;
+  const wph = heroWalkPhase(p), walk = moving ? Math.sin(wph) : 0;
+  const bob = moving ? Math.abs(Math.sin(wph))*2 : Math.sin(t*2)*1.2;
   const legSwing = walk*7;
   const flutter = Math.sin(t*6)*3 + walk*2;
 
@@ -791,8 +807,8 @@ function drawMystic(p){
   ctx.translate(iso.x, iso.y);
   ctx.scale(face*s*1.05, s*1.05);
 
-  const walk = moving ? Math.sin(t*10) : 0;
-  const bob = moving ? Math.abs(Math.sin(t*10))*2 : Math.sin(t*2)*1.2;
+  const wph = heroWalkPhase(p), walk = moving ? Math.sin(wph) : 0;
+  const bob = moving ? Math.abs(Math.sin(wph))*2 : Math.sin(t*2)*1.2;
   const legSwing = walk*7;
   const flutter = Math.sin(t*6)*3 + walk*2;
 

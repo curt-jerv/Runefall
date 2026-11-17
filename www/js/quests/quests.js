@@ -272,7 +272,8 @@ function talkToQuestGiver(){
   { const bq0 = getQuest(p, QUEST_BRIDGE.id); if(bq0 && bq0.status==='complete' && !bq0.rewarded){ grantBridgeReward(p, bq0); return; } }   // v486: turn in the bridge any time
   if(q && q.status==='complete'){
     if(!q.rewarded){
-      if(grantQuestRewardItem(p)){ q.rewarded = true; voicePlay('aldric_hunt_reward'); }   // v555: voiced
+      if(grantQuestRewardItem(p)){ q.rewarded = true; voicePlay('aldric_hunt_reward');   // v555: voiced
+        if(!getQuest(p, QUEST_BRIDGE.id) && !p.bridgeCleared) setTimeout(()=>{ if(game && game.player===p && !getQuest(p, QUEST_BRIDGE.id) && !p.bridgeCleared) talkToQuestGiver(); }, 2600); }   // v570: all three hunters home -> he asks about the bridge straight away
     } else if(!getQuest(p, QUEST_BRIDGE.id) && !p.bridgeCleared){
       pendingQuestGiver = 'oldmanBridge';
       questGiverNameEl.textContent = 'Aldric the Elder';
@@ -294,7 +295,7 @@ function talkToQuestGiver(){
       } else if(wq && wq.status==='active'){
         showMsg('"The runestone is held at the top of Frosthold Tower. Bring it down and we can face the Wraith Lord."', 3.4);
       } else {
-        { const bq = getQuest(p, QUEST_BRIDGE.id); if(bq && bq.status==='active') showMsg('"The bandits still hold the old bridge ('+bq.progress+'/'+bq.total+')."', 2.8); else { talkTownTip({name:'Aldric the Elder'}); voicePlay('aldric_careful', {gap:20}); } }   /* v546: nothing to ask of you -- a piece of advice instead */   // v456: no more respec here (the well still offers it)
+        { const bq = getQuest(p, QUEST_BRIDGE.id); if(bq && bq.status==='active') showMsg('"The bandits still hold the old bridge ('+bq.progress+'/'+bq.total+')."', 2.8); else { showNpcText('Aldric the Elder', '"Be careful out there, adventurer."', 'Close'); voicePlay('aldric_careful', {gap:20});   /* v570: his only default line */ } }   /* v546: nothing to ask of you -- a piece of advice instead */   // v456: no more respec here (the well still offers it)
       }
     }
   } else if(q){
