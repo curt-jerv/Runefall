@@ -225,6 +225,7 @@ function applyEnemyArmor(p, e, dmg, extraPen, el){
   // the target as "currently being attacked by the player" for monster
   // targeting purposes -- see markAttacked/pickEnemyTarget.
   markAttacked(e, p);
+  if(lastHitCrit && final>0 && typeof staggerEnemy==='function') staggerEnemy(e, STAGGER_DUR);   // v570: every critical hit staggers (normal monsters only)
   if(p.cls==='mystic' && game){
     const clk = game.clock||0;
     if(lastHitCrit){ const sr = (p.skills && effectiveRank(p,'storm'))||0; if(sr>0){ e.stormShred = stormShredPct(sr); e.stormShredUntil = clk + STORM_SHRED_DUR; } }   // v489 Storm: crits lower lightning resistance

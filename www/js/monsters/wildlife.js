@@ -17,6 +17,7 @@ function wildlifeStats(type, x, y, depth){
     kickCd:rand(1.5,HOOK_KICK_CD), kickT:0};
   if(type==='plaguedoc') return {type,x,y,r:16,hp:L*1.4,maxHp:L*1.4,speed:rand(84,92),dmg:D*0.9,atkCd:1,atkCdMax:PDOC_CD,color:'#2a2a2e',state:'kite',hitT:0,armor:4,
     preferRange:PDOC_PREFER, dmgType:'poison', pdCd:1.2, pdN:0, bombs:[]};
+  if(type==='hellbovine') return hellBovineStats(x, y, depth);   // v570 (monsters/hell-bovine.js)
   return null;
 }
 function wildlifeAggro(e){
@@ -24,7 +25,7 @@ function wildlifeAggro(e){
   else if(e.type==='hookbeak'){ e.aggroRange = 320; e.leashRange = 600; e.wanderRadius = 90; }
   else if(e.type==='plaguedoc'){ e.aggroRange = 380; e.leashRange = 700; e.wanderRadius = 60; }
 }
-const WILDLIFE_TYPES = {thornback:1, hookbeak:1, plaguedoc:1};
+const WILDLIFE_TYPES = {thornback:1, hookbeak:1, plaguedoc:1, hellbovine:1};
 // a hit on target (player or follower), with an optional element source
 function wildHit(g, target, isF, dmg, src){ if(isF) applyFollowerDamage(g, target, dmg, src); else playerDamage(g, dmg, src); }
 function updateThornback(g, e, dt, target, d, isF, chillMult, room){

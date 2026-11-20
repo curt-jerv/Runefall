@@ -10,7 +10,7 @@
 //   merchant -- Orrin Thistlewick, a wandering peddler with a cart, selling good rares. Very rare.       (all three)
 // The encounter lives in g.roadEv (g.roadEvRoom = the room it belongs to). roadEvRoll runs after a zone's monsters spawn.
 const ROAD_EV_ZONES = {
-  sunlitplains: { chance:1, min:1, extra:[0.45, 0.33], kinds:{caravan:3, scarecrow:2, herd:2, cellar:2, carrion:2} },   // v550: always one, sometimes two or three
+  sunlitplains: { chance:1, min:1, extra:[0.45, 0.33], kinds:{caravan:3, scarecrow:2, cellar:2, carrion:2} },   // v570: the feral herd / Black Ram encounter is gone   // v550: always one, sometimes two or three
   rivervalley:  { chance:0.6,  kinds:{caravan:3, carrion:2} },
   lakesideruins:{ chance:0.4,  kinds:{carrion:1} },
 };

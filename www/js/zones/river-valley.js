@@ -6,7 +6,7 @@
 // from north to south. The Minotaur Cave is tucked into the north-east corner.
 const RV_W = 8800, RV_H = 7200, RV_CY = 3600, RV_BX = 4400;   // v526: 4x the area (was 4400x3600)
 const RV_SLICE = 40, RV_BRIDGE_HW = 80, RV_CLIFF_W = 280, RV_ROAD_HW = 46, RV_CLIFF_H = 120;
-const RV_CAMP_TOTAL = 13, RV_PACK_COUNT = 200;   // v550: twice the packs (the valley measured ~4.4 monsters per million square units, the Forest ~11)
+const RV_CAMP_TOTAL = 14,   /* v570: a second Bandit Captain */ RV_PACK_COUNT = 200;   // v550: twice the packs (the valley measured ~4.4 monsters per million square units, the Forest ~11)
 function rvRiverY(x){ return RV_CY + 170*Math.sin((x-RV_BX)/640) + 60*Math.sin((x-RV_BX)/210); }
 function rvRiverHW(x){ const t = clamp((x-RV_CLIFF_W)/(RV_W-RV_CLIFF_W),0,1); return 62 + 150*Math.pow(t,1.15); }
 function rvWaterAt(x,y){
@@ -320,10 +320,10 @@ function spawnRiverValleyCamp(g){
   // fixed roster: chief first, then brutes, archers, bandits -- split between the two banks
   const roster = [];
   if(!p.bridgeChiefDead) roster.push('chief');
-  roster.push('captain','banditbrute','banditarcher','banditarcher','banditarcher','banditarcher','bandit','bandit','bandit','bandit','bandit','bandit');
+  roster.push('captain','captain2','banditbrute','banditarcher','banditarcher','banditarcher','banditarcher','bandit','bandit','bandit','bandit','bandit','bandit');
   const list = roster.slice(0, Math.max(0, remaining));
   list.forEach((kind,i)=>{
-    const north = (kind==='chief') ? true : (i%2===0);
+    const north = (kind==='chief') ? true : kind==='captain2' ? false : (i%2===0);
     const a = north ? rv.campAnchors.north : rv.campAnchors.south;
     let pos = kind==='captain' ? {x:RV_BX+rand(-30,30), y:rv.bridgeC.y+rand(-30,30)} : null;   // v526: the Captain holds the bridge itself
     for(let k=0;k<20 && !pos;k++){
@@ -331,10 +331,10 @@ function spawnRiverValleyCamp(g){
       if(!rvWaterNear(x,y,30) && !rv.obstacles.some(o=>!o.isWater && x>o.x-14 && x<o.x+o.w+14 && y>o.y-14 && y<o.y+o.h+14)) pos = {x,y};
     }
     if(!pos) pos = {x:a.x, y:a.y};
-    const e = spawnEnemy(g, (kind==='chief' || kind==='captain') ? 'banditbrute' : kind, pos);
+    const e = spawnEnemy(g, (kind==='chief' || kind==='captain' || kind==='captain2') ? 'banditbrute' : kind, pos);
     if(!e) return;
     e.campEnemy = true; e.aggroRange = Math.round(300*0.72); e.wanderRadius = 40;
-    if(kind==='captain'){ makeElite(e, pickMods(2)); e.eliteName = 'Bandit Captain'; e.wanderRadius = 30; e.aggroRange = 300; }   // v526: an elite brute guarding the planks
+    if(kind==='captain' || kind==='captain2'){ makeElite(e, pickMods(2)); e.eliteName = 'Bandit Captain'; e.bdCaptain = true; e.wanderRadius = 30; e.aggroRange = 300; }   // v570: two captains (the second on the south bank), gold bandanas   // v526: an elite brute guarding the planks
     if(kind==='chief'){
       e.campChief = true; e.bossName = 'Bandit Chief';
       e.r = Math.round(e.r*1.25); e.hp = Math.round(e.hp*2.4); e.maxHp = e.hp; e.dmg *= 1.3;

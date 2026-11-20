@@ -447,7 +447,7 @@ function audioFrame(dt){
 // v543: monsters are grouped by what they are, so people, beasts, the dead and the stone things each sound like themselves
 const AUD_ARCHER = /archer/, AUD_CASTER = /cultist|cleric|mendicant|mage|plaguedoc|imp\b|^imp/, AUD_SHOOTER = /turret|sentry|bat|coil/;
 const AUD_EATER = /zombie|ghoul|risendead/;
-const AUD_BEAST = /spider|beetle|crawler|wolf|warg|hound|raptor|snake|anaconda|alligator|rat|boar|toad|bear|ram|buffalo|trex|armordon|tortuga|harpy|roc|vulture|leech|gojira|leviathan|windigo|mastodon|thornback|hookbeak/;
+const AUD_BEAST = /bovine|spider|beetle|crawler|wolf|warg|hound|raptor|snake|anaconda|alligator|rat|boar|toad|bear|ram|buffalo|trex|armordon|tortuga|harpy|roc|vulture|leech|gojira|leviathan|windigo|mastodon|thornback|hookbeak/;
 const AUD_BIG = /troll|giant|golem|colossus|construct|warden|bulwark|guardian|treant|gearguard/;
 const AUD_ARMORED = /^fh|^hw|templar|knight|banditking|banditbrute|gearguard|guard/;
 const AUD_HUMAN = /bandit|cultist|goblin|grunt|archer|graverob|mage|cleric|^fh|^hw|templar|knight|guard|captain|scarecrow|plaguedoc/;

@@ -42,6 +42,7 @@ const ACTIVE_SKILL_REGISTRY = {
   // v266 warrior redesign
   smite:         { oldBtnId:null, trigger(){ wantSmite=true; },      getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
   vengeance:     { oldBtnId:null, trigger(){ wantVengeance=true; },  getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
+  auraOfRetribution:{ oldBtnId:null, trigger(){ divineEqToggle(game.player); }, getCd(p){ return {cur:0, max:1}; } },   // v570 Divine Equilibrium: tap switches the aura
   reave:         { oldBtnId:null, trigger(){ wantReave=true; },      getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
   banner:        { oldBtnId:null, trigger(){ wantBanner=true; },     getCd(p){ return {cur:p.bannerCd||0, max:p.bannerCdMax||BANNER_CD}; } },
   consecrate:    { oldBtnId:null, trigger(){ wantConsecrate=true; }, getCd(p){ return {cur:p.consecrateCd||0, max:p.consecrateCdMax||CONS_CD}; } },
@@ -81,7 +82,7 @@ const ACTIVE_SKILL_REGISTRY = {
   // this exact same registry shape as any real tree-node active skill.
   fireball:      { oldBtnId:null,              trigger(){ wantFireball=true; },      getCd(p){ return {cur:p.atkCd, max:p.atkCdMax}; } },
   iceBolt:       { oldBtnId:null,              trigger(){ wantIceBolt=true; },       getCd(p){ return (typeof uq==='function' && uq(p,'uq_elementalist')) ? {cur:Math.max(p.atkCd||0, p.frozenOrbCd||0), max:Math.max(p.atkCdMax||0, p.frozenOrbCdMax||FROZEN_ORB_CD)} : {cur:p.atkCd, max:p.atkCdMax}; } },   // v499: Frozen Orb has its own cooldown
-  iceArmor:      { oldBtnId:null,              trigger(){ wantIceArmor=true; },      getCd(p){ return {cur:p.iceArmorCd, max:p.iceArmorCdMax}; } },
+  iceArmor:      { oldBtnId:null,              trigger(){ wantIceArmor=true; },      getCd(p){ if(p.iceArmorCd>0) return {cur:p.iceArmorCd, max:p.iceArmorCdMax}; const mx = p.iceArmorMax||0; return mx>0 ? {cur:Math.max(0, mx-(p.iceArmorHp||0)), max:mx} : {cur:1, max:1}; } },   // v570: the sweep shows how much barrier is missing (the explosion is as strong as what is left)
   pyroTorrent:   { oldBtnId:null,              trigger(){ wantPyroTorrent=true; },   getCd(p){ return {cur:p.pyroTorrentCd, max:p.pyroTorrentCdMax}; } },
   blizzard:      { oldBtnId:null,              trigger(){ wantBlizzard=true; },      getCd(p){ return {cur:p.blizzardCd, max:p.blizzardCdMax}; } },
   immolate:      { oldBtnId:null,              trigger(){ wantImmolate=true; },      getCd(p){ return {cur:p.immolateCd||0, max:p.immolateCdMax||IMMOLATE_CD}; } },
@@ -238,6 +239,7 @@ function assignableSkillsForPlayer(p){
 function skillSlotIconHtml(skillId){
   if(!skillId) return '';
   if(skillId==='strike') return STRIKE_ICON_SVG;
+  if(skillId==='auraOfRetribution' && game && game.player) return game.player.deMode==='salvation' ? DE_ICON_SALV : DE_ICON_RETRIB;   // v570
   return skillNodeIconSvg(skillId);
 }
 function triggerSkillSlot(slotKey){
@@ -299,6 +301,7 @@ function resCost(p,id,rankOverride){
   // Rage stays a fixed 100, so Rage skills keep their own small rank steps
   if(isRageSkill(id)){ if(r.step) c += r.step*Math.max(0,rk-1); }
   else c *= 1 + COST_PER_RANK*Math.max(0, rk-1);
+  if(id==='nova') c *= 1.10;   // v570: Nova costs 10% more at every rank
   if(p && WR_SKILLS[id] && (p.windReady || p._wrCostWin>0)) c *= 0.5;   // v466 Windrunner
   if(p && p.cls==='ranger' && p.skills){ const ts=effectiveRank(p,'steadyBreathing')||0; if(ts>0) c *= 1 - 0.05*Math.min(10,ts); }   // v497: Steady Breathing is its own Marksman node
   return Math.round(c);

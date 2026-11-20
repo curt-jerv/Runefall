@@ -187,6 +187,7 @@ function drawEnemyIsoBase(e){
   else if(e.type==='bear') drawBearIso(e);
   else if(e.type==='treant') drawTreantIso(e);
   else if(e.type==='boar') drawBoarIso(e);
+  else if(e.type==='hellbovine') drawHellBovineIso(e);   // v570
   else if(e.type==='thornback') drawThornbackIso(e);   // v550
   else if(e.type==='hookbeak') drawHookbeakIso(e);
   else if(e.type==='plaguedoc') drawPlagueDocIso(e);

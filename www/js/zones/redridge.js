@@ -338,7 +338,12 @@ function enterRedridge(from, opts){
   for(const a of breatheAnchors(g.rr.packAnchors, {gap:560, cell:1300, calm:0.1})) spawnRedridgePack(g, a, RR_PACKS[Math.floor(Math.random()*RR_PACKS.length)]);
   g._herdAlarm = {};
   g.rr.herdAnchors.forEach((a,i)=>spawnBuffaloHerd(g, a, 'bh'+i));
-  if(g.rr.part==='east') spawnStormRaptor(g);   // v389: one Storm Raptor somewhere in the canyon (drops the Storm Claw)
+  if(g.rr.part==='east') spawnStormRaptor(g);
+  if(Math.random() < 0.5){   // v570: a Hell Bovine roams the canyon on half the visits (far from where you came in)
+    const far = (g.rr.packAnchors||[]).filter(a=>dist(a, p) > 1400);
+    const a = far.length ? far[Math.floor(Math.random()*far.length)] : null;
+    if(a) spawnHellBovine(g, {x:a.x, y:a.y});
+  }   // v389: one Storm Raptor somewhere in the canyon (drops the Storm Claw)
   { const ob = g.rr.obstacles; g.enemies = g.enemies.filter(e=>!ob.some(o=>e.x>o.x-e.r && e.x<o.x+o.w+e.r && e.y>o.y-e.r && e.y<o.y+o.h+e.r)); }
   p.crX = undefined;
   owPoiRoll(g);   // v527: caches, a shrine, a guarded hoard

@@ -220,6 +220,31 @@ function sacredBonus(r){ r = Math.max(1, r||1); return 0.5 + 0.1*(Math.min(10,r)
 const RETRIB_BASE = 0.10, RETRIB_MAX = 0.50;
 function retributionPct(r){ r = r||0; return r<=0 ? 0 : Math.min(0.6, RETRIB_BASE + (RETRIB_MAX-RETRIB_BASE)*(Math.min(10,r)-1)/9 + 0.01*Math.max(0,r-10)); }
 const VENG_OVERFLOW_AT = 0.8, VENG_OVERFLOW_COST = 5, VENG_OVERFLOW_DMG = 0.05;
+// v570 Vengeance is a three-hit combo: every swing deals full skill damage, and the next swing is only offered (one new press each)
+// when the last one hit something; a miss, or waiting longer than VENG_COMBO_WINDOW, starts over at the first swing.
+// Sacred Weapon: finishing all three readies Empowered; the next combo spends SACRED_COST Conviction on its first swing and all
+// three swings are empowered (+sacredBonus damage and a burn).
+const VENG_COMBO_WINDOW = 1.6, VENG_STAGES = 3;
+// v570 Divine Equilibrium (node id auraOfRetribution): works only while it sits on a skill button; tapping the button switches
+// Retribution (your life regeneration fills Conviction/Rage instead of life) <-> Salvation (+20% -> +50% life regeneration).
+function divineEqRank(p){ return (p && p.cls==='warrior' && p.skills && effectiveRank(p,'auraOfRetribution'))||0; }
+function divineEqSlotted(p){ const s = p && p.skillSlots; return !!(s && (s.main==='auraOfRetribution' || s.slot1==='auraOfRetribution' || s.slot2==='auraOfRetribution' || s.slot3==='auraOfRetribution')); }
+function divineEqMode(p){ return (divineEqRank(p)>0 && divineEqSlotted(p)) ? (p.deMode==='salvation' ? 'salvation' : 'retribution') : null; }
+const RETRIB_RAGE_PER_REGEN = 6;   // each 1% of life regeneration becomes 6 Conviction (Rage) a second (Rage is a small pool that fades)
+function retributionRagePerSec(p){ return (p.lifeRegenPct||0)*100*RETRIB_RAGE_PER_REGEN; }
+function salvationRegenPct(r){ r = clamp(r||1, 1, 20); return 0.20 + 0.30*(Math.min(10,r)-1)/9 + 0.02*Math.max(0, r-10); }
+function divineEqToggle(p){
+  if(!p || divineEqRank(p)<=0) return;
+  p.deMode = p.deMode==='salvation' ? 'retribution' : 'salvation';
+  showMsg(p.deMode==='salvation' ? 'Aura of Salvation' : 'Aura of Retribution', 0.9, p.deMode==='salvation' ? '#9ff0c8' : '#ffc070');
+  if(game && game.particles) game.particles.push({type:'ring', x:p.x, y:p.y, t:0.4, max:0.4, r:40, color:p.deMode==='salvation' ? '#9ff0c8' : '#ffb060'});
+  try{ sfxPlay(p.deMode==='salvation' ? 'heal' : 'buff', 0.6); }catch(e){}
+  if(typeof saveGame==='function') saveGame();
+}
+// the button icon follows the mode: a shield with a sword (Retribution) / a shield with a cross and a leaf of light (Salvation)
+const DE_ICON_RETRIB = '<svg class="treeNodeIconSvg" viewBox="-3 -3 46 46" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4 L32 9 V18 C32 27 26 32 20 36 C14 32 8 27 8 18 V9 Z" fill="#ff9a3a" fill-opacity=".25"/><path d="M20 9 V29 M15 24 H25 M20 9 L18 13 M20 9 L22 13" stroke="#ffc070"/></svg>';
+const DE_ICON_SALV = '<svg class="treeNodeIconSvg" viewBox="-3 -3 46 46" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4 L32 9 V18 C32 27 26 32 20 36 C14 32 8 27 8 18 V9 Z" fill="#6adfa0" fill-opacity=".25"/><path d="M20 11 V29 M13 18 H27" stroke="#bff5d8"/><circle cx="20" cy="18" r="9" stroke="#9ff0c8" stroke-opacity=".5"/></svg>';
+
 const VENG_CD = 4, VENG_REACH = 74, VENG_ARC = 0.55, VENG_CONV = 9, VENG_BUFF_DUR = 3, VENG_FDMG = 0.20, VENG_FDMG_STEP = 0.04, VENG_FCRIT = 15, VENG_FCRIT_STEP = 2;
 const BANNER_DUR = 30, BANNER_R = 130, BANNER_CD = 6, BANNER_CONV = 15;
 const bannerDur = r=> BANNER_DUR + 2*(Math.max(1,r||1)-1);

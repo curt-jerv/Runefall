@@ -449,6 +449,7 @@ function itemCardHtml(item, other){
     }
   }
   if(!mods.length && !base && !imps.length) h += '<div style="color:#8d8672">No modifiers</div>';
+  if(typeof isSocketable==='function' && isSocketable(item) && (item.sockets||0)>0) h += '<div class="icSock" style="margin-top:5px;text-align:center;color:#8fa0ff;">Socketed ('+item.sockets+')</div>';   // v570: socket count at the bottom of the card, Diablo style
   if(item.questId && item.questDesc) h += '<div class="icDiv"></div><div style="color:#b8b0c8;font-style:italic">'+item.questDesc+'</div>';   // v519: a wearable quest item (the Silver Locket)
   return h;
 }

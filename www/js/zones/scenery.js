@@ -171,6 +171,15 @@ function drawDecorIso(d, clock){
   const iso = toIso(d.x, d.y), t = clock||0, s = d.s||1;
   ctx.save(); ctx.translate(iso.x, iso.y);
   switch(d.k){
+    case 'web': {   // v570: a ground-level spider web strung between roots -- spokes and a spiral, pale and dusty
+      ctx.rotate(d.rot||0); ctx.scale(s, s*0.6);
+      ctx.strokeStyle = 'rgba(225,225,215,0.55)'; ctx.lineWidth = 0.9;
+      for(let i=0;i<8;i++){ const a = i/8*6.283; ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(Math.cos(a)*22, -10+Math.sin(a)*22); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(225,225,215,0.38)';
+      for(let r=5;r<=21;r+=4){ ctx.beginPath(); for(let i=0;i<=8;i++){ const a = i/8*6.283, rr = r*(i%2?0.92:1); const px = Math.cos(a)*rr, py = -10+Math.sin(a)*rr; if(i) ctx.lineTo(px,py); else ctx.moveTo(px,py); } ctx.stroke(); }
+      ctx.fillStyle = 'rgba(235,235,225,0.5)'; ctx.beginPath(); ctx.ellipse(6,-4,2.4,3,0,0,7); ctx.fill();   // a wrapped bundle
+      break;
+    }
     case 'fern': {
       ctx.strokeStyle = d.dark ? '#2a5a34' : '#4c8a3a'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
       for(let i=-3;i<=3;i++){ ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(i*5*s,-10*s,i*8*s,-4*s+Math.abs(i)*2); ctx.stroke(); }

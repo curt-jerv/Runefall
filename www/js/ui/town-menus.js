@@ -238,7 +238,7 @@ function socketLineHtml(item){
   if(!isSocketable(item)) return '';
   const n = item.sockets||0;
   if(!n) return '';
-  let h = '<div style="margin-top:6px;color:#c9b6ff;font-weight:600;">'+n+' socket'+(n>1?'s':'')+'</div>';
+  let h = '<div style="margin-top:6px;"></div>';   // v570: the count itself is the 'Socketed (n)' line on the card
   for(let i=0;i<n;i++){
     const id = item.socketed && item.socketed[i];
     if(id){ const [k,t] = id.split('_'); if(PART_DEFS[k]) h += '<div style="color:'+PART_DEFS[k].color+'; font-size:11.5px;">\u25C6 '+partName(k,+t)+' ('+partDesc(k,+t)+')</div>'; }

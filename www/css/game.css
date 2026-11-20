@@ -1385,3 +1385,33 @@ body.noPotionBtn #actionCluster .interactBtn{ right:127px !important; bottom:127
 .treeJunction{ min-height:64px; pointer-events:none; }
 .treeShieldLines polygon{ stroke:#3b3124; stroke-width:3; }
 .treeShieldLines polygon.lit{ stroke:#c7843a; }
+/* v570: life and resource globes 20% bigger (landscape 64 -> 77, portrait 60 -> 72); everything hung under them moves down to match */
+#hudDock .globe{ width:77px !important; height:77px !important; }
+#hudDock .gnum{ font-size:19px; }
+#hudDock .gia{ font-size:12px; }
+@media (orientation:portrait){
+  #hudDock .globe{ width:72px !important; height:72px !important; }
+  #topWrap{ top:calc(82px + env(safe-area-inset-top,0px)) !important; }
+  #subHud #soulsWrap{ top:calc(6px + 72px + 2px + env(safe-area-inset-top,0px)) !important; width:72px; }
+  #achToast{ top:calc(130px + env(safe-area-inset-top,0px)) !important; }
+}
+/* v570: grey granite buttons in the Inventory, Vendor, Stash and Skill Tree screens (and the item / stats pop-ups they open) */
+:root{
+  --granite-tex:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .85  0 0 0 0 .85  0 0 0 0 .86  0 0 0 .55 -.18'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"),
+                url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 .9'/></filter><rect width='100%' height='100%' filter='url(%23s)'/></svg>");
+  --granite:linear-gradient(180deg,#6d6a66 0%,#55524e 45%,#46433f 55%,#3b3936 100%);
+  --granite-frame:inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px #77736c, inset 0 -2px 0 rgba(0,0,0,.4), 0 0 0 1px #0b0a09, 0 2px 4px rgba(0,0,0,.6);
+}
+:is(#invOverlay, #shopOverlay, #stashOverlay, #skillTreeOverlay, #skillNodePopupOverlay, #skillAssignOverlay, #itemDetailOverlay, #itemCompareOverlay, #charStatsOverlay)
+  :is(.skillChoice, .portalBtn, .closeBtn, .invTab, .treeTabBtn, .showAllBtn, .dollTab, button){
+  background:var(--granite-tex), var(--granite) !important; border:none !important; border-radius:3px !important;
+  box-shadow:var(--granite-frame) !important; color:#f3eee4 !important; text-shadow:0 1px 1px #000, 0 0 3px rgba(0,0,0,.9) !important;
+}
+:is(#invOverlay, #shopOverlay, #stashOverlay, #skillTreeOverlay, #skillNodePopupOverlay, #skillAssignOverlay, #itemDetailOverlay, #itemCompareOverlay, #charStatsOverlay)
+  :is(.skillChoice, .portalBtn, .invTab, .treeTabBtn, button) .schName{ color:#fff4dc !important; text-shadow:0 1px 1px #000, 0 0 3px #000 !important; }
+:is(#invOverlay, #shopOverlay, #stashOverlay, #skillTreeOverlay, #skillNodePopupOverlay, #skillAssignOverlay, #itemDetailOverlay, #itemCompareOverlay, #charStatsOverlay)
+  .closeBtn{ color:#ffd0c4 !important; }
+:is(#invOverlay, #shopOverlay, #stashOverlay, #skillTreeOverlay):is(*) :is(.invTab, .treeTabBtn, .dollTab):not(.active){ filter:brightness(.72); }
+:is(#invOverlay, #shopOverlay, #stashOverlay, #skillTreeOverlay) :is(.invTab, .treeTabBtn, .dollTab).active{
+  box-shadow:var(--granite-frame), inset 0 0 0 1px #d0b06a, 0 0 10px rgba(208,176,106,.45) !important; color:#ffe6a8 !important; }
+:is(#invOverlay, #shopOverlay, #stashOverlay, #skillTreeOverlay, #skillNodePopupOverlay, #itemDetailOverlay) :is(.skillChoice, .portalBtn, .invTab, .treeTabBtn, button):active{ filter:brightness(1.2); }

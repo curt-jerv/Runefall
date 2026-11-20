@@ -80,6 +80,8 @@ const RUNEFALL_FILES = [
   'zones/ancient-ruins.js',
   'monsters/wraith-lord.js',
   'monsters/elites.js',
+  'monsters/warcry.js',
+  'monsters/hell-bovine.js',
   'zones/frosthold-dungeon.js',
   'combat/combat-feel.js',
   'zones/town-portal.js',

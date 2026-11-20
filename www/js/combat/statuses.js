@@ -63,7 +63,7 @@ let _statusOff = null, _statusDepth = 0, _hpQueue = null;
 const _statusPool = []; let _statusIx = 0, _statusUsed = 0;
 function drawStatusRing(ent, chill){
   const io = toIso(ent.x, ent.y), r = ent.r||14;
-  ctx.save(); ctx.globalAlpha = 0.6; ctx.strokeStyle = chill ? '#4aa8ff' : '#4fe04a'; ctx.lineWidth = 2;
+  ctx.save(); ctx.globalAlpha = 0.6; ctx.strokeStyle = ent.frozenT>0 ? '#1f45b0' : chill ? '#a6dcff' : '#4fe04a'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.ellipse(io.x, io.y, r*1.3, r*0.6, 0, 0, 7); ctx.stroke(); ctx.restore();
 }
 function drawBurnFx(ent, iso){
@@ -81,9 +81,31 @@ function drawBurnFx(ent, iso){
   }
   ctx.restore();
 }
+// v570: blood running down a bleeding creature: a few drops falling from the body and a small dark pool at the feet
+function drawBleedFx(ent, iso){
+  const ck = (game&&game.clock)||0, sc = Math.max(0.8, Math.min(2.2, (ent.r||16)/16)), seed = (ent.x||0)*0.013;
+  ctx.save();
+  ctx.globalAlpha = 0.55; ctx.fillStyle = '#4a0608';
+  ctx.beginPath(); ctx.ellipse(iso.x+3*sc, iso.y+1, 7*sc, 3*sc, 0, 0, 7); ctx.fill();
+  for(let i=0;i<3;i++){
+    const u = (ck*1.1+i/3+seed)%1, bx = iso.x+(i-1)*6*sc+Math.sin(seed*40+i*1.7)*2*sc, by = iso.y-(26-i*5)*sc + u*22*sc;
+    ctx.globalAlpha = Math.min(0.95, 1.3*(1-u)); ctx.fillStyle = i===1 ? '#8a0c12' : '#b0121a';
+    ctx.beginPath(); ctx.ellipse(bx, by, 1.6*sc, 2.6*sc, 0, 0, 7); ctx.fill();
+    ctx.globalAlpha = 0.7; ctx.strokeStyle = '#7a0a10'; ctx.lineWidth = 1.4*sc;
+    ctx.beginPath(); ctx.moveTo(bx, iso.y-(30-i*5)*sc); ctx.lineTo(bx, iso.y-(30-i*5)*sc + 6*sc); ctx.stroke();
+  }
+  ctx.restore();
+}
+// v570: status looks -- chilled light blue, frozen deep blue, poisoned green (tints on the body), burning flames, bleeding blood
+function statusTint(ent){
+  if(ent.frozenT>0) return ['#1f45b0', 0.62];
+  if(ent.chillT>0) return ['#a6dcff', 0.48];
+  if(ent.poisonT>0) return ['#3fd83a', 0.5];
+  return null;
+}
 function drawWithStatus(ent, drawFn, allowTint){
-  const chill = ent.chillT>0, poison = ent.poisonT>0, burn = ent.burnT>0 || ent.immolateT>0;
-  if(!(allowTint && (chill||poison)) || _statusDepth>0 || _statusUsed >= (gfxLevel===2 ? 10 : gfxLevel===1 ? 5 : 0)){ drawFn(); if(_statusDepth===0){ if(allowTint && (chill||poison)) drawStatusRing(ent, chill); if(burn) drawBurnFx(ent, toIso(ent.x, ent.y)); if(ent.charges>0) drawChargeFx(ent, toIso(ent.x, ent.y)); } return; }
+  const tint = statusTint(ent), chill = !!(tint && tint[0]!=='#3fd83a'), burn = ent.burnT>0 || ent.immolateT>0, bleed = ent.bleedT>0;
+  if(!(allowTint && tint) || _statusDepth>0 || _statusUsed >= (gfxLevel===2 ? 10 : gfxLevel===1 ? 5 : 0)){ drawFn(); if(_statusDepth===0){ const io = toIso(ent.x, ent.y); if(allowTint && tint) drawStatusRing(ent, chill); if(bleed) drawBleedFx(ent, io); if(burn) drawBurnFx(ent, io); if(ent.charges>0) drawChargeFx(ent, io); } return; }
   const iso = toIso(ent.x, ent.y), r = ent.r||14;
   const bw = r*4.4+90, bh = r*6.4+100, bx = iso.x-bw/2, by = iso.y-bh+40;
   const m = ctx.getTransform(), sx = Math.abs(m.a)||1, sy = Math.abs(m.d)||1;
@@ -99,11 +121,12 @@ function drawWithStatus(ent, drawFn, allowTint){
   ctx = octx;
   try{ drawFn(); } finally { ctx = mainCtx; _statusDepth--; _hpQueue = null; }
   octx.save(); octx.setTransform(sx,0,0,sy,-bx*sx,-by*sy); octx.globalCompositeOperation = 'source-atop';
-  if(chill){ octx.globalAlpha = 0.5; octx.fillStyle = '#4aa8ff'; octx.fillRect(bx,by,bw,bh); }
-  if(poison){ octx.globalAlpha = 0.5; octx.fillStyle = '#4fe04a'; octx.fillRect(bx,by,bw,bh); }
+  octx.globalAlpha = tint[1]; octx.fillStyle = tint[0]; octx.fillRect(bx,by,bw,bh);
+  if(ent.poisonT>0 && tint[0]!=='#3fd83a'){ octx.globalAlpha = 0.25; octx.fillStyle = '#3fd83a'; octx.fillRect(bx,by,bw,bh); }
   octx.restore();
   ctx.drawImage(_statusOff, 0, 0, pw, ph, bx, by, pw/sx, ph/sy);
   for(const a of q) drawHpBar(a[0],a[1],a[2],a[3],a[4]);
+  if(bleed) drawBleedFx(ent, iso);
   if(burn) drawBurnFx(ent, iso);
   if(ent.charges>0) drawChargeFx(ent, iso);
 }

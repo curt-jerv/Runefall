@@ -31,7 +31,8 @@ const SUNLIT_EAST_EXIT_SPOT = {x:SUN_W-16, y:SUN_CY};
 // post-v68 target/spacing 1-for-1 since the two zones share the exact same
 // footprint, so pack density and the spread-out, not-clumped feel match.
 const SUNLIT_PACK_ANCHOR_TARGET = 230;   // v550: more room for packs (was the Forest's 140)
-const SUNLIT_PACK_COUNT = 95;   // v550: denser (was 70 -- the Crossroads measured ~6.5 monsters per million square units vs the Forest's ~11)
+const SUNLIT_PACK_COUNT = 95;   // (v570: the Crossroads now spawns SUN_GROUP_COUNT single-kind groups instead -- see spawnSunlitGroup)
+const SUN_GROUP_COUNT = 40, SUN_GROUP_GAP = 620;   // v550: denser (was 70 -- the Crossroads measured ~6.5 monsters per million square units vs the Forest's ~11)
 // v527: the Lighthouse (west), Lakeside Ruins (east) and Cemetery (south) gates sit at a random spot along their
 // edge every visit; a winding old road runs from each gate (and from the Forest gate) into the crossroad centre
 // beside the waypoint. room.roads = the smoothed polylines, room.roadGrid = buckets for sunRoadNear().
@@ -213,12 +214,57 @@ function makeBanditCamp(at){
   return {x:at.x, y:at.y, r:26, tents};
 }
 function spawnBanditCamp(g, camp){
-  const n = 5 + Math.floor(Math.random()*3);
+  const n = 7;   // v570: every camp holds seven (a brute, an archer or two, the rest bandits)
   for(let i=0;i<n;i++){
     const a = i/n*6.28 + rand(-0.2,0.2), r = rand(60, 95);
     const type = i===0 ? 'banditbrute' : (i<=1+Math.floor(Math.random()*2) ? 'banditarcher' : 'bandit');
     const e = spawnEnemy(g, type, {x:camp.x+Math.cos(a)*r, y:camp.y+Math.sin(a)*r*0.75}); if(e){ e.campEnemy = false; e.wanderRadius = 30; }
   }
+}
+// v570: the Crossroads keeps its kinds apart -- each group is one kind of monster, spread well apart:
+// five wolves round a dead ranger, five hookbeaks, five boars, three or four thornbacks, or a flock of crows wheeling over
+// another dead ranger (crows only ever appear there). Bandits live in the camps (seven each).
+const SUN_GROUPS = [['wolves',3],['hookbeak',2],['boar',2],['thornback',2],['crows',1.4]];
+function spawnSunlitGroup(g, anchor, kind){
+  if(!kind){ let tot = 0; for(const k of SUN_GROUPS) tot += k[1]; let r = Math.random()*tot; kind = SUN_GROUPS[0][0]; for(const k of SUN_GROUPS){ r -= k[1]; if(r<=0){ kind = k[0]; break; } } }
+  const room = g.room, ring = (type, n, R, opt)=>{ const a0 = Math.random()*6.28, out = [];
+    for(let i=0;i<n;i++){ const a = a0 + i/n*6.28 + rand(-0.15,0.15), rr = R*rand(0.85,1.15);
+      const e = spawnEnemy(g, type, {x:anchor.x+Math.cos(a)*rr, y:anchor.y+Math.sin(a)*rr}); if(e){ e.homeX = e.x; e.homeY = e.y; if(opt) opt(e, a, i); out.push(e); } }
+    return out; };
+  if(kind==='wolves' || kind==='crows'){
+    (room.deadRangers || (room.deadRangers = [])).push({x:anchor.x, y:anchor.y, rot:Math.random()<0.5, seed:Math.random()*100});
+    if(kind==='wolves') ring('wolf', 5, 110, e=>{ e.wanderRadius = 24; });
+    else { const flock = {x:anchor.x, y:anchor.y, alarm:false};
+      for(let i=0;i<5+Math.floor(Math.random()*2);i++){ const e = spawnEnemy(g, 'vulture', {x:anchor.x, y:anchor.y}); if(!e) continue;
+        e.crow = true; e.name = 'Crow'; e.r = 10; e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp*0.5)); e.dmg *= 0.2; e.aggroRange = 200; e.wanderRadius = 60;
+        e.orbit = {flock, R:rand(70,120), ang:i*1.2+Math.random(), spd:rand(0.9,1.3)*(Math.random()<0.5?-1:1)}; crowOrbitPlace(e); } }
+  } else if(kind==='hookbeak') ring('hookbeak', 5, 90);
+  else if(kind==='boar') ring('boar', 5, 100);
+  else ring('thornback', 3 + Math.floor(Math.random()*2), 80);
+}
+function crowOrbitPlace(e){ const o = e.orbit; e.x = o.flock.x + Math.cos(o.ang)*o.R; e.y = o.flock.y + Math.sin(o.ang)*o.R*0.8; e.homeX = o.flock.x; e.homeY = o.flock.y; }
+// called from the enemy loop: crows wheel round their dead ranger until you come close or one is hurt
+function crowOrbitTick(g, e, dt){
+  const o = e.orbit, p = g.player;
+  if(o.flock.alarm || e.hp < e.maxHp || dist(p, o.flock) < 230){ o.flock.alarm = true; e.orbit = null; e.aggroed = true; e.engaged = true; return false; }
+  const px = e.x; o.ang += o.spd*dt*0.9; crowOrbitPlace(e);
+  e.facing = {x:e.x-px, y:0}; e.faceSign = e.x>=px ? 1 : -1; e.moving = true;
+  return true;
+}
+function drawDeadRangerIso(d){
+  const iso = toIso(d.x, d.y);
+  ctx.save(); ctx.translate(iso.x, iso.y); if(d.rot) ctx.scale(-1, 1);
+  ctx.fillStyle = 'rgba(70,10,10,0.55)'; ctx.beginPath(); ctx.ellipse(4, 3, 26, 9, 0.1, 0, 7); ctx.fill();   // old blood
+  ctx.fillStyle = '#2f4a24'; ctx.strokeStyle = '#141c0e'; ctx.lineWidth = 1;   // green cloak spread on the ground
+  ctx.beginPath(); ctx.moveTo(-20,-2); ctx.quadraticCurveTo(-6,-12,10,-8); ctx.quadraticCurveTo(22,-4,18,4); ctx.quadraticCurveTo(0,8,-18,6); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#5a4430'; roundRect(-6,-7,16,8,3); ctx.fill();                       // leather jerkin
+  ctx.fillStyle = '#3a2a1c'; ctx.fillRect(10,-4,12,3.4); ctx.fillRect(10,0,11,3);       // legs and boots
+  ctx.fillStyle = '#c89a78'; ctx.beginPath(); ctx.arc(-11,-4,4.2,0,7); ctx.fill();     // head
+  ctx.fillStyle = '#2a3a1c'; ctx.beginPath(); ctx.arc(-11,-5,4.6,3.3,6.1); ctx.fill();  // hood
+  ctx.strokeStyle = '#6a4a26'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(-26,6); ctx.quadraticCurveTo(-14,16,2,12); ctx.stroke();   // dropped bow
+  ctx.strokeStyle = '#d8cdb8'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(-26,6); ctx.lineTo(2,12); ctx.stroke();
+  ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = 1; for(const [ax,ay] of [[16,-14],[22,-10],[-30,-6]]){ ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax+8,ay+6); ctx.stroke(); }   // spent arrows
+  ctx.restore();
 }
 function drawCampFireIso(c, clock){
   const iso = toIso(c.x, c.y), fl = 0.8 + 0.2*Math.sin((clock||0)*7);
@@ -230,6 +276,7 @@ function drawCampFireIso(c, clock){
 function pushBanditCampDrawables(g, drawables){
   const cs = g.room && g.room.banditCamps; if(!cs) return;
   const cam = g.camera, vis = (x,y)=>{ const i = toIso(x,y); return !cam || (i.x>cam.x-300 && i.x<cam.x+W+300 && i.y>cam.y-300 && i.y<cam.y+H+300); };
+  for(const d of (g.room.deadRangers||[])) if(vis(d.x, d.y)) drawables.push({depth:d.x+d.y-30, draw:()=>drawDeadRangerIso(d)});   // v570
   for(const c of cs){
     if(!vis(c.x, c.y)) continue;
     drawables.push({depth:c.x+c.y-40, draw:()=>drawCampFireIso(c, g.clock||0)});

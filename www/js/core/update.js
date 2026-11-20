@@ -5,7 +5,8 @@ function updateStep(dt){
   const g = game, p = g.player, room = g.room;
   try{ dungeonPersist(g); }catch(err){}
   try{ tpCastTick(g, dt); }catch(err){}   // v548
-  try{ playerKnockTick(g, dt); }catch(err){}   // v550: Hookbeak kicks slide you back
+  try{ playerKnockTick(g, dt); }catch(err){}
+  try{ playerLaunchTick(g, dt); }catch(err){}   // v570: thrown into the air by the Hell Bovine   // v550: Hookbeak kicks slide you back
   if(showBigMsg._hold && g.scene!=='darkcrypt') bigMsgRelease();   // v536: a held crypt banner goes when you leave
   if(p.wellRestedT>0) wellRestedTick(p, dt);
   try{ wmMark(g, p); }catch(err){}
@@ -25,8 +26,10 @@ function updateStep(dt){
   if(p.riposteT>0) p.riposteT-=dt; // perfect-dodge damage bonus (v104)
   // v83 Holy/Regeneration (+Life Regen %, of max HP per second): a plain
   // per-frame heal-over-time tick, only while alive and below max HP.
-  if(p.lifeRegenPct>0 && p.hp>0 && p.hp<p.maxHp){
-    p.hp = Math.min(p.maxHp, p.hp + p.maxHp*p.lifeRegenPct*dt);
+  const _deM = divineEqMode(p);   // v570 Divine Equilibrium: Retribution turns life regeneration into Conviction (Rage); Salvation adds to it
+  if(_deM==='retribution'){ if(p.lifeRegenPct>0 && p.hp>0 && p.maxMp>0) gainResource(p, retributionRagePerSec(p)*dt); }
+  else if(p.lifeRegenPct>0 && p.hp>0 && p.hp<p.maxHp){
+    p.hp = Math.min(p.maxHp, p.hp + p.maxHp*p.lifeRegenPct*(_deM==='salvation' ? 1+salvationRegenPct(divineEqRank(p)) : 1)*dt);
   }
   if(p.windT>0) p.windT -= dt;   // v361 Wind Stone buff timer
   if(p.partB && p.partB.sp && p.partB.sp.burn && p.hp>0 && game && game.enemies){   // v361 Infernal Heart aura
@@ -1364,30 +1367,39 @@ function updateStep(dt){
     if(smRank>0 && p.atkCd<=0){ p.atkCd = p.atkCdMax; castSmite(g, p, smRank); }
   }
   // Vengeance (Templar): melee cone of holy fire (half fire, half physical) that empowers followers.
+  if(p.vengComboT>0){ p.vengComboT -= dt; if(p.vengComboT<=0){ p.vengComboT = 0; p.vengStage = 0; p.sacredCombo = false; } }   // v570: combo window ran out
   if(wantVengeance){
-    wantVengeance=false;
     const vRank = effectiveRank(p,'vengeance')||0;
+    if(vRank>0 && !p.dodging && p.atkCd>0 && p.atkCd<0.3){ /* v570: a press just before the swing timer is ready is kept */ }
+    else wantVengeance=false;
     if(vRank>0 && !p.dodging && p.atkCd<=0){
+      wantVengeance=false;
+      const stage = clamp(p.vengStage||0, 0, VENG_STAGES-1);
       p.movementStopT = 0.1;
       p.atkCd = p.atkCdMax;   // (v288) same speed as Strike, no cooldown of its own
       const target = nearestEnemy(g, p, VENG_REACH+10+(p.weaponReachBonus||0));
       const ang = target ? Math.atan2(target.y-p.y, target.x-p.x) : Math.atan2(p.facing.y,p.facing.x);
       p.facing = {x:Math.cos(ang), y:Math.sin(ang)}; p.faceSign = screenFacingSign(p.facing.x, p.facing.y);
-      p.atkAnimT = 0.22; p.atkAnimMax = 0.22; p.vengAnimT = 0.3; p.vengAnimMax = 0.3;
-      const reach = (VENG_REACH + (p.weaponReachBonus||0)) * aoeRadiusMult(p);
-      let dmg = wpnDmg(p) * swd('vengeance', vRank) * assaultDealtMult(p) * weaponDmgMult(p);
+      p.atkAnimT = 0.22; p.atkAnimMax = 0.22; p.vengAnimT = 0.3; p.vengAnimMax = 0.3; p.vengAnimStage = stage;
+      const reach = (VENG_REACH + (p.weaponReachBonus||0)) * aoeRadiusMult(p) * (stage===2 ? 1.12 : 1);
+      let dmg = wpnDmg(p) * swd('vengeance', vRank) * assaultDealtMult(p) * weaponDmgMult(p);   // v570: every swing of the combo deals the full skill damage
       if(p.maxMp>0 && (p.mp||0) > p.maxMp*VENG_OVERFLOW_AT){ p.mp = Math.max(0, p.mp - VENG_OVERFLOW_COST); dmg *= 1 + VENG_OVERFLOW_DMG; }   // v325: above 80% full, Vengeance burns 5 Rage for +5% damage
       let hits = 0;
       const swR = (p.skills && effectiveRank(p,'sacredWeapon'))||0;   // v455 Sacred Weapon
-      let sacred = false;
-      if(swR>0){ p.vengCount = Math.min(SACRED_EVERY+1, (p.vengCount||0) + 1); if(p.vengCount > SACRED_EVERY && (p.mp||0) >= SACRED_COST){ p.vengCount = 0; p.mp -= SACRED_COST; sacred = true; dmg *= 1 + sacredBonus(swR); } }   // v489: the empowered 4th swing burns 10 Conviction (it waits for it)
+      if(stage===0){
+        p.sacredCombo = false;
+        if(swR>0 && p.sacredReady && (p.mp||0) >= SACRED_COST){ p.mp -= SACRED_COST; p.sacredReady = false; p.sacredCombo = true; showMsg('Empowered!', 0.8, '#ffe08a'); }   // v570: the empowered combo spends Conviction once
+      }
+      const sacred = swR>0 && !!p.sacredCombo;
+      if(sacred) dmg *= 1 + sacredBonus(swR);
+      const arc = VENG_ARC*(stage===2 ? 1.2 : 1);
       for(const e of g.enemies){
         if(e.hp<=0) continue;
         const d = dist(p,e);
         if(d < reach+e.r){
           const eang = Math.atan2(e.y-p.y, e.x-p.x);
           let diff = Math.abs(eang-ang); if(diff>Math.PI) diff = 2*Math.PI-diff;
-          if(diff < VENG_ARC){
+          if(diff < arc){
             e.hp -= splitHit(p, e, dmg, 0.5, 'fire'); e.hitT = 0.15;
             if(sacred){ e.burnT = Math.max(e.burnT||0, SACRED_BURN_DUR); e.burnDps = Math.max(e.burnDps||0, dmg*SACRED_BURN_PCT); g.particles.push({type:'burst', x:e.x, y:e.y, t:0.4, max:0.4, color:'#fff0a0'}); }
             checkExecute(g, e);
@@ -1398,8 +1410,13 @@ function updateStep(dt){
       }
       if(hits>0) gainResource(p, Math.min(hits,3)*VENG_CONV);
       if(g.followers) for(const f of g.followers){ f.vengeT = VENG_BUFF_DUR; f.vengeRank = vRank; }
-      g.particles.push({type:'wave', x:p.x, y:p.y, ang, arc:VENG_ARC, reach, t:0.3, max:0.3, c1:'255,110,40', c2:'255,230,150'});
-      if(sacred){ g.particles.push({type:'wave', x:p.x, y:p.y, ang, arc:VENG_ARC*1.1, reach:reach*1.12, t:0.42, max:0.42, c1:'255,200,80', c2:'255,255,220'}); shakeScreen(g, 3, 0.12); }
+      // v570: the combo only carries on when this swing landed
+      if(hits>0 && stage < VENG_STAGES-1){ p.vengStage = stage+1; p.vengComboT = VENG_COMBO_WINDOW + p.atkCdMax; }
+      else if(hits>0){ p.vengStage = 0; p.vengComboT = 0; if(swR>0){ p.sacredReady = true; showMsg(sacred ? 'Combo! Empowered again' : 'Combo! Next combo Empowered', 1.0, '#ffe08a'); } p.sacredCombo = false; }
+      else { if(stage>0) showMsg('Combo broken', 0.7, '#c8b8a0'); p.vengStage = 0; p.vengComboT = 0; p.sacredCombo = false; }
+      g.particles.push({type:'wave', x:p.x, y:p.y, ang, arc, reach, t:0.3, max:0.3, c1:'255,110,40', c2:'255,230,150'});
+      if(stage===2) g.particles.push({type:'wave', x:p.x, y:p.y, ang, arc:arc*0.8, reach:reach*0.85, t:0.36, max:0.36, c1:'255,150,60', c2:'255,240,190'});
+      if(sacred){ g.particles.push({type:'wave', x:p.x, y:p.y, ang, arc:arc*1.1, reach:reach*1.12, t:0.42, max:0.42, c1:'255,200,80', c2:'255,255,220'}); shakeScreen(g, 3, 0.12); }
     }
   }
   // v454 Reave (Berserker): a basic attack -- one weapon hit like Strike that leaves the target bleeding. Rides the swing timer.
@@ -1519,7 +1536,7 @@ function updateStep(dt){
     const nRank = effectiveRank(p,'nova')||0;
     if(nRank>0 && p.novaCd<=0 && !(p.aoeGcd>0)){
       p.movementStopT = 0.2;
-      p.novaCd = applyCdr(p, p.novaCdMax); p.aoeGcd = AOE_GCD;
+      p.novaCdMax = NOVA_CD; p.novaCd = applyCdr(p, p.novaCdMax); p.aoeGcd = Math.min(AOE_GCD, NOVA_CD);   // v570: always the current 5s (old saves kept 9)
       const nSt = staticConsume(p), nWm = windConsume(p, 'nova');
       const novaBase = wpnDmg(p), novaDmg = novaBase*swd('nova', nRank)*nSt.mult*nWm;   // v313: hits add a Charge (no old Shock); ranks add damage
       const novaR = NOVA_RADIUS*aoeRadiusMult(p)*nSt.rad;
@@ -1769,8 +1786,8 @@ function updateStep(dt){
     wantIceArmor=false;
     const iaRank = iceArmorOn(p) ? (effectiveRank(p,'iceArmor')||0) : 0;
     if(iaRank>0 && p.iceArmorCd<=0){
-      if(p.iceArmorHp>0){ p.iceArmorCdMax = ICE_ARMOR_EXPLODE_CD; p.iceArmorCd = ICE_ARMOR_EXPLODE_CD; shatterIceArmor(g, p); }
-      else showMsg('Ice Armor is recharging', 0.9, '#9ad0ff');
+      if(p.iceArmorHp>=1 && p.iceArmorT>0){ p.iceArmorCdMax = ICE_ARMOR_EXPLODE_CD; p.iceArmorCd = ICE_ARMOR_EXPLODE_CD; shatterIceArmor(g, p); }
+      else showMsg('No Ice Armor to explode', 0.9, '#9ad0ff');   // v570: only while the barrier is up
     }
   }
   iceArmorSync(p);
@@ -2293,6 +2310,7 @@ function updateStep(dt){
       e.fearT = 3.0; e.engaged = false;
       g.particles.push({type:'burst', x:e.x, y:e.y, t:0.3, max:0.3, color:'#ff6a3a'});
     }
+    if(e.orbit && crowOrbitTick(g, e, dt)) continue;   // v570: Crossroads crows wheel over a dead ranger
     if(e.fearT>0){
       e.fearT -= dt; if(e.fearT<0) e.fearT = 0;
       const awayAng = Math.atan2(e.y-p.y, e.x-p.x);
@@ -2406,6 +2424,7 @@ function updateStep(dt){
     e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
 
     // Leviathans (Kraken, Marsh/Pool Leviathans, Breach pools): every one runs its own boss state machine
+    if((e.minotaur || e.campChief) && enemyWarcryTick(g, e, dt, target, d)) continue;   // v570: war cries (monsters/warcry.js)
     if(e.type==='leviathan'){ updateLeviathanBoss(g, e, dt, target, d, room); continue; }
 
     // Boss slam: an independent, ground-targeted AoE on its own cooldown --
@@ -2606,6 +2625,7 @@ function updateStep(dt){
       updateFhTurret(g, e, dt, target, d);
     } else if(e.type==='windigo'){
       updateWindigo(g, e, dt, target, d, isFollowerTarget, chillMult, room);
+    } else if(e.type==='hellbovine'){ updateHellBovine(g, e, dt, target, d, isFollowerTarget, chillMult, room);   // v570
     } else if(e.type==='thornback'){ updateThornback(g, e, dt, target, d, isFollowerTarget, chillMult, room);   // v550
     } else if(e.type==='hookbeak'){ updateHookbeak(g, e, dt, target, d, isFollowerTarget, chillMult, room);
     } else if(e.type==='plaguedoc'){ updatePlagueDoc(g, e, dt, target, d, isFollowerTarget, chillMult, room);
@@ -2757,6 +2777,8 @@ function updateStep(dt){
           beginEnemyMelee(e);
         }
       }
+    } else if(e.type==='skeletonbrute' && skelBruteLeapTick(g, e, dt, target, d, isFollowerTarget, room)){
+      // v570: the brute's opening leap (monsters/elites.js)
     } else if(e.type==='raptor'){
       // Jumping Raptor (Redridge): fast pack hunter; telegraphed pounce onto your position, then bites.
       const reach = e.r+target.r+2;
@@ -3082,6 +3104,7 @@ function updateStep(dt){
       if(g.enemies[i].dwc) dwConstructSlain(g, g.enemies[i]);
       if(g.enemies[i].colossus) colossusSlain(g.enemies[i]);
       if(g.enemies[i].type==='magmagolem') golemDeath(g, g.enemies[i]);
+      if(g.enemies[i].type==='hellbovine') hellBovineDeath(g, g.enemies[i]);   // v570: always a rare
       if(g.enemies[i].type==='plaguedoc') plagueDocDeath(g, g.enemies[i]);   // v550: three bats burst out
       if(g.enemies[i].type==='poisonwalker') walkerDeath(g, g.enemies[i]);
       if(g.enemies[i].sapMarked && !g.enemies[i].soulTaken){ g.enemies[i].soulTaken = true; p.souls = Math.min(SOUL_CAP, (p.souls||0) + SOUL_SAP_SOULS_PER_KILL); checkDemonBindThreshold(g); }
@@ -3785,8 +3808,7 @@ function updateStep(dt){
       if(sc.opened || dist(p, sc) > sc.r + p.r) continue;
       sc.opened = true;
       const lvl = Math.max(1, monsterLevel(g)), n0 = g.loot.length;
-      for(let k=0;k<2;k++) g.loot.push({type:'item', x:sc.x+rand(-26,26), y:sc.y+rand(26,46), r:8, item:generateItem(lvl, packRarity(lvl), null, null, p)});
-      if(Math.random()<0.5) g.loot.push({type:'item', x:sc.x+rand(-26,26), y:sc.y+rand(26,46), r:8, item:generateItem(lvl, packRarity(lvl), null, null, p)});
+      g.loot.push({type:'item', x:sc.x+rand(-26,26), y:sc.y+rand(26,46), r:8, item:generateItem(lvl, Math.random()<0.5 ? 'rare' : 'magic', null, null, p)});   // v570: a rare or a magic item, 50/50
       g.loot.push({type:'gold', x:sc.x+rand(-20,20), y:sc.y+rand(26,46), r:9, amt:Math.ceil((rand(30,60)+g.depth*3)*(1+clamp((p.goldFindPct||0),0,200)/100))});
       for(let i=n0;i<g.loot.length;i++) fixLootSpot(g, g.loot[i]);
       g.particles.push({type:'burst', x:sc.x, y:sc.y, t:0.4, max:0.4, color:'#e8c44a'});

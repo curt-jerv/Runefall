@@ -65,7 +65,8 @@ function defilerSlain(g, e){
   if(p.defilerSlain && p.inscriptionTaken){ bossMsg('THE GRAVEROBBER FALLS', 'The possession breaks once more', 3.2); return; }   // v489: a re-kill
   p.defilerSlain = true;
   // v536: 'Inspect the opened tomb' stays up until the sarcophagus is searched (bigMsgHold in the crypt branch of update)
-  const q = getQuest(p, QUEST_GRAVEROBBERS.id);
+  let q = getQuest(p, QUEST_GRAVEROBBERS.id);
+  if(!q){ if(!p.quests) p.quests = []; q = {id:QUEST_GRAVEROBBERS.id, name:QUEST_GRAVEROBBERS.name, desc:QUEST_GRAVEROBBERS.desc, status:'active', progress:0, total:QUEST_GRAVEROBBERS.total}; p.quests.push(q); }   // v570: killed before meeting the camp -- the quest still shows, waiting at the camp
   if(q && q.status==='active'){ q.desc = QUEST_GRAVEROBBERS.descDone; q.progress = q.total; }
   npcMark(p, 'graverobbers', true);
   updateQuestBadge(); saveGame();
@@ -89,20 +90,23 @@ function inspectSarcophagus(){
 function graverobbersMark(p){ const q = getQuest(p, QUEST_GRAVEROBBERS.id); return !q ? !p.defilerSlain : (q.status==='active' && !!p.defilerSlain); }
 // v532: the graverobbers camp just inside the Cursed Cemetery gate, round a small fire
 function makeGraverobbers(camp){
-  return [ {x:camp.x-60, y:camp.y-34, id:0, robe:'#4a3a2a', hood:'#2a2018', tool:'shovel'},
-           {x:camp.x+52, y:camp.y-48, id:1, robe:'#34423a', hood:'#1c2a22', tool:'lantern'},
-           {x:camp.x-14, y:camp.y+52, id:2, robe:'#463a52', hood:'#241c2c', tool:'shovel'} ];
+  return [ {x:camp.x-60, y:camp.y-34, id:0, robe:'#151517', long:true, hat:'trench', tool:'shovel'},   // v570: black trench coats and hats
+           {x:camp.x+52, y:camp.y-48, id:1, robe:'#1b1a1c', long:true, hat:'trench', tool:'lantern'},
+           {x:camp.x-14, y:camp.y+52, id:2, robe:'#121214', long:true, hat:'trench', tool:'shovel'} ];
 }
 function talkGraverobbers(){
   const p = game.player, q = getQuest(p, QUEST_GRAVEROBBERS.id);
   npcMark(p, 'graverobbers', false);
   if(!q){
-    if(p.defilerSlain){ showNpcText('Graverobbers', '"You went into the Defiler\'s Tomb? Then... that was our friend, wasn\'t it. The thing wearing his face. It is dead? He can finally rest. Thank you."', 'Close'); return; }
-    showNpcText('Graverobbers', '"Psst. Our friend went down into a hidden tomb below the Dark Crypt and never came back. Will you find him?"', 'Accept', ()=>{
-      if(!p.quests) p.quests = [];
-      if(!getQuest(p, QUEST_GRAVEROBBERS.id)) p.quests.push({id:QUEST_GRAVEROBBERS.id, name:QUEST_GRAVEROBBERS.name, desc:QUEST_GRAVEROBBERS.desc, status:'active', progress:0, total:QUEST_GRAVEROBBERS.total});
-      showMsg('Quest accepted: '+QUEST_GRAVEROBBERS.name, 1.8); updateQuestBadge(); saveGame();
-    });
+    // v570: talking to the camp always puts the quest in the tracker (it used to wait for the Accept button); if the
+    // Possessed Graverobber is already dead the quest goes straight to 'return for your reward'
+    if(!p.quests) p.quests = [];
+    const nq = {id:QUEST_GRAVEROBBERS.id, name:QUEST_GRAVEROBBERS.name, desc:QUEST_GRAVEROBBERS.desc, status:'active', progress:0, total:QUEST_GRAVEROBBERS.total};
+    if(p.defilerSlain){ nq.desc = QUEST_GRAVEROBBERS.descDone; nq.progress = nq.total; }
+    p.quests.push(nq); updateQuestBadge(); saveGame();
+    if(p.defilerSlain){ talkGraverobbers(); return; }
+    showMsg('New quest: '+QUEST_GRAVEROBBERS.name, 1.8);
+    showNpcText('Graverobbers', '"Psst. Our friend went down into a hidden tomb below the Dark Crypt and never came back. Will you find him?"', 'I will find him');
   } else if(q.status==='active' && p.defilerSlain){
     showNpcText('Graverobbers', '"You found him... and it was not him anymore. Gods. Take this -- it is all we have left from a hundred bad nights."', 'Take reward', ()=>{
       const item = classRewardItem(p, Math.max(p.level, 18), 'reward');
@@ -255,6 +259,15 @@ function drawSimpleNpcIso(n, clock, o){
   else { roundRect(-7.5,-31,15,20,4); ctx.fill(); ctx.stroke(); }
   ctx.fillStyle = '#d2a57a'; ctx.beginPath(); ctx.arc(0,-36,5.6,0,7); ctx.fill();
   if(n.hood){ ctx.fillStyle = n.hood; ctx.beginPath(); ctx.arc(0,-37,6.6,3.14,6.28); ctx.lineTo(6.6,-31); ctx.lineTo(-6.6,-31); ctx.closePath(); ctx.fill(); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.ellipse(0,-35,4,3.6,0,0,7); ctx.fill(); ctx.fillStyle = '#d2a57a'; ctx.beginPath(); ctx.arc(0,-34.4,3,0,3.14); ctx.fill(); }
+  else if(n.hat==='trench'){   // v570: graverobber -- turned-up collar, lapels, wide-brimmed black hat
+    ctx.fillStyle = '#2a2a2e'; ctx.beginPath(); ctx.moveTo(-7.5,-31); ctx.lineTo(-2,-22); ctx.lineTo(0,-31); ctx.lineTo(2,-22); ctx.lineTo(7.5,-31); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#7a7a80'; for(const by of [-25,-19,-13]){ ctx.beginPath(); ctx.arc(-2.6,by,0.8,0,7); ctx.arc(2.6,by,0.8,0,7); ctx.fill(); }
+    ctx.fillStyle = '#08080a'; ctx.fillRect(-8,-18,16,2);
+    ctx.fillStyle = '#1a120c'; ctx.fillRect(-2.6,-37,1.4,1.4); ctx.fillRect(1.2,-37,1.4,1.4);
+    ctx.fillStyle = '#0c0c0e'; ctx.beginPath(); ctx.ellipse(0,-40.5,10.5,3,0,0,7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-5.6,-40.5); ctx.lineTo(-4.8,-47.5); ctx.quadraticCurveTo(0,-49.5,4.8,-47.5); ctx.lineTo(5.6,-40.5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3a3a40'; ctx.fillRect(-5.3,-43.2,10.6,1.5);
+  }
   else if(n.hat==='captain'){   // v490: grey beard, peaked navy cap with a gold band, brass buttons
     ctx.fillStyle = '#b8b4aa'; ctx.beginPath(); ctx.moveTo(-5,-36); ctx.quadraticCurveTo(0,-26,5,-36); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#1a120c'; ctx.fillRect(-2.6,-38,1.4,1.4); ctx.fillRect(1.2,-38,1.4,1.4);

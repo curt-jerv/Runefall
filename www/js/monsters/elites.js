@@ -227,9 +227,64 @@ function drawMarkX(e){
   ctx.strokeStyle='#ff3a3a'; ctx.lineWidth=3.5; ctx.beginPath(); ctx.moveTo(-6,-6); ctx.lineTo(6,6); ctx.moveTo(6,-6); ctx.lineTo(-6,6); ctx.stroke();
   ctx.restore();
 }
+// v570: Skeleton Brutes (two-handed bone greataxe) open every fight with a telegraphed leap: a crouch with the axe raised
+// while a ring marks where you stood, then a short arcing jump that lands on that ring. Once per engagement.
+const SB_LEAP_TELE = 0.75, SB_LEAP_AIR = 0.45, SB_LEAP_R = 70, SB_LEAP_MIN = 110, SB_LEAP_MAX = 340;
+function skelBruteLeapTick(g, e, dt, target, d, isFT, room){
+  if(e.sbLeap==='tele'){
+    e.sbT -= dt; e.moving = false; e.atkAnimT = 0.1; e.windT = 0;
+    if(e.sbT<=0){ e.sbLeap = 'air'; e.sbT = SB_LEAP_AIR; e.sbFrom = {x:e.x, y:e.y}; }
+    return true;
+  }
+  if(e.sbLeap==='air'){
+    e.sbT -= dt; const k = 1 - clamp(e.sbT/SB_LEAP_AIR, 0, 1);
+    e.x = e.sbFrom.x + (e.sbPt.x-e.sbFrom.x)*k; e.y = e.sbFrom.y + (e.sbPt.y-e.sbFrom.y)*k;
+    e.sbHop = Math.sin(k*Math.PI)*46; e.moving = true;
+    if(e.sbT<=0){
+      e.sbLeap = 'done'; e.sbHop = 0; e.atkCd = e.atkCdMax*0.5;
+      const dm = teleDmg(e, 1.3), p = g.player;
+      if(dist(p, e) < SB_LEAP_R + p.r) playerDamage(g, dm, e);
+      if(g.followers) for(const f of g.followers) if(dist(f, e) < SB_LEAP_R + f.r) applyFollowerDamage(g, f, dm, e);
+      g.particles.push({type:'ring', x:e.x, y:e.y, t:0.4, max:0.4, r:SB_LEAP_R, color:'#d8d0b8'});
+      g.particles.push({type:'burst', x:e.x, y:e.y, t:0.35, max:0.35, color:'#b8ac90'});
+      shakeScreen(g, 4, 0.18);
+    }
+    return true;
+  }
+  if(!e.sbLeap && e.hp>0 && !(e.stunT>0) && !(e.frozenT>0) && d>SB_LEAP_MIN && d<SB_LEAP_MAX && (e.aggroed || e.lastAttackedT>0 || d<240) && enemyLOS(g, e, target)){
+    e.sbLeap = 'tele'; e.sbT = SB_LEAP_TELE; e.sbPt = {x:target.x, y:target.y}; e.windT = 0;
+    const a = Math.atan2(target.y-e.y, target.x-e.x); e.facing = {x:Math.cos(a), y:Math.sin(a)}; e.faceSign = screenFacingSign(e.facing.x, e.facing.y);
+    return true;
+  }
+  if(!e.sbLeap && d<=SB_LEAP_MIN) e.sbLeap = 'done';   // already in your face: no leap this fight
+  return false;
+}
+function drawSkelBruteLeapTele(e){
+  if(e.sbLeap==='tele') protRing(e.sbPt.x, e.sbPt.y, SB_LEAP_R, clamp(1-e.sbT/SB_LEAP_TELE,0,1), '230,210,160');
+  else if(e.sbLeap==='air') protRing(e.sbPt.x, e.sbPt.y, SB_LEAP_R, 1, '230,210,160', true);
+}
 function drawEnemyStatusWrap(e){
+  if(e.wcT>0 && e.hp>0){   // v570: war cry -- head thrown back, a slow shudder, shock rings (monsters/warcry.js)
+    drawEnemyWarcry(e);
+    const k = clamp(1 - e.wcT/(e.wcMax||1), 0, 1), lift = Math.sin(Math.min(1, k*1.6)*Math.PI*0.5)*(1-Math.max(0,(k-0.85)/0.15)), fi = toIso(e.x, e.y), sh = Math.sin(k*90)*1.2*lift;
+    ctx.save(); ctx.translate(fi.x + sh, fi.y); ctx.rotate(-(e.faceSign||1)*0.16*lift); ctx.scale(1+0.06*lift, 1+0.06*lift); ctx.translate(-fi.x, -fi.y);
+    try{ drawEnemyStatusWrapRaw(e); } finally { ctx.restore(); } return;
+  }
+  if(e.type==='skeletonbrute' && (e.sbLeap==='tele' || e.sbLeap==='air')){
+    drawSkelBruteLeapTele(e);
+    if(e.sbHop>0){ const fi = toIso(e.x, e.y); drawShadow(fi.x, fi.y, 14, 5); ctx.save(); ctx.translate(0, -e.sbHop);
+      try{ drawEnemyStatusWrapRaw(e); } finally { ctx.restore(); } return; }
+  }
+  drawEnemyStatusWrapRaw(e);
+}
+function drawEnemyStatusWrapRaw(e){
   _hpBarTopY = null;
-  drawWithStatus(e, ()=>drawEnemyIsoBase(e), !isHeavyEnemy(e) && e.hp>0);
+  if(e.staggerT>0 && e.hp>0 && e.staggerMax>0){   // v570: hit reaction on a critical hit -- the body snaps back away from the hero and recovers
+    const k = Math.sin(Math.PI*clamp(1 - e.staggerT/e.staggerMax, 0, 1)), fi = toIso(e.x, e.y), pl = game && game.player;
+    const away = pl ? (toIso(pl.x, pl.y).x > fi.x ? -1 : 1) : -(e.faceSign||1);
+    ctx.save(); ctx.translate(fi.x + away*4*k, fi.y); ctx.rotate(away*0.2*k); ctx.translate(-fi.x, -fi.y);
+    try{ drawWithStatus(e, ()=>drawEnemyIsoBase(e), !isHeavyEnemy(e) && e.hp>0); } finally { ctx.restore(); }
+  } else drawWithStatus(e, ()=>drawEnemyIsoBase(e), !isHeavyEnemy(e) && e.hp>0);
   // v419 safety net: any living monster whose sprite didn't draw its own life bar gets a standard one
   if(_hpBarTopY==null && e.hp>0 && e.maxHp>0 && !e.invulnerable && !e.submerged && !e.burrowed && !e.underground && !e.hidden && !e.buried && !e.dormant && !e.cloaked && !_suppressHpBar){
     const fi = toIso(e.x, e.y);

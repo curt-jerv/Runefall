@@ -34,7 +34,7 @@ function drawTrapIso(tr){
 }
 // v230: unified bandit look -- red face-wrap, leather vest over a rough tunic, belt, boots. Melee bandit: sabre;
 // archer: hooded with a shortbow and quiver; brute / tower leader: bigger, bare-armed, iron skullcap, studded pauldrons, war-axe and sash.
-// v310: the possessed graverobber -- ragged hooded long coat, a grave-digger's shovel, and pale violet eyes
+// v310: the possessed graverobber -- (v570: black trench coat and hat), a grave-digger's shovel, and pale violet eyes
 function drawDefiler(e){
   const iso = toIso(e.x,e.y), face = e.faceSign||1, t = e.animT||0, moving = e.moving, atk = e.atkAnimT||0, flash = e.hitT>0;
   const s = e.r/15*1.05;
@@ -48,14 +48,19 @@ function drawDefiler(e){
   ctx.fillStyle = F('#16110c');
   roundRect(-6+walk*3,-5,6,5,2); ctx.fill(); roundRect(1-walk*3,-5,6,5,2); ctx.fill();
   // long ragged coat
-  ctx.fillStyle = F('#3b3026'); ctx.strokeStyle = 'rgba(0,0,0,0.65)'; ctx.lineWidth = 1;
+  ctx.fillStyle = F('#141416'); ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 1;   // v570: black trench coat
   ctx.beginPath(); ctx.moveTo(-7,-30+bob); ctx.lineTo(7,-30+bob); ctx.lineTo(11,-4); ctx.lineTo(7,-6); ctx.lineTo(4,-3); ctx.lineTo(0,-6); ctx.lineTo(-4,-2); ctx.lineTo(-7,-6); ctx.lineTo(-11,-4); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = F('#241c14'); ctx.fillRect(-1.2,-29+bob,2.4,23);          // coat seam
-  ctx.fillStyle = F('#5a4630'); ctx.fillRect(-7,-17+bob,14,2.2);            // rope belt
+  ctx.fillStyle = F('#2c2c30'); ctx.fillRect(-1.2,-29+bob,2.4,23);          // coat seam
+  ctx.fillStyle = F('#08080a'); ctx.fillRect(-7,-17+bob,14,2.2);            // coat belt
+  ctx.fillStyle = F('#2a2a2e'); ctx.beginPath(); ctx.moveTo(-7,-30+bob); ctx.lineTo(-2,-21+bob); ctx.lineTo(0,-30+bob); ctx.lineTo(2,-21+bob); ctx.lineTo(7,-30+bob); ctx.closePath(); ctx.fill();   // lapels
+  ctx.fillStyle = F('#8a8a90'); for(const by of [-25,-20,-12]){ ctx.beginPath(); ctx.arc(-3,by+bob,0.8,0,7); ctx.arc(3,by+bob,0.8,0,7); ctx.fill(); }
   // back arm + hood
-  ctx.fillStyle = F('#2e251c'); roundRect(-10,-28+bob,4,13,2); ctx.fill();
-  ctx.fillStyle = F('#1c1610'); ctx.beginPath(); ctx.arc(0,-34+bob,7.4,Math.PI*0.95,Math.PI*2.05); ctx.lineTo(6,-27+bob); ctx.lineTo(-6,-27+bob); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#07050a'; ctx.beginPath(); ctx.ellipse(1.5,-32.5+bob,4.4,4.6,0,0,7); ctx.fill();
+  ctx.fillStyle = F('#18181a'); roundRect(-10,-28+bob,4,13,2); ctx.fill();
+  ctx.fillStyle = F('#9a8c80'); ctx.beginPath(); ctx.arc(0.8,-33+bob,5.6,0,7); ctx.fill();   // gaunt grey face
+  ctx.fillStyle = '#07050a'; ctx.beginPath(); ctx.ellipse(1.5,-32.5+bob,3.4,2.6,0,0,7); ctx.fill();
+  ctx.fillStyle = F('#0c0c0e'); ctx.beginPath(); ctx.ellipse(0,-37.5+bob,11,3.2,0,0,7); ctx.fill(); ctx.stroke();   // v570: wide-brimmed black hat
+  ctx.beginPath(); ctx.moveTo(-6,-37.5+bob); ctx.lineTo(-5,-45+bob); ctx.quadraticCurveTo(0,-47+bob,5,-45+bob); ctx.lineTo(6,-37.5+bob); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = F('#3a3a40'); ctx.fillRect(-5.6,-40.5+bob,11.2,1.6);
   // possessed eyes
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(190,150,255,0.95)';
   ctx.beginPath(); ctx.arc(0.2,-33+bob,1.3,0,7); ctx.arc(3.4,-33+bob,1.3,0,7); ctx.fill(); ctx.restore();
@@ -65,7 +70,7 @@ function drawDefiler(e){
   ctx.fillStyle = F('#8a8f98'); ctx.beginPath(); ctx.moveTo(-4.5,-26); ctx.lineTo(4.5,-26); ctx.lineTo(3.5,-36); ctx.lineTo(0,-39); ctx.lineTo(-3.5,-36); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.restore();
   // front arm
-  ctx.fillStyle = F('#3b3026'); roundRect(5,-28+bob,4,12,2); ctx.fill();
+  ctx.fillStyle = F('#141416'); roundRect(5,-28+bob,4,12,2); ctx.fill();
   ctx.fillStyle = F('#b69a7c'); ctx.beginPath(); ctx.arc(8,-16+bob,2.2,0,7); ctx.fill();
   ctx.restore();
   drawHpBar(iso, 56*s, e.r*1.35, e.hp, e.maxHp);
@@ -76,7 +81,9 @@ function drawBandit(e){
   const s = arch ? 1.22*15/16 : king ? e.r/16*0.95 : e.r/16*(brute?1.25:1.22);   // v452: archers drawn exactly at bandit size (v490: both shrunk to the player's height)
   const torsoW = brute?21:arch?13:15, torsoH = brute?23:18, legLen = brute?16:14, headR = brute?8.5:7;
   const F = (c)=>flash ? '#fff' : c;
-  const skin = brute ? '#b9805a' : '#d9a87a', tunic = king ? '#8a1c20' : arch ? '#5a6230' : brute ? '#5a3a24' : '#7a5530', vest = king ? '#2a1410' : arch ? '#3a3a1c' : '#2e2016';
+  if(e._shirt==null) e._shirt = Math.floor(Math.random()*3);   // v570: grey, brown or beige shirts
+  const SHIRT = ['#6c6a66', '#6a4a2c', '#b8a47e'];
+  const skin = brute ? '#b9805a' : '#d9a87a', tunic = king ? '#8a1c20' : arch ? '#5a6230' : SHIRT[e._shirt], vest = king ? '#2a1410' : arch ? '#3a3a1c' : '#2e2016';
   const pants = '#2c241c', boot = '#17120d', red = king ? '#d8a84a' : '#b02a2a', redDark = king ? '#8a6420' : '#701818', bronze = king ? '#f0c860' : '#c9a25a';
   drawShadow(iso.x, iso.y, (torsoW+6)*s*0.9*(king && e.bkHop ? Math.max(0.5, 1-e.bkHop/160) : 1), torsoW*0.38*s);
   ctx.save(); ctx.translate(iso.x, iso.y - (king ? (e.bkHop||0) : 0)); ctx.scale(face*s, s);
@@ -163,6 +170,18 @@ function drawBandit(e){
     ctx.beginPath(); ctx.moveTo(-headR*0.95, cy0); ctx.lineTo(-headR*0.95, cy0-headR*0.75); ctx.lineTo(-headR*0.5, cy0-headR*0.35); ctx.lineTo(0, cy0-headR*0.95); ctx.lineTo(headR*0.5, cy0-headR*0.35); ctx.lineTo(headR*0.95, cy0-headR*0.75); ctx.lineTo(headR*0.95, cy0); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.fillStyle = F('#c02a2a'); ctx.beginPath(); ctx.arc(0, cy0-headR*0.28, 1.4, 0, 7); ctx.fill();
     ctx.strokeStyle = flash ? '#fff' : '#7a3a30'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(headR*0.15, headY-headR*0.55); ctx.lineTo(headR*0.7, headY+headR*0.05); ctx.stroke();
+  } else if(!e.isGuard){   // v570: every bandit and brute wears a bandana -- red, gold for Bandit Captains and the Bandit Chief
+    const gold = !!(e.bdCaptain || e.campChief), bc = gold ? '#e2b234' : '#b3262a', bd = gold ? '#8a6a18' : '#6e1414', fl2 = Math.sin(t*7+(e.x||0)*0.01)*1.4;
+    ctx.fillStyle = F(bd);   // knot tails fluttering behind the head
+    ctx.beginPath(); ctx.moveTo(-headR*0.95, headY-headR*0.45); ctx.lineTo(-headR*1.95, headY-headR*0.1+fl2); ctx.lineTo(-headR*1.05, headY-headR*0.05); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-headR*0.95, headY-headR*0.35); ctx.lineTo(-headR*1.7, headY+headR*0.45-fl2); ctx.lineTo(-headR*0.9, headY+headR*0.05); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = F(bc); ctx.beginPath(); ctx.arc(0, headY-headR*0.22, headR*1.07, Math.PI*1.0, Math.PI*2.0); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = F(bd); ctx.lineWidth = 0.9; ctx.stroke();
+    ctx.fillStyle = F(bd); ctx.fillRect(-headR*1.07, headY-headR*0.36, headR*2.14, headR*0.16);
+    ctx.fillStyle = F(gold ? '#fff2b8' : '#f0d8c8');   // a few printed dots
+    for(const [dx,dy] of [[-0.5,-0.75],[0.1,-0.95],[0.6,-0.65],[-0.15,-0.55]]){ ctx.beginPath(); ctx.arc(headR*dx, headY+headR*dy, 0.8, 0, 7); ctx.fill(); }
+    ctx.beginPath(); ctx.arc(-headR*1.02, headY-headR*0.3, headR*0.22, 0, 7); ctx.fillStyle = F(bc); ctx.fill();
+    if(brute){ ctx.strokeStyle = flash ? '#fff' : '#7a3a30'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(headR*0.15, headY-headR*0.55); ctx.lineTo(headR*0.7, headY+headR*0.05); ctx.stroke(); }
   } else if(brute){   // iron skullcap with a short spike, scar across the eye
     ctx.fillStyle = F('#5a5c64'); ctx.beginPath(); ctx.arc(0, headY-headR*0.25, headR*1.04, Math.PI*1.05, Math.PI*1.95); ctx.lineTo(headR*0.9, headY-headR*0.5); ctx.lineTo(-headR*0.9, headY-headR*0.5); ctx.closePath(); ctx.fill();
     ctx.strokeStyle='#22232a'; ctx.lineWidth=1; ctx.stroke();
